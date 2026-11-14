@@ -11,11 +11,25 @@ import type { ReactNode } from "react";
 import { AlertTriangle, Info, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export function Page({ children, className, wide }: { children: ReactNode; className?: string; wide?: boolean }) {
+export function Page({
+  children,
+  className,
+  wide,
+}: {
+  children: ReactNode;
+  className?: string;
+  wide?: boolean;
+}) {
   return (
-    <main className={cn("mx-auto w-full px-4 py-6 sm:px-6 lg:py-8", wide ? "max-w-[1600px]" : "max-w-7xl", className)}>
+    <div
+      className={cn(
+        "mx-auto w-full px-4 py-6 sm:px-6 lg:py-8",
+        wide ? "max-w-[1600px]" : "max-w-7xl",
+        className,
+      )}
+    >
       {children}
-    </main>
+    </div>
   );
 }
 
@@ -40,7 +54,9 @@ export function PageHeader({
           {Icon ? <Icon className="size-6 text-primary" /> : null}
           {title}
         </h1>
-        {description ? <p className="mt-1.5 max-w-3xl text-sm text-muted-foreground">{description}</p> : null}
+        {description ? (
+          <p className="mt-1.5 max-w-3xl text-sm text-muted-foreground">{description}</p>
+        ) : null}
       </div>
       {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
     </div>
@@ -66,7 +82,9 @@ export function Section({
         <div className="mb-3 flex items-end justify-between gap-3">
           <div>
             {title ? <h2 className="text-base font-semibold tracking-tight">{title}</h2> : null}
-            {description ? <p className="mt-0.5 text-xs text-muted-foreground">{description}</p> : null}
+            {description ? (
+              <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
+            ) : null}
           </div>
           {actions}
         </div>
@@ -76,9 +94,19 @@ export function Section({
   );
 }
 
-export function Panel({ children, className, title, actions }: { children: ReactNode; className?: string; title?: ReactNode; actions?: ReactNode }) {
+export function Panel({
+  children,
+  className,
+  title,
+  actions,
+}: {
+  children: ReactNode;
+  className?: string;
+  title?: ReactNode;
+  actions?: ReactNode;
+}) {
   return (
-    <div className={cn("panel", className)}>
+    <div className={cn("panel min-w-0", className)}>
       {title || actions ? (
         <div className="flex items-center justify-between gap-2 border-b px-4 py-2.5">
           <div className="label-caps">{title}</div>
@@ -123,7 +151,15 @@ export function Stat({
 }
 
 /** Horizontal proficiency bar, value 0–100. */
-export function Meter({ value, label, className }: { value: number; label?: string; className?: string }) {
+export function Meter({
+  value,
+  label,
+  className,
+}: {
+  value: number;
+  label?: string;
+  className?: string;
+}) {
   const v = Math.max(0, Math.min(100, Math.round(value)));
   const color = v >= 80 ? "bg-ok" : v >= 60 ? "bg-primary" : v >= 35 ? "bg-caution" : "bg-warning";
   return (
@@ -135,7 +171,10 @@ export function Meter({ value, label, className }: { value: number; label?: stri
         </div>
       ) : null}
       <div className="h-1.5 overflow-hidden rounded-full bg-muted">
-        <div className={cn("h-full rounded-full transition-all", color)} style={{ width: `${v}%` }} />
+        <div
+          className={cn("h-full rounded-full transition-all", color)}
+          style={{ width: `${v}%` }}
+        />
       </div>
     </div>
   );
@@ -156,7 +195,9 @@ export function EmptyState({
     <div className="flex flex-col items-center justify-center rounded-lg border border-dashed px-6 py-10 text-center">
       {Icon ? <Icon className="mb-3 size-8 text-muted-foreground" /> : null}
       <p className="font-semibold">{title}</p>
-      {description ? <p className="mt-1 max-w-md text-sm text-muted-foreground">{description}</p> : null}
+      {description ? (
+        <p className="mt-1 max-w-md text-sm text-muted-foreground">{description}</p>
+      ) : null}
       {action ? (
         <Link
           to={action.to}
@@ -186,7 +227,9 @@ export function Notice({
     <div
       className={cn(
         "flex gap-2.5 rounded-md border px-3 py-2.5 text-xs leading-relaxed",
-        tone === "caution" ? "border-caution/30 bg-caution/5 text-caution" : "border-primary/25 bg-primary/5 text-primary",
+        tone === "caution"
+          ? "border-caution/30 bg-caution/5 text-caution"
+          : "border-primary/25 bg-primary/5 text-primary",
         className,
       )}
     >
@@ -199,7 +242,15 @@ export function Notice({
   );
 }
 
-export function Pill({ children, tone = "default", className }: { children: ReactNode; tone?: "default" | "ok" | "caution" | "warning" | "primary" | "magenta" | "cyan"; className?: string }) {
+export function Pill({
+  children,
+  tone = "default",
+  className,
+}: {
+  children: ReactNode;
+  tone?: "default" | "ok" | "caution" | "warning" | "primary" | "magenta" | "cyan";
+  className?: string;
+}) {
   const toneCls = {
     default: "border-border bg-muted text-muted-foreground",
     ok: "border-ok/30 bg-ok/10 text-ok",
@@ -210,7 +261,13 @@ export function Pill({ children, tone = "default", className }: { children: Reac
     cyan: "border-cyan/30 bg-cyan/10 text-cyan",
   }[tone];
   return (
-    <span className={cn("inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[10px] font-semibold tracking-wide uppercase", toneCls, className)}>
+    <span
+      className={cn(
+        "inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[10px] font-semibold tracking-wide uppercase",
+        toneCls,
+        className,
+      )}
+    >
       {children}
     </span>
   );
@@ -231,5 +288,10 @@ export function formatDate(iso: string): string {
 
 export function formatDateTime(iso: string): string {
   const d = new Date(iso);
-  return d.toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+  return d.toLocaleString(undefined, {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }

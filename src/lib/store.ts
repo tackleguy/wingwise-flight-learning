@@ -170,7 +170,18 @@ export interface CheckrideAttempt {
 export interface ActivityItem {
   id: string;
   date: string;
-  kind: "lesson" | "quiz" | "exam" | "flight" | "atc" | "oral" | "checkride" | "avionics" | "achievement" | "account" | "planner";
+  kind:
+    | "lesson"
+    | "quiz"
+    | "exam"
+    | "flight"
+    | "atc"
+    | "oral"
+    | "checkride"
+    | "avionics"
+    | "achievement"
+    | "account"
+    | "planner";
   text: string;
   link?: string;
 }
@@ -195,14 +206,30 @@ export interface SavedFlightPlan {
 }
 
 export interface Settings {
-  units: { altitude: "ft" | "m"; distance: "nm" | "km"; speed: "kt" | "kmh"; pressure: "inHg" | "hPa" };
+  units: {
+    altitude: "ft" | "m";
+    distance: "nm" | "km";
+    speed: "kt" | "kmh";
+    pressure: "inHg" | "hPa";
+  };
   jurisdiction: "FAA" | "EASA" | "ICAO";
   preferredAircraft: string;
   voice: { atcSpeech: boolean; rate: number; volume: number; voiceName: string; micInput: boolean };
-  sim: { quality: "low" | "medium" | "high"; showFps: boolean; invertPitch: boolean; mouseYoke: boolean; sensitivity: number; hud: boolean };
+  sim: {
+    quality: "low" | "medium" | "high";
+    showFps: boolean;
+    invertPitch: boolean;
+    mouseYoke: boolean;
+    sensitivity: number;
+    hud: boolean;
+  };
   accessibility: { reducedMotion: boolean; largeText: boolean; highContrast: boolean };
   notifications: { studyReminders: boolean; achievementToasts: boolean };
-  training: { dailyGoalMin: number; showHints: boolean; difficulty: "beginner" | "intermediate" | "advanced" };
+  training: {
+    dailyGoalMin: number;
+    showHints: boolean;
+    difficulty: "beginner" | "intermediate" | "advanced";
+  };
   ai: {
     /** Which provider the client asks for. The server decides what is actually configured. */
     provider: "auto" | "cloud" | "local-server" | "local-browser" | "scripted";
@@ -240,11 +267,22 @@ export const DEFAULT_SETTINGS: Settings = {
   jurisdiction: "FAA",
   preferredAircraft: "c172",
   voice: { atcSpeech: true, rate: 1.05, volume: 0.9, voiceName: "", micInput: true },
-  sim: { quality: "medium", showFps: false, invertPitch: false, mouseYoke: false, sensitivity: 1, hud: true },
+  sim: {
+    quality: "medium",
+    showFps: false,
+    invertPitch: false,
+    mouseYoke: false,
+    sensitivity: 1,
+    hud: true,
+  },
   accessibility: { reducedMotion: false, largeText: false, highContrast: false },
   notifications: { studyReminders: true, achievementToasts: true },
   training: { dailyGoalMin: 30, showHints: true, difficulty: "beginner" },
-  ai: { provider: "auto", localBrowserUrl: "http://localhost:11434/v1", localBrowserModel: "llama3.1" },
+  ai: {
+    provider: "auto",
+    localBrowserUrl: "http://localhost:11434/v1",
+    localBrowserModel: "llama3.1",
+  },
 };
 
 export const INITIAL_STATE: TrainingState = {
@@ -366,7 +404,12 @@ export const uid = () =>
 
 const now = () => new Date().toISOString();
 
-function pushActivity(s: TrainingState, kind: ActivityItem["kind"], text: string, link?: string): ActivityItem[] {
+function pushActivity(
+  s: TrainingState,
+  kind: ActivityItem["kind"],
+  text: string,
+  link?: string,
+): ActivityItem[] {
   const item: ActivityItem = { id: uid(), date: now(), kind, text };
   if (link) item.link = link;
   return [item, ...s.activity].slice(0, 200);
@@ -387,7 +430,12 @@ export const actions = {
     setState((s) => ({
       ...s,
       assessment: a,
-      activity: pushActivity(s, "exam", `Knowledge assessment: ${a.score}/${a.total} (${a.level})`, "/onboarding"),
+      activity: pushActivity(
+        s,
+        "exam",
+        `Knowledge assessment: ${a.score}/${a.total} (${a.level})`,
+        "/onboarding",
+      ),
     }));
   },
   completeLesson(lessonId: string, title: string, link?: string) {
@@ -405,7 +453,12 @@ export const actions = {
     setState((s) => ({
       ...s,
       quizzes: [{ ...q, id: uid(), date: now() }, ...s.quizzes],
-      activity: pushActivity(s, "quiz", `${q.final ? "Module exam" : "Quiz"} — ${q.title}: ${q.score}/${q.total}`, link),
+      activity: pushActivity(
+        s,
+        "quiz",
+        `${q.final ? "Module exam" : "Quiz"} — ${q.title}: ${q.score}/${q.total}`,
+        link,
+      ),
     }));
   },
   recordExam(e: Omit<ExamAttempt, "id" | "date">): string {
@@ -413,7 +466,12 @@ export const actions = {
     setState((s) => ({
       ...s,
       exams: [{ ...e, id, date: now() }, ...s.exams],
-      activity: pushActivity(s, "exam", `${e.title}: ${Math.round(e.scorePct)}% ${e.passed ? "(pass)" : "(below 70%)"}`, "/practice-tests"),
+      activity: pushActivity(
+        s,
+        "exam",
+        `${e.title}: ${Math.round(e.scorePct)}% ${e.passed ? "(pass)" : "(below 70%)"}`,
+        "/practice-tests",
+      ),
     }));
     return id;
   },
@@ -422,7 +480,12 @@ export const actions = {
     setState((s) => ({
       ...s,
       flights: [{ ...f, id, date: now() }, ...s.flights],
-      activity: pushActivity(s, "flight", `Sim flight: ${f.scenarioTitle} — score ${Math.round(f.score)}`, "/logbook"),
+      activity: pushActivity(
+        s,
+        "flight",
+        `Sim flight: ${f.scenarioTitle} — score ${Math.round(f.score)}`,
+        "/logbook",
+      ),
     }));
     return id;
   },
@@ -434,7 +497,12 @@ export const actions = {
     setState((s) => ({
       ...s,
       atcSessions: [{ ...a, id, date: now() }, ...s.atcSessions],
-      activity: pushActivity(s, "atc", `ATC practice: ${a.title} — ${Math.round(a.score)}%`, a.engine === "ai" ? "/ai-atc" : "/atc"),
+      activity: pushActivity(
+        s,
+        "atc",
+        `ATC practice: ${a.title} — ${Math.round(a.score)}%`,
+        a.engine === "ai" ? "/ai-atc" : "/atc",
+      ),
     }));
     return id;
   },
@@ -443,7 +511,12 @@ export const actions = {
     setState((s) => ({
       ...s,
       orals: [{ ...o, id, date: now() }, ...s.orals],
-      activity: pushActivity(s, "oral", `Oral exam (${o.level}): ${Math.round(o.score)}%`, "/oral-exam"),
+      activity: pushActivity(
+        s,
+        "oral",
+        `Oral exam (${o.level}): ${Math.round(o.score)}%`,
+        "/oral-exam",
+      ),
     }));
     return id;
   },
@@ -452,9 +525,16 @@ export const actions = {
       const exists = s.checkrides.some((x) => x.id === c.id);
       return {
         ...s,
-        checkrides: exists ? s.checkrides.map((x) => (x.id === c.id ? c : x)) : [c, ...s.checkrides],
+        checkrides: exists
+          ? s.checkrides.map((x) => (x.id === c.id ? c : x))
+          : [c, ...s.checkrides],
         activity: c.completed
-          ? pushActivity(s, "checkride", `Mock checkride (${c.title}): ${c.passed ? "satisfactory" : "unsatisfactory"} — ${Math.round(c.overall)}%`, "/checkrides")
+          ? pushActivity(
+              s,
+              "checkride",
+              `Mock checkride (${c.title}): ${c.passed ? "satisfactory" : "unsatisfactory"} — ${Math.round(c.overall)}%`,
+              "/checkrides",
+            )
           : s.activity,
       };
     });
@@ -475,7 +555,12 @@ export const actions = {
     setState((s) => ({
       ...s,
       flightPlans: [{ ...p, id, date: now() }, ...s.flightPlans],
-      activity: pushActivity(s, "planner", `Flight plan saved: ${p.departure} → ${p.destination} (${p.rules})`, "/planner"),
+      activity: pushActivity(
+        s,
+        "planner",
+        `Flight plan saved: ${p.departure} → ${p.destination} (${p.rules})`,
+        "/planner",
+      ),
     }));
     return id;
   },
@@ -489,7 +574,12 @@ export const actions = {
         : {
             ...s,
             achievements: { ...s.achievements, [id]: now() },
-            activity: pushActivity(s, "achievement", `Achievement unlocked: ${title}`, "/achievements"),
+            activity: pushActivity(
+              s,
+              "achievement",
+              `Achievement unlocked: ${title}`,
+              "/achievements",
+            ),
           },
     );
   },
@@ -509,7 +599,8 @@ export const actions = {
   },
   importData(json: string) {
     const parsed = JSON.parse(json) as Partial<TrainingState>;
-    if (typeof parsed !== "object" || parsed === null || parsed.version !== 1) throw new Error("Not a TeachX export file");
+    if (typeof parsed !== "object" || parsed === null || parsed.version !== 1)
+      throw new Error("Not a TeachX export file");
     setState(() => ({ ...INITIAL_STATE, ...parsed, settings: deepMergeSettings(parsed.settings) }));
   },
   resetAll() {

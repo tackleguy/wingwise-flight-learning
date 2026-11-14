@@ -65,14 +65,24 @@ export function holdWithin(o: {
         score: enough ? clamp(frac / pass, 0, 1) : (activeT / o.minSec) * frac * 0.6,
         met: enough && frac >= pass,
         done: false,
-        detail: activeT < 1 ? "Not yet attempted" : `${Math.round(frac * 100)}% within ±${o.tol} ${o.unit} over ${Math.round(activeT)} s (worst ${Math.round(worst)} ${o.unit})${enough ? "" : ` — need ${o.minSec} s`}`,
+        detail:
+          activeT < 1
+            ? "Not yet attempted"
+            : `${Math.round(frac * 100)}% within ±${o.tol} ${o.unit} over ${Math.round(activeT)} s (worst ${Math.round(worst)} ${o.unit})${enough ? "" : ` — need ${o.minSec} s`}`,
       };
     },
   };
 }
 
 /** Achieve a condition at least once (optionally sustained for `sustainSec`). */
-export function reach(o: { id: string; text: string; weight?: number; cond: Pred; sustainSec?: number; detail?: string }): Objective {
+export function reach(o: {
+  id: string;
+  text: string;
+  weight?: number;
+  cond: Pred;
+  sustainSec?: number;
+  detail?: string;
+}): Objective {
   let t = 0;
   let met = false;
   return {
@@ -88,13 +98,25 @@ export function reach(o: { id: string; text: string; weight?: number; cond: Pred
     },
     event() {},
     status() {
-      return { score: met ? 1 : 0, met, done: met, detail: met ? "Achieved" : o.detail ?? "Not yet achieved" };
+      return {
+        score: met ? 1 : 0,
+        met,
+        done: met,
+        detail: met ? "Achieved" : (o.detail ?? "Not yet achieved"),
+      };
     },
   };
 }
 
 /** Never let a bad condition happen. */
-export function avoid(o: { id: string; text: string; weight?: number; bad: Pred; describe: (s: SimSnapshot) => string; graceSec?: number }): Objective {
+export function avoid(o: {
+  id: string;
+  text: string;
+  weight?: number;
+  bad: Pred;
+  describe: (s: SimSnapshot) => string;
+  graceSec?: number;
+}): Objective {
   let violated = "";
   let t = 0;
   let elapsed = 0;
@@ -115,7 +137,12 @@ export function avoid(o: { id: string; text: string; weight?: number; bad: Pred;
       if (!violated && e.type === "crash") violated = e.message;
     },
     status() {
-      return { score: violated ? 0 : 1, met: !violated, done: !!violated, detail: violated || "No exceedance" };
+      return {
+        score: violated ? 0 : 1,
+        met: !violated,
+        done: !!violated,
+        detail: violated || "No exceedance",
+      };
     },
   };
 }
@@ -135,13 +162,26 @@ function runwayFrame(lat: number, lon: number, end: RunwayEnd) {
 
 /** Find the runway the aircraft is on (or over), with along-track & lateral position (ft). */
 export function locateOnRunway(airport: Airport, lat: number, lon: number, headingTrue: number) {
-  let best: { end: RunwayEnd; along: number; lateral: number; lengthFt: number; widthFt: number } | null = null;
+  let best: {
+    end: RunwayEnd;
+    along: number;
+    lateral: number;
+    lengthFt: number;
+    widthFt: number;
+  } | null = null;
   for (const r of airport.runways) {
     for (const end of r.ends) {
       if (Math.abs(norm180(headingTrue - end.trueHeading)) > 60) continue;
       const f = runwayFrame(lat, lon, end);
       if (f.along < -500 || f.along > r.lengthFt + 500) continue;
-      if (!best || Math.abs(f.lateral) < Math.abs(best.lateral)) best = { end, along: f.along, lateral: f.lateral, lengthFt: r.lengthFt, widthFt: r.widthFt };
+      if (!best || Math.abs(f.lateral) < Math.abs(best.lateral))
+        best = {
+          end,
+          along: f.along,
+          lateral: f.lateral,
+          lengthFt: r.lengthFt,
+          widthFt: r.widthFt,
+        };
     }
   }
   return best;
@@ -151,8 +191,24 @@ export function locateOnRunway(airport: Airport, lat: number, lon: number, headi
  * Landing quality: touchdown on the runway (within width), in the first third, with a
  * gentle sink rate and wings level, then a full stop on the runway.
  */
-export function landing(o: { id: string; text: string; weight?: number; target: LandingTarget; requireStop?: boolean }): Objective {
-  let touchdown: null | { vs: number; along: number; lateral: number; bank: number; onRunway: boolean; endId: string; length: number; width: number; slip: number } = null;
+export function landing(o: {
+  id: string;
+  text: string;
+  weight?: number;
+  target: LandingTarget;
+  requireStop?: boolean;
+}): Objective {
+  let touchdown: null | {
+    vs: number;
+    along: number;
+    lateral: number;
+    bank: number;
+    onRunway: boolean;
+    endId: string;
+    length: number;
+    width: number;
+    slip: number;
+  } = null;
   let stopped = false;
   let crashed = "";
   return {
@@ -168,7 +224,12 @@ export function landing(o: { id: string; text: string; weight?: number; target: 
       const ap = o.target.airport;
       const loc = locateOnRunway(ap, s.aircraft.lat, s.aircraft.lon, s.aircraft.heading);
       const wantEnd = o.target.endId;
-      const onRunway = !!loc && Math.abs(loc.lateral) <= loc.widthFt / 2 + 5 && loc.along >= -50 && loc.along <= loc.lengthFt && (!wantEnd || loc.end.id === wantEnd);
+      const onRunway =
+        !!loc &&
+        Math.abs(loc.lateral) <= loc.widthFt / 2 + 5 &&
+        loc.along >= -50 &&
+        loc.along <= loc.lengthFt &&
+        (!wantEnd || loc.end.id === wantEnd);
       touchdown = {
         vs: Number(e.data?.["vs"] ?? 0),
         along: loc?.along ?? 0,
@@ -185,7 +246,13 @@ export function landing(o: { id: string; text: string; weight?: number; target: 
       if (crashed) return { score: 0, met: false, done: true, detail: crashed };
       if (!touchdown) return { score: 0, met: false, done: false, detail: "Awaiting touchdown" };
       const t = touchdown;
-      if (!t.onRunway) return { score: 0.15, met: false, done: true, detail: `Touched down off the ${o.target.endId ? `assigned runway ${o.target.endId}` : "runway"} (lateral ${Math.round(t.lateral)} ft)` };
+      if (!t.onRunway)
+        return {
+          score: 0.15,
+          met: false,
+          done: true,
+          detail: `Touched down off the ${o.target.endId ? `assigned runway ${o.target.endId}` : "runway"} (lateral ${Math.round(t.lateral)} ft)`,
+        };
       let score = 1;
       const notes: string[] = [`RWY ${t.endId}`, `${Math.round(t.vs)} fpm`];
       if (t.vs < -600) score -= 0.4;
@@ -193,19 +260,39 @@ export function landing(o: { id: string; text: string; weight?: number; target: 
       const zone = t.length > 0 ? t.along / t.length : 0;
       notes.push(`${Math.round(t.along)} ft past threshold`);
       if (zone > 0.33) score -= 0.25;
-      notes.push(`${Math.abs(Math.round(t.lateral))} ft ${t.lateral >= 0 ? "right" : "left"} of centerline`);
+      notes.push(
+        `${Math.abs(Math.round(t.lateral))} ft ${t.lateral >= 0 ? "right" : "left"} of centerline`,
+      );
       if (Math.abs(t.lateral) > t.width / 4) score -= 0.15;
       if (Math.abs(t.bank) > 5) score -= 0.1;
       if (o.requireStop !== false && !stopped) {
-        return { score: Math.max(0, score - 0.15), met: false, done: false, detail: `${notes.join(" · ")} — bring the aircraft to a full stop` };
+        return {
+          score: Math.max(0, score - 0.15),
+          met: false,
+          done: false,
+          detail: `${notes.join(" · ")} — bring the aircraft to a full stop`,
+        };
       }
-      return { score: Math.max(0, score), met: score >= 0.7, done: true, detail: notes.join(" · ") };
+      return {
+        score: Math.max(0, score),
+        met: score >= 0.7,
+        done: true,
+        detail: notes.join(" · "),
+      };
     },
   };
 }
 
 /** Accumulate heading change while a condition holds (e.g. steep turn ≥ 40° bank). */
-export function turnThrough(o: { id: string; text: string; weight?: number; degrees: number; while: Pred; altTolFt?: number; label: string }): Objective {
+export function turnThrough(o: {
+  id: string;
+  text: string;
+  weight?: number;
+  degrees: number;
+  while: Pred;
+  altTolFt?: number;
+  label: string;
+}): Objective {
   let accum = 0;
   let lastHdg: number | null = null;
   let entryAlt: number | null = null;
@@ -242,19 +329,41 @@ export function turnThrough(o: { id: string; text: string; weight?: number; degr
     },
     event() {},
     status() {
-      const inProgress = accum > 0 ? ` (in progress: ${Math.round(accum)}°${o.altTolFt !== undefined ? `, alt dev ${Math.round(altDevMax)} ft` : ""})` : "";
-      if (best >= 1) return { score: 1, met: true, done: true, detail: `Completed ${o.degrees}° ${o.label}` };
+      const inProgress =
+        accum > 0
+          ? ` (in progress: ${Math.round(accum)}°${o.altTolFt !== undefined ? `, alt dev ${Math.round(altDevMax)} ft` : ""})`
+          : "";
+      if (best >= 1)
+        return { score: 1, met: true, done: true, detail: `Completed ${o.degrees}° ${o.label}` };
       if (accum >= o.degrees) {
         const altOk = o.altTolFt === undefined || altDevMax <= o.altTolFt;
-        return { score: altOk ? 1 : 0.6, met: altOk, done: false, detail: `${o.degrees}° complete${altOk ? "" : ` but altitude deviated ${Math.round(altDevMax)} ft`} — roll out` };
+        return {
+          score: altOk ? 1 : 0.6,
+          met: altOk,
+          done: false,
+          detail: `${o.degrees}° complete${altOk ? "" : ` but altitude deviated ${Math.round(altDevMax)} ft`} — roll out`,
+        };
       }
-      return { score: best, met: false, done: false, detail: best > 0 ? `Completed with altitude deviation (±${o.altTolFt} ft required)${inProgress}` : `Not yet completed${inProgress}` };
+      return {
+        score: best,
+        met: false,
+        done: false,
+        detail:
+          best > 0
+            ? `Completed with altitude deviation (±${o.altTolFt} ft required)${inProgress}`
+            : `Not yet completed${inProgress}`,
+      };
     },
   };
 }
 
 /** Stall recognition & recovery: altitude lost between stall warning and positive climb. */
-export function stallRecovery(o: { id: string; text: string; weight?: number; maxLossFt: number }): Objective {
+export function stallRecovery(o: {
+  id: string;
+  text: string;
+  weight?: number;
+  maxLossFt: number;
+}): Objective {
   let phase: "idle" | "stalling" | "done" = "idle";
   let entryAlt = 0;
   let minAlt = 0;
@@ -282,16 +391,41 @@ export function stallRecovery(o: { id: string; text: string; weight?: number; ma
     },
     event() {},
     status() {
-      if (phase === "idle") return { score: 0, met: false, done: false, detail: "Slow down until the stall warning sounds, then recover" };
-      if (phase === "stalling") return { score: 0.3, met: false, done: false, detail: `${sawStall ? "Stalled" : "Stall warning"} — reduce AoA, full power, level wings, climb` };
+      if (phase === "idle")
+        return {
+          score: 0,
+          met: false,
+          done: false,
+          detail: "Slow down until the stall warning sounds, then recover",
+        };
+      if (phase === "stalling")
+        return {
+          score: 0.3,
+          met: false,
+          done: false,
+          detail: `${sawStall ? "Stalled" : "Stall warning"} — reduce AoA, full power, level wings, climb`,
+        };
       const ok = loss <= o.maxLossFt;
-      return { score: ok ? 1 : clamp(1 - (loss - o.maxLossFt) / 600, 0.2, 0.8), met: ok, done: true, detail: `Recovered with ${Math.round(loss)} ft altitude loss${sawStall ? " (full stall)" : " (at the warning)"}` };
+      return {
+        score: ok ? 1 : clamp(1 - (loss - o.maxLossFt) / 600, 0.2, 0.8),
+        met: ok,
+        done: true,
+        detail: `Recovered with ${Math.round(loss)} ft altitude loss${sawStall ? " (full stall)" : " (at the warning)"}`,
+      };
     },
   };
 }
 
 /** Count passages over a fix (within radius). */
-export function fixPassages(o: { id: string; text: string; weight?: number; lat: number; lon: number; count: number; radiusNm?: number }): Objective {
+export function fixPassages(o: {
+  id: string;
+  text: string;
+  weight?: number;
+  lat: number;
+  lon: number;
+  count: number;
+  radiusNm?: number;
+}): Objective {
   let inside = false;
   let n = 0;
   return {
@@ -309,13 +443,25 @@ export function fixPassages(o: { id: string; text: string; weight?: number; lat:
     event() {},
     status() {
       const met = n >= o.count;
-      return { score: clamp(n / o.count, 0, 1), met, done: met, detail: `${n}/${o.count} fix crossings` };
+      return {
+        score: clamp(n / o.count, 0, 1),
+        met,
+        done: met,
+        detail: `${n}/${o.count} fix crossings`,
+      };
     },
   };
 }
 
 /** Respond within a time window after a trigger becomes true. */
-export function respondWithin(o: { id: string; text: string; weight?: number; trigger: Pred; response: Pred; withinSec: number }): Objective {
+export function respondWithin(o: {
+  id: string;
+  text: string;
+  weight?: number;
+  trigger: Pred;
+  response: Pred;
+  withinSec: number;
+}): Objective {
   let triggeredAt: number | null = null;
   let respondedAfter: number | null = null;
   let t = 0;
@@ -326,17 +472,36 @@ export function respondWithin(o: { id: string; text: string; weight?: number; tr
     update(s, dt) {
       t += dt;
       if (triggeredAt === null && o.trigger(s)) triggeredAt = t;
-      if (triggeredAt !== null && respondedAfter === null && o.response(s)) respondedAfter = t - triggeredAt;
+      if (triggeredAt !== null && respondedAfter === null && o.response(s))
+        respondedAfter = t - triggeredAt;
     },
     event() {},
     status() {
-      if (triggeredAt === null) return { score: 0, met: false, done: false, detail: "Waiting for the situation to develop" };
+      if (triggeredAt === null)
+        return {
+          score: 0,
+          met: false,
+          done: false,
+          detail: "Waiting for the situation to develop",
+        };
       if (respondedAfter === null) {
         const late = t - triggeredAt > o.withinSec;
-        return { score: 0, met: false, done: late, detail: late ? `No correct response within ${o.withinSec} s` : `Respond within ${o.withinSec} s (${Math.round(o.withinSec - (t - triggeredAt))} s left)` };
+        return {
+          score: 0,
+          met: false,
+          done: late,
+          detail: late
+            ? `No correct response within ${o.withinSec} s`
+            : `Respond within ${o.withinSec} s (${Math.round(o.withinSec - (t - triggeredAt))} s left)`,
+        };
       }
       const ok = respondedAfter <= o.withinSec;
-      return { score: ok ? 1 : 0.5, met: ok, done: true, detail: `Responded after ${Math.round(respondedAfter)} s` };
+      return {
+        score: ok ? 1 : 0.5,
+        met: ok,
+        done: true,
+        detail: `Responded after ${Math.round(respondedAfter)} s`,
+      };
     },
   };
 }

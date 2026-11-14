@@ -17,7 +17,17 @@
  */
 import { getPerf } from "@/lib/data/aircraft-perf";
 import type { AircraftPerf } from "@/lib/data/types";
-import { clamp, destinationPoint, distanceNm, FT_PER_NM, KT_TO_FPS, norm180, norm360, toDeg, toRad } from "@/lib/geo";
+import {
+  clamp,
+  destinationPoint,
+  distanceNm,
+  FT_PER_NM,
+  KT_TO_FPS,
+  norm180,
+  norm360,
+  toDeg,
+  toRad,
+} from "@/lib/geo";
 import { autopilotStep, INITIAL_AP, INITIAL_AP_INTERNAL, type ApInternal } from "./autopilot";
 import {
   densityAltitude,
@@ -117,7 +127,13 @@ export class SimEngine {
   private ac: AircraftState;
   private controls: Controls;
   private radios: Radios;
-  private gps: GpsState = { flightPlan: [], activeLeg: 1, directTo: null, approach: null, mode: "ENR" };
+  private gps: GpsState = {
+    flightPlan: [],
+    activeLeg: 1,
+    directTo: null,
+    approach: null,
+    mode: "ENR",
+  };
   private directFrom: Waypoint | null = null;
   private ap: AutopilotState = { ...INITIAL_AP };
   private apInt: ApInternal = { ...INITIAL_AP_INTERNAL };
@@ -226,7 +242,7 @@ export class SimEngine {
 
   private applyStartControls(s: StartState) {
     this.controls.flapIndex = s.flapIndex ?? 0;
-    this.controls.gearDown = this.perf.retractableGear ? s.gearDown ?? s.onGround : true;
+    this.controls.gearDown = this.perf.retractableGear ? (s.gearDown ?? s.onGround) : true;
     this.controls.throttle = s.throttle ?? (s.onGround ? 0 : 0.65);
     this.controls.parkingBrake = s.onGround && !s.engineRunning;
     if (s.trim !== undefined) this.controls.trim = s.trim;
@@ -237,7 +253,10 @@ export class SimEngine {
     this.radios.iasBug = Math.round(this.perf.v.y);
     if (!s.onGround) {
       // Settle the airborne state close to equilibrium.
-      const sigma = densityRatio(s.altMslFt, oatAt(s.altMslFt, this.ac.groundElevFt, this.weather.tempC));
+      const sigma = densityRatio(
+        s.altMslFt,
+        oatAt(s.altMslFt, this.ac.groundElevFt, this.weather.tempC),
+      );
       this.ac.tasKt = s.iasKt / Math.sqrt(sigma);
       this.ac.aoaDeg = this.equilibriumAlpha(s.iasKt);
       this.ac.pitch = this.ac.aoaDeg;
@@ -248,7 +267,7 @@ export class SimEngine {
   private equilibriumAlpha(iasKt: number) {
     const p = this.perf;
     const q = 0.5 * RHO0 * (iasKt * KT_TO_FPS) ** 2;
-    const cl = (this.ac.weightLb) / (q * p.wingAreaSqFt);
+    const cl = this.ac.weightLb / (q * p.wingAreaSqFt);
     return toDeg((cl - p.cl0 - this.flapClIncrement()) / p.clAlpha);
   }
 
@@ -346,7 +365,11 @@ export class SimEngine {
   setControls(patch: Partial<Controls>) {
     this.controls = { ...this.controls, ...patch };
     if (patch.lights) this.controls.lights = { ...this.controls.lights, ...patch.lights };
-    this.controls.flapIndex = clamp(Math.round(this.controls.flapIndex), 0, this.perf.flapDetents.length - 1);
+    this.controls.flapIndex = clamp(
+      Math.round(this.controls.flapIndex),
+      0,
+      this.perf.flapDetents.length - 1,
+    );
     this.controls.throttle = clamp(this.controls.throttle, 0, 1);
     this.controls.mixture = clamp(this.controls.mixture, 0, 1);
     this.controls.trim = clamp(this.controls.trim, -1, 1);
@@ -357,7 +380,11 @@ export class SimEngine {
       this.emit("info", "Gear retraction inhibited on the ground (squat switch).");
     }
     // Pilot overpowering the AP disconnects it.
-    if (this.ap.engaged && ((patch.elevator !== undefined && Math.abs(patch.elevator) > 0.6) || (patch.aileron !== undefined && Math.abs(patch.aileron) > 0.6))) {
+    if (
+      this.ap.engaged &&
+      ((patch.elevator !== undefined && Math.abs(patch.elevator) > 0.6) ||
+        (patch.aileron !== undefined && Math.abs(patch.aileron) > 0.6))
+    ) {
       this.apDisconnect("AP override");
     }
   }
@@ -462,7 +489,12 @@ export class SimEngine {
       return;
     }
     this.ap = { ...this.ap, engaged: true, fd: true, annunciation: "AP" };
-    this.apInt = { ...this.apInt, elevInt: 0, holdAlt: this.snapshot.indicated.altFt, rolBank: this.ac.bank };
+    this.apInt = {
+      ...this.apInt,
+      elevInt: 0,
+      holdAlt: this.snapshot.indicated.altFt,
+      rolBank: this.ac.bank,
+    };
     if (this.ap.vertical === "PIT") this.ap.targetPitch = this.ac.pitch;
     this.publish();
   }
@@ -534,7 +566,8 @@ export class SimEngine {
   /** Nose up/down wheel: adjusts VS target, pitch target or ALT hold. */
   apWheel(dir: 1 | -1) {
     if (this.ap.vertical === "VS") this.setRadios({ vsBug: this.radios.vsBug + dir * 100 });
-    else if (this.ap.vertical === "PIT") this.ap = { ...this.ap, targetPitch: clamp(this.ap.targetPitch + dir * 0.5, -15, 20) };
+    else if (this.ap.vertical === "PIT")
+      this.ap = { ...this.ap, targetPitch: clamp(this.ap.targetPitch + dir * 0.5, -15, 20) };
     else if (this.ap.vertical === "FLC") this.setRadios({ iasBug: this.radios.iasBug - dir });
     else if (this.ap.vertical === "ALT") this.apInt.holdAlt += dir * 10;
     this.publish();
@@ -548,7 +581,12 @@ export class SimEngine {
   // GPS ------------------------------------------------------------------
 
   loadFlightPlan(wps: Waypoint[]) {
-    this.gps = { ...this.gps, flightPlan: wps, activeLeg: Math.min(1, Math.max(wps.length - 1, 0)), directTo: null };
+    this.gps = {
+      ...this.gps,
+      flightPlan: wps,
+      activeLeg: Math.min(1, Math.max(wps.length - 1, 0)),
+      directTo: null,
+    };
     this.publish();
   }
 
@@ -565,15 +603,27 @@ export class SimEngine {
   }
 
   setActiveLeg(i: number) {
-    this.gps = { ...this.gps, activeLeg: clamp(i, 1, Math.max(1, this.gps.flightPlan.length - 1)), directTo: null };
+    this.gps = {
+      ...this.gps,
+      activeLeg: clamp(i, 1, Math.max(1, this.gps.flightPlan.length - 1)),
+      directTo: null,
+    };
     this.publish();
   }
 
   activateApproach(approach: NonNullable<GpsState["approach"]>, waypoints: Waypoint[]) {
     // Append the approach after the current enroute plan (replacing a previous approach).
-    const enroute = this.gps.approach ? this.gps.flightPlan.filter((w) => w.kind !== "fix" && w.kind !== "runway") : this.gps.flightPlan;
+    const enroute = this.gps.approach
+      ? this.gps.flightPlan.filter((w) => w.kind !== "fix" && w.kind !== "runway")
+      : this.gps.flightPlan;
     const fp = [...enroute.filter((w) => w.kind !== "runway"), ...waypoints];
-    this.gps = { ...this.gps, flightPlan: fp, approach, activeLeg: Math.max(1, enroute.length > 0 ? enroute.length : 1), directTo: null };
+    this.gps = {
+      ...this.gps,
+      flightPlan: fp,
+      approach,
+      activeLeg: Math.max(1, enroute.length > 0 ? enroute.length : 1),
+      directTo: null,
+    };
     this.publish();
   }
 
@@ -581,7 +631,12 @@ export class SimEngine {
   clearApproach() {
     if (!this.gps.approach) return;
     const enroute = this.gps.flightPlan.filter((w) => w.kind !== "fix" && w.kind !== "runway");
-    this.gps = { ...this.gps, approach: null, flightPlan: enroute, activeLeg: Math.min(this.gps.activeLeg, Math.max(1, enroute.length - 1)) };
+    this.gps = {
+      ...this.gps,
+      approach: null,
+      flightPlan: enroute,
+      activeLeg: Math.min(this.gps.activeLeg, Math.max(1, enroute.length - 1)),
+    };
     this.publish();
   }
 
@@ -628,7 +683,10 @@ export class SimEngine {
     const rho = RHO0 * sigma;
     const wind = windAt(w, Math.max(0, a.aglFt));
     this.gustPhase += dt;
-    const gust = w.gustKt > w.windKt ? Math.max(0, smoothNoise(this.gustPhase * 0.35, 1)) * (w.gustKt - w.windKt) : 0;
+    const gust =
+      w.gustKt > w.windKt
+        ? Math.max(0, smoothNoise(this.gustPhase * 0.35, 1)) * (w.gustKt - w.windKt)
+        : 0;
     const windKt = a.onGround ? wind.kt + gust : wind.kt + gust;
     const windTo = toRad(wind.dir + 180);
     const wN = windKt * Math.cos(windTo); // knots toward north
@@ -638,7 +696,8 @@ export class SimEngine {
     const flapTarget = p.flapDetents[c.flapIndex] ?? 0;
     a.flapsDeg += clamp(flapTarget - a.flapsDeg, -3 * dt, 3 * dt);
     const powered = a.busVolts > 20;
-    if (p.retractableGear && powered) a.gearPosition = clamp(a.gearPosition + (c.gearDown ? 1 : -1) * dt / 6, 0, 1);
+    if (p.retractableGear && powered)
+      a.gearPosition = clamp(a.gearPosition + ((c.gearDown ? 1 : -1) * dt) / 6, 0, 1);
 
     // ---- engine
     this.engineStep(dt, sigma, pa);
@@ -658,10 +717,20 @@ export class SimEngine {
 
     // ---- autopilot
     const indicatedAltForAp = a.altMslFt + (this.radios.altimeterInHg - w.qnhInHg) * 1000;
-    const apOut = autopilotStep(this.ap, this.apInt, a, indicatedAltForAp, this.radios, this.snapshot.nav, this.magVar, dt);
+    const apOut = autopilotStep(
+      this.ap,
+      this.apInt,
+      a,
+      indicatedAltForAp,
+      this.radios,
+      this.snapshot.nav,
+      this.magVar,
+      dt,
+    );
     this.ap = apOut.ap;
     this.apInt = apOut.int;
-    if (this.ap.engaged && (a.stalled || a.onGround || !powered || this.failures.ahrs)) this.apDisconnect(a.stalled ? "AP disconnect — stall" : "AP disconnect");
+    if (this.ap.engaged && (a.stalled || a.onGround || !powered || this.failures.ahrs))
+      this.apDisconnect(a.stalled ? "AP disconnect — stall" : "AP disconnect");
     if (this.ap.annunciation.endsWith("CAPTURE")) {
       this.captureTimer += dt;
       if (this.captureTimer > 3) {
@@ -671,7 +740,8 @@ export class SimEngine {
     } else this.captureTimer = 0;
     if (this.apDisconnectTimer > 0) {
       this.apDisconnectTimer -= dt;
-      if (this.apDisconnectTimer <= 0 && !this.ap.engaged) this.ap = { ...this.ap, annunciation: "" };
+      if (this.apDisconnectTimer <= 0 && !this.ap.engaged)
+        this.ap = { ...this.ap, annunciation: "" };
     }
     const elevIn = this.ap.engaged ? apOut.elevator : c.elevator;
     const ailIn = this.ap.engaged ? apOut.aileron : c.aileron;
@@ -693,9 +763,17 @@ export class SimEngine {
     if (alpha < -0.25) cl = p.cl0 + flapCl + p.clAlpha * -0.25;
     const ar = aspect(p);
     const gearDrag = p.retractableGear ? a.gearPosition * 0.015 : 0;
-    const cd = p.cd0 + this.flapFraction() * 0.045 + gearDrag + (cl * cl) / (Math.PI * ar * p.oswald) + (alpha > alphaStall ? 0.12 : 0);
+    const cd =
+      p.cd0 +
+      this.flapFraction() * 0.045 +
+      gearDrag +
+      (cl * cl) / (Math.PI * ar * p.oswald) +
+      (alpha > alphaStall ? 0.12 : 0);
     // Turbulence perturbs lift a little.
-    const turb = w.turbulence > 0 && !a.onGround ? smoothNoise(a.simTimeSec * 1.7, 3) * 0.04 * w.turbulence : 0;
+    const turb =
+      w.turbulence > 0 && !a.onGround
+        ? smoothNoise(a.simTimeSec * 1.7, 3) * 0.04 * w.turbulence
+        : 0;
     // Ground effect: within ~half a wingspan of the surface, lift increases slightly.
     const groundEffect = 1 + 0.12 * clamp(1 - a.aglFt / (p.wingSpanFt * 0.5), 0, 1);
     let L = q * S * (cl + turb) * groundEffect;
@@ -705,7 +783,8 @@ export class SimEngine {
     // Stall state & warning (warning ~5–10 kt / ~2° before stall)
     a.stalled = !a.onGround && alpha > alphaStall;
     a.stallWarning = !a.onGround && alpha > alphaStall - toRad(2.2) && a.iasKt > 10;
-    if (a.stallWarning && !this.wasStallWarning) this.emit("stall", a.stalled ? "Stall" : "Stall warning");
+    if (a.stallWarning && !this.wasStallWarning)
+      this.emit("stall", a.stalled ? "Stall" : "Stall warning");
     this.wasStallWarning = a.stallWarning;
 
     if (a.onGround) {
@@ -719,7 +798,11 @@ export class SimEngine {
       // Power-on pitch-up tendency (propwash over tail), flaps pitch-down/balloon simplification.
       alphaCmd += (a.powerFraction - 0.55) * 1.2;
       if (a.stalled) alphaCmd -= 3; // nose drops in the stall
-      const pitchRateCmd = clamp((alphaCmd - a.aoaDeg) * 1.6 * Math.min(1, authority), -p.pitchRateDps, p.pitchRateDps);
+      const pitchRateCmd = clamp(
+        (alphaCmd - a.aoaDeg) * 1.6 * Math.min(1, authority),
+        -p.pitchRateDps,
+        p.pitchRateDps,
+      );
       a.pitchRate += (pitchRateCmd - a.pitchRate) * clamp(dt * 4, 0, 1);
       // Turning: pitch attitude must also follow the flight-path rotation; handled by γ below.
       // Roll
@@ -752,7 +835,10 @@ export class SimEngine {
       a.loadFactor = L / W;
 
       // Slip ball: adverse yaw from aileron, p-factor at high power/low speed, rudder.
-      const pfactor = p.powerType === "jet" ? 0 : a.powerFraction * clamp(1.2 - a.iasKt / (p.v.y * 1.4), 0, 1) * 0.6;
+      const pfactor =
+        p.powerType === "jet"
+          ? 0
+          : a.powerFraction * clamp(1.2 - a.iasKt / (p.v.y * 1.4), 0, 1) * 0.6;
       const slipRaw = clamp(ailIn * 0.35 + pfactor - c.rudder * 0.9 - asym * 0.25, -1, 1);
       const slipTarget = this.ap.yd ? slipRaw * 0.15 : slipRaw;
       this.filteredSlip += (slipTarget - this.filteredSlip) * clamp(dt * 3, 0, 1);
@@ -780,11 +866,19 @@ export class SimEngine {
       this.emit("overspeed", "Overspeed — exceeding VNE/VMO");
     }
     if (!a.overspeed) this.overspeedNotified = false;
-    if (a.iasKt > p.v.ne * 1.15 && !a.onGround) this.crash("Structural failure — airspeed far beyond VNE");
-    if (a.loadFactor > 5.5 && !a.onGround) this.crash("Structural failure — load factor limit exceeded");
+    if (a.iasKt > p.v.ne * 1.15 && !a.onGround)
+      this.crash("Structural failure — airspeed far beyond VNE");
+    if (a.loadFactor > 5.5 && !a.onGround)
+      this.crash("Structural failure — load factor limit exceeded");
 
     // Gear warning (retractables): low power + low altitude with gear up
-    if (p.retractableGear && !a.onGround && a.gearPosition < 0.9 && a.aglFt < 600 && a.powerFraction < 0.3) {
+    if (
+      p.retractableGear &&
+      !a.onGround &&
+      a.gearPosition < 0.9 &&
+      a.aglFt < 600 &&
+      a.powerFraction < 0.3
+    ) {
       if (!this.gearHornNotified) this.emit("gear-warning", "GEAR UP — landing gear not down");
       this.gearHornNotified = true;
     } else this.gearHornNotified = false;
@@ -825,7 +919,18 @@ export class SimEngine {
     a.gsKt = Math.hypot(vN, vE);
   }
 
-  private groundStep(dt: number, T: number, D: number, L: number, m: number, elevIn: number, authority: number, wN: number, wE: number, alphaStall: number) {
+  private groundStep(
+    dt: number,
+    T: number,
+    D: number,
+    L: number,
+    m: number,
+    elevIn: number,
+    authority: number,
+    wN: number,
+    wE: number,
+    alphaStall: number,
+  ) {
     const p = this.perf;
     const a = this.ac;
     const c = this.controls;
@@ -863,7 +968,8 @@ export class SimEngine {
     a.flightPathDeg = 0;
     a.vsFpm = 0;
     a.loadFactor = 1;
-    if (a.pitch > 12.5 && p.powerType === "jet") this.emit("info", "Tail strike risk — pitch too high on the ground");
+    if (a.pitch > 12.5 && p.powerType === "jet")
+      this.emit("info", "Tail strike risk — pitch too high on the ground");
 
     const vN = gs * Math.cos(hdgRad);
     const vE = gs * Math.sin(hdgRad);
@@ -905,19 +1011,33 @@ export class SimEngine {
       this.crash("Gear-up landing");
       return;
     }
-    if (vs < -1000 || Math.abs(a.bank) > 15 || a.pitch < -6 || (a.flightPathDeg < -12 && a.iasKt > p.v.ref)) {
-      this.crash(vs < -1000 ? `Hard impact (${Math.round(vs)} fpm)` : Math.abs(a.bank) > 15 ? "Wingtip strike — excessive bank at touchdown" : "Nose-first impact");
+    if (
+      vs < -1000 ||
+      Math.abs(a.bank) > 15 ||
+      a.pitch < -6 ||
+      (a.flightPathDeg < -12 && a.iasKt > p.v.ref)
+    ) {
+      this.crash(
+        vs < -1000
+          ? `Hard impact (${Math.round(vs)} fpm)`
+          : Math.abs(a.bank) > 15
+            ? "Wingtip strike — excessive bank at touchdown"
+            : "Nose-first impact",
+      );
       return;
     }
     if (a.aglFt > 50 && a.iasKt > p.v.ne) {
       this.crash("Terrain impact");
       return;
     }
-    this.emit("touchdown", vs < -600 ? "Hard landing" : vs < -300 ? "Firm touchdown" : "Smooth touchdown", data);
+    this.emit(
+      "touchdown",
+      vs < -600 ? "Hard landing" : vs < -300 ? "Firm touchdown" : "Smooth touchdown",
+      data,
+    );
     a.vsFpm = 0;
     a.flightPathDeg = 0;
     a.bank = 0;
-    a.gsKt = a.gsKt;
   }
 
   private crash(reason: string) {
@@ -963,7 +1083,11 @@ export class SimEngine {
       a.batteryPct = Math.max(0, a.batteryPct - dt * 0.4);
       if (a.engineCranking <= 0) {
         a.engineCranking = 0;
-        const canRun = this.fuelAvailable() > 0 && c.fuelSelector !== "off" && !(this.failures.engine && p.engines === 1) && (p.powerType !== "piston" || c.mixture >= 0.3);
+        const canRun =
+          this.fuelAvailable() > 0 &&
+          c.fuelSelector !== "off" &&
+          !(this.failures.engine && p.engines === 1) &&
+          (p.powerType !== "piston" || c.mixture >= 0.3);
         if (canRun) {
           a.engineRunning = true;
           this.emit("engine", "Engine started");
@@ -985,9 +1109,11 @@ export class SimEngine {
     if (!a.engineRunning) {
       a.powerFraction = 0;
       a.fuelFlowGph = 0;
-      if (a.engineCranking <= 0) a.rpm = Math.max(0, a.rpm - dt * 600) * (p.powerType === "jet" ? 1 : 1);
+      if (a.engineCranking <= 0)
+        a.rpm = Math.max(0, a.rpm - dt * 600) * (p.powerType === "jet" ? 1 : 1);
       // Windmilling
-      if (p.powerType !== "jet" && !a.onGround && a.iasKt > 60 && !this.failures.engine) a.rpm = Math.max(a.rpm, a.iasKt * 9);
+      if (p.powerType !== "jet" && !a.onGround && a.iasKt > 60 && !this.failures.engine)
+        a.rpm = Math.max(a.rpm, a.iasKt * 9);
       a.oilPressPsi = Math.max(0, a.oilPressPsi - dt * 30);
       a.manifoldInHg = 29.92 * Math.pow(Math.max(0.1, 1 - 6.8756e-6 * pa), 5.2559);
       return;
@@ -995,7 +1121,8 @@ export class SimEngine {
 
     let densityFactor: number;
     if (p.powerType === "jet") densityFactor = 1;
-    else if (p.turbocharged) densityFactor = pa < 15000 ? 1 : clamp((sigma - 0.13) / 0.87 / 0.63, 0, 1);
+    else if (p.turbocharged)
+      densityFactor = pa < 15000 ? 1 : clamp((sigma - 0.13) / 0.87 / 0.63, 0, 1);
     else densityFactor = clamp((sigma - 0.13) / 0.87, 0, 1);
 
     // Mixture: best power when mixture ≈ ideal for altitude (full rich at sea level).
@@ -1007,7 +1134,13 @@ export class SimEngine {
       mixtureFactor = clamp(mixtureFactor, 0, 1);
       // Carburettor ice
       if (CARBURETED.has(p.id)) {
-        const conducive = this.weather.tempC > -5 && this.weather.tempC < 25 && c.throttle < 0.45 && (this.weather.precipitation !== "none" || this.weather.visibilitySm < 5 || this.weather.tempC < 15);
+        const conducive =
+          this.weather.tempC > -5 &&
+          this.weather.tempC < 25 &&
+          c.throttle < 0.45 &&
+          (this.weather.precipitation !== "none" ||
+            this.weather.visibilitySm < 5 ||
+            this.weather.tempC < 15);
         if (c.carbHeat) a.carbIce = Math.max(0, a.carbIce - dt * 0.05);
         else if (conducive) a.carbIce = Math.min(1, a.carbIce + dt * 0.0025);
         if (a.carbIce >= 0.98) {
@@ -1029,12 +1162,18 @@ export class SimEngine {
     } else {
       const maxRpm = p.powerType === "turboprop" ? 1700 : 2700;
       const idle = p.powerType === "turboprop" ? 1050 : 650;
-      a.rpm = idle + (maxRpm - idle) * Math.pow(target, 0.6) + (p.powerType === "piston" ? Math.min(150, a.iasKt * 0.8) : 0);
+      a.rpm =
+        idle +
+        (maxRpm - idle) * Math.pow(target, 0.6) +
+        (p.powerType === "piston" ? Math.min(150, a.iasKt * 0.8) : 0);
       a.rpm = Math.min(a.rpm, maxRpm + 50);
     }
     const ambientMp = 29.92 * Math.pow(Math.max(0.1, 1 - 6.8756e-6 * pa), 5.2559);
     a.manifoldInHg = p.turbocharged ? 12 + target * 26 : ambientMp * (0.35 + 0.65 * throttleEff);
-    a.fuelFlowGph = p.fuelBurnFullGph * (0.12 + 0.88 * target) * (p.powerType === "piston" ? clamp(0.5 + c.mixture * 0.5, 0.4, 1) : 1);
+    a.fuelFlowGph =
+      p.fuelBurnFullGph *
+      (0.12 + 0.88 * target) *
+      (p.powerType === "piston" ? clamp(0.5 + c.mixture * 0.5, 0.4, 1) : 1);
     a.oilPressPsi += (55 + target * 25 - a.oilPressPsi) * clamp(dt * 0.8, 0, 1);
     a.oilTempF += (150 + target * 60 - a.oilTempF) * clamp(dt * 0.02, 0, 1);
   }
@@ -1042,7 +1181,12 @@ export class SimEngine {
   private electricalStep(dt: number) {
     const a = this.ac;
     const c = this.controls;
-    const charging = c.alternator && !this.failures.alternator && a.engineRunning && (a.rpm > 550 || this.perf.powerType === "jet") && c.masterBattery;
+    const charging =
+      c.alternator &&
+      !this.failures.alternator &&
+      a.engineRunning &&
+      (a.rpm > 550 || this.perf.powerType === "jet") &&
+      c.masterBattery;
     let load = 0;
     if (c.masterBattery) {
       load += 4;
@@ -1072,7 +1216,8 @@ export class SimEngine {
     const a = this.ac;
     const p = this.perf;
     const f = this.failures;
-    const avionicsPowered = this.controls.masterBattery && this.controls.avionicsMaster && a.busVolts > 20;
+    const avionicsPowered =
+      this.controls.masterBattery && this.controls.avionicsMaster && a.busVolts > 20;
     const glass = p.avionics !== "steam";
     let ias = a.iasKt < 20 ? 0 : a.iasKt;
     const trueIndicatedAlt = a.altMslFt + (this.radios.altimeterInHg - this.weather.qnhInHg) * 1000;
@@ -1136,13 +1281,24 @@ export class SimEngine {
     if (a.stalled) out.push({ text: "STALL", level: "warning" });
     else if (a.stallWarning) out.push({ text: "STALL WARN", level: "warning" });
     if (a.overspeed) out.push({ text: "OVERSPEED", level: "warning" });
-    if (!a.engineRunning && !a.onGround && !a.crashed) out.push({ text: "ENGINE OUT", level: "warning" });
-    if (this.perf.engines > 1 && this.failures.engine) out.push({ text: "L ENG FAIL", level: "warning" });
-    if (this.perf.retractableGear && !a.onGround && a.gearPosition < 0.9 && a.aglFt < 600 && a.powerFraction < 0.3) out.push({ text: "GEAR UP", level: "warning" });
+    if (!a.engineRunning && !a.onGround && !a.crashed)
+      out.push({ text: "ENGINE OUT", level: "warning" });
+    if (this.perf.engines > 1 && this.failures.engine)
+      out.push({ text: "L ENG FAIL", level: "warning" });
+    if (
+      this.perf.retractableGear &&
+      !a.onGround &&
+      a.gearPosition < 0.9 &&
+      a.aglFt < 600 &&
+      a.powerFraction < 0.3
+    )
+      out.push({ text: "GEAR UP", level: "warning" });
     if (a.oilPressPsi < 20 && a.engineRunning) out.push({ text: "OIL PRESS", level: "warning" });
-    if (a.busVolts < 25 && this.controls.masterBattery) out.push({ text: "LOW VOLTS", level: "caution" });
+    if (a.busVolts < 25 && this.controls.masterBattery)
+      out.push({ text: "LOW VOLTS", level: "caution" });
     if (this.failures.alternator) out.push({ text: "ALT FAIL", level: "caution" });
-    if (this.failures.vacuum && this.perf.avionics === "steam") out.push({ text: "VACUUM", level: "caution" });
+    if (this.failures.vacuum && this.perf.avionics === "steam")
+      out.push({ text: "VACUUM", level: "caution" });
     if (this.failures.ahrs) out.push({ text: "AHRS FAIL", level: "caution" });
     if (this.failures.pitot) out.push({ text: "PITOT", level: "caution" });
     if (this.failures.static) out.push({ text: "STATIC", level: "caution" });
@@ -1151,7 +1307,8 @@ export class SimEngine {
     const fuel = a.fuelLeftGal + a.fuelRightGal;
     if (fuel < this.perf.usableFuelGal * 0.1) out.push({ text: "LOW FUEL", level: "caution" });
     if (a.carbIce > 0.25) out.push({ text: "CARB ICE?", level: "caution" });
-    if (this.controls.parkingBrake && a.engineRunning && this.controls.throttle > 0.5) out.push({ text: "PARK BRAKE", level: "caution" });
+    if (this.controls.parkingBrake && a.engineRunning && this.controls.throttle > 0.5)
+      out.push({ text: "PARK BRAKE", level: "caution" });
     if (!ind.attitudeValid) out.push({ text: "ATT FAIL", level: "caution" });
     return out;
   }
@@ -1193,7 +1350,9 @@ export class SimEngine {
       const to = g.flightPlan[g.activeLeg]!;
       const next = g.flightPlan[g.activeLeg + 1]!;
       // Turn anticipation ~ 0.6 nm, or passed abeam
-      const passed = distanceNm(this.ac.lat, this.ac.lon, next.lat, next.lon) < distanceNm(to.lat, to.lon, next.lat, next.lon) - 0.2;
+      const passed =
+        distanceNm(this.ac.lat, this.ac.lon, next.lat, next.lon) <
+        distanceNm(to.lat, to.lon, next.lat, next.lon) - 0.2;
       if (distToActive < 0.6 || (passed && distToActive < 3)) {
         this.gps = { ...g, activeLeg: g.activeLeg + 1 };
       }

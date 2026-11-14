@@ -27,23 +27,44 @@ const PRINT_CSS = `
 
 function studyLink(id: StageId, ifr: boolean): { label: string; to: string } {
   const map: Record<StageId, { label: string; to: string }> = {
-    "preflight-prep": { label: "Regulations review", to: ifr ? "/academy/ifr/regulations" : "/academy/vfr/regulations" },
-    documents: { label: "Airworthiness & inspections", to: ifr ? "/academy/ifr/regulations" : "/academy/vfr/regulations" },
-    "aircraft-knowledge": { label: ifr ? "IFR fundamentals & instruments" : "Aircraft systems", to: ifr ? "/academy/ifr/fundamentals" : "/academy/vfr/systems" },
+    "preflight-prep": {
+      label: "Regulations review",
+      to: ifr ? "/academy/ifr/regulations" : "/academy/vfr/regulations",
+    },
+    documents: {
+      label: "Airworthiness & inspections",
+      to: ifr ? "/academy/ifr/regulations" : "/academy/vfr/regulations",
+    },
+    "aircraft-knowledge": {
+      label: ifr ? "IFR fundamentals & instruments" : "Aircraft systems",
+      to: ifr ? "/academy/ifr/fundamentals" : "/academy/vfr/systems",
+    },
     weather: { label: "Weather Lab", to: "/weather" },
     planning: { label: "Flight Planner", to: "/planner" },
     oral: { label: "Oral Exam Simulator", to: "/oral-exam" },
     walkaround: { label: "Aircraft Library (systems & preflight)", to: "/aircraft" },
     maneuvers: { label: "Flight Simulator", to: "/simulator" },
-    navigation: { label: ifr ? "IFR navigation" : "Navigation & Charts", to: ifr ? "/academy/ifr/navigation" : "/navigation" },
+    navigation: {
+      label: ifr ? "IFR navigation" : "Navigation & Charts",
+      to: ifr ? "/academy/ifr/navigation" : "/navigation",
+    },
     radio: { label: "ATC Simulator", to: "/atc" },
-    emergency: { label: ifr ? "IFR emergencies" : "Emergency procedures", to: ifr ? "/academy/ifr/emergencies" : "/academy/vfr/emergencies" },
+    emergency: {
+      label: ifr ? "IFR emergencies" : "Emergency procedures",
+      to: ifr ? "/academy/ifr/emergencies" : "/academy/vfr/emergencies",
+    },
     postflight: { label: "Flight Logbook", to: "/logbook" },
   };
   return map[id];
 }
 
-export function CheckrideReport({ attempt, track }: { attempt: CheckrideAttempt; track: CheckrideTrackDef }) {
+export function CheckrideReport({
+  attempt,
+  track,
+}: {
+  attempt: CheckrideAttempt;
+  track: CheckrideTrackDef;
+}) {
   const profile = useStore((s) => s.profile);
   const unsat = attempt.stages.filter((s) => s.status !== "satisfactory");
   const passed = attempt.passed;
@@ -55,7 +76,10 @@ export function CheckrideReport({ attempt, track }: { attempt: CheckrideAttempt;
         <Button onClick={() => window.print()}>
           <Printer /> Print / save as PDF
         </Button>
-        <Link to="/checkrides" className="inline-flex h-9 items-center gap-2 rounded-md border border-input bg-background px-4 text-sm font-medium hover:bg-accent">
+        <Link
+          to="/checkrides"
+          className="inline-flex h-9 items-center gap-2 rounded-md border border-input bg-background px-4 text-sm font-medium hover:bg-accent"
+        >
           All checkrides
         </Link>
       </div>
@@ -66,20 +90,31 @@ export function CheckrideReport({ attempt, track }: { attempt: CheckrideAttempt;
             <p className="label-caps">TeachX Virtual Checkride · Grading Report</p>
             <h2 className="mt-1 text-xl font-bold">{track.certificate}</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Applicant: <span className="text-foreground">{profile?.name ?? "Applicant"}</span> · Started {formatDate(attempt.date)} · Attempt {attempt.id.slice(0, 8)}
+              Applicant: <span className="text-foreground">{profile?.name ?? "Applicant"}</span> ·
+              Started {formatDate(attempt.date)} · Attempt {attempt.id.slice(0, 8)}
             </p>
           </div>
           <div className="text-right">
-            <p className={cn("flex items-center justify-end gap-2 text-2xl font-bold", passed ? "text-ok" : "text-warning")}>
+            <p
+              className={cn(
+                "flex items-center justify-end gap-2 text-2xl font-bold",
+                passed ? "text-ok" : "text-warning",
+              )}
+            >
               {passed ? <Award className="size-6" /> : <XCircle className="size-6" />}
               {passed ? "SATISFACTORY" : "UNSATISFACTORY"}
             </p>
-            <p className="font-mono text-sm text-muted-foreground tabular">Overall {Math.round(attempt.overall)}/100</p>
+            <p className="font-mono text-sm text-muted-foreground tabular">
+              Overall {Math.round(attempt.overall)}/100
+            </p>
           </div>
         </div>
 
         <p className="mt-3 rounded-md border border-caution/40 bg-caution/5 px-3 py-2 text-xs text-foreground/85">
-          <span className="font-semibold">Simulated checkride — not an FAA practical test.</span> This report is unofficial training feedback. It does not grant, and may not be used to obtain, any FAA certificate or rating, and it does not replace an instructor's endorsement or an examiner's evaluation.
+          <span className="font-semibold">Simulated checkride — not an FAA practical test.</span>{" "}
+          This report is unofficial training feedback. It does not grant, and may not be used to
+          obtain, any FAA certificate or rating, and it does not replace an instructor's endorsement
+          or an examiner's evaluation.
         </p>
 
         <div className="mt-5 overflow-x-auto">
@@ -101,7 +136,9 @@ export function CheckrideReport({ attempt, track }: { attempt: CheckrideAttempt;
                   <td className="py-2 pr-3 font-mono text-[11px] text-cyan">{s.acsRef ?? "—"}</td>
                   <td className="py-2 pr-3 text-right font-mono tabular">{Math.round(s.score)}</td>
                   <td className="py-2 text-right">
-                    <Pill tone={s.status === "satisfactory" ? "ok" : "warning"}>{s.status === "satisfactory" ? "SAT" : "UNSAT"}</Pill>
+                    <Pill tone={s.status === "satisfactory" ? "ok" : "warning"}>
+                      {s.status === "satisfactory" ? "SAT" : "UNSAT"}
+                    </Pill>
                   </td>
                 </tr>
               ))}
@@ -122,13 +159,22 @@ export function CheckrideReport({ attempt, track }: { attempt: CheckrideAttempt;
             return (
               <div key={s.id} className="avoid-break rounded-md border px-3 py-2.5">
                 <div className="flex flex-wrap items-center gap-2">
-                  {s.status === "satisfactory" ? <CheckCircle2 className="size-4 text-ok" /> : <XCircle className="size-4 text-warning" />}
+                  {s.status === "satisfactory" ? (
+                    <CheckCircle2 className="size-4 text-ok" />
+                  ) : (
+                    <XCircle className="size-4 text-warning" />
+                  )}
                   <span className="text-sm font-semibold">
                     {i + 1}. {s.name}
                   </span>
-                  <span className="font-mono text-xs text-muted-foreground tabular">{Math.round(s.score)}/100</span>
+                  <span className="font-mono text-xs text-muted-foreground tabular">
+                    {Math.round(s.score)}/100
+                  </span>
                   {s.status !== "satisfactory" && link ? (
-                    <Link to={link.to} className="no-print ml-auto inline-flex items-center gap-1 text-xs text-primary hover:underline">
+                    <Link
+                      to={link.to}
+                      className="no-print ml-auto inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                    >
                       {link.label} <ArrowRight className="size-3" />
                     </Link>
                   ) : null}
@@ -145,7 +191,10 @@ export function CheckrideReport({ attempt, track }: { attempt: CheckrideAttempt;
           })}
         </div>
         <p className="mt-5 text-[11px] text-muted-foreground">
-          Generated by TeachX on {formatDate(new Date().toISOString())}. Grading thresholds: each area satisfactory at {PASS_SCORE}/100 or higher; overall pass requires every area satisfactory. ACS references identify the related Airman Certification Standards tasks for study purposes.
+          Generated by TeachX on {formatDate(new Date().toISOString())}. Grading thresholds: each
+          area satisfactory at {PASS_SCORE}/100 or higher; overall pass requires every area
+          satisfactory. ACS references identify the related Airman Certification Standards tasks for
+          study purposes.
         </p>
       </div>
     </div>

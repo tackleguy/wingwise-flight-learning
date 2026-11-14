@@ -19,18 +19,29 @@ export function HistoryTable({ rows }: { rows: ExamAttempt[] }) {
         <tbody>
           {rows.map((e) => (
             <tr key={e.id} className="border-b border-border/60 last:border-0">
-              <td className="whitespace-nowrap px-4 py-2.5 text-xs text-muted-foreground">{formatDate(e.date)}</td>
+              <td className="whitespace-nowrap px-4 py-2.5 text-xs text-muted-foreground">
+                {formatDate(e.date)}
+              </td>
               <td className="px-4 py-2.5">{e.title}</td>
               <td className="px-4 py-2.5">
                 <Pill tone={e.mode === "timed" ? "caution" : "cyan"}>{e.mode}</Pill>
               </td>
               <td className="px-4 py-2.5 text-right">
-                <span className={cn("font-mono font-semibold tabular", e.passed ? "text-ok" : "text-warning")}>{Math.round(e.scorePct)}%</span>
+                <span
+                  className={cn(
+                    "font-mono font-semibold tabular",
+                    e.passed ? "text-ok" : "text-warning",
+                  )}
+                >
+                  {Math.round(e.scorePct)}%
+                </span>
               </td>
               <td className="px-4 py-2.5 text-right font-mono text-xs tabular">
                 {e.correct}/{e.total}
               </td>
-              <td className="px-4 py-2.5 text-right font-mono text-xs text-muted-foreground tabular">{formatDuration(e.timeUsedSec)}</td>
+              <td className="px-4 py-2.5 text-right font-mono text-xs text-muted-foreground tabular">
+                {formatDuration(e.timeUsedSec)}
+              </td>
             </tr>
           ))}
         </tbody>

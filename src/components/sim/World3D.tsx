@@ -66,7 +66,8 @@ function runwayTexture(rw: Runway): THREE.CanvasTexture {
   g.fillRect(3, 0, 3, h);
   g.fillRect(w - 6, 0, 3, h);
   // centerline dashes (120 ft stripe, 80 ft gap)
-  for (let y = 400 * ftToPx; y < h - 400 * ftToPx; y += 200 * ftToPx) g.fillRect(w / 2 - 1.5, y, 3, 120 * ftToPx);
+  for (let y = 400 * ftToPx; y < h - 400 * ftToPx; y += 200 * ftToPx)
+    g.fillRect(w / 2 - 1.5, y, 3, 120 * ftToPx);
   const drawEnd = (bottom: boolean, id: string) => {
     g.save();
     if (!bottom) {
@@ -162,7 +163,11 @@ function groundTexture(): THREE.CanvasTexture {
 
 // --------------------------------------------------------------- builders
 
-function buildTerrain(origin: { lat: number; lon: number }, center: THREE.Vector3, quality: Props["quality"]) {
+function buildTerrain(
+  origin: { lat: number; lon: number },
+  center: THREE.Vector3,
+  quality: Props["quality"],
+) {
   const size = 70000;
   const seg = quality === "high" ? 220 : quality === "medium" ? 150 : 90;
   const geo = new THREE.PlaneGeometry(size, size, seg, seg);
@@ -176,7 +181,8 @@ function buildTerrain(origin: { lat: number; lon: number }, center: THREE.Vector
     const ll = latLonFromLocal(origin, x / M, -z / M);
     const elevFt = terrainElevationFt(ll.lat, ll.lon);
     pos.setXYZ(i, x, elevFt * M - 1.2, z);
-    const n = Math.sin(x * 0.0013) * Math.cos(z * 0.0011) * 0.5 + Math.sin(x * 0.0071 + z * 0.0043) * 0.5;
+    const n =
+      Math.sin(x * 0.0013) * Math.cos(z * 0.0011) * 0.5 + Math.sin(x * 0.0071 + z * 0.0043) * 0.5;
     const hNorm = Math.min(1, elevFt / 2500);
     if (hNorm < 0.35) col.setRGB(0.26 + n * 0.03, 0.34 + n * 0.04, 0.2 + n * 0.02);
     else if (hNorm < 0.7) col.setRGB(0.38 + n * 0.03, 0.36 + n * 0.03, 0.24);
@@ -212,7 +218,12 @@ function buildAirport(origin: { lat: number; lon: number }, ap: Airport, taxiTex
     const b = rw.ends[1];
     const elevA = terrainElevationFt(a.threshold.lat, a.threshold.lon);
     const pA = toWorld(origin, a.threshold.lat, a.threshold.lon, elevA);
-    const pB = toWorld(origin, b.threshold.lat, b.threshold.lon, terrainElevationFt(b.threshold.lat, b.threshold.lon));
+    const pB = toWorld(
+      origin,
+      b.threshold.lat,
+      b.threshold.lon,
+      terrainElevationFt(b.threshold.lat, b.threshold.lon),
+    );
     const mid = pA.clone().add(pB).multiplyScalar(0.5);
     const len = pA.distanceTo(new THREE.Vector3(pB.x, pA.y, pB.z));
     const widthM = rw.widthFt * M;
@@ -227,7 +238,11 @@ function buildAirport(origin: { lat: number; lon: number }, ap: Airport, taxiTex
 
     // Parallel taxiway (offset to the right of end A) + connectors
     const offsetM = (rw.widthFt / 2 + 350) * M;
-    const right = new THREE.Vector3(Math.cos(toRad(a.trueHeading)), 0, Math.sin(toRad(a.trueHeading)));
+    const right = new THREE.Vector3(
+      Math.cos(toRad(a.trueHeading)),
+      0,
+      Math.sin(toRad(a.trueHeading)),
+    );
     const tw = new THREE.PlaneGeometry(20, len);
     tw.rotateX(-Math.PI / 2);
     const twTex = taxiTex.clone();
@@ -250,14 +265,24 @@ function buildAirport(origin: { lat: number; lon: number }, ap: Airport, taxiTex
     }
     // Apron with hangars near the taxiway midpoint
     const apronCenter = mid.clone().addScaledVector(right, offsetM + 120);
-    const apron = new THREE.Mesh(new THREE.PlaneGeometry(220, Math.min(500, len * 0.3)).rotateX(-Math.PI / 2), new THREE.MeshLambertMaterial({ color: 0x4d4f55 }));
+    const apron = new THREE.Mesh(
+      new THREE.PlaneGeometry(220, Math.min(500, len * 0.3)).rotateX(-Math.PI / 2),
+      new THREE.MeshLambertMaterial({ color: 0x4d4f55 }),
+    );
     apron.position.set(apronCenter.x, mid.y + 0.08, apronCenter.z);
     apron.rotation.y = mesh.rotation.y;
     group.add(apron);
     for (let i = 0; i < 4; i++) {
-      const hangar = new THREE.Mesh(new THREE.BoxGeometry(40, 12, 30), new THREE.MeshLambertMaterial({ color: i % 2 ? 0x8a8f99 : 0x9aa0a8 }));
+      const hangar = new THREE.Mesh(
+        new THREE.BoxGeometry(40, 12, 30),
+        new THREE.MeshLambertMaterial({ color: i % 2 ? 0x8a8f99 : 0x9aa0a8 }),
+      );
       const along = (i - 1.5) * 60;
-      const fwd = new THREE.Vector3(Math.sin(toRad(a.trueHeading)), 0, -Math.cos(toRad(a.trueHeading)));
+      const fwd = new THREE.Vector3(
+        Math.sin(toRad(a.trueHeading)),
+        0,
+        -Math.cos(toRad(a.trueHeading)),
+      );
       hangar.position.copy(apronCenter).addScaledVector(right, 140).addScaledVector(fwd, along);
       hangar.position.y = mid.y + 6;
       hangar.rotation.y = mesh.rotation.y;
@@ -269,7 +294,10 @@ function buildAirport(origin: { lat: number; lon: number }, ap: Airport, taxiTex
     const spacing = 60;
     for (let d = 0; d <= len; d += spacing) {
       for (const side of [-1, 1]) {
-        const p = pA.clone().addScaledVector(fwd, d).addScaledVector(right, side * (widthM / 2 + 1.5));
+        const p = pA
+          .clone()
+          .addScaledVector(fwd, d)
+          .addScaledVector(right, side * (widthM / 2 + 1.5));
         edgeLightPositions.push(p.x, mid.y + 0.6, p.z);
         edgeLightColors.push(1, 0.95, 0.8);
       }
@@ -285,38 +313,75 @@ function buildAirport(origin: { lat: number; lon: number }, ap: Airport, taxiTex
 
     // PAPI on the left side of each runway end, 1,000 ft from the threshold
     for (const end of rw.ends) {
-      const th = toWorld(origin, end.threshold.lat, end.threshold.lon, terrainElevationFt(end.threshold.lat, end.threshold.lon));
-      const dir = new THREE.Vector3(Math.sin(toRad(end.trueHeading)), 0, -Math.cos(toRad(end.trueHeading)));
+      const th = toWorld(
+        origin,
+        end.threshold.lat,
+        end.threshold.lon,
+        terrainElevationFt(end.threshold.lat, end.threshold.lon),
+      );
+      const dir = new THREE.Vector3(
+        Math.sin(toRad(end.trueHeading)),
+        0,
+        -Math.cos(toRad(end.trueHeading)),
+      );
       const left = new THREE.Vector3(-dir.z, 0, dir.x).multiplyScalar(-1);
       const lights: THREE.Mesh[] = [];
       for (let i = 0; i < 4; i++) {
-        const m = new THREE.Mesh(new THREE.BoxGeometry(2.2, 1.2, 1.2), new THREE.MeshBasicMaterial({ color: 0xff2020 }));
+        const m = new THREE.Mesh(
+          new THREE.BoxGeometry(2.2, 1.2, 1.2),
+          new THREE.MeshBasicMaterial({ color: 0xff2020 }),
+        );
         // i = 0 outermost
-        m.position.copy(th).addScaledVector(dir, 1000 * M).addScaledVector(left, widthM / 2 + 15 + (3 - i) * 9);
+        m.position
+          .copy(th)
+          .addScaledVector(dir, 1000 * M)
+          .addScaledVector(left, widthM / 2 + 15 + (3 - i) * 9);
         m.position.y = th.y + 0.9;
         m.rotation.y = -toRad(end.trueHeading);
         group.add(m);
         lights.push(m);
       }
-      papis.push({ lights, threshold: end.threshold, elevFt: terrainElevationFt(end.threshold.lat, end.threshold.lon), heading: end.trueHeading });
+      papis.push({
+        lights,
+        threshold: end.threshold,
+        elevFt: terrainElevationFt(end.threshold.lat, end.threshold.lon),
+        heading: end.trueHeading,
+      });
     }
   }
   // Control tower
   if (ap.towered) {
     const rw0 = ap.runways[0]!;
     const c = toWorld(origin, ap.lat, ap.lon, ap.elevationFt);
-    const right = new THREE.Vector3(Math.cos(toRad(rw0.ends[0].trueHeading)), 0, Math.sin(toRad(rw0.ends[0].trueHeading)));
+    const right = new THREE.Vector3(
+      Math.cos(toRad(rw0.ends[0].trueHeading)),
+      0,
+      Math.sin(toRad(rw0.ends[0].trueHeading)),
+    );
     const pos = c.clone().addScaledVector(right, (rw0.widthFt / 2 + 900) * M);
-    const shaft = new THREE.Mesh(new THREE.CylinderGeometry(4, 5, 30, 10), new THREE.MeshLambertMaterial({ color: 0xb8bcc4 }));
+    const shaft = new THREE.Mesh(
+      new THREE.CylinderGeometry(4, 5, 30, 10),
+      new THREE.MeshLambertMaterial({ color: 0xb8bcc4 }),
+    );
     shaft.position.set(pos.x, c.y + 15, pos.z);
-    const cab = new THREE.Mesh(new THREE.CylinderGeometry(8, 7, 6, 10), new THREE.MeshLambertMaterial({ color: 0x1d3b55, emissive: 0x0b1a26 }));
+    const cab = new THREE.Mesh(
+      new THREE.CylinderGeometry(8, 7, 6, 10),
+      new THREE.MeshLambertMaterial({ color: 0x1d3b55, emissive: 0x0b1a26 }),
+    );
     cab.position.set(pos.x, c.y + 33, pos.z);
     group.add(shaft, cab);
   }
   const lightGeo = new THREE.BufferGeometry();
   lightGeo.setAttribute("position", new THREE.Float32BufferAttribute(edgeLightPositions, 3));
   lightGeo.setAttribute("color", new THREE.Float32BufferAttribute(edgeLightColors, 3));
-  const lightsMat = new THREE.PointsMaterial({ size: 3.5, vertexColors: true, sizeAttenuation: true, transparent: true, opacity: 0.95, depthWrite: false });
+  const lightsMat = new THREE.PointsMaterial({
+    size: 3.5,
+    vertexColors: true,
+    sizeAttenuation: true,
+    transparent: true,
+    opacity: 0.95,
+    depthWrite: false,
+  });
   const lightPoints = new THREE.Points(lightGeo, lightsMat);
   group.add(lightPoints);
   return { group, papis, lightPoints };
@@ -329,19 +394,29 @@ function buildAircraftModel(perfId: string, spanFt: number) {
   const jet = perfId === "b738" || perfId === "a320";
   const twin = ["pa34", "be58", "be350", "b738", "a320"].includes(perfId);
   const len = span * (jet ? 1.05 : 0.75);
-  const body = new THREE.MeshStandardMaterial({ color: 0xf2f4f7, roughness: 0.45, metalness: 0.15 });
+  const body = new THREE.MeshStandardMaterial({
+    color: 0xf2f4f7,
+    roughness: 0.45,
+    metalness: 0.15,
+  });
   const accent = new THREE.MeshStandardMaterial({ color: 0x1f5fa8, roughness: 0.5 });
   const glass = new THREE.MeshStandardMaterial({ color: 0x0f1a26, roughness: 0.1, metalness: 0.6 });
   const rad = len * (jet ? 0.055 : 0.07);
   const fus = new THREE.Mesh(new THREE.CapsuleGeometry(rad, len * 0.75, 6, 12), body);
   fus.rotation.x = Math.PI / 2;
   g.add(fus);
-  const stripe = new THREE.Mesh(new THREE.CylinderGeometry(rad * 1.01, rad * 1.01, len * 0.6, 12, 1, true), accent);
+  const stripe = new THREE.Mesh(
+    new THREE.CylinderGeometry(rad * 1.01, rad * 1.01, len * 0.6, 12, 1, true),
+    accent,
+  );
   stripe.rotation.x = Math.PI / 2;
   stripe.scale.set(1, 1, 0.25);
   stripe.position.y = -rad * 0.2;
   g.add(stripe);
-  const windshield = new THREE.Mesh(new THREE.SphereGeometry(rad * 0.95, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2.4), glass);
+  const windshield = new THREE.Mesh(
+    new THREE.SphereGeometry(rad * 0.95, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2.4),
+    glass,
+  );
   windshield.position.set(0, rad * 0.35, -len * 0.25);
   windshield.scale.set(1, 0.6, 1.4);
   g.add(windshield);
@@ -365,16 +440,30 @@ function buildAircraftModel(perfId: string, spanFt: number) {
   vstab.position.set(0, span * 0.08 + rad * 0.3, len * 0.46);
   g.add(vstab);
   // wingtip nav lights
-  const navL = new THREE.Mesh(new THREE.SphereGeometry(0.18, 6, 6), new THREE.MeshBasicMaterial({ color: 0xff2222 }));
+  const navL = new THREE.Mesh(
+    new THREE.SphereGeometry(0.18, 6, 6),
+    new THREE.MeshBasicMaterial({ color: 0xff2222 }),
+  );
   navL.position.set(-span / 2, wingY, -len * 0.08);
-  const navR = new THREE.Mesh(new THREE.SphereGeometry(0.18, 6, 6), new THREE.MeshBasicMaterial({ color: 0x22ff44 }));
+  const navR = new THREE.Mesh(
+    new THREE.SphereGeometry(0.18, 6, 6),
+    new THREE.MeshBasicMaterial({ color: 0x22ff44 }),
+  );
   navR.position.set(span / 2, wingY, -len * 0.08);
-  const beacon = new THREE.Mesh(new THREE.SphereGeometry(0.2, 6, 6), new THREE.MeshBasicMaterial({ color: 0xff3030 }));
+  const beacon = new THREE.Mesh(
+    new THREE.SphereGeometry(0.2, 6, 6),
+    new THREE.MeshBasicMaterial({ color: 0xff3030 }),
+  );
   beacon.position.set(0, span * 0.16 + rad * 0.4, len * 0.46);
   g.add(navL, navR, beacon);
   // engines / propellers
   const props: THREE.Mesh[] = [];
-  const propMat = new THREE.MeshBasicMaterial({ color: 0x222222, transparent: true, opacity: 0.35, side: THREE.DoubleSide });
+  const propMat = new THREE.MeshBasicMaterial({
+    color: 0x222222,
+    transparent: true,
+    opacity: 0.35,
+    side: THREE.DoubleSide,
+  });
   const addProp = (x: number, y: number, z: number, r: number) => {
     const p = new THREE.Mesh(new THREE.CircleGeometry(r, 20), propMat);
     p.position.set(x, y, z);
@@ -383,7 +472,10 @@ function buildAircraftModel(perfId: string, spanFt: number) {
   };
   if (jet) {
     for (const s of [-1, 1]) {
-      const eng = new THREE.Mesh(new THREE.CylinderGeometry(rad * 0.55, rad * 0.5, chord * 1.1, 12), new THREE.MeshStandardMaterial({ color: 0xc9ced6, metalness: 0.4 }));
+      const eng = new THREE.Mesh(
+        new THREE.CylinderGeometry(rad * 0.55, rad * 0.5, chord * 1.1, 12),
+        new THREE.MeshStandardMaterial({ color: 0xc9ced6, metalness: 0.4 }),
+      );
       eng.rotation.x = Math.PI / 2;
       eng.position.set(s * span * 0.17, wingY - rad * 0.55, -len * 0.12);
       g.add(eng);
@@ -403,7 +495,10 @@ function buildAircraftModel(perfId: string, spanFt: number) {
   const gear = new THREE.Group();
   const wheelMat = new THREE.MeshStandardMaterial({ color: 0x151515 });
   const wheel = (x: number, z: number) => {
-    const w = new THREE.Mesh(new THREE.CylinderGeometry(rad * 0.28, rad * 0.28, rad * 0.18, 10), wheelMat);
+    const w = new THREE.Mesh(
+      new THREE.CylinderGeometry(rad * 0.28, rad * 0.28, rad * 0.18, 10),
+      wheelMat,
+    );
     w.rotation.z = Math.PI / 2;
     w.position.set(x, -rad * 1.45, z);
     gear.add(w);
@@ -433,7 +528,13 @@ function buildClouds(snap: SimSnapshot, center: THREE.Vector3) {
   const baseM = groundM + w.cloudBaseFt * M;
   const topsM = groundM + (w.cloudTopsFt ?? w.cloudBaseFt + 3000) * M;
   if (w.cloudCover === "OVC" || w.cloudCover === "BKN") {
-    const mat = new THREE.MeshLambertMaterial({ color: w.cloudCover === "OVC" ? 0xb9bec6 : 0xd5d9de, transparent: true, opacity: w.cloudCover === "OVC" ? 0.97 : 0.8, side: THREE.DoubleSide, depthWrite: false });
+    const mat = new THREE.MeshLambertMaterial({
+      color: w.cloudCover === "OVC" ? 0xb9bec6 : 0xd5d9de,
+      transparent: true,
+      opacity: w.cloudCover === "OVC" ? 0.97 : 0.8,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+    });
     const base = new THREE.Mesh(new THREE.PlaneGeometry(140000, 140000).rotateX(-Math.PI / 2), mat);
     base.position.set(center.x, baseM, center.z);
     group.add(base);
@@ -443,8 +544,13 @@ function buildClouds(snap: SimSnapshot, center: THREE.Vector3) {
     (top.material as THREE.MeshLambertMaterial).color.set(0xf4f6f8);
     group.add(top);
   }
-  const count = w.cloudCover === "FEW" ? 70 : w.cloudCover === "SCT" ? 170 : w.cloudCover === "BKN" ? 240 : 0;
-  const puffMat = new THREE.MeshLambertMaterial({ color: 0xf2f4f7, transparent: true, opacity: 0.92 });
+  const count =
+    w.cloudCover === "FEW" ? 70 : w.cloudCover === "SCT" ? 170 : w.cloudCover === "BKN" ? 240 : 0;
+  const puffMat = new THREE.MeshLambertMaterial({
+    color: 0xf2f4f7,
+    transparent: true,
+    opacity: 0.92,
+  });
   const puffGeo = new THREE.SphereGeometry(1, 10, 8);
   const inst = new THREE.InstancedMesh(puffGeo, puffMat, count * 3);
   const m = new THREE.Matrix4();
@@ -461,7 +567,11 @@ function buildClouds(snap: SimSnapshot, center: THREE.Vector3) {
     for (let j = 0; j < 3; j++) {
       const s = size * (0.6 + rnd() * 0.5);
       m.compose(
-        new THREE.Vector3(x + (rnd() - 0.5) * size * 1.4, baseM + s * 0.35, z + (rnd() - 0.5) * size * 1.4),
+        new THREE.Vector3(
+          x + (rnd() - 0.5) * size * 1.4,
+          baseM + s * 0.35,
+          z + (rnd() - 0.5) * size * 1.4,
+        ),
         new THREE.Quaternion(),
         new THREE.Vector3(s, s * 0.45, s * 0.9),
       );
@@ -500,7 +610,16 @@ function disposeObject(root: THREE.Object3D) {
   });
 }
 
-export function World3D({ engine, origin, towerAirport, landmarks, camera, quality, look, className }: Props) {
+export function World3D({
+  engine,
+  origin,
+  towerAirport,
+  landmarks,
+  camera,
+  quality,
+  look,
+  className,
+}: Props) {
   const host = useRef<HTMLDivElement>(null);
   const camRef = useRef<CameraMode>(camera);
   const lookRef = useRef(look ?? { yaw: 0, pitch: 0 });
@@ -510,7 +629,10 @@ export function World3D({ engine, origin, towerAirport, landmarks, camera, quali
   useEffect(() => {
     const el = host.current;
     if (!el) return;
-    const renderer = new THREE.WebGLRenderer({ antialias: quality !== "low", powerPreference: "high-performance" });
+    const renderer = new THREE.WebGLRenderer({
+      antialias: quality !== "low",
+      powerPreference: "high-performance",
+    });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, quality === "high" ? 2 : 1.25));
     renderer.setSize(el.clientWidth, el.clientHeight);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -518,7 +640,12 @@ export function World3D({ engine, origin, towerAirport, landmarks, camera, quali
     renderer.domElement.style.display = "block";
 
     const scene = new THREE.Scene();
-    const cam = new THREE.PerspectiveCamera(62, el.clientWidth / Math.max(1, el.clientHeight), 0.3, 120000);
+    const cam = new THREE.PerspectiveCamera(
+      62,
+      el.clientWidth / Math.max(1, el.clientHeight),
+      0.3,
+      120000,
+    );
     const hemi = new THREE.HemisphereLight(0xdfe9ff, 0x3a4a2a, 0.9);
     const sun = new THREE.DirectionalLight(0xffffff, 1.4);
     scene.add(hemi, sun);
@@ -530,7 +657,10 @@ export function World3D({ engine, origin, towerAirport, landmarks, camera, quali
     scene.add(model.group);
 
     // Far ground plane beyond the terrain mesh
-    const far = new THREE.Mesh(new THREE.PlaneGeometry(400000, 400000).rotateX(-Math.PI / 2), new THREE.MeshLambertMaterial({ color: 0x3f5233 }));
+    const far = new THREE.Mesh(
+      new THREE.PlaneGeometry(400000, 400000).rotateX(-Math.PI / 2),
+      new THREE.MeshLambertMaterial({ color: 0x3f5233 }),
+    );
     far.position.y = -3;
     scene.add(far);
 
@@ -570,16 +700,28 @@ export function World3D({ engine, origin, towerAirport, landmarks, camera, quali
       const ground = terrainElevationFt(lm.lat, lm.lon);
       const p = toWorld(origin, lm.lat, lm.lon, ground);
       if (lm.kind === "tower") {
-        const t = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 2.5, lm.heightFt * M, 6), new THREE.MeshLambertMaterial({ color: 0xc23b2b }));
+        const t = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.8, 2.5, lm.heightFt * M, 6),
+          new THREE.MeshLambertMaterial({ color: 0xc23b2b }),
+        );
         t.position.set(p.x, p.y + (lm.heightFt * M) / 2, p.z);
-        const beacon = new THREE.Mesh(new THREE.SphereGeometry(2.5, 8, 8), new THREE.MeshBasicMaterial({ color: 0xff3020 }));
+        const beacon = new THREE.Mesh(
+          new THREE.SphereGeometry(2.5, 8, 8),
+          new THREE.MeshBasicMaterial({ color: 0xff3020 }),
+        );
         beacon.position.set(p.x, p.y + lm.heightFt * M + 2, p.z);
         lmGroup.add(t, beacon);
       } else {
         const col = lm.kind === "fix" ? 0x22d3ee : 0xf59e0b;
-        const pole = new THREE.Mesh(new THREE.CylinderGeometry(3, 3, 120, 6), new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.55 }));
+        const pole = new THREE.Mesh(
+          new THREE.CylinderGeometry(3, 3, 120, 6),
+          new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.55 }),
+        );
         pole.position.set(p.x, p.y + 60 + (lm.kind === "point" ? lm.heightFt * M * 0.1 : 0), p.z);
-        const ring = new THREE.Mesh(new THREE.TorusGeometry(220, 6, 6, 40), new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.6 }));
+        const ring = new THREE.Mesh(
+          new THREE.TorusGeometry(220, 6, 6, 40),
+          new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.6 }),
+        );
         ring.rotation.x = Math.PI / 2;
         ring.position.set(p.x, p.y + 2, p.z);
         lmGroup.add(pole, ring);
@@ -598,7 +740,10 @@ export function World3D({ engine, origin, towerAirport, landmarks, camera, quali
       rainPos.set([x, y, z, x, y - 2.2, z], i * 6);
     }
     rainGeo.setAttribute("position", new THREE.BufferAttribute(rainPos, 3));
-    const rain = new THREE.LineSegments(rainGeo, new THREE.LineBasicMaterial({ color: 0xaab4c4, transparent: true, opacity: 0.35 }));
+    const rain = new THREE.LineSegments(
+      rainGeo,
+      new THREE.LineBasicMaterial({ color: 0xaab4c4, transparent: true, opacity: 0.35 }),
+    );
     rain.visible = false;
     scene.add(rain);
 
@@ -626,7 +771,10 @@ export function World3D({ engine, origin, towerAirport, landmarks, camera, quali
     const onWheel = (e: WheelEvent) => {
       if (camRef.current !== "orbit") return;
       e.preventDefault();
-      orbitDist = Math.max(perf.wingSpanFt * M * 0.8, Math.min(800, orbitDist * (1 + Math.sign(e.deltaY) * 0.1)));
+      orbitDist = Math.max(
+        perf.wingSpanFt * M * 0.8,
+        Math.min(800, orbitDist * (1 + Math.sign(e.deltaY) * 0.1)),
+      );
     };
     renderer.domElement.addEventListener("pointerdown", onDown);
     window.addEventListener("pointerup", onUp);
@@ -646,7 +794,11 @@ export function World3D({ engine, origin, towerAirport, landmarks, camera, quali
       const rw0 = towerAirport.runways[0];
       const c = toWorld(origin, towerAirport.lat, towerAirport.lon, towerAirport.elevationFt);
       if (!rw0) return c.setY(c.y + 35);
-      const right = new THREE.Vector3(Math.cos(toRad(rw0.ends[0].trueHeading)), 0, Math.sin(toRad(rw0.ends[0].trueHeading)));
+      const right = new THREE.Vector3(
+        Math.cos(toRad(rw0.ends[0].trueHeading)),
+        0,
+        Math.sin(toRad(rw0.ends[0].trueHeading)),
+      );
       return c.addScaledVector(right, (rw0.widthFt / 2 + 900) * M).setY(c.y + 34);
     })();
 
@@ -687,20 +839,32 @@ export function World3D({ engine, origin, towerAirport, landmarks, camera, quali
       const dayF = Math.max(0, Math.min(1, sunAlt * 2 + 0.25));
       hemi.intensity = 0.12 + dayF * (overcast ? 0.7 : 0.85);
       sun.intensity = dayF * (overcast ? 0.35 : 1.4);
-      sun.position.set(Math.cos(((w.timeOfDay - 6) / 12) * Math.PI) * 1000, Math.max(50, sunAlt * 1000), -400).add(pos);
+      sun.position
+        .set(Math.cos(((w.timeOfDay - 6) / 12) * Math.PI) * 1000, Math.max(50, sunAlt * 1000), -400)
+        .add(pos);
       sun.target.position.copy(pos);
       const visM = Math.min(60000, Math.max(200, w.visibilitySm * 1609));
       const base = w.cloudBaseFt !== null ? (a.groundElevFt + w.cloudBaseFt) * M : Infinity;
-      const tops = w.cloudBaseFt !== null ? (a.groundElevFt + (w.cloudTopsFt ?? (w.cloudBaseFt + 3000))) * M : -Infinity;
+      const tops =
+        w.cloudBaseFt !== null
+          ? (a.groundElevFt + (w.cloudTopsFt ?? w.cloudBaseFt + 3000)) * M
+          : -Infinity;
       const inCloud = overcast && pos.y > base - 5 && pos.y < tops;
       const fog = scene.fog as THREE.Fog;
       if (inCloud) {
-        fog.color.setRGB(0.62 * (0.3 + dayF * 0.7), 0.65 * (0.3 + dayF * 0.7), 0.69 * (0.3 + dayF * 0.7));
+        fog.color.setRGB(
+          0.62 * (0.3 + dayF * 0.7),
+          0.65 * (0.3 + dayF * 0.7),
+          0.69 * (0.3 + dayF * 0.7),
+        );
         fog.near = 2;
         fog.far = 70;
         scene.background = fog.color.clone();
       } else {
-        fog.color.copy(sky).lerp(new THREE.Color(0xc9d2dc), overcast ? 0.4 : 0.25).multiplyScalar(0.35 + dayF * 0.65);
+        fog.color
+          .copy(sky)
+          .lerp(new THREE.Color(0xc9d2dc), overcast ? 0.4 : 0.25)
+          .multiplyScalar(0.35 + dayF * 0.65);
         fog.near = visM * 0.05;
         fog.far = visM * 1.15;
         scene.background = sky.clone().multiplyScalar(0.3 + dayF * 0.7);
@@ -713,12 +877,19 @@ export function World3D({ engine, origin, towerAirport, landmarks, camera, quali
         for (const papi of ag.papis) {
           const dNm = distanceNm(papi.threshold.lat, papi.threshold.lon, a.lat, a.lon);
           if (dNm > 8) continue;
-          const papiPt = destinationPoint(papi.threshold.lat, papi.threshold.lon, papi.heading, 1000 / FT_PER_NM);
+          const papiPt = destinationPoint(
+            papi.threshold.lat,
+            papi.threshold.lon,
+            papi.heading,
+            1000 / FT_PER_NM,
+          );
           const distFt = Math.max(1, distanceNm(papiPt.lat, papiPt.lon, a.lat, a.lon) * FT_PER_NM);
           const angle = (Math.atan2(a.altMslFt - papi.elevFt, distFt) * 180) / Math.PI;
           const settings = [2.5, 2.83, 3.17, 3.5];
           papi.lights.forEach((l, i) => {
-            (l.material as THREE.MeshBasicMaterial).color.set(angle > settings[i]! ? 0xffffff : 0xff2020);
+            (l.material as THREE.MeshBasicMaterial).color.set(
+              angle > settings[i]! ? 0xffffff : 0xff2020,
+            );
           });
         }
       }
@@ -749,11 +920,18 @@ export function World3D({ engine, origin, towerAirport, landmarks, camera, quali
       const mode = camRef.current;
       model.group.visible = mode !== "cockpit";
       if (mode === "cockpit") {
-        const eye = new THREE.Vector3(0, perf.eyeHeightFt * M * 0.35, -perf.wingSpanFt * M * 0.12).applyEuler(euler).add(model.group.position);
+        const eye = new THREE.Vector3(0, perf.eyeHeightFt * M * 0.35, -perf.wingSpanFt * M * 0.12)
+          .applyEuler(euler)
+          .add(model.group.position);
         if (a.onGround) eye.y = pos.y + perf.eyeHeightFt * M;
         cam.position.copy(eye);
         const lk = lookRef.current;
-        const e2 = new THREE.Euler(toRad(a.pitch) + toRad(lk.pitch), -toRad(a.heading) - toRad(lk.yaw), -toRad(a.bank), "YXZ");
+        const e2 = new THREE.Euler(
+          toRad(a.pitch) + toRad(lk.pitch),
+          -toRad(a.heading) - toRad(lk.yaw),
+          -toRad(a.bank),
+          "YXZ",
+        );
         cam.setRotationFromEuler(e2);
         cam.fov = 64;
       } else if (mode === "chase") {
@@ -769,7 +947,11 @@ export function World3D({ engine, origin, towerAirport, landmarks, camera, quali
         cam.lookAt(model.group.position);
         cam.fov = 58;
       } else if (mode === "orbit") {
-        const off = new THREE.Vector3(Math.sin(orbitYaw) * Math.cos(orbitPitch), Math.sin(orbitPitch), Math.cos(orbitYaw) * Math.cos(orbitPitch)).multiplyScalar(orbitDist);
+        const off = new THREE.Vector3(
+          Math.sin(orbitYaw) * Math.cos(orbitPitch),
+          Math.sin(orbitPitch),
+          Math.cos(orbitYaw) * Math.cos(orbitPitch),
+        ).multiplyScalar(orbitDist);
         cam.position.copy(model.group.position).add(off);
         cam.lookAt(model.group.position);
         cam.fov = 55;

@@ -4,7 +4,13 @@ import { PlaneTakeoff } from "lucide-react";
 import { Page, PageHeader, Notice } from "@/components/app/page";
 import { SimSetup } from "@/components/sim/SimSetup";
 import { FlightSession } from "@/components/sim/FlightSession";
-import { getScenario, SCENARIOS, type ScenarioConfig, type ScenarioDef, type BuiltScenario } from "@/sim/scenarios";
+import {
+  getScenario,
+  SCENARIOS,
+  type ScenarioConfig,
+  type ScenarioDef,
+  type BuiltScenario,
+} from "@/sim/scenarios";
 import { getAirport, getNavaid } from "@/lib/data/airports";
 import { getState, useStore } from "@/lib/store";
 import type { Waypoint } from "@/sim/types";
@@ -18,7 +24,8 @@ interface SimSearch {
   checkride?: string;
 }
 
-const str = (v: unknown) => (typeof v === "string" && v.length > 0 && v.length < 64 ? v : undefined);
+const str = (v: unknown) =>
+  typeof v === "string" && v.length > 0 && v.length < 64 ? v : undefined;
 
 export const Route = createFileRoute("/simulator")({
   validateSearch: (s: Record<string, unknown>): SimSearch => {
@@ -33,7 +40,11 @@ export const Route = createFileRoute("/simulator")({
   head: () => ({
     meta: [
       { title: "Flight Simulator — TeachX" },
-      { name: "description", content: "3D browser flight simulator with real physics, VFR/IFR/emergency training scenarios, scored objectives and debriefs." },
+      {
+        name: "description",
+        content:
+          "3D browser flight simulator with real physics, VFR/IFR/emergency training scenarios, scored objectives and debriefs.",
+      },
     ],
   }),
   component: SimulatorPage,
@@ -66,17 +77,27 @@ function SimulatorPage() {
   const search = Route.useSearch();
   const navigate = useNavigate();
   const preferred = useStore((s) => s.settings.preferredAircraft);
-  const plan = useStore((s) => (search.plan ? s.flightPlans.find((p) => p.id === search.plan) : undefined));
-  const [session, setSession] = useState<{ scenario: ScenarioDef; config: ScenarioConfig; run: number } | null>(null);
+  const plan = useStore((s) =>
+    search.plan ? s.flightPlans.find((p) => p.id === search.plan) : undefined,
+  );
+  const [session, setSession] = useState<{
+    scenario: ScenarioDef;
+    config: ScenarioConfig;
+    run: number;
+  } | null>(null);
 
   const initial = useMemo(() => {
     const sc = getScenario(search.scenario) ?? SCENARIOS[0]!;
-    const config: ScenarioConfig = { aircraftId: search.aircraft ?? plan?.aircraftId ?? preferred ?? sc.defaultAircraft };
+    const config: ScenarioConfig = {
+      aircraftId: search.aircraft ?? plan?.aircraftId ?? preferred ?? sc.defaultAircraft,
+    };
     const dep = search.airport ?? plan?.departure;
     const dst = search.dest ?? plan?.destination;
     if (dep && getAirport(dep)) config.airport = getAirport(dep)!.icao;
     if (dst && getAirport(dst)) config.destination = getAirport(dst)!.icao;
-    if (!search.aircraft && !plan && sc.defaultAircraft) config.aircraftId = sc.category === "free" ? preferred || sc.defaultAircraft : sc.defaultAircraft;
+    if (!search.aircraft && !plan && sc.defaultAircraft)
+      config.aircraftId =
+        sc.category === "free" ? preferred || sc.defaultAircraft : sc.defaultAircraft;
     return { scenarioId: sc.id, config };
   }, [search.scenario, search.aircraft, search.airport, search.dest, plan, preferred]);
 
@@ -90,7 +111,10 @@ function SimulatorPage() {
         prev?.(e);
         e.loadFlightPlan(wps);
       };
-      b.instructions = [...b.instructions, `Flight plan loaded: ${wps.map((w) => w.id).join(" → ")}`];
+      b.instructions = [
+        ...b.instructions,
+        `Flight plan loaded: ${wps.map((w) => w.id).join(" → ")}`,
+      ];
     }
     return b;
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -120,7 +144,8 @@ function SimulatorPage() {
       />
       {search.checkride ? (
         <Notice className="mb-4" title="Checkride in progress.">
-          Complete this flight and use “Return to checkride” in the debrief — your score is attached to your mock checkride automatically.
+          Complete this flight and use “Return to checkride” in the debrief — your score is attached
+          to your mock checkride automatically.
         </Notice>
       ) : null}
       {plan ? (
@@ -133,13 +158,19 @@ function SimulatorPage() {
         initial={initial}
         onStart={(scenario, config) => {
           setSession({ scenario, config, run: Date.now() });
-          if (search.scenario !== scenario.id) void navigate({ to: "/simulator", search: { ...search, scenario: scenario.id }, replace: true });
+          if (search.scenario !== scenario.id)
+            void navigate({
+              to: "/simulator",
+              search: { ...search, scenario: scenario.id },
+              replace: true,
+            });
         }}
       />
       <p className="mt-6 text-[11px] leading-relaxed text-muted-foreground">
-        Flight model: simplified point-mass aerodynamics with angle-of-attack based lift, stall, propeller/jet thrust, density altitude, wind, gusts and
-        turbulence. Aircraft numbers are educational approximations — not POH/AFM data. Scenery, terrain and approach procedures are synthetic training
-        representations and must not be used for real-world navigation.
+        Flight model: simplified point-mass aerodynamics with angle-of-attack based lift, stall,
+        propeller/jet thrust, density altitude, wind, gusts and turbulence. Aircraft numbers are
+        educational approximations — not POH/AFM data. Scenery, terrain and approach procedures are
+        synthetic training representations and must not be used for real-world navigation.
       </p>
     </Page>
   );

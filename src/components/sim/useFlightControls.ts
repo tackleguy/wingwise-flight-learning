@@ -15,7 +15,13 @@ const CAMERAS: CameraMode[] = ["cockpit", "chase", "orbit", "tower"];
 
 export function useFlightControls(
   engine: SimEngine | null,
-  opts: { invertPitch: boolean; sensitivity: number; enabled: boolean; onCamera: (c: CameraMode | "next") => void; onPause: () => void },
+  opts: {
+    invertPitch: boolean;
+    sensitivity: number;
+    enabled: boolean;
+    onCamera: (c: CameraMode | "next") => void;
+    onPause: () => void;
+  },
 ) {
   const optsRef = useRef(opts);
   optsRef.current = opts;
@@ -27,7 +33,13 @@ export function useFlightControls(
     const held = new Set<string>();
     const isTyping = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement | null;
-      return !!t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT" || t.isContentEditable);
+      return (
+        !!t &&
+        (t.tagName === "INPUT" ||
+          t.tagName === "TEXTAREA" ||
+          t.tagName === "SELECT" ||
+          t.isContentEditable)
+      );
     };
     const down = (e: KeyboardEvent) => {
       if (isTyping(e)) return;
@@ -69,7 +81,30 @@ export function useFlightControls(
           engine.setControls({ trim: c.trim + 0.03 });
           return handled();
       }
-      if (["w", "s", "a", "d", "q", "e", "b", ".", "+", "=", "-", "_", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Shift", "Control", "PageUp", "PageDown"].includes(k)) {
+      if (
+        [
+          "w",
+          "s",
+          "a",
+          "d",
+          "q",
+          "e",
+          "b",
+          ".",
+          "+",
+          "=",
+          "-",
+          "_",
+          "ArrowUp",
+          "ArrowDown",
+          "ArrowLeft",
+          "ArrowRight",
+          "Shift",
+          "Control",
+          "PageUp",
+          "PageDown",
+        ].includes(k)
+      ) {
         held.add(k);
         if (k.startsWith("Arrow") || k === "PageUp" || k === "PageDown") e.preventDefault();
       }
@@ -96,14 +131,23 @@ export function useFlightControls(
       const push = held.has("w") || held.has("ArrowUp");
       const left = held.has("a") || held.has("ArrowLeft");
       const right = held.has("d") || held.has("ArrowRight");
-      const ramp = (cur: number, target: number, rate: number) => cur + Math.max(-rate * dt, Math.min(rate * dt, target - cur));
+      const ramp = (cur: number, target: number, rate: number) =>
+        cur + Math.max(-rate * dt, Math.min(rate * dt, target - cur));
       const v = virtual.current;
       const kbElev = (pull ? 0.75 : 0) - (push ? 0.75 : 0);
       const kbAil = (right ? 0.85 : 0) - (left ? 0.85 : 0);
       const elevTarget = v.active ? v.y : kbElev * inv * sens;
       const ailTarget = v.active ? v.x : kbAil * sens;
-      state.elev = ramp(state.elev, Math.max(-1, Math.min(1, elevTarget)), pull || push || v.active ? 1.6 : 2.5);
-      state.ail = ramp(state.ail, Math.max(-1, Math.min(1, ailTarget)), left || right || v.active ? 2.5 : 3.5);
+      state.elev = ramp(
+        state.elev,
+        Math.max(-1, Math.min(1, elevTarget)),
+        pull || push || v.active ? 1.6 : 2.5,
+      );
+      state.ail = ramp(
+        state.ail,
+        Math.max(-1, Math.min(1, ailTarget)),
+        left || right || v.active ? 2.5 : 3.5,
+      );
       const rudTarget = (held.has("e") ? 0.9 : 0) - (held.has("q") ? 0.9 : 0);
       state.rud = ramp(state.rud, rudTarget, 2.5);
       const c = engine.getControls();

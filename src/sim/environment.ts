@@ -43,46 +43,161 @@ export function speedOfSoundKt(oatC: number): number {
 
 // ---------------------------------------------------------------- weather
 
-export const WEATHER_PRESETS: Record<string, { label: string; description: string; weather: Omit<WeatherState, "timeOfDay"> }> = {
+export const WEATHER_PRESETS: Record<
+  string,
+  { label: string; description: string; weather: Omit<WeatherState, "timeOfDay"> }
+> = {
   cavu: {
     label: "Clear (CAVU)",
     description: "Ceiling and visibility unlimited, light winds.",
-    weather: { windDir: 280, windKt: 6, gustKt: 0, windAloftDir: 290, windAloftKt: 15, turbulence: 0, visibilitySm: 30, cloudBaseFt: null, cloudTopsFt: null, cloudCover: "CLR", precipitation: "none", tempC: 18, qnhInHg: 30.02 },
+    weather: {
+      windDir: 280,
+      windKt: 6,
+      gustKt: 0,
+      windAloftDir: 290,
+      windAloftKt: 15,
+      turbulence: 0,
+      visibilitySm: 30,
+      cloudBaseFt: null,
+      cloudTopsFt: null,
+      cloudCover: "CLR",
+      precipitation: "none",
+      tempC: 18,
+      qnhInHg: 30.02,
+    },
   },
   scattered: {
     label: "Scattered clouds",
     description: "VFR with scattered cumulus at 4,500 ft and a light breeze.",
-    weather: { windDir: 300, windKt: 10, gustKt: 0, windAloftDir: 310, windAloftKt: 20, turbulence: 1, visibilitySm: 10, cloudBaseFt: 4500, cloudTopsFt: 6500, cloudCover: "SCT", precipitation: "none", tempC: 20, qnhInHg: 29.98 },
+    weather: {
+      windDir: 300,
+      windKt: 10,
+      gustKt: 0,
+      windAloftDir: 310,
+      windAloftKt: 20,
+      turbulence: 1,
+      visibilitySm: 10,
+      cloudBaseFt: 4500,
+      cloudTopsFt: 6500,
+      cloudCover: "SCT",
+      precipitation: "none",
+      tempC: 20,
+      qnhInHg: 29.98,
+    },
   },
   gusty: {
     label: "Gusty crosswind",
     description: "Strong crosswind gusting — practice crosswind technique.",
-    weather: { windDir: 240, windKt: 15, gustKt: 24, windAloftDir: 250, windAloftKt: 30, turbulence: 2, visibilitySm: 10, cloudBaseFt: 5000, cloudTopsFt: 7000, cloudCover: "FEW", precipitation: "none", tempC: 16, qnhInHg: 29.85 },
+    weather: {
+      windDir: 240,
+      windKt: 15,
+      gustKt: 24,
+      windAloftDir: 250,
+      windAloftKt: 30,
+      turbulence: 2,
+      visibilitySm: 10,
+      cloudBaseFt: 5000,
+      cloudTopsFt: 7000,
+      cloudCover: "FEW",
+      precipitation: "none",
+      tempC: 16,
+      qnhInHg: 29.85,
+    },
   },
   mvfr: {
     label: "Marginal VFR",
     description: "Broken ceiling 2,000 ft, visibility 4 SM in haze.",
-    weather: { windDir: 270, windKt: 8, gustKt: 0, windAloftDir: 280, windAloftKt: 18, turbulence: 1, visibilitySm: 4, cloudBaseFt: 2000, cloudTopsFt: 4500, cloudCover: "BKN", precipitation: "none", tempC: 14, qnhInHg: 29.9 },
+    weather: {
+      windDir: 270,
+      windKt: 8,
+      gustKt: 0,
+      windAloftDir: 280,
+      windAloftKt: 18,
+      turbulence: 1,
+      visibilitySm: 4,
+      cloudBaseFt: 2000,
+      cloudTopsFt: 4500,
+      cloudCover: "BKN",
+      precipitation: "none",
+      tempC: 14,
+      qnhInHg: 29.9,
+    },
   },
   ifr: {
     label: "IFR — low overcast",
     description: "Overcast 600 ft, visibility 2 SM in mist. Instrument conditions.",
-    weather: { windDir: 290, windKt: 9, gustKt: 0, windAloftDir: 300, windAloftKt: 25, turbulence: 1, visibilitySm: 2, cloudBaseFt: 600, cloudTopsFt: 4000, cloudCover: "OVC", precipitation: "rain", tempC: 12, qnhInHg: 29.82 },
+    weather: {
+      windDir: 290,
+      windKt: 9,
+      gustKt: 0,
+      windAloftDir: 300,
+      windAloftKt: 25,
+      turbulence: 1,
+      visibilitySm: 2,
+      cloudBaseFt: 600,
+      cloudTopsFt: 4000,
+      cloudCover: "OVC",
+      precipitation: "rain",
+      tempC: 12,
+      qnhInHg: 29.82,
+    },
   },
   lifr: {
     label: "LIFR — fog",
     description: "Overcast 200 ft, visibility 1/2 SM in fog. At/below ILS minimums.",
-    weather: { windDir: 0, windKt: 3, gustKt: 0, windAloftDir: 270, windAloftKt: 15, turbulence: 0, visibilitySm: 0.5, cloudBaseFt: 200, cloudTopsFt: 1500, cloudCover: "OVC", precipitation: "none", tempC: 10, qnhInHg: 30.05 },
+    weather: {
+      windDir: 0,
+      windKt: 3,
+      gustKt: 0,
+      windAloftDir: 270,
+      windAloftKt: 15,
+      turbulence: 0,
+      visibilitySm: 0.5,
+      cloudBaseFt: 200,
+      cloudTopsFt: 1500,
+      cloudCover: "OVC",
+      precipitation: "none",
+      tempC: 10,
+      qnhInHg: 30.05,
+    },
   },
   storm: {
     label: "Rain showers & turbulence",
     description: "Moderate rain, gusty winds and moderate turbulence.",
-    weather: { windDir: 200, windKt: 14, gustKt: 26, windAloftDir: 220, windAloftKt: 35, turbulence: 3, visibilitySm: 3, cloudBaseFt: 1500, cloudTopsFt: 20000, cloudCover: "BKN", precipitation: "rain", tempC: 15, qnhInHg: 29.62 },
+    weather: {
+      windDir: 200,
+      windKt: 14,
+      gustKt: 26,
+      windAloftDir: 220,
+      windAloftKt: 35,
+      turbulence: 3,
+      visibilitySm: 3,
+      cloudBaseFt: 1500,
+      cloudTopsFt: 20000,
+      cloudCover: "BKN",
+      precipitation: "rain",
+      tempC: 15,
+      qnhInHg: 29.62,
+    },
   },
   hot: {
     label: "Hot & high",
     description: "34°C and calm — high density altitude reduces performance.",
-    weather: { windDir: 210, windKt: 4, gustKt: 0, windAloftDir: 230, windAloftKt: 12, turbulence: 1, visibilitySm: 25, cloudBaseFt: null, cloudTopsFt: null, cloudCover: "CLR", precipitation: "none", tempC: 34, qnhInHg: 29.88 },
+    weather: {
+      windDir: 210,
+      windKt: 4,
+      gustKt: 0,
+      windAloftDir: 230,
+      windAloftKt: 12,
+      turbulence: 1,
+      visibilitySm: 25,
+      cloudBaseFt: null,
+      cloudTopsFt: null,
+      cloudCover: "CLR",
+      precipitation: "none",
+      tempC: 34,
+      qnhInHg: 29.88,
+    },
   },
 };
 
@@ -90,7 +205,7 @@ export const WEATHER_PRESETS: Record<string, { label: string; description: strin
 export function windAt(w: WeatherState, aglFt: number): { dir: number; kt: number } {
   const t = Math.min(1, Math.max(0, aglFt / 6000));
   // Surface friction: wind near the ground is reduced and backed.
-  const dir = norm360(w.windDir + t * ((((w.windAloftDir - w.windDir + 540) % 360) - 180)));
+  const dir = norm360(w.windDir + t * (((w.windAloftDir - w.windDir + 540) % 360) - 180));
   const kt = w.windKt + (w.windAloftKt - w.windKt) * t;
   return { dir, kt };
 }
@@ -148,8 +263,8 @@ export function terrainElevationFt(lat: number, lon: number): number {
   }
   const base = wsum > 0 ? esum / wsum : 0;
   // Hills: scale in nm; amplitude grows away from airports.
-  const nx = lon * 60 * Math.cos(toRad(lat)) / 6;
-  const ny = lat * 60 / 6;
+  const nx = (lon * 60 * Math.cos(toRad(lat))) / 6;
+  const ny = (lat * 60) / 6;
   const n = valueNoise2(nx, ny) * 0.65 + valueNoise2(nx * 2.3, ny * 2.3) * 0.35;
   const ridge = Math.max(0, n - 0.45) / 0.55; // only the upper part of the noise forms hills
   const fade = nearest === Infinity ? 1 : Math.min(1, Math.max(0, (nearest - 3) / 5));

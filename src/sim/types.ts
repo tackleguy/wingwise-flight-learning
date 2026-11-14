@@ -29,7 +29,14 @@ export interface Controls {
   /** −1..1 elevator trim (+ = nose up). */
   trim: number;
   fuelSelector: "both" | "left" | "right" | "off";
-  lights: { nav: boolean; beacon: boolean; strobe: boolean; landing: boolean; taxi: boolean; panel: boolean };
+  lights: {
+    nav: boolean;
+    beacon: boolean;
+    strobe: boolean;
+    landing: boolean;
+    taxi: boolean;
+    panel: boolean;
+  };
   masterBattery: boolean;
   alternator: boolean;
   avionicsMaster: boolean;
@@ -204,7 +211,15 @@ export interface NavOutputs {
   nav2: NavReceiverOutput;
   gps: GpsOutput;
   /** The selected CDI source projected for the HSI. */
-  hsi: { source: Radios["cdiSource"]; course: number; cdiDots: number; toFrom: "TO" | "FROM" | "OFF"; gsDots: number; gsValid: boolean; label: string };
+  hsi: {
+    source: Radios["cdiSource"];
+    course: number;
+    cdiDots: number;
+    toFrom: "TO" | "FROM" | "OFF";
+    gsDots: number;
+    gsValid: boolean;
+    label: string;
+  };
   adf: { valid: boolean; ident: string; relBearing: number };
   marker: "OM" | "MM" | "IM" | null;
 }
@@ -295,7 +310,16 @@ export interface Indicated {
 
 export interface SimEvent {
   t: number;
-  type: "touchdown" | "liftoff" | "stall" | "crash" | "overspeed" | "failure" | "engine" | "info" | "gear-warning";
+  type:
+    | "touchdown"
+    | "liftoff"
+    | "stall"
+    | "crash"
+    | "overspeed"
+    | "failure"
+    | "engine"
+    | "info"
+    | "gear-warning";
   message: string;
   data?: Record<string, number | string | boolean>;
 }

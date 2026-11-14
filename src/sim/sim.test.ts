@@ -12,7 +12,16 @@ function onRunway(perfId: string) {
     perfId,
     magVar: ap.magVar,
     weather: calm,
-    start: { lat: re.end.threshold.lat, lon: re.end.threshold.lon, altMslFt: ap.elevationFt, heading: re.end.trueHeading, iasKt: 0, onGround: true, groundElevFt: ap.elevationFt, engineRunning: true },
+    start: {
+      lat: re.end.threshold.lat,
+      lon: re.end.threshold.lon,
+      altMslFt: ap.elevationFt,
+      heading: re.end.trueHeading,
+      iasKt: 0,
+      onGround: true,
+      groundElevFt: ap.elevationFt,
+      engineRunning: true,
+    },
   });
 }
 
@@ -38,7 +47,14 @@ describe("flight model", () => {
       else sim.setControls({ elevator: 0, trim: sim.trimForSpeed(74) });
     });
     const s1 = sim.getSnapshot().aircraft;
-    console.log("after takeoff", { liftoffIas, ias: s1.iasKt.toFixed(0), agl: s1.aglFt.toFixed(0), vs: s1.vsFpm.toFixed(0), pitch: s1.pitch.toFixed(1), crash: s1.crashReason });
+    console.log("after takeoff", {
+      liftoffIas,
+      ias: s1.iasKt.toFixed(0),
+      agl: s1.aglFt.toFixed(0),
+      vs: s1.vsFpm.toFixed(0),
+      pitch: s1.pitch.toFixed(1),
+      crash: s1.crashReason,
+    });
     expect(s1.onGround).toBe(false);
     expect(liftoffIas).toBeGreaterThan(40);
     expect(liftoffIas).toBeLessThan(70);
@@ -46,20 +62,47 @@ describe("flight model", () => {
     sim.setControls({ elevator: 0, trim: sim.trimForSpeed(74) });
     run(sim, 60);
     const s2 = sim.getSnapshot().aircraft;
-    console.log("climb", { ias: s2.iasKt.toFixed(0), vs: s2.vsFpm.toFixed(0), alt: s2.altMslFt.toFixed(0), pitch: s2.pitch.toFixed(1) });
+    console.log("climb", {
+      ias: s2.iasKt.toFixed(0),
+      vs: s2.vsFpm.toFixed(0),
+      alt: s2.altMslFt.toFixed(0),
+      pitch: s2.pitch.toFixed(1),
+    });
     expect(s2.vsFpm).toBeGreaterThan(400);
     expect(s2.vsFpm).toBeLessThan(1100);
     // Cruise: 70% power, trim for level
     sim.setControls({ throttle: 0.72, trim: sim.trimForSpeed(115) });
     run(sim, 120);
     const s3 = sim.getSnapshot().aircraft;
-    console.log("cruise", { ias: s3.iasKt.toFixed(0), tas: s3.tasKt.toFixed(0), vs: s3.vsFpm.toFixed(0), alt: s3.altMslFt.toFixed(0), rpm: s3.rpm.toFixed(0), ff: s3.fuelFlowGph.toFixed(1) });
+    console.log("cruise", {
+      ias: s3.iasKt.toFixed(0),
+      tas: s3.tasKt.toFixed(0),
+      vs: s3.vsFpm.toFixed(0),
+      alt: s3.altMslFt.toFixed(0),
+      rpm: s3.rpm.toFixed(0),
+      ff: s3.fuelFlowGph.toFixed(1),
+    });
     expect(s3.crashed).toBe(false);
   });
 
   it("autopilot holds altitude and heading", () => {
     const ap = getAirport("KSFO")!;
-    const sim = new SimEngine({ perfId: "c172", magVar: ap.magVar, weather: calm, start: { lat: ap.lat, lon: ap.lon, altMslFt: 4000, heading: 90, iasKt: 105, onGround: false, groundElevFt: 13, engineRunning: true, throttle: 0.9 } });
+    const sim = new SimEngine({
+      perfId: "c172",
+      magVar: ap.magVar,
+      weather: calm,
+      start: {
+        lat: ap.lat,
+        lon: ap.lon,
+        altMslFt: 4000,
+        heading: 90,
+        iasKt: 105,
+        onGround: false,
+        groundElevFt: 13,
+        engineRunning: true,
+        throttle: 0.9,
+      },
+    });
     sim.setRadios({ hdgBug: 180, altBug: 5000 });
     sim.apToggle();
     sim.apLateral("HDG");
@@ -67,7 +110,13 @@ describe("flight model", () => {
     sim.setRadios({ vsBug: 500 });
     run(sim, 240);
     const s = sim.getSnapshot();
-    console.log("AP", { hdg: s.indicated.headingMag.toFixed(0), alt: s.indicated.altFt.toFixed(0), mode: s.ap.vertical, ias: s.aircraft.iasKt.toFixed(0), bank: s.aircraft.bank.toFixed(1) });
+    console.log("AP", {
+      hdg: s.indicated.headingMag.toFixed(0),
+      alt: s.indicated.altFt.toFixed(0),
+      mode: s.ap.vertical,
+      ias: s.aircraft.iasKt.toFixed(0),
+      bank: s.aircraft.bank.toFixed(1),
+    });
     expect(Math.abs(s.indicated.headingMag - 180)).toBeLessThan(5);
     expect(Math.abs(s.indicated.altFt - 5000)).toBeLessThan(120);
     expect(s.ap.vertical).toBe("ALT");
@@ -75,7 +124,22 @@ describe("flight model", () => {
 
   it("stalls when pulled hard at idle", () => {
     const ap = getAirport("KSFO")!;
-    const sim = new SimEngine({ perfId: "c172", magVar: ap.magVar, weather: calm, start: { lat: ap.lat, lon: ap.lon, altMslFt: 5000, heading: 90, iasKt: 90, onGround: false, groundElevFt: 13, engineRunning: true, throttle: 0 } });
+    const sim = new SimEngine({
+      perfId: "c172",
+      magVar: ap.magVar,
+      weather: calm,
+      start: {
+        lat: ap.lat,
+        lon: ap.lon,
+        altMslFt: 5000,
+        heading: 90,
+        iasKt: 90,
+        onGround: false,
+        groundElevFt: 13,
+        engineRunning: true,
+        throttle: 0,
+      },
+    });
     sim.setControls({ throttle: 0, elevator: 1 });
     let stalled = false;
     let minIas = 999;
@@ -95,7 +159,12 @@ describe("flight model", () => {
     sim.setControls({ elevator: 0.6 });
     run(sim, 15);
     const a = sim.getSnapshot().aircraft;
-    console.log("737", { ias: a.iasKt.toFixed(0), agl: a.aglFt.toFixed(0), onGround: a.onGround, crash: a.crashReason });
+    console.log("737", {
+      ias: a.iasKt.toFixed(0),
+      agl: a.aglFt.toFixed(0),
+      onGround: a.onGround,
+      crash: a.crashReason,
+    });
     expect(a.onGround).toBe(false);
   });
 });

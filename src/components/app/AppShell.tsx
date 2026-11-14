@@ -54,7 +54,9 @@ function NavMenu() {
     <>
       {NAV.map((group) => (
         <SidebarGroup key={group.label} className="py-1">
-          <SidebarGroupLabel className="text-[10px] tracking-[0.16em] uppercase">{group.label}</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-[10px] tracking-[0.16em] uppercase">
+            {group.label}
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {group.items.map((item) => {
@@ -67,7 +69,11 @@ function NavMenu() {
                         onClick={() => {
                           if (isMobile) setOpenMobile(false);
                         }}
-                        className={active ? "relative before:absolute before:inset-y-1.5 before:left-0 before:w-0.5 before:rounded before:bg-primary" : ""}
+                        className={
+                          active
+                            ? "relative before:absolute before:inset-y-1.5 before:left-0 before:w-0.5 before:rounded before:bg-primary"
+                            : ""
+                        }
                       >
                         <item.icon className={active ? "text-primary" : ""} />
                         <span>{item.label}</span>
@@ -148,8 +154,8 @@ export function AppShell({ children }: { children: ReactNode }) {
         </SidebarContent>
         <SidebarFooter className="border-t border-sidebar-border">
           <p className="px-2 text-[10px] leading-snug text-muted-foreground group-data-[collapsible=icon]:hidden">
-            Educational simulator. Not a substitute for a certificated flight instructor, approved aircraft documents or
-            current FAA publications.
+            Educational simulator. Not a substitute for a certificated flight instructor, approved
+            aircraft documents or current FAA publications.
           </p>
         </SidebarFooter>
         <SidebarRail />

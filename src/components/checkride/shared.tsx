@@ -21,11 +21,21 @@ export interface StageProps {
   onSaveProgress: (notes: string[]) => void;
 }
 
-export function StageFrame({ stage, children, aside }: { stage: StageDef; children: ReactNode; aside?: ReactNode }) {
+export function StageFrame({
+  stage,
+  children,
+  aside,
+}: {
+  stage: StageDef;
+  children: ReactNode;
+  aside?: ReactNode;
+}) {
   return (
     <section className="panel overflow-hidden animate-fade-up">
       <header className="flex flex-wrap items-start gap-3 border-b bg-muted/20 px-4 py-3 sm:px-5">
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-md border border-primary/40 bg-primary/10 font-mono text-sm font-bold text-primary">{stage.number}</span>
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-md border border-primary/40 bg-primary/10 font-mono text-sm font-bold text-primary">
+          {stage.number}
+        </span>
         <div className="min-w-0 flex-1">
           <h2 className="text-lg font-semibold leading-tight">{stage.name}</h2>
           <p className="mt-0.5 text-xs text-muted-foreground">{stage.summary}</p>
@@ -66,14 +76,25 @@ export function SelectAllList({
                 revealed && "cursor-default",
               )}
             >
-              <Checkbox className="mt-0.5" checked={on} disabled={revealed} onCheckedChange={() => onToggle(it.id)} />
+              <Checkbox
+                className="mt-0.5"
+                checked={on}
+                disabled={revealed}
+                onCheckedChange={() => onToggle(it.id)}
+              />
               <span className="flex-1">
                 <span className="leading-snug">{it.label}</span>
                 {revealed ? (
                   <span className="mt-1 flex items-start gap-1 text-xs text-muted-foreground">
-                    {right ? <CheckCircle2 className="mt-px size-3.5 shrink-0 text-ok" /> : <XCircle className="mt-px size-3.5 shrink-0 text-warning" />}
+                    {right ? (
+                      <CheckCircle2 className="mt-px size-3.5 shrink-0 text-ok" />
+                    ) : (
+                      <XCircle className="mt-px size-3.5 shrink-0 text-warning" />
+                    )}
                     <span>
-                      <span className="font-medium text-foreground/80">{it.correct ? "Required/correct. " : "Not required. "}</span>
+                      <span className="font-medium text-foreground/80">
+                        {it.correct ? "Required/correct. " : "Not required. "}
+                      </span>
                       {it.why}
                     </span>
                   </span>
@@ -129,9 +150,17 @@ export function QuestionSet({
   );
 }
 
-export function questionScore(questions: QuizQuestion[], answers: (number | null)[]): { score: number; missed: QuizQuestion[] } {
+export function questionScore(
+  questions: QuizQuestion[],
+  answers: (number | null)[],
+): { score: number; missed: QuizQuestion[] } {
   const missed = questions.filter((qq, i) => answers[i] !== qq.answer);
-  return { score: questions.length ? Math.round(((questions.length - missed.length) / questions.length) * 100) : 0, missed };
+  return {
+    score: questions.length
+      ? Math.round(((questions.length - missed.length) / questions.length) * 100)
+      : 0,
+    missed,
+  };
 }
 
 export function StageResult({
@@ -147,9 +176,18 @@ export function StageResult({
 }) {
   const sat = score >= PASS_SCORE;
   return (
-    <div className={cn("mt-5 rounded-md border-l-4 bg-muted/30 px-4 py-3 animate-fade-up", sat ? "border-l-ok" : "border-l-warning")}>
+    <div
+      className={cn(
+        "mt-5 rounded-md border-l-4 bg-muted/30 px-4 py-3 animate-fade-up",
+        sat ? "border-l-ok" : "border-l-warning",
+      )}
+    >
       <div className="flex flex-wrap items-center gap-3">
-        <span className={cn("font-mono text-2xl font-bold tabular", sat ? "text-ok" : "text-warning")}>{score}</span>
+        <span
+          className={cn("font-mono text-2xl font-bold tabular", sat ? "text-ok" : "text-warning")}
+        >
+          {score}
+        </span>
         <Pill tone={sat ? "ok" : "warning"}>{sat ? "Satisfactory" : "Unsatisfactory"}</Pill>
         <span className="text-xs text-muted-foreground">Satisfactory at {PASS_SCORE} or above</span>
         <Button className="ml-auto" onClick={onContinue}>

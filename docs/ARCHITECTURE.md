@@ -4,21 +4,21 @@ TeachX is a TanStack Start (React 19 + TypeScript) application styled with Tailw
 
 ## Layout
 
-| Area | Location |
-| --- | --- |
-| App shell (sidebar, top bar) | `src/components/app/AppShell.tsx`, navigation in `src/lib/nav.ts` |
-| Shared page primitives | `src/components/app/page.tsx` |
-| Training record (progress store) | `src/lib/store.ts` |
-| Metrics & achievements | `src/lib/metrics.ts`, `src/lib/achievements.ts` |
-| Aviation data (airports, navaids, aircraft) | `src/lib/data/*` |
-| Ground-school content | `src/lib/content/*` |
-| Question bank & exam catalog | `src/lib/exams/*` |
-| Oral exam & checkride logic | `src/lib/oral/*`, `src/lib/checkride/*` |
-| ATC engine & phraseology evaluation | `src/lib/atc/*` |
-| AI provider abstraction | `src/lib/ai/*` (client) and server functions |
-| Flight simulation engine | `src/sim/*` |
-| 3D view and cockpit UI | `src/components/sim/*` |
-| Avionics instrument library | `src/components/avionics/*` |
+| Area                                        | Location                                                          |
+| ------------------------------------------- | ----------------------------------------------------------------- |
+| App shell (sidebar, top bar)                | `src/components/app/AppShell.tsx`, navigation in `src/lib/nav.ts` |
+| Shared page primitives                      | `src/components/app/page.tsx`                                     |
+| Training record (progress store)            | `src/lib/store.ts`                                                |
+| Metrics & achievements                      | `src/lib/metrics.ts`, `src/lib/achievements.ts`                   |
+| Aviation data (airports, navaids, aircraft) | `src/lib/data/*`                                                  |
+| Ground-school content                       | `src/lib/content/*`                                               |
+| Question bank & exam catalog                | `src/lib/exams/*`                                                 |
+| Oral exam & checkride logic                 | `src/lib/oral/*`, `src/lib/checkride/*`                           |
+| ATC engine & phraseology evaluation         | `src/lib/atc/*`                                                   |
+| AI provider abstraction                     | `src/lib/ai/*` (client) and server functions                      |
+| Flight simulation engine                    | `src/sim/*`                                                       |
+| 3D view and cockpit UI                      | `src/components/sim/*`                                            |
+| Avionics instrument library                 | `src/components/avionics/*`                                       |
 
 ## Simulation architecture
 
@@ -52,21 +52,21 @@ Postgres backend (Lovable Cloud) without changing the UI.
 > Database tables for this project must be created through Lovable (see `AGENTS.md`). This is the
 > blueprint to request.
 
-| Table | Key columns |
-| --- | --- |
-| `profiles` | `id (uuid, = auth user id)`, `name`, `callsign`, `home_airport`, `goal`, `settings jsonb`, `created_at` |
-| `courses` / `lessons` | static content (seeded from `src/lib/content`) — `id`, `course_id`, `module_id`, `title`, `body jsonb` |
-| `questions` / `exams` | static bank (seeded from `src/lib/exams`) |
-| `lesson_progress` | `user_id`, `lesson_id`, `completed_at` |
-| `quiz_attempts` | `id`, `user_id`, `course`, `module_id`, `score`, `total`, `final`, `created_at` |
-| `exam_attempts` | `id`, `user_id`, `exam_id`, `mode`, `score_pct`, `correct`, `incorrect`, `unanswered`, `time_used_sec`, `by_subject jsonb`, `missed_question_ids text[]`, `created_at` |
-| `flight_sessions` / `flight_logs` | `id`, `user_id`, `aircraft_id`, `departure`, `destination`, `duration_sec`, `kind`, `rules`, `scenario_id`, `landings`, `approaches`, `night`, `objectives jsonb`, `feedback jsonb`, `score`, `checkride_id`, `created_at` |
-| `atc_sessions` / `atc_transcripts` | `id`, `user_id`, `scenario_id`, `airport`, `difficulty`, `engine`, `score`, `breakdown jsonb`, `transcript jsonb`, `created_at` |
-| `oral_attempts` | `id`, `user_id`, `level`, `track_id`, `score`, `items jsonb`, `created_at` |
-| `checkride_attempts` | `id`, `user_id`, `track_id`, `stages jsonb`, `overall`, `passed`, `completed`, `created_at` |
-| `achievements_unlocked` | `user_id`, `achievement_id`, `unlocked_at` |
-| `flight_plans` | `id`, `user_id`, `rules`, `aircraft_id`, `departure`, `destination`, `alternate`, `route text[]`, `cruise_alt_ft`, `cruise_ktas`, `wind`, `fuel_gal`, `departure_time` |
-| `certificates_of_completion` | `id`, `user_id`, `track_id`, `checkride_id`, `issued_at` (training completion only — not FAA credentials) |
+| Table                              | Key columns                                                                                                                                                                                                                |
+| ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `profiles`                         | `id (uuid, = auth user id)`, `name`, `callsign`, `home_airport`, `goal`, `settings jsonb`, `created_at`                                                                                                                    |
+| `courses` / `lessons`              | static content (seeded from `src/lib/content`) — `id`, `course_id`, `module_id`, `title`, `body jsonb`                                                                                                                     |
+| `questions` / `exams`              | static bank (seeded from `src/lib/exams`)                                                                                                                                                                                  |
+| `lesson_progress`                  | `user_id`, `lesson_id`, `completed_at`                                                                                                                                                                                     |
+| `quiz_attempts`                    | `id`, `user_id`, `course`, `module_id`, `score`, `total`, `final`, `created_at`                                                                                                                                            |
+| `exam_attempts`                    | `id`, `user_id`, `exam_id`, `mode`, `score_pct`, `correct`, `incorrect`, `unanswered`, `time_used_sec`, `by_subject jsonb`, `missed_question_ids text[]`, `created_at`                                                     |
+| `flight_sessions` / `flight_logs`  | `id`, `user_id`, `aircraft_id`, `departure`, `destination`, `duration_sec`, `kind`, `rules`, `scenario_id`, `landings`, `approaches`, `night`, `objectives jsonb`, `feedback jsonb`, `score`, `checkride_id`, `created_at` |
+| `atc_sessions` / `atc_transcripts` | `id`, `user_id`, `scenario_id`, `airport`, `difficulty`, `engine`, `score`, `breakdown jsonb`, `transcript jsonb`, `created_at`                                                                                            |
+| `oral_attempts`                    | `id`, `user_id`, `level`, `track_id`, `score`, `items jsonb`, `created_at`                                                                                                                                                 |
+| `checkride_attempts`               | `id`, `user_id`, `track_id`, `stages jsonb`, `overall`, `passed`, `completed`, `created_at`                                                                                                                                |
+| `achievements_unlocked`            | `user_id`, `achievement_id`, `unlocked_at`                                                                                                                                                                                 |
+| `flight_plans`                     | `id`, `user_id`, `rules`, `aircraft_id`, `departure`, `destination`, `alternate`, `route text[]`, `cruise_alt_ft`, `cruise_ktas`, `wind`, `fuel_gal`, `departure_time`                                                     |
+| `certificates_of_completion`       | `id`, `user_id`, `track_id`, `checkride_id`, `issued_at` (training completion only — not FAA credentials)                                                                                                                  |
 
 All user tables use row-level security: `user_id = auth.uid()`.
 

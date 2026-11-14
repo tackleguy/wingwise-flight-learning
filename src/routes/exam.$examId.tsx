@@ -18,7 +18,8 @@ function validateSearch(search: Record<string, unknown>): ExamSearch {
   const out: ExamSearch = { mode: search["mode"] === "study" ? "study" : "timed" };
   const c = Number(search["count"]);
   if (Number.isFinite(c) && c >= 1) out.count = Math.min(200, Math.floor(c));
-  if (typeof search["subjects"] === "string" && search["subjects"].trim()) out.subjects = search["subjects"];
+  if (typeof search["subjects"] === "string" && search["subjects"].trim())
+    out.subjects = search["subjects"];
   if (search["review"] === "missed") out.review = "missed";
   return out;
 }
@@ -27,13 +28,18 @@ export const Route = createFileRoute("/exam/$examId")({
   validateSearch,
   head: ({ params }) => {
     const def = getExam(params.examId);
-    const name = def ? (def.category === "written" ? `${def.code} Practice Exam` : def.title) : "Practice Exam";
+    const name = def
+      ? def.category === "written"
+        ? `${def.code} Practice Exam`
+        : def.title
+      : "Practice Exam";
     return {
       meta: [
         { title: `${name} — TeachX` },
         {
           name: "description",
-          content: "Timed or study-mode practice exam with instant scoring, subject breakdown and full explanations. Unofficial study material — not FAA test questions.",
+          content:
+            "Timed or study-mode practice exam with instant scoring, subject breakdown and full explanations. Unofficial study material — not FAA test questions.",
         },
       ],
     };
@@ -60,14 +66,20 @@ function ExamPage() {
   // Snapshot the missed set once, so recording this attempt doesn't change the running exam.
   const [missedSnap, setMissedSnap] = useState<string[] | null>(null);
   useEffect(() => {
-    if (search.review === "missed" && hydrated && missedSnap === null) setMissedSnap(recentMissedIds(getState().exams));
+    if (search.review === "missed" && hydrated && missedSnap === null)
+      setMissedSnap(recentMissedIds(getState().exams));
   }, [search.review, hydrated, missedSnap]);
   const missed = search.review === "missed" ? (missedSnap ?? undefined) : undefined;
 
   if (!def) {
     return (
       <Page>
-        <EmptyState icon={FileQuestion} title="Exam not found" description={`There is no practice exam with the id "${examId}".`} action={{ to: "/practice-tests", label: "Go to Practice Test Center" }} />
+        <EmptyState
+          icon={FileQuestion}
+          title="Exam not found"
+          description={`There is no practice exam with the id "${examId}".`}
+          action={{ to: "/practice-tests", label: "Go to Practice Test Center" }}
+        />
       </Page>
     );
   }
@@ -79,7 +91,9 @@ function ExamPage() {
   if (search.review === "missed" && (!hydrated || missedSnap === null)) {
     return (
       <Page>
-        <p className="py-16 text-center text-sm text-muted-foreground">Loading your missed questions…</p>
+        <p className="py-16 text-center text-sm text-muted-foreground">
+          Loading your missed questions…
+        </p>
       </Page>
     );
   }
@@ -110,7 +124,13 @@ function ExamPage() {
           ? `${def.code} — ${def.title} (practice)`
           : `${def.title} Practice Test`;
 
-  const runKey = [examId, search.mode, search.count ?? "", search.subjects ?? "", search.review ?? ""].join("|");
+  const runKey = [
+    examId,
+    search.mode,
+    search.count ?? "",
+    search.subjects ?? "",
+    search.review ?? "",
+  ].join("|");
 
   return (
     <Page className="max-w-6xl">

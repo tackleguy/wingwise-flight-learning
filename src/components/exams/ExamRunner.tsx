@@ -4,7 +4,20 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useBlocker } from "@tanstack/react-router";
-import { AlertTriangle, ArrowLeft, ArrowRight, BookOpenCheck, CheckCircle2, ClipboardCheck, Clock, Flag, Grid3x3, Keyboard, Play, Timer } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowLeft,
+  ArrowRight,
+  BookOpenCheck,
+  CheckCircle2,
+  ClipboardCheck,
+  Clock,
+  Flag,
+  Grid3x3,
+  Keyboard,
+  Play,
+  Timer,
+} from "lucide-react";
 import type { QuizQuestion } from "@/lib/content/types";
 import { actions } from "@/lib/store";
 import { buildExam, examPool, SECONDS_PER_QUESTION, type ExamDef } from "@/lib/exams/catalog";
@@ -48,7 +61,16 @@ function timeLimitFor(def: ExamDef, n: number): number {
   return def.timeLimitMin * 60;
 }
 
-export function ExamRunner({ def, title, mode, count, subjects, onlyIds, backTo, backLabel }: ExamRunnerProps) {
+export function ExamRunner({
+  def,
+  title,
+  mode,
+  count,
+  subjects,
+  onlyIds,
+  backTo,
+  backLabel,
+}: ExamRunnerProps) {
   const poolCount = useMemo(() => {
     let pool = examPool(def, subjects);
     if (onlyIds) {
@@ -71,7 +93,11 @@ export function ExamRunner({ def, title, mode, count, subjects, onlyIds, backTo,
   const [limitSec, setLimitSec] = useState(0);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [showNav, setShowNav] = useState(false);
-  const [result, setResult] = useState<{ grade: GradeResult; timeUsedSec: number; auto: boolean } | null>(null);
+  const [result, setResult] = useState<{
+    grade: GradeResult;
+    timeUsedSec: number;
+    auto: boolean;
+  } | null>(null);
   const submittedRef = useRef(false);
 
   const inProgress = phase === "active" || phase === "review";
@@ -162,8 +188,14 @@ export function ExamRunner({ def, title, mode, count, subjects, onlyIds, backTo,
     },
     [phase, questions, idx, timed, revealed],
   );
-  const go = useCallback((i: number) => setIdx(Math.max(0, Math.min(questions.length - 1, i))), [questions.length]);
-  const toggleFlag = useCallback(() => setFlags((f) => f.map((v, i) => (i === idx ? !v : v))), [idx]);
+  const go = useCallback(
+    (i: number) => setIdx(Math.max(0, Math.min(questions.length - 1, i))),
+    [questions.length],
+  );
+  const toggleFlag = useCallback(
+    () => setFlags((f) => f.map((v, i) => (i === idx ? !v : v))),
+    [idx],
+  );
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -172,7 +204,8 @@ export function ExamRunner({ def, title, mode, count, subjects, onlyIds, backTo,
       if (confirmOpen || blocker.status === "blocked") return;
       if (e.metaKey || e.ctrlKey || e.altKey) return;
       const el = e.target as HTMLElement | null;
-      if (el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.isContentEditable)) return;
+      if (el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.isContentEditable))
+        return;
       const k = e.key.toLowerCase();
       if (["1", "2", "3", "4"].includes(k)) {
         select(Number(k) - 1);
@@ -206,12 +239,16 @@ export function ExamRunner({ def, title, mode, count, subjects, onlyIds, backTo,
         <AlertDialogHeader>
           <AlertDialogTitle>Leave this exam?</AlertDialogTitle>
           <AlertDialogDescription>
-            Your exam is still in progress. If you leave now, your answers will be lost and this attempt will not be recorded.
+            Your exam is still in progress. If you leave now, your answers will be lost and this
+            attempt will not be recorded.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel onClick={() => blocker.reset?.()}>Stay in exam</AlertDialogCancel>
-          <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => blocker.proceed?.()}>
+          <AlertDialogAction
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            onClick={() => blocker.proceed?.()}
+          >
             Leave and discard
           </AlertDialogAction>
         </AlertDialogFooter>
@@ -231,7 +268,11 @@ export function ExamRunner({ def, title, mode, count, subjects, onlyIds, backTo,
             {onlyIds ? <Pill tone="magenta">Missed-question review</Pill> : null}
           </div>
           <h2 className="mt-3 text-xl font-bold tracking-tight">{title}</h2>
-          <p className="mt-1 text-sm text-muted-foreground">{onlyIds ? "Questions you missed in recent attempts, in a new random order." : def.description}</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {onlyIds
+              ? "Questions you missed in recent attempts, in a new random order."
+              : def.description}
+          </p>
           <div className="mt-5 grid grid-cols-3 gap-2">
             <div className="rounded-md border bg-background/40 px-3 py-2.5">
               <div className="label-caps">Questions</div>
@@ -239,7 +280,9 @@ export function ExamRunner({ def, title, mode, count, subjects, onlyIds, backTo,
             </div>
             <div className="rounded-md border bg-background/40 px-3 py-2.5">
               <div className="label-caps">Time</div>
-              <div className="mt-1 font-mono text-xl font-semibold tabular">{timed ? `${Math.round(introLimit / 60)} min` : "Untimed"}</div>
+              <div className="mt-1 font-mono text-xl font-semibold tabular">
+                {timed ? `${Math.round(introLimit / 60)} min` : "Untimed"}
+              </div>
             </div>
             <div className="rounded-md border bg-background/40 px-3 py-2.5">
               <div className="label-caps">To pass</div>
@@ -249,17 +292,35 @@ export function ExamRunner({ def, title, mode, count, subjects, onlyIds, backTo,
           <ul className="mt-5 grid gap-2 text-sm text-foreground/85">
             {timed ? (
               <>
-                <li className="flex gap-2"><Timer className="mt-0.5 size-4 shrink-0 text-primary" /> The timer starts when you begin. The exam submits automatically when time runs out.</li>
-                <li className="flex gap-2"><Flag className="mt-0.5 size-4 shrink-0 text-primary" /> Flag questions to revisit; you can change answers until you submit. Results and explanations appear at the end.</li>
+                <li className="flex gap-2">
+                  <Timer className="mt-0.5 size-4 shrink-0 text-primary" /> The timer starts when
+                  you begin. The exam submits automatically when time runs out.
+                </li>
+                <li className="flex gap-2">
+                  <Flag className="mt-0.5 size-4 shrink-0 text-primary" /> Flag questions to
+                  revisit; you can change answers until you submit. Results and explanations appear
+                  at the end.
+                </li>
               </>
             ) : (
-              <li className="flex gap-2"><BookOpenCheck className="mt-0.5 size-4 shrink-0 text-primary" /> Study mode is untimed. After you answer, the correct answer and a full explanation are shown immediately.</li>
+              <li className="flex gap-2">
+                <BookOpenCheck className="mt-0.5 size-4 shrink-0 text-primary" /> Study mode is
+                untimed. After you answer, the correct answer and a full explanation are shown
+                immediately.
+              </li>
             )}
-            <li className="flex gap-2"><ClipboardCheck className="mt-0.5 size-4 shrink-0 text-primary" /> Questions and answer choices are shuffled every attempt. Unanswered questions count as incorrect.</li>
-            <li className="hidden gap-2 sm:flex"><Keyboard className="mt-0.5 size-4 shrink-0 text-primary" /> Keyboard: 1–4 or A–D to answer · ← → to move · F to flag.</li>
+            <li className="flex gap-2">
+              <ClipboardCheck className="mt-0.5 size-4 shrink-0 text-primary" /> Questions and
+              answer choices are shuffled every attempt. Unanswered questions count as incorrect.
+            </li>
+            <li className="hidden gap-2 sm:flex">
+              <Keyboard className="mt-0.5 size-4 shrink-0 text-primary" /> Keyboard: 1–4 or A–D to
+              answer · ← → to move · F to flag.
+            </li>
           </ul>
           <Notice className="mt-5" title="Unofficial study material.">
-            These are original TeachX practice questions written from FAA publications — not actual FAA knowledge test questions. Always verify against current regulations and handbooks.
+            These are original TeachX practice questions written from FAA publications — not actual
+            FAA knowledge test questions. Always verify against current regulations and handbooks.
           </Notice>
           <div className="mt-6 flex flex-wrap gap-2">
             {plannedCount > 0 ? (
@@ -267,9 +328,14 @@ export function ExamRunner({ def, title, mode, count, subjects, onlyIds, backTo,
                 <Play /> Begin {timed ? "timed exam" : "study session"}
               </Button>
             ) : (
-              <p className="text-sm text-caution">No questions match this selection. Go back and choose different subjects.</p>
+              <p className="text-sm text-caution">
+                No questions match this selection. Go back and choose different subjects.
+              </p>
             )}
-            <Link to={backTo} className="inline-flex h-10 items-center rounded-md px-4 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground">
+            <Link
+              to={backTo}
+              className="inline-flex h-10 items-center rounded-md px-4 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground"
+            >
               {backLabel}
             </Link>
           </div>
@@ -300,7 +366,14 @@ export function ExamRunner({ def, title, mode, count, subjects, onlyIds, backTo,
   }
 
   const q = questions[idx];
-  const timeTone = remainingSec === null ? "text-foreground" : remainingSec <= 60 ? "text-warning animate-annunciator" : remainingSec <= 300 ? "text-caution" : "text-foreground";
+  const timeTone =
+    remainingSec === null
+      ? "text-foreground"
+      : remainingSec <= 60
+        ? "text-warning animate-annunciator"
+        : remainingSec <= 300
+          ? "text-caution"
+          : "text-foreground";
 
   const header = (
     <div className="sticky top-12 z-20 -mx-4 mb-4 border-b bg-background/95 px-4 py-2.5 backdrop-blur sm:-mx-6 sm:px-6">
@@ -308,21 +381,36 @@ export function ExamRunner({ def, title, mode, count, subjects, onlyIds, backTo,
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-semibold">{title}</p>
           <p className="font-mono text-xs text-muted-foreground tabular">
-            {phase === "review" ? "Review & submit" : `Question ${idx + 1} of ${questions.length}`} · {answeredCount} answered
+            {phase === "review" ? "Review & submit" : `Question ${idx + 1} of ${questions.length}`}{" "}
+            · {answeredCount} answered
           </p>
         </div>
-        <div className={cn("flex items-center gap-1.5 rounded-md border bg-panel px-2.5 py-1.5 font-mono text-base font-semibold tabular", timeTone)} aria-live="off">
+        <div
+          className={cn(
+            "flex items-center gap-1.5 rounded-md border bg-panel px-2.5 py-1.5 font-mono text-base font-semibold tabular",
+            timeTone,
+          )}
+          aria-live="off"
+        >
           <Clock className="size-4" />
           {remainingSec === null ? formatDuration(elapsedSec) : formatDuration(remainingSec)}
         </div>
         {phase === "active" ? (
-          <Button variant="outline" size="sm" className="hidden sm:inline-flex" onClick={() => setPhase("review")}>
+          <Button
+            variant="outline"
+            size="sm"
+            className="hidden sm:inline-flex"
+            onClick={() => setPhase("review")}
+          >
             <ClipboardCheck /> Review & submit
           </Button>
         ) : null}
       </div>
       <div className="mt-2 h-1 overflow-hidden rounded-full bg-muted">
-        <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${questions.length ? (answeredCount / questions.length) * 100 : 0}%` }} />
+        <div
+          className="h-full rounded-full bg-primary transition-all"
+          style={{ width: `${questions.length ? (answeredCount / questions.length) * 100 : 0}%` }}
+        />
       </div>
     </div>
   );
@@ -349,20 +437,35 @@ export function ExamRunner({ def, title, mode, count, subjects, onlyIds, backTo,
                 studyState === "bad" && "border-warning/50 bg-warning/15 text-warning",
                 !studyState && a !== null && "border-primary/50 bg-primary/20 text-foreground",
                 !studyState && a === null && "border-border bg-background/40 text-muted-foreground",
-                phase === "active" && i === idx && "ring-2 ring-primary ring-offset-1 ring-offset-background",
+                phase === "active" &&
+                  i === idx &&
+                  "ring-2 ring-primary ring-offset-1 ring-offset-background",
               )}
             >
               {i + 1}
-              {flags[i] ? <span className="absolute -right-0.5 -top-0.5 size-2 rounded-full bg-caution" /> : null}
+              {flags[i] ? (
+                <span className="absolute -right-0.5 -top-0.5 size-2 rounded-full bg-caution" />
+              ) : null}
             </button>
           );
         })}
       </div>
       <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
-        <span className="flex items-center gap-1"><span className="size-2.5 rounded-sm border border-primary/50 bg-primary/20" /> Answered</span>
-        <span className="flex items-center gap-1"><span className="size-2.5 rounded-sm border bg-background/40" /> Unanswered</span>
-        <span className="flex items-center gap-1"><span className="size-2 rounded-full bg-caution" /> Flagged</span>
-        {!timed ? <span className="flex items-center gap-1"><span className="size-2.5 rounded-sm bg-ok/40" /> Correct / <span className="size-2.5 rounded-sm bg-warning/40" /> Incorrect</span> : null}
+        <span className="flex items-center gap-1">
+          <span className="size-2.5 rounded-sm border border-primary/50 bg-primary/20" /> Answered
+        </span>
+        <span className="flex items-center gap-1">
+          <span className="size-2.5 rounded-sm border bg-background/40" /> Unanswered
+        </span>
+        <span className="flex items-center gap-1">
+          <span className="size-2 rounded-full bg-caution" /> Flagged
+        </span>
+        {!timed ? (
+          <span className="flex items-center gap-1">
+            <span className="size-2.5 rounded-sm bg-ok/40" /> Correct /{" "}
+            <span className="size-2.5 rounded-sm bg-warning/40" /> Incorrect
+          </span>
+        ) : null}
       </div>
     </div>
   );
@@ -378,15 +481,31 @@ export function ExamRunner({ def, title, mode, count, subjects, onlyIds, backTo,
             <div className="grid grid-cols-3 gap-2">
               <div className="rounded-md border px-3 py-2.5">
                 <div className="label-caps">Answered</div>
-                <div className="mt-1 font-mono text-xl font-semibold text-ok tabular">{answeredCount}</div>
+                <div className="mt-1 font-mono text-xl font-semibold text-ok tabular">
+                  {answeredCount}
+                </div>
               </div>
               <div className="rounded-md border px-3 py-2.5">
                 <div className="label-caps">Unanswered</div>
-                <div className={cn("mt-1 font-mono text-xl font-semibold tabular", unansweredIdx.length ? "text-caution" : "")}>{unansweredIdx.length}</div>
+                <div
+                  className={cn(
+                    "mt-1 font-mono text-xl font-semibold tabular",
+                    unansweredIdx.length ? "text-caution" : "",
+                  )}
+                >
+                  {unansweredIdx.length}
+                </div>
               </div>
               <div className="rounded-md border px-3 py-2.5">
                 <div className="label-caps">Flagged</div>
-                <div className={cn("mt-1 font-mono text-xl font-semibold tabular", flaggedIdx.length ? "text-caution" : "")}>{flaggedIdx.length}</div>
+                <div
+                  className={cn(
+                    "mt-1 font-mono text-xl font-semibold tabular",
+                    flaggedIdx.length ? "text-caution" : "",
+                  )}
+                >
+                  {flaggedIdx.length}
+                </div>
               </div>
             </div>
             {unansweredIdx.length > 0 ? (
@@ -396,21 +515,41 @@ export function ExamRunner({ def, title, mode, count, subjects, onlyIds, backTo,
                 </p>
                 <div className="flex flex-wrap gap-1.5">
                   {unansweredIdx.map((i) => (
-                    <button key={i} type="button" onClick={() => { go(i); setPhase("active"); }} className="rounded border border-caution/40 bg-caution/10 px-2 py-1 font-mono text-xs text-caution hover:bg-caution/20">
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => {
+                        go(i);
+                        setPhase("active");
+                      }}
+                      className="rounded border border-caution/40 bg-caution/10 px-2 py-1 font-mono text-xs text-caution hover:bg-caution/20"
+                    >
                       Q{i + 1}
                     </button>
                   ))}
                 </div>
               </div>
             ) : (
-              <p className="mt-4 flex items-center gap-1.5 text-sm text-ok"><CheckCircle2 className="size-4" /> All questions answered.</p>
+              <p className="mt-4 flex items-center gap-1.5 text-sm text-ok">
+                <CheckCircle2 className="size-4" /> All questions answered.
+              </p>
             )}
             {flaggedIdx.length > 0 ? (
               <div className="mt-4">
-                <p className="mb-2 flex items-center gap-1.5 text-sm font-medium"><Flag className="size-4 text-caution" /> Flagged for review</p>
+                <p className="mb-2 flex items-center gap-1.5 text-sm font-medium">
+                  <Flag className="size-4 text-caution" /> Flagged for review
+                </p>
                 <div className="flex flex-wrap gap-1.5">
                   {flaggedIdx.map((i) => (
-                    <button key={i} type="button" onClick={() => { go(i); setPhase("active"); }} className="rounded border px-2 py-1 font-mono text-xs hover:bg-accent">
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => {
+                        go(i);
+                        setPhase("active");
+                      }}
+                      className="rounded border px-2 py-1 font-mono text-xs hover:bg-accent"
+                    >
                       Q{i + 1}
                     </button>
                   ))}
@@ -439,13 +578,17 @@ export function ExamRunner({ def, title, mode, count, subjects, onlyIds, backTo,
                 {unansweredIdx.length > 0
                   ? `You have ${unansweredIdx.length} unanswered question${unansweredIdx.length > 1 ? "s" : ""}, which will be scored as incorrect. `
                   : "All questions are answered. "}
-                {flaggedIdx.length > 0 ? `${flaggedIdx.length} question${flaggedIdx.length > 1 ? "s are" : " is"} still flagged. ` : ""}
+                {flaggedIdx.length > 0
+                  ? `${flaggedIdx.length} question${flaggedIdx.length > 1 ? "s are" : " is"} still flagged. `
+                  : ""}
                 You can't change answers after submitting.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Keep working</AlertDialogCancel>
-              <AlertDialogAction onClick={() => submit(false)}>Submit and see results</AlertDialogAction>
+              <AlertDialogAction onClick={() => submit(false)}>
+                Submit and see results
+              </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
@@ -472,18 +615,37 @@ export function ExamRunner({ def, title, mode, count, subjects, onlyIds, backTo,
             reveal={!timed && (revealed[idx] ?? false)}
             flagged={flags[idx] ?? false}
           />
-          {!timed && !revealed[idx] ? <p className="mt-2 text-xs text-muted-foreground">Study mode: choose an answer to see the explanation.</p> : null}
+          {!timed && !revealed[idx] ? (
+            <p className="mt-2 text-xs text-muted-foreground">
+              Study mode: choose an answer to see the explanation.
+            </p>
+          ) : null}
 
           {/* Action bar — sticky on phones */}
           <div className="sticky bottom-0 z-10 -mx-4 mt-4 border-t bg-background/95 px-4 py-3 backdrop-blur sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-none">
             <div className="flex items-center gap-2">
-              <Button variant="outline" onClick={() => go(idx - 1)} disabled={idx === 0} aria-label="Previous question">
+              <Button
+                variant="outline"
+                onClick={() => go(idx - 1)}
+                disabled={idx === 0}
+                aria-label="Previous question"
+              >
                 <ArrowLeft /> <span className="hidden sm:inline">Previous</span>
               </Button>
-              <Button variant={flags[idx] ? "secondary" : "ghost"} onClick={toggleFlag} aria-pressed={flags[idx] ?? false} className={cn(flags[idx] && "text-caution")}>
+              <Button
+                variant={flags[idx] ? "secondary" : "ghost"}
+                onClick={toggleFlag}
+                aria-pressed={flags[idx] ?? false}
+                className={cn(flags[idx] && "text-caution")}
+              >
                 <Flag /> <span className="hidden sm:inline">{flags[idx] ? "Flagged" : "Flag"}</span>
               </Button>
-              <Button variant="ghost" className="lg:hidden" onClick={() => setShowNav((s) => !s)} aria-expanded={showNav}>
+              <Button
+                variant="ghost"
+                className="lg:hidden"
+                onClick={() => setShowNav((s) => !s)}
+                aria-expanded={showNav}
+              >
                 <Grid3x3 /> <span className="hidden sm:inline">Questions</span>
               </Button>
               <div className="flex-1" />
@@ -500,7 +662,12 @@ export function ExamRunner({ def, title, mode, count, subjects, onlyIds, backTo,
             {showNav ? (
               <div className="mt-3 rounded-md border bg-card p-3 lg:hidden">
                 {navigator}
-                <Button variant="outline" size="sm" className="mt-3 w-full" onClick={() => setPhase("review")}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-3 w-full"
+                  onClick={() => setPhase("review")}
+                >
                   <ClipboardCheck /> Review & submit
                 </Button>
               </div>
@@ -514,7 +681,8 @@ export function ExamRunner({ def, title, mode, count, subjects, onlyIds, backTo,
               <ClipboardCheck /> Review & submit
             </Button>
             <p className="px-1 text-[11px] leading-relaxed text-muted-foreground">
-              <Keyboard className="mr-1 inline size-3" />1–4 / A–D answer · ← → move · F flag
+              <Keyboard className="mr-1 inline size-3" />
+              1–4 / A–D answer · ← → move · F flag
             </p>
           </div>
         </aside>

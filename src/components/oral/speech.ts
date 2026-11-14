@@ -31,7 +31,10 @@ type RecognitionCtor = new () => Recognition;
 
 function getRecognitionCtor(): RecognitionCtor | null {
   if (typeof window === "undefined") return null;
-  const w = window as unknown as { SpeechRecognition?: RecognitionCtor; webkitSpeechRecognition?: RecognitionCtor };
+  const w = window as unknown as {
+    SpeechRecognition?: RecognitionCtor;
+    webkitSpeechRecognition?: RecognitionCtor;
+  };
   return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
 }
 
@@ -109,10 +112,17 @@ export function useSpeechInput(onFinal: (text: string) => void) {
 }
 
 export function speechSynthesisSupported(): boolean {
-  return typeof window !== "undefined" && "speechSynthesis" in window && typeof SpeechSynthesisUtterance !== "undefined";
+  return (
+    typeof window !== "undefined" &&
+    "speechSynthesis" in window &&
+    typeof SpeechSynthesisUtterance !== "undefined"
+  );
 }
 
-export function speak(text: string, opts: { rate?: number; volume?: number; voiceName?: string } = {}) {
+export function speak(
+  text: string,
+  opts: { rate?: number; volume?: number; voiceName?: string } = {},
+) {
   if (!speechSynthesisSupported()) return;
   const synth = window.speechSynthesis;
   synth.cancel();

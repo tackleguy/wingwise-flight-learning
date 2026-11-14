@@ -72,7 +72,11 @@ export function subjectStats(exams: readonly ExamAttempt[], limit = 20): Subject
 }
 
 /** Subjects ranked weakest first, requiring a minimum sample so one question doesn't dominate. */
-export function weakestSubjects(exams: readonly ExamAttempt[], n = 5, minQuestions = 3): SubjectStat[] {
+export function weakestSubjects(
+  exams: readonly ExamAttempt[],
+  n = 5,
+  minQuestions = 3,
+): SubjectStat[] {
   return subjectStats(exams)
     .filter((s) => s.total >= minQuestions)
     .slice(0, n);
@@ -114,7 +118,13 @@ export interface Readiness {
 export function readinessFor(exams: readonly ExamAttempt[], examId: string): Readiness {
   const mine = exams.filter((e) => e.examId === examId).slice(0, 3);
   if (mine.length === 0) {
-    return { level: "none", label: "No data yet", estimate: null, attempts: 0, detail: "Take a practice exam to get a readiness estimate." };
+    return {
+      level: "none",
+      label: "No data yet",
+      estimate: null,
+      attempts: 0,
+      detail: "Take a practice exam to get a readiness estimate.",
+    };
   }
   const weights = [3, 2, 1];
   let sum = 0;
@@ -127,13 +137,43 @@ export function readinessFor(exams: readonly ExamAttempt[], examId: string): Rea
   const est = sum / wsum;
   const timed = mine.filter((e) => e.mode === "timed").length;
   const basis = `Based on your last ${mine.length} attempt${mine.length > 1 ? "s" : ""}${timed < mine.length ? " (study-mode attempts weighted lower)" : ""}.`;
-  if (est >= 85) return { level: "ready", label: "Ready", estimate: est, attempts: mine.length, detail: `Consistently well above the 70% passing score. ${basis}` };
-  if (est >= 78) return { level: "nearly", label: "Nearly ready", estimate: est, attempts: mine.length, detail: `Passing with a margin. Review weak subjects to build a buffer. ${basis}` };
-  if (est >= 70) return { level: "borderline", label: "Borderline", estimate: est, attempts: mine.length, detail: `Right at the passing line — a bad day could mean a fail. ${basis}` };
-  return { level: "not-ready", label: "Not yet ready", estimate: est, attempts: mine.length, detail: `Below the 70% passing score. Focus on the weakest subjects first. ${basis}` };
+  if (est >= 85)
+    return {
+      level: "ready",
+      label: "Ready",
+      estimate: est,
+      attempts: mine.length,
+      detail: `Consistently well above the 70% passing score. ${basis}`,
+    };
+  if (est >= 78)
+    return {
+      level: "nearly",
+      label: "Nearly ready",
+      estimate: est,
+      attempts: mine.length,
+      detail: `Passing with a margin. Review weak subjects to build a buffer. ${basis}`,
+    };
+  if (est >= 70)
+    return {
+      level: "borderline",
+      label: "Borderline",
+      estimate: est,
+      attempts: mine.length,
+      detail: `Right at the passing line — a bad day could mean a fail. ${basis}`,
+    };
+  return {
+    level: "not-ready",
+    label: "Not yet ready",
+    estimate: est,
+    attempts: mine.length,
+    detail: `Below the 70% passing score. Focus on the weakest subjects first. ${basis}`,
+  };
 }
 
-export const READINESS_TONE: Record<ReadinessLevel, "default" | "ok" | "caution" | "warning" | "primary"> = {
+export const READINESS_TONE: Record<
+  ReadinessLevel,
+  "default" | "ok" | "caution" | "warning" | "primary"
+> = {
   none: "default",
   "not-ready": "warning",
   borderline: "caution",

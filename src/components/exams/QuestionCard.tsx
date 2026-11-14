@@ -17,11 +17,36 @@ export const LETTERS = ["A", "B", "C", "D", "E"];
 /** Monospace "figure" panel for METAR/TAF/chart/table context; prose panel for scenarios. */
 export function QuestionContext({ q }: { q: QuizQuestion }) {
   if (!q.context) return null;
-  const mono = q.kind === "weather" || q.kind === "chart" || q.kind === "calc" || /\n/.test(q.context);
+  const mono =
+    q.kind === "weather" || q.kind === "chart" || q.kind === "calc" || /\n/.test(q.context);
   return (
-    <div className={cn("mb-4", mono ? "avionics-screen px-3 py-2.5" : "rounded-md border-l-2 border-primary/60 bg-muted/40 px-3 py-2.5")}>
-      <div className="label-caps mb-1 text-[10px]">{q.kind === "weather" ? "Report" : q.kind === "chart" ? "Figure" : q.kind === "calc" ? "Given" : "Scenario"}</div>
-      <p className={cn("whitespace-pre-wrap break-words", mono ? "font-mono text-[12.5px] leading-relaxed text-cyan" : "text-sm leading-relaxed text-foreground/90")}>{q.context}</p>
+    <div
+      className={cn(
+        "mb-4",
+        mono
+          ? "avionics-screen px-3 py-2.5"
+          : "rounded-md border-l-2 border-primary/60 bg-muted/40 px-3 py-2.5",
+      )}
+    >
+      <div className="label-caps mb-1 text-[10px]">
+        {q.kind === "weather"
+          ? "Report"
+          : q.kind === "chart"
+            ? "Figure"
+            : q.kind === "calc"
+              ? "Given"
+              : "Scenario"}
+      </div>
+      <p
+        className={cn(
+          "whitespace-pre-wrap break-words",
+          mono
+            ? "font-mono text-[12.5px] leading-relaxed text-cyan"
+            : "text-sm leading-relaxed text-foreground/90",
+        )}
+      >
+        {q.context}
+      </p>
     </div>
   );
 }
@@ -64,12 +89,27 @@ export function QuestionCard({
         <span className="ml-auto font-mono text-[10px] text-muted-foreground/70">{q.id}</span>
       </div>
       <QuestionContext q={q} />
-      <h2 className={cn("font-semibold leading-snug", compact ? "text-[15px]" : "text-base sm:text-lg")}>{q.prompt}</h2>
+      <h2
+        className={cn(
+          "font-semibold leading-snug",
+          compact ? "text-[15px]" : "text-base sm:text-lg",
+        )}
+      >
+        {q.prompt}
+      </h2>
       <div className="mt-4 grid gap-2" role="radiogroup" aria-label="Answer choices">
         {q.choices.map((c, i) => {
           const isSel = selected === i;
           const isCorrect = i === q.answer;
-          const state = reveal ? (isCorrect ? "correct" : isSel ? "wrong" : "idle") : isSel ? "selected" : "idle";
+          const state = reveal
+            ? isCorrect
+              ? "correct"
+              : isSel
+                ? "wrong"
+                : "idle"
+            : isSel
+              ? "selected"
+              : "idle";
           return (
             <button
               key={i}
@@ -100,8 +140,15 @@ export function QuestionCard({
                 {LETTERS[i]}
               </span>
               <span className="flex-1 leading-relaxed">{c}</span>
-              {reveal && isCorrect ? <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-ok" aria-label="Correct answer" /> : null}
-              {reveal && isSel && !isCorrect ? <XCircle className="mt-0.5 size-4 shrink-0 text-warning" aria-label="Your answer" /> : null}
+              {reveal && isCorrect ? (
+                <CheckCircle2
+                  className="mt-0.5 size-4 shrink-0 text-ok"
+                  aria-label="Correct answer"
+                />
+              ) : null}
+              {reveal && isSel && !isCorrect ? (
+                <XCircle className="mt-0.5 size-4 shrink-0 text-warning" aria-label="Your answer" />
+              ) : null}
             </button>
           );
         })}
@@ -117,13 +164,15 @@ export function QuestionCard({
               <Pill tone="warning">Incorrect — you chose {LETTERS[selected]}</Pill>
             )}
             <span className="text-xs text-muted-foreground">
-              Correct answer: <span className="font-mono font-semibold text-foreground">{LETTERS[q.answer]}</span>
+              Correct answer:{" "}
+              <span className="font-mono font-semibold text-foreground">{LETTERS[q.answer]}</span>
             </span>
           </div>
           <p className="text-sm leading-relaxed text-foreground/90">{q.explanation}</p>
           {q.reference ? (
             <p className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
-              <BookMarked className="size-3.5" /> Reference: <span className="font-mono">{q.reference}</span>
+              <BookMarked className="size-3.5" /> Reference:{" "}
+              <span className="font-mono">{q.reference}</span>
             </p>
           ) : null}
         </div>

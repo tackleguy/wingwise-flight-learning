@@ -228,10 +228,9 @@ export async function aiChat(req: AiChatRequest): Promise<AiChatResult> {
         serverResult = await serverChat(req, "auto");
         if (serverResult.ok) return serverResult;
       }
-      if (await probeBrowser(ai.localBrowserUrl)) {
-        const b = await browserChat(req, ai.localBrowserUrl, ai.localBrowserModel);
-        if (b.ok) return b;
-      }
+      // "Auto" never reaches into the visitor's own computer (localhost) on its own — that
+      // causes failed requests and browser local-network prompts for most users. The local
+      // browser model is used only when it is explicitly selected in Settings.
       return (
         serverResult ?? {
           ok: false,
@@ -246,9 +245,7 @@ export async function getAiStatus(): Promise<AiStatus> {
   const ai = aiSettings();
   const s = await fetchServerStatus();
   const localBrowser =
-    ai.provider === "local-browser" || ai.provider === "auto"
-      ? await probeBrowser(ai.localBrowserUrl)
-      : false;
+    ai.provider === "local-browser" ? await probeBrowser(ai.localBrowserUrl) : false;
   let active: AiStatus["active"] = "scripted";
   switch (ai.provider) {
     case "cloud":

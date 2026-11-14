@@ -63,7 +63,12 @@ export const INSTRUMENT: QuizQuestion[] = [
     "Regulations",
     "mc",
     "When an airport's approach chart shows no nonstandard alternate minimums, the standard alternate minimums for an airport with a precision approach are",
-    ["200 ft ceiling and ½ SM", "800 ft ceiling and 2 SM", "600 ft ceiling and 2 SM", "1,000 ft ceiling and 3 SM"],
+    [
+      "200 ft ceiling and ½ SM",
+      "800 ft ceiling and 2 SM",
+      "600 ft ceiling and 2 SM",
+      "1,000 ft ceiling and 3 SM",
+    ],
     2,
     "91.169(c): precision approach 600-2; nonprecision approach 800-2; no IAP — a ceiling and visibility allowing descent from the MEA, approach and landing under basic VFR. A triangle 'A' symbol on the chart means nonstandard minimums apply, and 'NA' means the airport cannot be used as an alternate.",
     { ref: "14 CFR 91.169(c)" },
@@ -186,7 +191,7 @@ export const INSTRUMENT: QuizQuestion[] = [
     "91.185(c)(2): fly the HIGHEST of (1) the last assigned altitude (5,000), (2) the MEA (6,000 on the next segment), and (3) the altitude ATC advised you may expect (7,000, which became effective 10 minutes after departure). The highest is 7,000 ft. If the MEA later rises above 7,000, climb to the MEA for that segment.",
     {
       ref: "14 CFR 91.185(c)(2)",
-      ctx: "Clearance: \"...climb and maintain 5,000, expect 7,000 ten minutes after departure.\" Radio communications fail 15 minutes after departure in IMC. The MEA of the current segment is 4,000 ft; the next segment's MEA is 6,000 ft.",
+      ctx: 'Clearance: "...climb and maintain 5,000, expect 7,000 ten minutes after departure." Radio communications fail 15 minutes after departure in IMC. The MEA of the current segment is 4,000 ft; the next segment\'s MEA is 6,000 ft.',
     },
   ),
   q(
@@ -266,7 +271,7 @@ export const INSTRUMENT: QuizQuestion[] = [
     "The inbound course to the VORTAC is 090°, right turns, so the pattern lies south of the inbound leg. For a right-hand pattern, headings from 70° left of the inbound course to 110° right use a direct entry; from 110° to 180° right, teardrop; from 180° to 290° right (70° left), parallel. 330° is 240° to the right of 090° → parallel: cross the fix, turn left to 270° (non-holding side) for 1 minute, then turn left more than 180° back to the inbound course.",
     {
       ref: "AIM 5-3-8; IFH Ch. 10",
-      ctx: "ATC: \"Hold west of the ABC VORTAC on the 270 radial, standard turns.\" You are approaching the VORTAC on a heading of 330°.",
+      ctx: 'ATC: "Hold west of the ABC VORTAC on the 270 radial, standard turns." You are approaching the VORTAC on a heading of 330°.',
     },
   ),
   q(
@@ -279,7 +284,7 @@ export const INSTRUMENT: QuizQuestion[] = [
     "Hold west on the 270 radial: inbound course 090°, right turns. A 220° heading is 130° to the right of 090°, which falls in the teardrop sector (110°–180° right). Cross the fix, turn to about 240° (30° toward the holding side of the 270° outbound course) for 1 minute, then turn right to intercept 090° inbound.",
     {
       ref: "AIM 5-3-8; IFH Ch. 10",
-      ctx: "ATC: \"Hold west of the ABC VORTAC on the 270 radial, standard turns.\" You are now approaching the VORTAC on a heading of 220°.",
+      ctx: 'ATC: "Hold west of the ABC VORTAC on the 270 radial, standard turns." You are now approaching the VORTAC on a heading of 220°.',
     },
   ),
   q(
@@ -675,7 +680,12 @@ export const INSTRUMENT: QuizQuestion[] = [
     "Instrument Approaches",
     "mc",
     "The Minimum Safe Altitude (MSA) depicted on an approach chart provides at least 1,000 ft of obstacle clearance within",
-    ["25 NM of the facility or waypoint on which it is based (unless otherwise noted)", "10 NM", "4 NM", "100 NM"],
+    [
+      "25 NM of the facility or waypoint on which it is based (unless otherwise noted)",
+      "10 NM",
+      "4 NM",
+      "100 NM",
+    ],
     0,
     "MSAs are for emergency use and provide 1,000 ft of obstacle clearance within 25 NM (30 NM may be used in some cases, as noted). They do not guarantee navigation signal coverage. They are not the same as the MEA or a feeder route altitude.",
     { ref: "AIM 5-4-5" },
@@ -713,7 +723,10 @@ export const INSTRUMENT: QuizQuestion[] = [
     ],
     2,
     "In a typical steam-gauge airplane, the attitude and heading indicators are vacuum-driven and will slowly become unreliable. The electrically driven turn coordinator and the pitot-static instruments still work, and the magnetic compass provides heading. Cover the failed instruments to avoid being misled, and fly partial panel.",
-    { ref: "IFH Ch. 7", ctx: "In IMC the low-vacuum annunciator illuminates and the suction gauge reads zero in a typical light single with conventional instruments." },
+    {
+      ref: "IFH Ch. 7",
+      ctx: "In IMC the low-vacuum annunciator illuminates and the suction gauge reads zero in a typical light single with conventional instruments.",
+    },
   ),
   q(
     "ira-052",
@@ -730,7 +743,12 @@ export const INSTRUMENT: QuizQuestion[] = [
     "Flight Instruments",
     "mc",
     "Three common errors in instrument cross-check are",
-    ["fixation, omission, and emphasis", "precession, lag, and deviation", "parallax, acceleration, and turning", "ANDS, UNOS, and dip"],
+    [
+      "fixation, omission, and emphasis",
+      "precession, lag, and deviation",
+      "parallax, acceleration, and turning",
+      "ANDS, UNOS, and dip",
+    ],
     0,
     "Fixation: staring at one instrument. Omission: leaving an instrument out of the scan. Emphasis: relying on one instrument instead of the combination of instruments. The other choices are instrument errors, not scan errors.",
     { ref: "IFH Ch. 6" },
@@ -760,7 +778,12 @@ export const INSTRUMENT: QuizQuestion[] = [
     "Charts",
     "chart",
     "On an IFR en route low-altitude chart, what does a solid (filled) triangle at a navaid or intersection indicate?",
-    ["An on-request reporting point", "A compulsory reporting point", "A holding fix", "A VOR changeover point"],
+    [
+      "An on-request reporting point",
+      "A compulsory reporting point",
+      "A holding fix",
+      "A VOR changeover point",
+    ],
     1,
     "A solid triangle = compulsory reporting point (report when not in radar contact). An open triangle = on-request reporting point. Changeover points are shown with a 'Z'-shaped symbol and mileages.",
     { ref: "FAA Chart User's Guide (IFR)" },
@@ -810,7 +833,10 @@ export const INSTRUMENT: QuizQuestion[] = [
     ],
     3,
     "The most dangerous part of a gyro failure is not recognizing it. Covering the failed instruments prevents them from leading you into an unusual attitude. Inform ATC (91.187), ask for no-gyro vectors and a surveillance or other suitable approach, and keep the workload low. Declaring an emergency is appropriate if needed, but an immediate descent is not.",
-    { ref: "IFH Ch. 7; AIM 5-3-3", ctx: "In IMC the attitude indicator begins to slowly tilt and the heading indicator drifts. The suction gauge reads zero." },
+    {
+      ref: "IFH Ch. 7; AIM 5-3-3",
+      ctx: "In IMC the attitude indicator begins to slowly tilt and the heading indicator drifts. The suction gauge reads zero.",
+    },
   ),
   q(
     "ira-060",
@@ -818,13 +844,16 @@ export const INSTRUMENT: QuizQuestion[] = [
     "scenario",
     "Which readback is correct and complete?",
     [
-      "\"Roger, N123AB.\"",
-      "\"Wilco.\"",
-      "\"Turn right heading 090, climb and maintain 6,000, N123AB.\"",
-      "\"Heading 090, N123AB.\"",
+      '"Roger, N123AB."',
+      '"Wilco."',
+      '"Turn right heading 090, climb and maintain 6,000, N123AB."',
+      '"Heading 090, N123AB."',
     ],
     2,
     "Pilots should read back altitudes, headings, altimeter settings and frequencies (AIM 4-4-7), ending with the call sign. 'Roger' or 'Wilco' alone does not let the controller verify you heard correctly, and reading back only part of the instruction omits the altitude — the most safety-critical element.",
-    { ref: "AIM 4-4-7; AIM 4-2-3", ctx: "ATC: \"N123AB, turn right heading 090, climb and maintain 6,000.\"" },
+    {
+      ref: "AIM 4-4-7; AIM 4-2-3",
+      ctx: 'ATC: "N123AB, turn right heading 090, climb and maintain 6,000."',
+    },
   ),
 ];

@@ -1,14 +1,53 @@
 import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, CheckCircle2, ChevronRight, CircleDashed, ClipboardCheck, FileSearch, Play, XCircle } from "lucide-react";
-import { EmptyState, Meter, Notice, Page, PageHeader, Panel, Pill, Section, formatDate } from "@/components/app/page";
+import {
+  ArrowLeft,
+  CheckCircle2,
+  ChevronRight,
+  CircleDashed,
+  ClipboardCheck,
+  FileSearch,
+  Play,
+  XCircle,
+} from "lucide-react";
+import {
+  EmptyState,
+  Meter,
+  Notice,
+  Page,
+  PageHeader,
+  Panel,
+  Pill,
+  Section,
+  formatDate,
+} from "@/components/app/page";
 import { Button } from "@/components/ui/button";
-import { actions, uid, useHydrated, useStore, type CheckrideAttempt, type CheckrideStageResult } from "@/lib/store";
+import {
+  actions,
+  uid,
+  useHydrated,
+  useStore,
+  type CheckrideAttempt,
+  type CheckrideStageResult,
+} from "@/lib/store";
 import { CHECKRIDE_TRACKS, PASS_SCORE, trackDef } from "@/lib/checkride/content";
 import type { CheckrideTrackDef, StageDef, StageId } from "@/lib/checkride/types";
 import type { StageProps } from "@/components/checkride/shared";
-import { AircraftKnowledgeStage, DocumentsStage, OralStage, PlanningStage, PreflightPrepStage, WeatherStage } from "@/components/checkride/stages-a";
-import { EmergencyStage, ManeuversStage, NavigationStage, PostflightStage, RadioStage } from "@/components/checkride/stages-b";
+import {
+  AircraftKnowledgeStage,
+  DocumentsStage,
+  OralStage,
+  PlanningStage,
+  PreflightPrepStage,
+  WeatherStage,
+} from "@/components/checkride/stages-a";
+import {
+  EmergencyStage,
+  ManeuversStage,
+  NavigationStage,
+  PostflightStage,
+  RadioStage,
+} from "@/components/checkride/stages-b";
 import { WalkaroundStage } from "@/components/checkride/WalkAround";
 import { CheckrideReport } from "@/components/checkride/CheckrideReport";
 import { cn } from "@/lib/utils";
@@ -27,7 +66,8 @@ export const Route = createFileRoute("/checkrides")({
       { title: "Virtual Checkrides — TeachX" },
       {
         name: "description",
-        content: "Simulated Private, Instrument and Commercial checkrides: 12 stages from document inspection and oral exam to simulator maneuvers, with ACS-referenced grading and a printable report. Not an FAA practical test.",
+        content:
+          "Simulated Private, Instrument and Commercial checkrides: 12 stages from document inspection and oral exam to simulator maneuvers, with ACS-referenced grading and a printable report. Not an FAA practical test.",
       },
     ],
   }),
@@ -67,7 +107,12 @@ function CheckridesPage() {
     if (!attempt || !track) {
       return (
         <Page>
-          <EmptyState icon={FileSearch} title="Checkride not found" description="This checkride attempt isn't in your training record on this device." action={{ to: "/checkrides", label: "Back to Virtual Checkrides" }} />
+          <EmptyState
+            icon={FileSearch}
+            title="Checkride not found"
+            description="This checkride attempt isn't in your training record on this device."
+            action={{ to: "/checkrides", label: "Back to Virtual Checkrides" }}
+          />
         </Page>
       );
     }
@@ -79,8 +124,14 @@ function CheckridesPage() {
 
 function SimNotice() {
   return (
-    <Notice tone="caution" title="Simulated checkride — not an FAA practical test." className="mb-6">
-      TeachX checkrides are training exercises modeled on the FAA Airman Certification Standards. They are not administered by an examiner, do not grant any certificate or rating, and do not satisfy any FAA requirement.
+    <Notice
+      tone="caution"
+      title="Simulated checkride — not an FAA practical test."
+      className="mb-6"
+    >
+      TeachX checkrides are training exercises modeled on the FAA Airman Certification Standards.
+      They are not administered by an examiner, do not grant any certificate or rating, and do not
+      satisfy any FAA requirement.
     </Notice>
   );
 }
@@ -98,7 +149,14 @@ function CheckrideHome() {
       date: now,
       trackId: t.trackId,
       title: t.title,
-      stages: t.stages.map((s) => ({ id: s.id, name: s.name, score: 0, status: "incomplete", notes: [], acsRef: s.acsRef })),
+      stages: t.stages.map((s) => ({
+        id: s.id,
+        name: s.name,
+        score: 0,
+        status: "incomplete",
+        notes: [],
+        acsRef: s.acsRef,
+      })),
       overall: 0,
       passed: false,
       completed: false,
@@ -122,7 +180,10 @@ function CheckrideHome() {
           {CHECKRIDE_TRACKS.map((t) => {
             const recommended = goal === t.trackId;
             return (
-              <div key={t.key} className={cn("panel flex flex-col p-5", recommended && "border-primary/50")}>
+              <div
+                key={t.key}
+                className={cn("panel flex flex-col p-5", recommended && "border-primary/50")}
+              >
                 <div className="flex items-center justify-between gap-2">
                   <Pill tone="primary">{t.ifr ? "IFR" : "VFR"}</Pill>
                   {recommended ? <Pill tone="cyan">Your goal</Pill> : null}
@@ -151,14 +212,21 @@ function CheckrideHome() {
           {!hydrated ? (
             <p className="text-sm text-muted-foreground">Loading…</p>
           ) : checkrides.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No attempts yet. Your progress is saved after every stage, so you can leave for the simulator or ATC practice and come back.</p>
+            <p className="text-sm text-muted-foreground">
+              No attempts yet. Your progress is saved after every stage, so you can leave for the
+              simulator or ATC practice and come back.
+            </p>
           ) : (
             <ul className="grid gap-2">
               {checkrides.slice(0, 10).map((c) => {
                 const done = c.stages.filter((s) => s.status !== "incomplete").length;
                 return (
                   <li key={c.id}>
-                    <Link to="/checkrides" search={{ attempt: c.id }} className="flex items-center gap-3 rounded-md border px-3 py-2.5 hover:border-primary/50 hover:bg-accent/30">
+                    <Link
+                      to="/checkrides"
+                      search={{ attempt: c.id }}
+                      className="flex items-center gap-3 rounded-md border px-3 py-2.5 hover:border-primary/50 hover:bg-accent/30"
+                    >
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-semibold">{c.title}</p>
                         <p className="text-[11px] text-muted-foreground">
@@ -166,11 +234,15 @@ function CheckrideHome() {
                         </p>
                       </div>
                       {c.completed ? (
-                        <Pill tone={c.passed ? "ok" : "warning"}>{c.passed ? "Satisfactory" : "Unsatisfactory"}</Pill>
+                        <Pill tone={c.passed ? "ok" : "warning"}>
+                          {c.passed ? "Satisfactory" : "Unsatisfactory"}
+                        </Pill>
                       ) : (
                         <Pill tone="caution">In progress</Pill>
                       )}
-                      <span className="w-10 text-right font-mono text-sm tabular">{done ? Math.round(c.overall) : "—"}</span>
+                      <span className="w-10 text-right font-mono text-sm tabular">
+                        {done ? Math.round(c.overall) : "—"}
+                      </span>
                       <ChevronRight className="size-4 text-muted-foreground" />
                     </Link>
                   </li>
@@ -181,10 +253,18 @@ function CheckrideHome() {
         </Panel>
         <Panel title="How grading works">
           <ul className="grid gap-2 text-sm text-foreground/85">
-            <li>• Each of the 12 stages is scored 0–100 and is satisfactory at {PASS_SCORE} or above.</li>
+            <li>
+              • Each of the 12 stages is scored 0–100 and is satisfactory at {PASS_SCORE} or above.
+            </li>
             <li>• Like a real practical test, you pass only if every stage is satisfactory.</li>
-            <li>• The flight portion and radio stage use your linked TeachX simulator flight and ATC session.</li>
-            <li>• The final instructor-style report lists ACS references and debrief notes, and can be printed or saved as a PDF.</li>
+            <li>
+              • The flight portion and radio stage use your linked TeachX simulator flight and ATC
+              session.
+            </li>
+            <li>
+              • The final instructor-style report lists ACS references and debrief notes, and can be
+              printed or saved as a PDF.
+            </li>
           </ul>
         </Panel>
       </div>
@@ -203,7 +283,9 @@ function AttemptView({ attempt, track }: { attempt: CheckrideAttempt; track: Che
   const currentIdx = attempt.stages.findIndex((s) => s.status === "incomplete");
   const current = currentIdx >= 0 ? track.stages[currentIdx] : undefined;
   const doneCount = attempt.stages.filter((s) => s.status !== "incomplete").length;
-  const viewed = viewing ? attempt.stages.find((s) => s.id === viewing && s.status !== "incomplete") : undefined;
+  const viewed = viewing
+    ? attempt.stages.find((s) => s.id === viewing && s.status !== "incomplete")
+    : undefined;
 
   const save = (stageId: string, update: (s: CheckrideStageResult) => CheckrideStageResult) => {
     const stages = attempt.stages.map((s) => (s.id === stageId ? update(s) : s));
@@ -220,11 +302,18 @@ function AttemptView({ attempt, track }: { attempt: CheckrideAttempt; track: Che
 
   const onComplete = (stage: StageDef) => (score: number, notes: string[]) => {
     const sc = Math.max(0, Math.min(100, Math.round(score)));
-    save(stage.id, (s) => ({ ...s, score: sc, status: sc >= PASS_SCORE ? "satisfactory" : "unsatisfactory", notes, acsRef: stage.acsRef }));
+    save(stage.id, (s) => ({
+      ...s,
+      score: sc,
+      status: sc >= PASS_SCORE ? "satisfactory" : "unsatisfactory",
+      notes,
+      acsRef: stage.acsRef,
+    }));
     setViewing(null);
     if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
   };
-  const onSaveProgress = (stage: StageDef) => (notes: string[]) => save(stage.id, (s) => ({ ...s, notes }));
+  const onSaveProgress = (stage: StageDef) => (notes: string[]) =>
+    save(stage.id, (s) => ({ ...s, notes }));
 
   const StageComp = current ? STAGE_COMPONENTS[current.id] : null;
   const saved = current ? attempt.stages[currentIdx] : undefined;
@@ -232,7 +321,10 @@ function AttemptView({ attempt, track }: { attempt: CheckrideAttempt; track: Che
   return (
     <Page wide>
       <div className="mb-4 flex flex-wrap items-center gap-3">
-        <Link to="/checkrides" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
+        <Link
+          to="/checkrides"
+          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+        >
           <ArrowLeft className="size-4" /> Virtual Checkrides
         </Link>
         <span className="text-muted-foreground/40">/</span>
@@ -245,7 +337,11 @@ function AttemptView({ attempt, track }: { attempt: CheckrideAttempt; track: Che
       <div className="grid gap-5 lg:grid-cols-[270px_1fr]">
         <aside className="lg:sticky lg:top-16 lg:self-start">
           <Panel title="Stages">
-            <Meter value={(doneCount / attempt.stages.length) * 100} label={`${doneCount} of ${attempt.stages.length} graded`} className="mb-3" />
+            <Meter
+              value={(doneCount / attempt.stages.length) * 100}
+              label={`${doneCount} of ${attempt.stages.length} graded`}
+              className="mb-3"
+            />
             <ol className="grid gap-0.5">
               {attempt.stages.map((s, i) => {
                 const isCurrent = i === currentIdx;
@@ -264,16 +360,22 @@ function AttemptView({ attempt, track }: { attempt: CheckrideAttempt; track: Che
                         viewing === s.id && "bg-accent/60",
                       )}
                     >
-                      <span className="w-4 font-mono text-[10px] text-muted-foreground">{i + 1}</span>
+                      <span className="w-4 font-mono text-[10px] text-muted-foreground">
+                        {i + 1}
+                      </span>
                       <StageStatusIcon s={s} />
                       <span className="flex-1 truncate">{s.name}</span>
-                      {clickable ? <span className="font-mono tabular">{Math.round(s.score)}</span> : null}
+                      {clickable ? (
+                        <span className="font-mono tabular">{Math.round(s.score)}</span>
+                      ) : null}
                     </button>
                   </li>
                 );
               })}
             </ol>
-            <p className="mt-3 text-[11px] text-muted-foreground">Progress is saved after every stage. Leave anytime and resume from Virtual Checkrides.</p>
+            <p className="mt-3 text-[11px] text-muted-foreground">
+              Progress is saved after every stage. Leave anytime and resume from Virtual Checkrides.
+            </p>
           </Panel>
         </aside>
 
@@ -284,8 +386,15 @@ function AttemptView({ attempt, track }: { attempt: CheckrideAttempt; track: Che
                 <StageStatusIcon s={viewed} />
                 <h2 className="font-semibold">{viewed.name}</h2>
                 <span className="font-mono text-sm tabular">{Math.round(viewed.score)}/100</span>
-                <Pill tone={viewed.status === "satisfactory" ? "ok" : "warning"}>{viewed.status}</Pill>
-                <Button variant="ghost" size="sm" className="ml-auto" onClick={() => setViewing(null)}>
+                <Pill tone={viewed.status === "satisfactory" ? "ok" : "warning"}>
+                  {viewed.status}
+                </Pill>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="ml-auto"
+                  onClick={() => setViewing(null)}
+                >
                   Close
                 </Button>
               </div>

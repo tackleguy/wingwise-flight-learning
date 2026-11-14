@@ -6,7 +6,15 @@
  *   const ias = useSimSelector((s) => s.indicated.iasKt);
  *   const engine = useSimEngine();            // to send commands: engine.setControls(...)
  */
-import { createContext, useContext, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type ReactNode,
+} from "react";
 import type { SimEngine, SimOptions } from "./engine";
 import type { SimSnapshot } from "./types";
 

@@ -4,8 +4,26 @@
  */
 import { AIRPORTS, NAVAIDS, magneticHeading } from "@/lib/data/airports";
 import type { Airport, RunwayEnd } from "@/lib/data/types";
-import { bearingDeg, clamp, crossTrackNm, destinationPoint, distanceNm, FT_PER_NM, norm180, norm360, toDeg } from "@/lib/geo";
-import type { AircraftState, GpsOutput, GpsState, NavOutputs, NavReceiverOutput, Radios, Waypoint } from "./types";
+import {
+  bearingDeg,
+  clamp,
+  crossTrackNm,
+  destinationPoint,
+  distanceNm,
+  FT_PER_NM,
+  norm180,
+  norm360,
+  toDeg,
+} from "@/lib/geo";
+import type {
+  AircraftState,
+  GpsOutput,
+  GpsState,
+  NavOutputs,
+  NavReceiverOutput,
+  Radios,
+  Waypoint,
+} from "./types";
 
 export interface TrainingNdb {
   id: string;
@@ -43,7 +61,9 @@ interface IlsHit {
 
 const ILS_INDEX: { freq: number; hit: IlsHit }[] = AIRPORTS.flatMap((a) =>
   a.runways.flatMap((r) =>
-    r.ends.filter((e) => e.ils).map((e) => ({ freq: e.ils!.freq, hit: { airport: a, end: e, runwayLengthFt: r.lengthFt } })),
+    r.ends
+      .filter((e) => e.ils)
+      .map((e) => ({ freq: e.ils!.freq, hit: { airport: a, end: e, runwayLengthFt: r.lengthFt } })),
   ),
 );
 
@@ -73,15 +93,21 @@ function computeReceiver(freq: number, obs: number, ac: AircraftState): NavRecei
     const { end, airport, runwayLengthFt } = ils;
     const hdg = end.trueHeading;
     // Localizer antenna beyond the far end of the runway; glideslope ~1000 ft past threshold.
-    const loc = destinationPoint(end.threshold.lat, end.threshold.lon, hdg, (runwayLengthFt + 1000) / FT_PER_NM);
+    const loc = destinationPoint(
+      end.threshold.lat,
+      end.threshold.lon,
+      hdg,
+      (runwayLengthFt + 1000) / FT_PER_NM,
+    );
     const distLoc = distanceNm(loc.lat, loc.lon, ac.lat, ac.lon);
     const brgFromLoc = bearingDeg(loc.lat, loc.lon, ac.lat, ac.lon);
     const beta = norm180(brgFromLoc - norm360(hdg + 180));
     const inFront = Math.abs(beta) < 35;
     const locCourse = magneticHeading(airport, hdg);
-    if (distLoc > 25 || !inFront) return { ...EMPTY_RX, freq, ident: end.ils!.ident, kind: "ILS", locCourse };
+    if (distLoc > 25 || !inFront)
+      return { ...EMPTY_RX, freq, ident: end.ils!.ident, kind: "ILS", locCourse };
     // Localizer: ~±2.5° full scale (≈700 ft at threshold); 5 dots full scale each side → 2.5 dots shown.
-    const widthDeg = clamp(toDeg(Math.atan(350 / ((runwayLengthFt + 1000)))), 1.5, 3);
+    const widthDeg = clamp(toDeg(Math.atan(350 / (runwayLengthFt + 1000))), 1.5, 3);
     const cdiDots = clamp((beta / widthDeg) * 2.5, -2.5, 2.5);
     const gsPt = destinationPoint(end.threshold.lat, end.threshold.lon, hdg, 1000 / FT_PER_NM);
     const distGs = distanceNm(gsPt.lat, gsPt.lon, ac.lat, ac.lon) * FT_PER_NM;
@@ -103,7 +129,9 @@ function computeReceiver(freq: number, obs: number, ac: AircraftState): NavRecei
       gsDots,
       dmeValid: false,
       dmeNm: 0,
-      bearingTo: norm360(bearingDeg(ac.lat, ac.lon, end.threshold.lat, end.threshold.lon) - airport.magVar),
+      bearingTo: norm360(
+        bearingDeg(ac.lat, ac.lon, end.threshold.lat, end.threshold.lon) - airport.magVar,
+      ),
     };
   }
   // VOR
@@ -155,7 +183,13 @@ function waypointTarget(gps: GpsState, ac: AircraftState): { from: Waypoint; to:
   return { from: fp[i - 1]!, to: fp[i]! };
 }
 
-export function computeGps(gps: GpsState, ac: AircraftState, magVar: number, failed: boolean, directFrom: Waypoint | null): GpsOutput {
+export function computeGps(
+  gps: GpsState,
+  ac: AircraftState,
+  magVar: number,
+  failed: boolean,
+  directFrom: Waypoint | null,
+): GpsOutput {
   const empty: GpsOutput = {
     valid: false,
     fromId: "",
@@ -179,7 +213,10 @@ export function computeGps(gps: GpsState, ac: AircraftState, magVar: number, fai
   const dtkTrue = bearingDeg(from.lat, from.lon, to.lat, to.lon);
   const brgTrue = bearingDeg(ac.lat, ac.lon, to.lat, to.lon);
   const dist = distanceNm(ac.lat, ac.lon, to.lat, to.lon);
-  const xtk = from.lat === to.lat && from.lon === to.lon ? 0 : crossTrackNm(from.lat, from.lon, to.lat, to.lon, ac.lat, ac.lon);
+  const xtk =
+    from.lat === to.lat && from.lon === to.lon
+      ? 0
+      : crossTrackNm(from.lat, from.lon, to.lat, to.lon, ac.lat, ac.lon);
   const fullScale = gps.mode === "APR" ? 0.3 : gps.mode === "TERM" ? 1 : 2;
   const cdiDots = clamp((-xtk / fullScale) * 2.5, -2.5, 2.5);
   const toFrom = Math.abs(norm180(brgTrue - dtkTrue)) < 90 ? "TO" : "FROM";
@@ -226,10 +263,19 @@ export function computeNav(
   radios: Radios,
   gps: GpsState,
   magVar: number,
-  opts: { gpsFailed: boolean; navPowered: boolean; directFrom: Waypoint | null; ndbs: TrainingNdb[] },
+  opts: {
+    gpsFailed: boolean;
+    navPowered: boolean;
+    directFrom: Waypoint | null;
+    ndbs: TrainingNdb[];
+  },
 ): NavOutputs {
-  const nav1 = opts.navPowered ? computeReceiver(radios.nav1.active, radios.nav1.obs, ac) : { ...EMPTY_RX };
-  const nav2 = opts.navPowered ? computeReceiver(radios.nav2.active, radios.nav2.obs, ac) : { ...EMPTY_RX };
+  const nav1 = opts.navPowered
+    ? computeReceiver(radios.nav1.active, radios.nav1.obs, ac)
+    : { ...EMPTY_RX };
+  const nav2 = opts.navPowered
+    ? computeReceiver(radios.nav2.active, radios.nav2.obs, ac)
+    : { ...EMPTY_RX };
   const gpsOut = computeGps(gps, ac, magVar, opts.gpsFailed || !opts.navPowered, opts.directFrom);
 
   let hsi: NavOutputs["hsi"];
@@ -241,7 +287,12 @@ export function computeNav(
       toFrom: gpsOut.valid && gpsOut.toId ? gpsOut.toFrom : "OFF",
       gsDots: gpsOut.vdevDots,
       gsValid: gpsOut.vdevValid,
-      label: gps.approach && gps.mode === "APR" ? (gps.approach.kind === "RNAV" ? "LPV" : "GPS") : gps.mode,
+      label:
+        gps.approach && gps.mode === "APR"
+          ? gps.approach.kind === "RNAV"
+            ? "LPV"
+            : "GPS"
+          : gps.mode,
     };
   } else {
     const rx = radios.cdiSource === "NAV1" ? nav1 : nav2;
@@ -272,7 +323,12 @@ export function computeNav(
   const ils = nav1.kind === "ILS" ? findIlsByFreq(radios.nav1.active, ac.lat, ac.lon) : undefined;
   if (ils && opts.navPowered) {
     const d = distanceNm(ac.lat, ac.lon, ils.end.threshold.lat, ils.end.threshold.lon);
-    const beta = Math.abs(norm180(bearingDeg(ils.end.threshold.lat, ils.end.threshold.lon, ac.lat, ac.lon) - norm360(ils.end.trueHeading + 180)));
+    const beta = Math.abs(
+      norm180(
+        bearingDeg(ils.end.threshold.lat, ils.end.threshold.lon, ac.lat, ac.lon) -
+          norm360(ils.end.trueHeading + 180),
+      ),
+    );
     const cone = 0.15 + ac.aglFt / 20000;
     if (beta < 10) {
       if (Math.abs(d - 5) < cone) marker = "OM";
@@ -300,6 +356,13 @@ export function buildTrainingApproach(airport: Airport, end: RunwayEnd): Waypoin
     { id: `${end.id}IAF`, label: "IAF", ...iaf, kind: "fix", altFt: ifAlt },
     { id: `${end.id}IF`, label: "IF", ...ifp, kind: "fix", altFt: ifAlt },
     { id: `${end.id}FAF`, label: "FAF", ...faf, kind: "fix", altFt: fafAlt },
-    { id: `RW${end.id}`, label: `RW${end.id}`, lat: end.threshold.lat, lon: end.threshold.lon, kind: "runway", altFt: airport.elevationFt },
+    {
+      id: `RW${end.id}`,
+      label: `RW${end.id}`,
+      lat: end.threshold.lat,
+      lon: end.threshold.lon,
+      kind: "runway",
+      altFt: airport.elevationFt,
+    },
   ];
 }

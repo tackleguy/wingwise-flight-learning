@@ -5,17 +5,7 @@
 export type LatLon = { lat: number; lon: number };
 
 export type FrequencyType =
-  | "ATIS"
-  | "AWOS"
-  | "CLNC"
-  | "GND"
-  | "TWR"
-  | "CTAF"
-  | "UNICOM"
-  | "APP"
-  | "DEP"
-  | "CTR"
-  | "FSS";
+  "ATIS" | "AWOS" | "CLNC" | "GND" | "TWR" | "CTAF" | "UNICOM" | "APP" | "DEP" | "CTR" | "FSS";
 
 export interface Frequency {
   type: FrequencyType;
@@ -86,12 +76,7 @@ export interface Navaid {
 }
 
 export type AircraftCategory =
-  | "single-piston"
-  | "multi-piston"
-  | "high-performance"
-  | "turboprop"
-  | "business"
-  | "airliner";
+  "single-piston" | "multi-piston" | "high-performance" | "turboprop" | "business" | "airliner";
 
 /**
  * Simplified flight-model parameters. These are EDUCATIONAL APPROXIMATIONS chosen to

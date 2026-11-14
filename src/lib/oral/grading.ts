@@ -34,7 +34,11 @@ function keywordRegex(kw: string): RegExp {
     .trim()
     .split(" ")
     .filter(Boolean)
-    .map((w) => (w.endsWith("*") ? `${w.slice(0, -1).replace(/[^a-z0-9]/g, "")}[a-z0-9]*` : w.replace(/[^a-z0-9]/g, "")));
+    .map((w) =>
+      w.endsWith("*")
+        ? `${w.slice(0, -1).replace(/[^a-z0-9]/g, "")}[a-z0-9]*`
+        : w.replace(/[^a-z0-9]/g, ""),
+    );
   const re = new RegExp(` ${words.join(" ")} `);
   reCache.set(kw, re);
   return re;
@@ -44,7 +48,8 @@ export function conceptHit(concept: RubricConcept, normalized: string): boolean 
   return concept.keywords.some((k) => keywordRegex(k).test(normalized));
 }
 
-const NON_ANSWER = /^ (i dont know|i do not know|idk|not sure|no idea|pass|skip|dunno|i forget|i forgot|unsure)( |$)/;
+const NON_ANSWER =
+  /^ (i dont know|i do not know|idk|not sure|no idea|pass|skip|dunno|i forget|i forgot|unsure)( |$)/;
 
 export function isNonAnswer(text: string): boolean {
   const n = normalizeText(text);
@@ -59,7 +64,11 @@ export interface RubricResult {
   coverage: number;
 }
 
-export function evaluateRubric(q: OralQuestion, text: string, already?: ReadonlySet<string>): RubricResult {
+export function evaluateRubric(
+  q: OralQuestion,
+  text: string,
+  already?: ReadonlySet<string>,
+): RubricResult {
   const n = normalizeText(text);
   const nonAnswer = isNonAnswer(text);
   const hits = new Set<string>(already ?? []);
@@ -73,7 +82,11 @@ export function evaluateRubric(q: OralQuestion, text: string, already?: Readonly
  * Combined score after an optional follow-up. Concepts first covered in the follow-up earn 75%
  * credit — the examiner had to prompt for them.
  */
-export function rubricScore(q: OralQuestion, firstHits: ReadonlySet<string>, followHits?: ReadonlySet<string>): number {
+export function rubricScore(
+  q: OralQuestion,
+  firstHits: ReadonlySet<string>,
+  followHits?: ReadonlySet<string>,
+): number {
   const total = q.concepts.reduce((a, c) => a + c.weight, 0) || 1;
   let got = 0;
   for (const c of q.concepts) {
@@ -135,9 +148,20 @@ export function parseAiAssessment(text: string, provider: string): AiAssessment 
   const raw = extractJson(text);
   if (!raw || typeof raw !== "object") return null;
   const r = raw as Record<string, unknown>;
-  const scoreNum = typeof r["score"] === "number" ? r["score"] : typeof r["score"] === "string" ? Number(r["score"]) : NaN;
+  const scoreNum =
+    typeof r["score"] === "number"
+      ? r["score"]
+      : typeof r["score"] === "string"
+        ? Number(r["score"])
+        : NaN;
   if (!Number.isFinite(scoreNum)) return null;
-  const missing = Array.isArray(r["missing"]) ? r["missing"].filter((m): m is string => typeof m === "string").map((m) => clean(m, 80)).filter(Boolean).slice(0, 5) : [];
+  const missing = Array.isArray(r["missing"])
+    ? r["missing"]
+        .filter((m): m is string => typeof m === "string")
+        .map((m) => clean(m, 80))
+        .filter(Boolean)
+        .slice(0, 5)
+    : [];
   const feedback = typeof r["feedback"] === "string" ? clean(r["feedback"], 500) : "";
   const fu = typeof r["followUp"] === "string" ? clean(r["followUp"], 220) : "";
   return {
@@ -151,7 +175,10 @@ export function parseAiAssessment(text: string, provider: string): AiAssessment 
 
 const AI_TIMEOUT_MS = 12_000;
 
-export async function aiAssess(q: OralQuestion, transcript: { question: string; answer: string }[]): Promise<AiAssessment | null> {
+export async function aiAssess(
+  q: OralQuestion,
+  transcript: { question: string; answer: string }[],
+): Promise<AiAssessment | null> {
   const system = [
     "You are an FAA designated pilot examiner conducting a SIMULATED oral exam for training (not an official test).",
     "Grade the applicant's answer(s) to the question against the reference answer and key concepts.",
@@ -163,14 +190,25 @@ export async function aiAssess(q: OralQuestion, transcript: { question: string; 
     q.scenario ? `SCENARIO: ${q.scenario}` : "",
     `KEY CONCEPTS: ${q.concepts.map((c) => c.label).join("; ")}`,
     `REFERENCE ANSWER: ${q.modelAnswer}`,
-    ...transcript.map((t, i) => `${i === 0 ? "APPLICANT ANSWER" : `FOLLOW-UP "${t.question}" — APPLICANT ANSWER`}: ${t.answer.slice(0, 2000)}`),
+    ...transcript.map(
+      (t, i) =>
+        `${i === 0 ? "APPLICANT ANSWER" : `FOLLOW-UP "${t.question}" — APPLICANT ANSWER`}: ${t.answer.slice(0, 2000)}`,
+    ),
   ]
     .filter(Boolean)
     .join("\n");
   try {
     const res = await Promise.race([
-      aiChat({ service: "oral", system, messages: [{ role: "user", content: user }], json: true, temperature: 0.2 }),
-      new Promise<{ ok: false; reason: string }>((resolve) => setTimeout(() => resolve({ ok: false, reason: "timeout" }), AI_TIMEOUT_MS)),
+      aiChat({
+        service: "oral",
+        system,
+        messages: [{ role: "user", content: user }],
+        json: true,
+        temperature: 0.2,
+      }),
+      new Promise<{ ok: false; reason: string }>((resolve) =>
+        setTimeout(() => resolve({ ok: false, reason: "timeout" }), AI_TIMEOUT_MS),
+      ),
     ]);
     if (!res.ok) return null;
     return parseAiAssessment(res.text, res.provider);

@@ -23,7 +23,12 @@ import { cn } from "@/lib/utils";
 
 type StackTab = "ap" | "radios" | "gps" | "engine";
 
-const TAB_LABEL: Record<StackTab, string> = { ap: "Autopilot", radios: "Radios", gps: "GPS", engine: "Engine" };
+const TAB_LABEL: Record<StackTab, string> = {
+  ap: "Autopilot",
+  radios: "Radios",
+  gps: "GPS",
+  engine: "Engine",
+};
 
 export function InstrumentPanel() {
   const engine = useSimEngine();
@@ -38,7 +43,10 @@ export function InstrumentPanel() {
           <div className="h-full shrink-0 overflow-hidden" style={{ width: "min(46vh, 410px)" }}>
             <Pfd hideSoftKeys />
           </div>
-          <div className="hidden h-full shrink-0 overflow-hidden xl:block" style={{ width: "min(40vh, 360px)" }}>
+          <div
+            className="hidden h-full shrink-0 overflow-hidden xl:block"
+            style={{ width: "min(40vh, 360px)" }}
+          >
             <Mfd hideEngineStrip />
           </div>
         </>
@@ -47,7 +55,10 @@ export function InstrumentPanel() {
           <div className="h-full shrink-0 overflow-hidden" style={{ width: "min(62vh, 470px)" }}>
             <SixPack showCompass={false} />
           </div>
-          <div className="hidden h-full shrink-0 flex-col gap-2 overflow-hidden xl:flex" style={{ width: "min(22vh, 160px)" }}>
+          <div
+            className="hidden h-full shrink-0 flex-col gap-2 overflow-hidden xl:flex"
+            style={{ width: "min(22vh, 160px)" }}
+          >
             <VorIndicator nav={1} />
             <Hsi />
           </div>
@@ -59,7 +70,10 @@ export function InstrumentPanel() {
             <button
               key={t}
               onClick={() => setTab(t)}
-              className={cn("flex-1 rounded px-2 py-1 text-[10px] font-semibold tracking-wider uppercase", tab === t ? "bg-primary text-primary-foreground" : "text-white/70 hover:bg-white/5")}
+              className={cn(
+                "flex-1 rounded px-2 py-1 text-[10px] font-semibold tracking-wider uppercase",
+                tab === t ? "bg-primary text-primary-foreground" : "text-white/70 hover:bg-white/5",
+              )}
             >
               {TAB_LABEL[t]}
             </button>

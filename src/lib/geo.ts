@@ -49,7 +49,9 @@ export function destinationPoint(lat: number, lon: number, brgDeg: number, distN
   const p1 = toRad(lat);
   const l1 = toRad(lon);
   const p2 = Math.asin(Math.sin(p1) * Math.cos(d) + Math.cos(p1) * Math.sin(d) * Math.cos(b));
-  const l2 = l1 + Math.atan2(Math.sin(b) * Math.sin(d) * Math.cos(p1), Math.cos(d) - Math.sin(p1) * Math.sin(p2));
+  const l2 =
+    l1 +
+    Math.atan2(Math.sin(b) * Math.sin(d) * Math.cos(p1), Math.cos(d) - Math.sin(p1) * Math.sin(p2));
   return { lat: toDeg(p2), lon: ((toDeg(l2) + 540) % 360) - 180 };
 }
 

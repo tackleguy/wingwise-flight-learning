@@ -46,7 +46,11 @@ function bankLimit(tasKt: number) {
 }
 
 /** Desired true track for the active nav source; null when no valid guidance. */
-function navGuidance(nav: NavOutputs, radios: Radios, magVar: number): { desired: number; dots: number } | null {
+function navGuidance(
+  nav: NavOutputs,
+  radios: Radios,
+  magVar: number,
+): { desired: number; dots: number } | null {
   const h = nav.hsi;
   if (h.toFrom === "OFF") return null;
   const courseTrue = norm360(h.course + magVar);
@@ -75,7 +79,11 @@ export function autopilotStep(
   const guidance = navGuidance(nav, radios, magVar);
 
   // Arm → capture transitions
-  if (a.lateralArmed && guidance && Math.abs(guidance.dots) < (a.lateralArmed === "LOC" ? 2.2 : 2)) {
+  if (
+    a.lateralArmed &&
+    guidance &&
+    Math.abs(guidance.dots) < (a.lateralArmed === "LOC" ? 2.2 : 2)
+  ) {
     if (a.lateralArmed === "NAV") a.lateral = "NAV";
     else {
       a.lateral = "APR";
@@ -120,7 +128,12 @@ export function autopilotStep(
       a.annunciation = "ALT CAPTURE";
     }
   }
-  if (a.verticalArmed === "GS" && nav.hsi.gsValid && Math.abs(nav.hsi.gsDots) < 0.5 && a.lateral === "APR") {
+  if (
+    a.verticalArmed === "GS" &&
+    nav.hsi.gsValid &&
+    Math.abs(nav.hsi.gsDots) < 0.5 &&
+    a.lateral === "APR"
+  ) {
     a.vertical = "GS";
     a.verticalArmed = null;
     a.annunciation = "GS CAPTURE";
