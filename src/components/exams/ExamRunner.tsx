@@ -497,7 +497,14 @@ export function ExamRunner({ def, title, mode, count, subjects, onlyIds, backTo,
                 </Button>
               )}
             </div>
-            {showNav ? <div className="mt-3 rounded-md border bg-card p-3 lg:hidden">{navigator}</div> : null}
+            {showNav ? (
+              <div className="mt-3 rounded-md border bg-card p-3 lg:hidden">
+                {navigator}
+                <Button variant="outline" size="sm" className="mt-3 w-full" onClick={() => setPhase("review")}>
+                  <ClipboardCheck /> Review & submit
+                </Button>
+              </div>
+            ) : null}
           </div>
         </div>
         <aside className="hidden lg:block">

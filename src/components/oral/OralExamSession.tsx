@@ -175,7 +175,7 @@ export function OralExamSession({
 
   useEffect(() => {
     const el = scrollRef.current;
-    if (el) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+    if (el) el.scrollTop = el.scrollHeight;
   }, [messages, step]);
 
   const appendVoice = useCallback((t: string) => setInput((prev) => (prev ? `${prev.trimEnd()} ${t}` : t)), []);
