@@ -1,5 +1,20 @@
 import type { Module } from "../types";
-import { caution, check, diagram, h, info, link, ol, p, practice, q, table, tip, ul, warning } from "../builders";
+import {
+  caution,
+  check,
+  diagram,
+  h,
+  info,
+  link,
+  ol,
+  p,
+  practice,
+  q,
+  table,
+  tip,
+  ul,
+  warning,
+} from "../builders";
 
 export const approaches: Module = {
   id: "approaches",
@@ -26,10 +41,26 @@ export const approaches: Module = {
           ["Segment", "Begins at", "Purpose"],
           [
             ["Feeder route", "En route structure", "Connects the en route system to the IAF"],
-            ["Initial", "Initial approach fix (IAF)", "Maneuvers onto the intermediate course, may include a course reversal or DME arc"],
-            ["Intermediate", "Intermediate fix (IF)", "Aligns the aircraft and adjusts speed and configuration"],
-            ["Final", "Final approach fix (FAF) or glideslope intercept", "Descent to minimums and alignment with the runway"],
-            ["Missed approach", "Missed approach point (MAP) or DA", "Climb to a safe altitude and a holding fix"],
+            [
+              "Initial",
+              "Initial approach fix (IAF)",
+              "Maneuvers onto the intermediate course, may include a course reversal or DME arc",
+            ],
+            [
+              "Intermediate",
+              "Intermediate fix (IF)",
+              "Aligns the aircraft and adjusts speed and configuration",
+            ],
+            [
+              "Final",
+              "Final approach fix (FAF) or glideslope intercept",
+              "Descent to minimums and alignment with the runway",
+            ],
+            [
+              "Missed approach",
+              "Missed approach point (MAP) or DA",
+              "Climb to a safe altitude and a holding fix",
+            ],
           ],
         ),
         info(
@@ -44,10 +75,26 @@ export const approaches: Module = {
         table(
           ["", "Decision altitude (DA)", "Minimum descent altitude (MDA)"],
           [
-            ["Used on", "Precision (ILS) and approaches with vertical guidance (LPV, LNAV/VNAV)", "Nonprecision approaches (LNAV, LP, VOR, LOC, NDB) and circling"],
-            ["Meaning", "The altitude at which you must decide to continue or begin the missed approach", "The lowest altitude you may descend to until the 91.175(c) requirements are met"],
-            ["Below it?", "Momentary descent below DA during the transition to the missed approach is expected", "You may not descend below the MDA without the required visual references"],
-            ["Where the miss begins", "At DA", "At the missed approach point (often a fix or timed from the FAF)"],
+            [
+              "Used on",
+              "Precision (ILS) and approaches with vertical guidance (LPV, LNAV/VNAV)",
+              "Nonprecision approaches (LNAV, LP, VOR, LOC, NDB) and circling",
+            ],
+            [
+              "Meaning",
+              "The altitude at which you must decide to continue or begin the missed approach",
+              "The lowest altitude you may descend to until the 91.175(c) requirements are met",
+            ],
+            [
+              "Below it?",
+              "Momentary descent below DA during the transition to the missed approach is expected",
+              "You may not descend below the MDA without the required visual references",
+            ],
+            [
+              "Where the miss begins",
+              "At DA",
+              "At the missed approach point (often a fix or timed from the FAF)",
+            ],
           ],
         ),
         h("Approach categories"),
@@ -59,10 +106,11 @@ export const approaches: Module = {
             ["C", "121 to 140 knots"],
             ["D", "141 to 165 knots"],
             ["E", "166 knots or more"],
+            [
+              "Note",
+              "If you maneuver (especially when circling) faster than your category's range, use the higher category's minimums",
+            ],
           ],
-        ),
-        p(
-          "If you fly the approach (especially a circling approach) at a speed above your category's range, use the minimums for the higher category.",
         ),
         h("14 CFR 91.175 — descending below DA or MDA"),
         p("You may not operate below the DA or MDA unless all three conditions are met:"),
@@ -83,11 +131,11 @@ export const approaches: Module = {
           prompt: "How low may you descend?",
           choices: [
             "To the runway — the ALS is a valid reference",
-            "You must go missed at DA",
-            "To 50 ft above the touchdown zone",
             "To 100 ft above the touchdown zone elevation, unless other references become visible",
+            "To 50 ft above the touchdown zone",
+            "You must go missed at DA",
           ],
-          answer: 3,
+          answer: 1,
           explanation:
             "The ALS lets you continue below DA, but only to 100 ft above TDZE unless the red terminating or red side row bars are visible. To land you then need one of the other references (threshold, runway lights, etc.).",
           subject: "Instrument Approaches",
@@ -113,14 +161,29 @@ export const approaches: Module = {
         p(
           "The instrument landing system provides precise lateral and vertical guidance to a runway. The localizer gives lateral guidance along the runway centerline; the glideslope gives vertical guidance, usually on a 3° path; marker beacons or fixes give range information; and an approach light system helps the transition to visual flight.",
         ),
-        diagram("ils", "ILS localizer and glideslope: course widths, glideslope angle and the decision altitude."),
+        diagram(
+          "ils",
+          "ILS localizer and glideslope: course widths, glideslope angle and the decision altitude.",
+        ),
         table(
           ["Component", "Details"],
           [
-            ["Localizer", "108.10–111.95 MHz (odd tenths). Course width 3°–6° (typically 5°, i.e., 2.5° full scale each side), tailored to about 700 ft wide at the threshold — roughly four times more sensitive than a VOR"],
-            ["Glideslope", "UHF, automatically paired with the localizer. Typically 3°. Full-scale deflection is about ±0.7°. False glideslopes exist above the true one, so intercept from below"],
-            ["Outer marker", "4–7 NM from the threshold; blue light, dashes (often replaced by a named fix)"],
-            ["Middle marker", "About 3,500 ft from the threshold; amber light, alternating dots and dashes"],
+            [
+              "Localizer",
+              "108.10–111.95 MHz (odd tenths). Course width 3°–6° (typically 5°, i.e., 2.5° full scale each side), tailored to about 700 ft wide at the threshold — roughly four times more sensitive than a VOR",
+            ],
+            [
+              "Glideslope",
+              "UHF, automatically paired with the localizer. Typically 3°. Full-scale deflection is about ±0.7°. False glideslopes exist above the true one, so intercept from below",
+            ],
+            [
+              "Outer marker",
+              "4–7 NM from the threshold; blue light, dashes (often replaced by a named fix)",
+            ],
+            [
+              "Middle marker",
+              "About 3,500 ft from the threshold; amber light, alternating dots and dashes",
+            ],
             ["Approach lights", "Aid the transition from instrument to visual flight"],
           ],
         ),
@@ -134,11 +197,11 @@ export const approaches: Module = {
           prompt: "Why should the glideslope normally be intercepted from below?",
           choices: [
             "Because the glideslope signal is not transmitted above 3°",
-            "To avoid capturing a false glideslope that exists above the true one",
-            "Because ATC regulations prohibit intercepting from above",
             "Because the localizer is only usable below the glideslope",
+            "Because ATC regulations prohibit intercepting from above",
+            "To avoid capturing a false glideslope that exists above the true one",
           ],
-          answer: 1,
+          answer: 3,
           explanation:
             "False glideslope lobes exist at higher angles (multiples of the true angle). Intercepting from below at the published altitude ensures you capture the true glideslope. Intercepting from above is not prohibited, but it risks capturing a false one.",
           subject: "Instrument Approaches",
@@ -152,7 +215,12 @@ export const approaches: Module = {
         table(
           ["Minimums line", "Guidance", "Minimum type", "Equipment"],
           [
-            ["LPV", "Lateral and vertical, angular like an ILS", "DA (can be as low as 200 ft)", "WAAS"],
+            [
+              "LPV",
+              "Lateral and vertical, angular like an ILS",
+              "DA (can be as low as 200 ft)",
+              "WAAS",
+            ],
             ["LNAV/VNAV", "Lateral and vertical", "DA", "WAAS or approved baro-VNAV"],
             ["LP", "Lateral only, angular", "MDA", "WAAS"],
             ["LNAV", "Lateral only", "MDA", "IFR-approved GPS (WAAS not required)"],
@@ -165,8 +233,16 @@ export const approaches: Module = {
           "Check the annunciator",
           "Before the final approach fix, confirm the GPS annunciates the approach mode you expect (for example, LPV). If it downgrades to LNAV, you must use the LNAV MDA, not the LPV DA.",
         ),
-        practice("/simulator?scenario=ifr-ils", "ILS approach", "Fly a coupled and hand-flown ILS to minimums."),
-        practice("/simulator?scenario=ifr-rnav", "RNAV approach", "Fly an RNAV (GPS) approach to LPV minimums and handle a downgrade to LNAV."),
+        practice(
+          "/simulator?scenario=ifr-ils",
+          "ILS approach",
+          "Fly a coupled and hand-flown ILS to minimums.",
+        ),
+        practice(
+          "/simulator?scenario=ifr-rnav",
+          "RNAV approach",
+          "Fly an RNAV (GPS) approach to LPV minimums and handle a downgrade to LNAV.",
+        ),
       ],
     },
     {
@@ -191,7 +267,8 @@ export const approaches: Module = {
         check({
           id: "ifr.approaches.3.k1",
           kind: "calc",
-          context: "The timing table shows FAF to MAP: 4.2 NM. Your groundspeed on final is 90 knots.",
+          context:
+            "The timing table shows FAF to MAP: 4.2 NM. Your groundspeed on final is 90 knots.",
           prompt: "About how long after passing the FAF will you reach the MAP?",
           choices: ["2 min 48 s", "1 min 50 s", "3 min 30 s", "4 min 12 s"],
           answer: 0,
@@ -225,14 +302,15 @@ export const approaches: Module = {
         check({
           id: "ifr.approaches.3.k2",
           kind: "mc",
-          prompt: "You decide to go missed 2 NM before the MAP on a nonprecision approach. What does the AIM recommend?",
+          prompt:
+            "You decide to go missed 2 NM before the MAP on a nonprecision approach. What does the AIM recommend?",
           choices: [
-            "Immediately turn to the missed approach heading",
             "Climb straight ahead to the MAP at or above the MDA, then fly the missed approach",
+            "Immediately turn to the missed approach heading",
             "Descend to the MDA and continue to the MAP",
             "Request vectors and hold present position",
           ],
-          answer: 1,
+          answer: 0,
           explanation:
             "Fly to the MAP along the approach course at or above the MDA, then execute the published missed approach. Turning early can take you out of the protected airspace designed for the missed approach.",
           subject: "Instrument Approaches",
@@ -242,23 +320,52 @@ export const approaches: Module = {
           "Brief the miss first",
           "Brief the missed approach before you start the approach and set up the navigation for it. Expect the miss on every approach — then landing is the pleasant surprise.",
         ),
-        practice("/simulator?scenario=ifr-missed", "Missed approach", "Fly an approach to minimums, go missed and enter the published hold."),
+        practice(
+          "/simulator?scenario=ifr-missed",
+          "Missed approach",
+          "Fly an approach to minimums, go missed and enter the published hold.",
+        ),
       ],
     },
   ],
   flashcards: [
-    { id: "ifr.approaches.fc1", front: "DA vs MDA", back: "DA: decision point on precision/APV approaches. MDA: lowest altitude on nonprecision/circling until visual references are met." },
-    { id: "ifr.approaches.fc2", front: "Approach category B", back: "VREF / 1.3 VSO of 91–120 knots." },
-    { id: "ifr.approaches.fc3", front: "Approach lights as the only reference", back: "Descend no lower than 100 ft above TDZE unless red terminating or side row bars are visible." },
-    { id: "ifr.approaches.fc4", front: "LPV vs LNAV", back: "LPV: lateral + vertical to a DA (WAAS). LNAV: lateral only to an MDA." },
-    { id: "ifr.approaches.fc5", front: "When a procedure turn is not permitted", back: "NoPT, radar vectors to final, timed approach from a hold, or cleared straight-in." },
-    { id: "ifr.approaches.fc6", front: "Losing sight of the airport while circling", back: "Climbing turn toward the landing runway, then continue to the missed approach course." },
+    {
+      id: "ifr.approaches.fc1",
+      front: "DA vs MDA",
+      back: "DA: decision point on precision/APV approaches. MDA: lowest altitude on nonprecision/circling until visual references are met.",
+    },
+    {
+      id: "ifr.approaches.fc2",
+      front: "Approach category B",
+      back: "VREF / 1.3 VSO of 91–120 knots.",
+    },
+    {
+      id: "ifr.approaches.fc3",
+      front: "Approach lights as the only reference",
+      back: "Descend no lower than 100 ft above TDZE unless red terminating or side row bars are visible.",
+    },
+    {
+      id: "ifr.approaches.fc4",
+      front: "LPV vs LNAV",
+      back: "LPV: lateral + vertical to a DA (WAAS). LNAV: lateral only to an MDA.",
+    },
+    {
+      id: "ifr.approaches.fc5",
+      front: "When a procedure turn is not permitted",
+      back: "NoPT, radar vectors to final, timed approach from a hold, or cleared straight-in.",
+    },
+    {
+      id: "ifr.approaches.fc6",
+      front: "Losing sight of the airport while circling",
+      back: "Climbing turn toward the landing runway, then continue to the missed approach course.",
+    },
   ],
   quiz: [
     q({
       id: "ifr.approaches.q1",
       kind: "mc",
-      prompt: "An airplane's VREF is 75 knots, but you plan to circle at 95 knots. Which approach category minimums should you use?",
+      prompt:
+        "An airplane's VREF is 75 knots, but you plan to circle at 95 knots. Which approach category minimums should you use?",
       choices: ["A", "B", "C", "D"],
       answer: 1,
       explanation:
@@ -309,7 +416,8 @@ export const approaches: Module = {
     q({
       id: "ifr.approaches.q5",
       kind: "mc",
-      prompt: "Under 91.175, which is NOT one of the visual references that allows descent below DA or MDA?",
+      prompt:
+        "Under 91.175, which is NOT one of the visual references that allows descent below DA or MDA?",
       choices: [
         "Runway end identifier lights (REIL)",
         "The visual glide slope indicator",
@@ -325,7 +433,8 @@ export const approaches: Module = {
     q({
       id: "ifr.approaches.q6",
       kind: "tf",
-      prompt: "True or false: when established on a segment marked 'NoPT', you should fly the procedure turn anyway if you are high.",
+      prompt:
+        "True or false: when established on a segment marked 'NoPT', you should fly the procedure turn anyway if you are high.",
       choices: ["True", "False"],
       answer: 1,
       explanation:
@@ -336,7 +445,8 @@ export const approaches: Module = {
     q({
       id: "ifr.approaches.q7",
       kind: "mc",
-      prompt: "While circling to land at the MDA, you lose sight of the airport. What should you do?",
+      prompt:
+        "While circling to land at the MDA, you lose sight of the airport. What should you do?",
       choices: [
         "Descend to regain visual contact",
         "Continue the circle at the MDA until you see the runway again",

@@ -1,5 +1,18 @@
 import type { Module } from "../types";
-import { caution, check, diagram, h, info, link, p, practice, q, table, tip, ul } from "../builders";
+import {
+  caution,
+  check,
+  diagram,
+  h,
+  info,
+  link,
+  p,
+  practice,
+  q,
+  table,
+  tip,
+  ul,
+} from "../builders";
 
 export const principles: Module = {
   id: "principles",
@@ -36,10 +49,22 @@ export const principles: Module = {
         table(
           ["Condition", "What the forces are doing"],
           [
-            ["Straight-and-level, constant speed", "Lift = weight, thrust = drag (no acceleration)"],
-            ["Accelerating in level flight", "Thrust momentarily exceeds drag until drag rises to match"],
-            ["Steady climb", "A component of weight acts rearward along the flight path, so more thrust is needed"],
-            ["Steady descent", "A component of weight acts forward along the path, so less thrust is needed"],
+            [
+              "Straight-and-level, constant speed",
+              "Lift = weight, thrust = drag (no acceleration)",
+            ],
+            [
+              "Accelerating in level flight",
+              "Thrust momentarily exceeds drag until drag rises to match",
+            ],
+            [
+              "Steady climb",
+              "A component of weight acts rearward along the flight path, so more thrust is needed",
+            ],
+            [
+              "Steady descent",
+              "A component of weight acts forward along the path, so less thrust is needed",
+            ],
           ],
         ),
         h("Changing the balance"),
@@ -56,14 +81,15 @@ export const principles: Module = {
         check({
           id: "vfr.principles.1.k1",
           kind: "mc",
-          prompt: "During straight-and-level flight at a constant airspeed, which statement is true?",
+          prompt:
+            "During straight-and-level flight at a constant airspeed, which statement is true?",
           choices: [
-            "Lift is greater than weight and thrust is greater than drag",
             "Lift equals weight and thrust equals drag",
+            "Lift is greater than weight and thrust is greater than drag",
             "Lift equals thrust and weight equals drag",
             "Thrust is greater than drag, which keeps the airplane moving",
           ],
-          answer: 1,
+          answer: 0,
           explanation:
             "Constant speed and constant altitude mean no acceleration, so opposing forces balance: lift = weight and thrust = drag. A common misconception is that thrust must exceed drag to keep moving — that would cause acceleration, not steady flight.",
           subject: "Aerodynamics",
@@ -108,7 +134,11 @@ export const principles: Module = {
         table(
           ["Angle", "Measured between", "Pilot controls it?"],
           [
-            ["Angle of attack", "Chord line and relative wind", "Yes — primarily with the elevator"],
+            [
+              "Angle of attack",
+              "Chord line and relative wind",
+              "Yes — primarily with the elevator",
+            ],
             ["Pitch attitude", "Longitudinal axis and the natural horizon", "Yes"],
             ["Angle of incidence", "Chord line and longitudinal axis", "No — fixed by design"],
           ],
@@ -127,7 +157,12 @@ export const principles: Module = {
           id: "vfr.principles.2.k1",
           kind: "mc",
           prompt: "If airspeed is doubled while angle of attack stays the same, lift will:",
-          choices: ["Double", "Remain the same", "Increase by a factor of four", "Halve, because drag increases"],
+          choices: [
+            "Double",
+            "Remain the same",
+            "Increase by a factor of four",
+            "Halve, because drag increases",
+          ],
           answer: 2,
           explanation:
             "Lift varies with the square of velocity, so 2² = 4 times the lift. 'Double' is the tempting answer if you treat the relationship as linear, but the V² term makes it quadratic.",
@@ -145,7 +180,8 @@ export const principles: Module = {
         check({
           id: "vfr.principles.2.k2",
           kind: "tf",
-          prompt: "True or false: angle of attack is the angle between the wing's chord line and the horizon.",
+          prompt:
+            "True or false: angle of attack is the angle between the wing's chord line and the horizon.",
           choices: ["True", "False"],
           answer: 1,
           explanation:
@@ -162,7 +198,11 @@ export const principles: Module = {
     },
   ],
   flashcards: [
-    { id: "vfr.principles.fc1", front: "The four forces of flight", back: "Lift, weight, thrust and drag." },
+    {
+      id: "vfr.principles.fc1",
+      front: "The four forces of flight",
+      back: "Lift, weight, thrust and drag.",
+    },
     {
       id: "vfr.principles.fc2",
       front: "Relationship of forces in straight-and-level, unaccelerated flight",
@@ -196,11 +236,11 @@ export const principles: Module = {
       prompt: "In which direction does lift act?",
       choices: [
         "Straight up, opposite gravity",
-        "Perpendicular to the relative wind",
-        "Parallel to the chord line",
         "Perpendicular to the longitudinal axis",
+        "Parallel to the chord line",
+        "Perpendicular to the relative wind",
       ],
-      answer: 1,
+      answer: 3,
       explanation:
         "Lift is defined as perpendicular to the relative wind (flight path). It only points 'straight up' when the flight path is level and the wings are level — in a bank or climb it tilts.",
       subject: "Aerodynamics",
@@ -209,7 +249,8 @@ export const principles: Module = {
     q({
       id: "vfr.principles.q2",
       kind: "mc",
-      prompt: "The angle between the chord line of an airfoil and the relative wind is known as the:",
+      prompt:
+        "The angle between the chord line of an airfoil and the relative wind is known as the:",
       choices: ["Angle of incidence", "Pitch angle", "Angle of attack", "Dihedral angle"],
       answer: 2,
       explanation:
@@ -249,7 +290,8 @@ export const principles: Module = {
     q({
       id: "vfr.principles.q5",
       kind: "mc",
-      prompt: "Which change will DECREASE the lift a wing produces at a given indicated angle of attack and true airspeed?",
+      prompt:
+        "Which change will DECREASE the lift a wing produces at a given indicated angle of attack and true airspeed?",
       choices: [
         "Lowering the flaps",
         "Moving to colder air",
@@ -282,8 +324,13 @@ export const principles: Module = {
       id: "vfr.principles.q7",
       kind: "mc",
       prompt: "Wingtip vortices are strongest behind an aircraft that is:",
-      choices: ["Light, dirty and fast", "Heavy, clean and slow", "Heavy, dirty and fast", "Light, clean and slow"],
-      answer: 1,
+      choices: [
+        "Heavy, clean and slow",
+        "Light, dirty and fast",
+        "Heavy, dirty and fast",
+        "Light, clean and slow",
+      ],
+      answer: 0,
       explanation:
         "Vortex strength is greatest when the wing is working hardest: high weight, clean configuration and slow speed (high AOA). Extended flaps and gear ('dirty') change the vortex characteristics and generally reduce strength.",
       subject: "Aerodynamics",

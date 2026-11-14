@@ -96,10 +96,22 @@ export const controls: Module = {
         table(
           ["Flap type", "How it works", "Notes"],
           [
-            ["Plain", "Trailing edge hinges down", "Simple; raises lift and drag; pitch-down moment"],
+            [
+              "Plain",
+              "Trailing edge hinges down",
+              "Simple; raises lift and drag; pitch-down moment",
+            ],
             ["Split", "Only the lower surface deflects", "More drag than plain flap"],
-            ["Slotted", "A gap lets high-energy air flow over the flap", "Delays separation; more lift"],
-            ["Fowler", "Moves aft, then down", "Increases wing area and camber; largest lift increase"],
+            [
+              "Slotted",
+              "A gap lets high-energy air flow over the flap",
+              "Delays separation; more lift",
+            ],
+            [
+              "Fowler",
+              "Moves aft, then down",
+              "Increases wing area and camber; largest lift increase",
+            ],
           ],
         ),
         caution(
@@ -126,7 +138,8 @@ export const controls: Module = {
         check({
           id: "vfr.controls.2.k1",
           kind: "scenario",
-          context: "You are taxiing a tricycle-gear, high-wing airplane with a strong quartering tailwind from the left.",
+          context:
+            "You are taxiing a tricycle-gear, high-wing airplane with a strong quartering tailwind from the left.",
           prompt: "How should you position the controls?",
           choices: [
             "Left aileron up, neutral elevator",
@@ -160,20 +173,44 @@ export const controls: Module = {
     },
   ],
   flashcards: [
-    { id: "vfr.controls.fc1", front: "Ailerons control movement about which axis?", back: "The longitudinal axis (roll)." },
-    { id: "vfr.controls.fc2", front: "Elevator controls movement about which axis?", back: "The lateral axis (pitch)." },
-    { id: "vfr.controls.fc3", front: "Adverse yaw", back: "Yaw opposite the direction of roll, caused by extra induced drag on the wing with the lowered aileron." },
-    { id: "vfr.controls.fc4", front: "Trim tab movement", back: "Opposite to the movement of the control surface it trims." },
-    { id: "vfr.controls.fc5", front: "Taxiing with a quartering tailwind", back: "'Dive away from the wind': yoke away from the wind, elevator forward (down)." },
-    { id: "vfr.controls.fc6", front: "Fowler flap", back: "Moves aft and down, increasing both wing area and camber." },
+    {
+      id: "vfr.controls.fc1",
+      front: "Ailerons control movement about which axis?",
+      back: "The longitudinal axis (roll).",
+    },
+    {
+      id: "vfr.controls.fc2",
+      front: "Elevator controls movement about which axis?",
+      back: "The lateral axis (pitch).",
+    },
+    {
+      id: "vfr.controls.fc3",
+      front: "Adverse yaw",
+      back: "Yaw opposite the direction of roll, caused by extra induced drag on the wing with the lowered aileron.",
+    },
+    {
+      id: "vfr.controls.fc4",
+      front: "Trim tab movement",
+      back: "Opposite to the movement of the control surface it trims.",
+    },
+    {
+      id: "vfr.controls.fc5",
+      front: "Taxiing with a quartering tailwind",
+      back: "'Dive away from the wind': yoke away from the wind, elevator forward (down).",
+    },
+    {
+      id: "vfr.controls.fc6",
+      front: "Fowler flap",
+      back: "Moves aft and down, increasing both wing area and camber.",
+    },
   ],
   quiz: [
     q({
       id: "vfr.controls.q1",
       kind: "mc",
       prompt: "The three axes of an airplane intersect at the:",
-      choices: ["Center of pressure", "Center of gravity", "Aerodynamic center", "Datum"],
-      answer: 1,
+      choices: ["Center of gravity", "Center of pressure", "Aerodynamic center", "Datum"],
+      answer: 0,
       explanation:
         "All three axes pass through the CG; the airplane rotates about its CG. The center of pressure is where lift effectively acts and moves with angle of attack. The datum is an arbitrary reference for weight-and-balance measurements.",
       subject: "Aerodynamics",
@@ -185,11 +222,11 @@ export const controls: Module = {
       prompt: "What is the purpose of the rudder?",
       choices: [
         "To bank the airplane in a turn",
-        "To control yaw and keep the airplane coordinated",
-        "To control pitch",
         "To turn the airplane without banking",
+        "To control pitch",
+        "To control yaw and keep the airplane coordinated",
       ],
-      answer: 1,
+      answer: 3,
       explanation:
         "The rudder controls yaw about the vertical axis and is used to coordinate turns. Turning is caused by the horizontal component of lift when banked, so the rudder is not what turns the airplane.",
       subject: "Aerodynamics",
@@ -218,11 +255,11 @@ export const controls: Module = {
       prompt: "Extending flaps on approach primarily allows:",
       choices: [
         "A higher approach speed with a shallower angle",
-        "Reduced stall speed with no change in drag",
-        "Increased cruise speed",
         "A steeper approach angle without increasing airspeed",
+        "Increased cruise speed",
+        "Reduced stall speed with no change in drag",
       ],
-      answer: 3,
+      answer: 1,
       explanation:
         "Flaps add lift and drag, so you can descend more steeply without building speed and touch down slower. They do increase drag — that is part of how they steepen the approach.",
       subject: "Aerodynamics",
@@ -247,10 +284,12 @@ export const controls: Module = {
     q({
       id: "vfr.controls.q6",
       kind: "tf",
-      prompt: "True or false: if the inclinometer ball is deflected to the right during a turn, you should add right rudder.",
+      prompt:
+        "True or false: if the inclinometer ball is deflected to the right during a turn, you should add right rudder.",
       choices: ["True", "False"],
       answer: 0,
-      explanation: "True — 'step on the ball'. Pressing the rudder on the side toward which the ball has moved recenters it and restores coordination.",
+      explanation:
+        "True — 'step on the ball'. Pressing the rudder on the side toward which the ball has moved recenters it and restores coordination.",
       subject: "Flight Instruments",
       reference: "PHAK Ch. 8",
     }),

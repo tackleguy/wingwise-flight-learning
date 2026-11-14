@@ -1,5 +1,20 @@
 import type { Module } from "../types";
-import { caution, check, diagram, exercise, h, info, link, p, practice, q, table, tip, ul, warning } from "../builders";
+import {
+  caution,
+  check,
+  diagram,
+  exercise,
+  h,
+  info,
+  link,
+  p,
+  practice,
+  q,
+  table,
+  tip,
+  ul,
+  warning,
+} from "../builders";
 
 export const airspace: Module = {
   id: "airspace",
@@ -73,8 +88,14 @@ export const airspace: Module = {
           ["Where", "Maximum indicated airspeed"],
           [
             ["Below 10,000 ft MSL", "250 knots"],
-            ["At or below 2,500 ft above the surface within 4 NM of the primary airport of Class C or D (unless authorized)", "200 knots"],
-            ["Beneath the lateral limits of Class B, or in a VFR corridor through Class B", "200 knots"],
+            [
+              "At or below 2,500 ft above the surface within 4 NM of the primary airport of Class C or D (unless authorized)",
+              "200 knots",
+            ],
+            [
+              "Beneath the lateral limits of Class B, or in a VFR corridor through Class B",
+              "200 knots",
+            ],
           ],
         ),
         tip(
@@ -112,9 +133,15 @@ export const airspace: Module = {
           [
             ["Surface", "Dashed magenta line around the airport"],
             ["700 ft AGL", "Shaded magenta vignette (fuzzy side inward)"],
-            ["1,200 ft AGL", "The default in most areas; a shaded blue vignette marks the edge where a higher floor begins"],
+            [
+              "1,200 ft AGL",
+              "The default in most areas; a shaded blue vignette marks the edge where a higher floor begins",
+            ],
             ["Specified altitude (e.g., 14,500 ft MSL)", "Staggered blue line or printed value"],
-            ["Federal (Victor) airways", "From 1,200 ft AGL up to but not including 18,000 ft MSL, 4 NM either side of centerline"],
+            [
+              "Federal (Victor) airways",
+              "From 1,200 ft AGL up to but not including 18,000 ft MSL, 4 NM either side of centerline",
+            ],
           ],
         ),
         h("Class G"),
@@ -125,10 +152,20 @@ export const airspace: Module = {
           ["Class", "Entry requirement", "Min. pilot certificate", "Transponder / ADS-B"],
           [
             ["A", "IFR clearance", "Instrument rating", "Required"],
-            ["B", "ATC clearance", "Private (or endorsed student/recreational)", "Required (and within 30 NM veil)"],
+            [
+              "B",
+              "ATC clearance",
+              "Private (or endorsed student/recreational)",
+              "Required (and within 30 NM veil)",
+            ],
             ["C", "Two-way radio communication", "Student", "Required"],
             ["D", "Two-way radio communication", "Student", "Not required by Class D rule"],
-            ["E", "None for VFR", "Student", "Required at and above 10,000 ft MSL, excluding at or below 2,500 ft AGL"],
+            [
+              "E",
+              "None for VFR",
+              "Student",
+              "Required at and above 10,000 ft MSL, excluding at or below 2,500 ft AGL",
+            ],
             ["G", "None", "Student", "Not required"],
           ],
         ),
@@ -148,7 +185,10 @@ export const airspace: Module = {
           subject: "Charts",
           reference: "FAA Aeronautical Chart User's Guide",
         }),
-        exercise("airspace-identify", "Identify the airspace class and floor at each point on the chart"),
+        exercise(
+          "airspace-identify",
+          "Identify the airspace class and floor at each point on the chart",
+        ),
         info(
           "Weather minimums matter more than radio calls",
           "Because Class E and G have different visibility and cloud clearance minimums, knowing exactly where the Class E floor begins tells you which VFR minimums apply at your altitude.",
@@ -173,11 +213,31 @@ export const airspace: Module = {
           ["Type", "Chart label", "What it means for a VFR pilot"],
           [
             ["Prohibited area", "P-xxx", "Flight is prohibited (e.g., over the White House, P-56)"],
-            ["Restricted area", "R-xxxx", "Hazards such as artillery, missiles or aerial gunnery. Do not enter when active without permission from the controlling/using agency"],
-            ["Warning area", "W-xxx", "Like a restricted area, but over international waters beyond 3 NM from the coast; hazardous activity"],
-            ["Military operations area (MOA)", "Name + 'MOA'", "VFR flight is permitted but use extreme caution; contact the controlling agency or FSS for status"],
-            ["Alert area", "A-xxx", "High volume of pilot training or unusual aerial activity. No permission needed; all pilots are responsible for collision avoidance"],
-            ["Controlled firing area (CFA)", "Not charted", "Activities are suspended when spotter aircraft, radar or ground lookouts detect an approaching aircraft"],
+            [
+              "Restricted area",
+              "R-xxxx",
+              "Hazards such as artillery, missiles or aerial gunnery. Do not enter when active without permission from the controlling/using agency",
+            ],
+            [
+              "Warning area",
+              "W-xxx",
+              "Like a restricted area, but over international waters beyond 3 NM from the coast; hazardous activity",
+            ],
+            [
+              "Military operations area (MOA)",
+              "Name + 'MOA'",
+              "VFR flight is permitted but use extreme caution; contact the controlling agency or FSS for status",
+            ],
+            [
+              "Alert area",
+              "A-xxx",
+              "High volume of pilot training or unusual aerial activity. No permission needed; all pilots are responsible for collision avoidance",
+            ],
+            [
+              "Controlled firing area (CFA)",
+              "Not charted",
+              "Activities are suspended when spotter aircraft, radar or ground lookouts detect an approaching aircraft",
+            ],
           ],
         ),
         warning(
@@ -199,11 +259,11 @@ export const airspace: Module = {
           prompt: "What is required for a VFR pilot to fly through an active MOA?",
           choices: [
             "A clearance from the controlling agency",
-            "No clearance is required, but pilots should exercise extreme caution",
-            "VFR flight is prohibited in an active MOA",
             "An instrument rating",
+            "VFR flight is prohibited in an active MOA",
+            "No clearance is required, but pilots should exercise extreme caution",
           ],
-          answer: 1,
+          answer: 3,
           explanation:
             "VFR flight through a MOA is legal at any time, though you should contact the controlling agency or FSS and use caution. A clearance or permission is required for an active RESTRICTED area, which is why that choice is tempting.",
           subject: "Airspace",
@@ -213,17 +273,45 @@ export const airspace: Module = {
           "TFRs are moving targets",
           "Presidential and stadium TFRs can appear with little notice. Violations can result in interception and certificate action. Get a briefing or check an approved source immediately before departure.",
         ),
-        practice("/navigation", "Plan around airspace", "Draw a route and check for special use airspace and TFRs along the way."),
+        practice(
+          "/navigation",
+          "Plan around airspace",
+          "Draw a route and check for special use airspace and TFRs along the way.",
+        ),
       ],
     },
   ],
   flashcards: [
-    { id: "vfr.airspace.fc1", front: "Class B entry requirement", back: "An ATC clearance: 'Cleared into the Class Bravo airspace'." },
-    { id: "vfr.airspace.fc2", front: "Class C entry requirement", back: "Two-way radio communication established before entering (controller uses your call sign)." },
-    { id: "vfr.airspace.fc3", front: "Typical Class C dimensions", back: "5 NM radius surface to 4,000 ft above the airport; 10 NM shelf from 1,200 to 4,000 ft above the airport." },
-    { id: "vfr.airspace.fc4", front: "Mode C veil", back: "30 NM around Class B primary airports, surface to 10,000 ft MSL: transponder with altitude reporting and ADS-B Out required." },
-    { id: "vfr.airspace.fc5", front: "Shaded magenta vignette on a sectional", back: "Class E airspace begins at 700 ft AGL." },
-    { id: "vfr.airspace.fc6", front: "Speed limit below Class B shelf or in a VFR corridor", back: "200 knots indicated (91.117)." },
+    {
+      id: "vfr.airspace.fc1",
+      front: "Class B entry requirement",
+      back: "An ATC clearance: 'Cleared into the Class Bravo airspace'.",
+    },
+    {
+      id: "vfr.airspace.fc2",
+      front: "Class C entry requirement",
+      back: "Two-way radio communication established before entering (controller uses your call sign).",
+    },
+    {
+      id: "vfr.airspace.fc3",
+      front: "Typical Class C dimensions",
+      back: "5 NM radius surface to 4,000 ft above the airport; 10 NM shelf from 1,200 to 4,000 ft above the airport.",
+    },
+    {
+      id: "vfr.airspace.fc4",
+      front: "Mode C veil",
+      back: "30 NM around Class B primary airports, surface to 10,000 ft MSL: transponder with altitude reporting and ADS-B Out required.",
+    },
+    {
+      id: "vfr.airspace.fc5",
+      front: "Shaded magenta vignette on a sectional",
+      back: "Class E airspace begins at 700 ft AGL.",
+    },
+    {
+      id: "vfr.airspace.fc6",
+      front: "Speed limit below Class B shelf or in a VFR corridor",
+      back: "200 knots indicated (91.117).",
+    },
   ],
   quiz: [
     q({
@@ -231,12 +319,12 @@ export const airspace: Module = {
       kind: "mc",
       prompt: "What minimum pilot certification is required for operation within Class B airspace?",
       choices: [
-        "Recreational pilot certificate",
         "Private pilot certificate, or student pilot certificate with appropriate logbook endorsements",
+        "Recreational pilot certificate",
         "Commercial pilot certificate",
         "Private pilot certificate with an instrument rating",
       ],
-      answer: 1,
+      answer: 0,
       explanation:
         "Class B requires at least a private certificate, or a student or recreational pilot who has the training and endorsements of 61.95 (not permitted at certain listed primary airports). An instrument rating is required for Class A, not Class B.",
       subject: "Airspace",
@@ -280,8 +368,8 @@ export const airspace: Module = {
       id: "vfr.airspace.q4",
       kind: "mc",
       prompt: "The floor of Class E airspace along a federal (Victor) airway is normally:",
-      choices: ["700 ft AGL", "1,200 ft AGL", "14,500 ft MSL", "The surface"],
-      answer: 1,
+      choices: ["700 ft AGL", "The surface", "14,500 ft MSL", "1,200 ft AGL"],
+      answer: 3,
       explanation:
         "Victor airways are Class E from 1,200 ft AGL up to but not including 18,000 ft MSL unless otherwise specified. 700 ft AGL is the floor near airports with instrument approaches, shown by a magenta vignette.",
       subject: "Airspace",
@@ -290,9 +378,15 @@ export const airspace: Module = {
     q({
       id: "vfr.airspace.q5",
       kind: "mc",
-      prompt: "Which type of special use airspace contains invisible hazards such as artillery firing and guided missiles and requires permission to enter when active?",
-      choices: ["Alert area", "Military operations area", "Warning area over domestic land", "Restricted area"],
-      answer: 3,
+      prompt:
+        "Which type of special use airspace contains invisible hazards such as artillery firing and guided missiles and requires permission to enter when active?",
+      choices: [
+        "Alert area",
+        "Restricted area",
+        "Warning area over domestic land",
+        "Military operations area",
+      ],
+      answer: 1,
       explanation:
         "Restricted areas contain hazards to non-participating aircraft and require permission when active. MOAs and alert areas allow VFR flight without permission. Warning areas are over international waters, not domestic land.",
       subject: "Airspace",
@@ -301,7 +395,8 @@ export const airspace: Module = {
     q({
       id: "vfr.airspace.q6",
       kind: "mc",
-      prompt: "What is the maximum indicated airspeed at or below 2,500 ft AGL within 4 NM of the primary airport of Class D airspace, unless otherwise authorized?",
+      prompt:
+        "What is the maximum indicated airspeed at or below 2,500 ft AGL within 4 NM of the primary airport of Class D airspace, unless otherwise authorized?",
       choices: ["156 knots", "180 knots", "200 knots", "250 knots"],
       answer: 2,
       explanation:
@@ -312,7 +407,8 @@ export const airspace: Module = {
     q({
       id: "vfr.airspace.q7",
       kind: "tf",
-      prompt: "True or false: when a part-time control tower closes, its Class D surface area always becomes Class G airspace.",
+      prompt:
+        "True or false: when a part-time control tower closes, its Class D surface area always becomes Class G airspace.",
       choices: ["True", "False"],
       answer: 1,
       explanation:
@@ -321,5 +417,8 @@ export const airspace: Module = {
       reference: "AIM 3-2-5",
     }),
   ],
-  practice: [link("/navigation", "Airspace on the moving map"), link("/airports", "Airport airspace info")],
+  practice: [
+    link("/navigation", "Airspace on the moving map"),
+    link("/airports", "Airport airspace info"),
+  ],
 };

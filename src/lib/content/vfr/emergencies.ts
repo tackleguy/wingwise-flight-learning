@@ -1,5 +1,19 @@
 import type { Module } from "../types";
-import { caution, check, h, info, link, ol, p, practice, q, table, tip, ul, warning } from "../builders";
+import {
+  caution,
+  check,
+  h,
+  info,
+  link,
+  ol,
+  p,
+  practice,
+  q,
+  table,
+  tip,
+  ul,
+  warning,
+} from "../builders";
 
 export const emergencies: Module = {
   id: "emergencies",
@@ -26,10 +40,19 @@ export const emergencies: Module = {
           ["Step", "Action"],
           [
             ["A — Airspeed", "Pitch for best glide speed (VG) and trim for it"],
-            ["B — Best field", "Pick a landing site within gliding distance, preferably into the wind"],
-            ["C — Checklist", "Restart checklist: fuel selector/tank, fuel pump, mixture rich, carb heat on, magnetos, primer locked"],
+            [
+              "B — Best field",
+              "Pick a landing site within gliding distance, preferably into the wind",
+            ],
+            [
+              "C — Checklist",
+              "Restart checklist: fuel selector/tank, fuel pump, mixture rich, carb heat on, magnetos, primer locked",
+            ],
             ["D — Declare", "Mayday on the current frequency or 121.5; squawk 7700"],
-            ["E — Execute", "Secure the engine (fuel off, mixture idle cutoff, magnetos off), flaps as needed, unlatch doors, master off before touchdown per the POH"],
+            [
+              "E — Execute",
+              "Secure the engine (fuel off, mixture idle cutoff, magnetos off), flaps as needed, unlatch doors, master off before touchdown per the POH",
+            ],
           ],
         ),
         h("Choosing a field"),
@@ -50,7 +73,8 @@ export const emergencies: Module = {
         check({
           id: "vfr.emergencies.1.k1",
           kind: "scenario",
-          context: "At 400 ft AGL after takeoff, the engine stops. There are fields ahead and slightly to the left.",
+          context:
+            "At 400 ft AGL after takeoff, the engine stops. There are fields ahead and slightly to the left.",
           prompt: "What is the best action?",
           choices: [
             "Turn back to the runway immediately",
@@ -68,16 +92,29 @@ export const emergencies: Module = {
         table(
           ["Fire", "Typical POH actions"],
           [
-            ["Engine fire in flight", "Mixture idle cutoff, fuel selector off, master switch off, cabin heat and air off, establish a high-speed descent to try to extinguish, and plan a forced landing"],
-            ["Electrical fire in flight", "Master switch off, cabin heat and air vents off, use the fire extinguisher, then ventilate the cabin once the fire is out; restore only essential electrical circuits"],
-            ["Engine fire during start", "Continue cranking to draw the fire into the engine; if it persists, follow the POH and evacuate"],
+            [
+              "Engine fire in flight",
+              "Mixture idle cutoff, fuel selector off, master switch off, cabin heat and air off, establish a high-speed descent to try to extinguish, and plan a forced landing",
+            ],
+            [
+              "Electrical fire in flight",
+              "Master switch off, cabin heat and air vents off, use the fire extinguisher, then ventilate the cabin once the fire is out; restore only essential electrical circuits",
+            ],
+            [
+              "Engine fire during start",
+              "Continue cranking to draw the fire into the engine; if it persists, follow the POH and evacuate",
+            ],
           ],
         ),
         warning(
           "Use your POH checklist",
           "These summaries show typical logic. Every airplane's procedures differ — the POH emergency checklist is the authority, and memory items should be practiced until automatic.",
         ),
-        practice("/simulator?scenario=emg-engine-failure", "Engine failure", "Practice best-glide, field selection and the restart checklist from altitude."),
+        practice(
+          "/simulator?scenario=emg-engine-failure",
+          "Engine failure",
+          "Practice best-glide, field selection and the restart checklist from altitude.",
+        ),
       ],
     },
     {
@@ -132,9 +169,15 @@ export const emergencies: Module = {
         table(
           ["Tool", "Use"],
           [
-            ["121.5 MHz", "International VHF emergency frequency, monitored by many ATC facilities, Flight Service and airliners"],
+            [
+              "121.5 MHz",
+              "International VHF emergency frequency, monitored by many ATC facilities, Flight Service and airliners",
+            ],
             ["Squawk 7700", "Alerts every radar facility that you have an emergency"],
-            ["'Mayday' / 'Pan-pan'", "Mayday (spoken three times) for distress; Pan-pan for urgency"],
+            [
+              "'Mayday' / 'Pan-pan'",
+              "Mayday (spoken three times) for distress; Pan-pan for urgency",
+            ],
             ["ELT", "Emergency locator transmitter; 406 MHz units are detected by satellites"],
           ],
         ),
@@ -146,17 +189,41 @@ export const emergencies: Module = {
           "Declare early",
           "Declaring an emergency costs you nothing and gives you priority, extra help and the authority to deviate from rules. Pilots who delay declaring often run out of options.",
         ),
-        practice("/simulator?scenario=emg-weather", "Inadvertent IMC", "Practice a 180° escape turn on instruments after entering cloud."),
+        practice(
+          "/simulator?scenario=emg-weather",
+          "Inadvertent IMC",
+          "Practice a 180° escape turn on instruments after entering cloud.",
+        ),
       ],
     },
   ],
   flashcards: [
-    { id: "vfr.emergencies.fc1", front: "First action after engine failure", back: "Establish best glide speed (VG)." },
-    { id: "vfr.emergencies.fc2", front: "ABCDE", back: "Airspeed, Best field, Checklist, Declare, Execute." },
+    {
+      id: "vfr.emergencies.fc1",
+      front: "First action after engine failure",
+      back: "Establish best glide speed (VG).",
+    },
+    {
+      id: "vfr.emergencies.fc2",
+      front: "ABCDE",
+      back: "Airspeed, Best field, Checklist, Declare, Execute.",
+    },
     { id: "vfr.emergencies.fc3", front: "Emergency frequency", back: "121.5 MHz." },
-    { id: "vfr.emergencies.fc4", front: "Engine failure at low altitude after takeoff", back: "Lower the nose and land generally straight ahead; avoid the 'impossible turn'." },
-    { id: "vfr.emergencies.fc5", front: "Escape from inadvertent IMC", back: "Wings level on instruments, then a shallow standard-rate 180° turn; ask ATC for help." },
-    { id: "vfr.emergencies.fc6", front: "PIC emergency authority", back: "May deviate from Part 91 to the extent required (91.3(b)); written report on request." },
+    {
+      id: "vfr.emergencies.fc4",
+      front: "Engine failure at low altitude after takeoff",
+      back: "Lower the nose and land generally straight ahead; avoid the 'impossible turn'.",
+    },
+    {
+      id: "vfr.emergencies.fc5",
+      front: "Escape from inadvertent IMC",
+      back: "Wings level on instruments, then a shallow standard-rate 180° turn; ask ATC for help.",
+    },
+    {
+      id: "vfr.emergencies.fc6",
+      front: "PIC emergency authority",
+      back: "May deviate from Part 91 to the extent required (91.3(b)); written report on request.",
+    },
   ],
   quiz: [
     q({
@@ -181,14 +248,16 @@ export const emergencies: Module = {
       prompt: "Which frequency is the international VHF emergency frequency?",
       choices: ["122.2 MHz", "121.5 MHz", "123.45 MHz", "122.8 MHz"],
       answer: 1,
-      explanation: "121.5 MHz is the emergency frequency. 122.2 is a common Flight Service frequency and 122.8 is a common UNICOM/CTAF.",
+      explanation:
+        "121.5 MHz is the emergency frequency. 122.2 is a common Flight Service frequency and 122.8 is a common UNICOM/CTAF.",
       subject: "Radio & ATC",
       reference: "AIM 6-3-1",
     }),
     q({
       id: "vfr.emergencies.q3",
       kind: "scenario",
-      context: "Smoke and the smell of burning insulation fill the cabin in cruise. The engine is running normally.",
+      context:
+        "Smoke and the smell of burning insulation fill the cabin in cruise. The engine is running normally.",
       prompt: "What is the most likely problem and first action?",
       choices: [
         "Engine fire — mixture to idle cutoff",
@@ -221,7 +290,8 @@ export const emergencies: Module = {
     q({
       id: "vfr.emergencies.q5",
       kind: "tf",
-      prompt: "True or false: a pilot who deviates from a rule during an emergency must send a written report to the FAA only if requested.",
+      prompt:
+        "True or false: a pilot who deviates from a rule during an emergency must send a written report to the FAA only if requested.",
       choices: ["True", "False"],
       answer: 0,
       explanation:
@@ -235,11 +305,11 @@ export const emergencies: Module = {
       prompt: "A VFR pilot who loses two-way radio communications should:",
       choices: [
         "Squawk 7700 and continue to the destination using IFR rules",
-        "Squawk 7600, continue VFR and land as soon as practicable",
-        "Squawk 7500 and circle until contacted",
         "Climb to the MEA",
+        "Squawk 7500 and circle until contacted",
+        "Squawk 7600, continue VFR and land as soon as practicable",
       ],
-      answer: 1,
+      answer: 3,
       explanation:
         "91.185(b): if the failure occurs in VFR conditions, or VFR conditions are encountered, continue the flight under VFR and land as soon as practicable. 7600 alerts ATC. 7500 is the hijack code.",
       subject: "Radio & ATC",
@@ -248,8 +318,14 @@ export const emergencies: Module = {
     q({
       id: "vfr.emergencies.q7",
       kind: "mc",
-      prompt: "During an inadvertent IMC encounter, which bank angle is appropriate for the 180° turn in a light airplane?",
-      choices: ["About 45°", "About 60°", "A shallow, roughly standard-rate bank of about 15°–20°", "Whatever turns the airplane fastest"],
+      prompt:
+        "During an inadvertent IMC encounter, which bank angle is appropriate for the 180° turn in a light airplane?",
+      choices: [
+        "About 45°",
+        "About 60°",
+        "A shallow, roughly standard-rate bank of about 15°–20°",
+        "Whatever turns the airplane fastest",
+      ],
       answer: 2,
       explanation:
         "A shallow, standard-rate turn minimizes altitude loss and disorientation. Steep banks increase the load factor and the risk of a graveyard spiral.",

@@ -91,9 +91,15 @@ export const adm: Module = {
           ["Risk element", "Questions to ask"],
           [
             ["P — Pilot", "Am I current, proficient and fit (IMSAFE)? Within personal minimums?"],
-            ["A — Aircraft", "Airworthy? Right equipment? Enough performance and fuel for today's conditions?"],
+            [
+              "A — Aircraft",
+              "Airworthy? Right equipment? Enough performance and fuel for today's conditions?",
+            ],
             ["V — enVironment", "Weather, terrain, airports, airspace, night?"],
-            ["E — External pressures", "Schedules, passengers, people waiting, the desire to impress, cost of a hotel?"],
+            [
+              "E — External pressures",
+              "Schedules, passengers, people waiting, the desire to impress, cost of a hotel?",
+            ],
           ],
         ),
         h("IMSAFE"),
@@ -110,7 +116,10 @@ export const adm: Module = {
           ["Type", "Cause"],
           [
             ["Hypoxic", "Not enough oxygen in the air at altitude"],
-            ["Hypemic (anemic)", "Blood cannot carry enough oxygen — carbon monoxide, anemia, blood donation"],
+            [
+              "Hypemic (anemic)",
+              "Blood cannot carry enough oxygen — carbon monoxide, anemia, blood donation",
+            ],
             ["Stagnant", "Poor circulation — excessive G-forces, cold, shock"],
             ["Histotoxic", "Cells cannot use oxygen — alcohol, drugs, certain poisons"],
           ],
@@ -140,11 +149,26 @@ export const adm: Module = {
         table(
           ["Illusion", "Cause and effect"],
           [
-            ["The leans", "After an unnoticed gradual bank, abruptly leveling the wings creates the sensation of banking the other way"],
-            ["Graveyard spiral", "In a prolonged coordinated turn the sensation of turning fades; the pilot notices altitude loss, pulls back and tightens the spiral"],
-            ["Coriolis illusion", "An abrupt head movement during a prolonged constant-rate turn produces an overwhelming sensation of tumbling — the most overwhelming of the illusions"],
-            ["Somatogravic", "Rapid acceleration feels like a nose-up attitude, tempting the pilot to push forward — dangerous on a dark night takeoff or go-around"],
-            ["Inversion", "An abrupt change from climb to level flight creates the illusion of tumbling backward"],
+            [
+              "The leans",
+              "After an unnoticed gradual bank, abruptly leveling the wings creates the sensation of banking the other way",
+            ],
+            [
+              "Graveyard spiral",
+              "In a prolonged coordinated turn the sensation of turning fades; the pilot notices altitude loss, pulls back and tightens the spiral",
+            ],
+            [
+              "Coriolis illusion",
+              "An abrupt head movement during a prolonged constant-rate turn produces an overwhelming sensation of tumbling — the most overwhelming of the illusions",
+            ],
+            [
+              "Somatogravic",
+              "Rapid acceleration feels like a nose-up attitude, tempting the pilot to push forward — dangerous on a dark night takeoff or go-around",
+            ],
+            [
+              "Inversion",
+              "An abrupt change from climb to level flight creates the illusion of tumbling backward",
+            ],
           ],
         ),
         caution(
@@ -155,17 +179,41 @@ export const adm: Module = {
           "Scuba diving",
           "After a dive that did not require a controlled ascent, wait at least 12 hours before flying up to 8,000 ft cabin altitude, and at least 24 hours before flying above 8,000 ft or after any dive requiring a controlled ascent (AIM 8-1-2).",
         ),
-        practice("/simulator?scenario=emg-weather", "Weather decision scenario", "Make go/no-go and diversion decisions as conditions deteriorate."),
+        practice(
+          "/simulator?scenario=emg-weather",
+          "Weather decision scenario",
+          "Make go/no-go and diversion decisions as conditions deteriorate.",
+        ),
       ],
     },
   ],
   flashcards: [
-    { id: "vfr.adm.fc1", front: "Antidote for 'It won't happen to me'", back: "'It could happen to me.' (Invulnerability)" },
-    { id: "vfr.adm.fc2", front: "Antidote for 'Do it quickly'", back: "'Not so fast. Think first.' (Impulsivity)" },
+    {
+      id: "vfr.adm.fc1",
+      front: "Antidote for 'It won't happen to me'",
+      back: "'It could happen to me.' (Invulnerability)",
+    },
+    {
+      id: "vfr.adm.fc2",
+      front: "Antidote for 'Do it quickly'",
+      back: "'Not so fast. Think first.' (Impulsivity)",
+    },
     { id: "vfr.adm.fc3", front: "PAVE", back: "Pilot, Aircraft, enVironment, External pressures." },
-    { id: "vfr.adm.fc4", front: "IMSAFE", back: "Illness, Medication, Stress, Alcohol, Fatigue, Emotion/Eating." },
-    { id: "vfr.adm.fc5", front: "Four types of hypoxia", back: "Hypoxic, hypemic, stagnant, histotoxic." },
-    { id: "vfr.adm.fc6", front: "The leans", back: "After leveling from an unnoticed bank, a false sensation of banking the opposite way." },
+    {
+      id: "vfr.adm.fc4",
+      front: "IMSAFE",
+      back: "Illness, Medication, Stress, Alcohol, Fatigue, Emotion/Eating.",
+    },
+    {
+      id: "vfr.adm.fc5",
+      front: "Four types of hypoxia",
+      back: "Hypoxic, hypemic, stagnant, histotoxic.",
+    },
+    {
+      id: "vfr.adm.fc6",
+      front: "The leans",
+      back: "After leveling from an unnoticed bank, a false sensation of banking the opposite way.",
+    },
   ],
   quiz: [
     q({
@@ -183,7 +231,12 @@ export const adm: Module = {
       id: "vfr.adm.q2",
       kind: "mc",
       prompt: "The antidote for the resignation attitude is:",
-      choices: ["'Follow the rules.'", "'Not so fast, think first.'", "'It could happen to me.'", "'I'm not helpless. I can make a difference.'"],
+      choices: [
+        "'Follow the rules.'",
+        "'Not so fast, think first.'",
+        "'It could happen to me.'",
+        "'I'm not helpless. I can make a difference.'",
+      ],
       answer: 3,
       explanation:
         "Resignation ('What's the use?') is countered with 'I'm not helpless.' The other choices are the antidotes for anti-authority, impulsivity and invulnerability.",
@@ -196,8 +249,8 @@ export const adm: Module = {
       context:
         "You promised to bring three friends to a family event 200 NM away. The forecast shows marginal VFR at the destination, your passengers are already at the airport, and returning tomorrow would mean a hotel bill.",
       prompt: "In the PAVE model, which element is creating the most pressure on your decision?",
-      choices: ["Pilot", "Aircraft", "enVironment", "External pressures"],
-      answer: 3,
+      choices: ["Pilot", "External pressures", "enVironment", "Aircraft"],
+      answer: 1,
       explanation:
         "Commitments, waiting passengers and costs are external pressures — often the most dangerous element because they push you to accept risks you would otherwise reject. The weather (environment) is the hazard, but the pressure to go comes from outside factors.",
       subject: "ADM",
@@ -207,8 +260,13 @@ export const adm: Module = {
       id: "vfr.adm.q4",
       kind: "mc",
       prompt: "Rapid or extra-deep breathing while under stress may result in:",
-      choices: ["Hypoxia", "Hyperventilation", "Spatial disorientation", "Carbon monoxide poisoning"],
-      answer: 1,
+      choices: [
+        "Hypoxia",
+        "Carbon monoxide poisoning",
+        "Spatial disorientation",
+        "Hyperventilation",
+      ],
+      answer: 3,
       explanation:
         "Over-breathing reduces CO2 in the blood, causing hyperventilation. Its symptoms resemble hypoxia, which is why it is easily confused, but the cause and treatment are different.",
       subject: "Human Factors",
@@ -218,8 +276,8 @@ export const adm: Module = {
       id: "vfr.adm.q5",
       kind: "mc",
       prompt: "An abrupt head movement during a prolonged constant-rate turn in IMC may cause:",
-      choices: ["The leans", "Coriolis illusion", "Autokinesis", "Somatogravic illusion"],
-      answer: 1,
+      choices: ["Coriolis illusion", "The leans", "Autokinesis", "Somatogravic illusion"],
+      answer: 0,
       explanation:
         "Moving the head during a sustained turn stimulates multiple semicircular canals and produces the overwhelming tumbling sensation of the Coriolis illusion. The leans follow an abrupt roll-out from an unnoticed bank.",
       subject: "Human Factors",
@@ -228,7 +286,8 @@ export const adm: Module = {
     q({
       id: "vfr.adm.q6",
       kind: "tf",
-      prompt: "True or false: a pilot experiencing hypoxia will usually notice the symptoms early and clearly.",
+      prompt:
+        "True or false: a pilot experiencing hypoxia will usually notice the symptoms early and clearly.",
       choices: ["True", "False"],
       answer: 1,
       explanation:
@@ -240,7 +299,12 @@ export const adm: Module = {
       id: "vfr.adm.q7",
       kind: "mc",
       prompt: "In the DECIDE model, what is the first step?",
-      choices: ["Do the necessary action", "Detect that a change has occurred", "Determine the best outcome", "Delegate tasks"],
+      choices: [
+        "Do the necessary action",
+        "Detect that a change has occurred",
+        "Determine the best outcome",
+        "Delegate tasks",
+      ],
       answer: 1,
       explanation:
         "DECIDE begins with Detect — recognizing that something has changed and requires attention. You cannot respond to a problem you have not noticed.",
@@ -248,5 +312,8 @@ export const adm: Module = {
       reference: "PHAK Ch. 2",
     }),
   ],
-  practice: [link("/simulator?scenario=emg-weather", "Weather decision scenario"), link("/weather", "Go/no-go with real weather")],
+  practice: [
+    link("/simulator?scenario=emg-weather", "Weather decision scenario"),
+    link("/weather", "Go/no-go with real weather"),
+  ],
 };

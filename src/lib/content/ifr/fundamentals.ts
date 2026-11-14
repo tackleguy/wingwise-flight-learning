@@ -1,5 +1,20 @@
 import type { Module } from "../types";
-import { caution, check, diagram, exercise, h, info, link, ol, p, practice, q, table, tip, ul } from "../builders";
+import {
+  caution,
+  check,
+  diagram,
+  exercise,
+  h,
+  info,
+  link,
+  ol,
+  p,
+  practice,
+  q,
+  table,
+  tip,
+  ul,
+} from "../builders";
 
 export const fundamentals: Module = {
   id: "fundamentals",
@@ -20,21 +35,25 @@ export const fundamentals: Module = {
       blocks: [
         h("Flying by reference to instruments"),
         p(
-          "In visual flight you control the airplane by setting a pitch and bank attitude against the natural horizon and setting power. Instrument flight is the same airplane and the same control inputs — the only difference is that the horizon now lives on the attitude indicator. The Instrument Flying Handbook (IFH) calls this attitude instrument flying: controlling the airplane's attitude and power by reference to instruments to achieve a desired performance.",
-        ),
-        p(
-          "The IFH breaks the skill into three fundamentals: cross-check (scanning the instruments), instrument interpretation (understanding what each one is telling you) and aircraft control (making the right, small corrections). All three improve with practice; none can be skipped.",
+          "In visual flight you control the airplane by setting a pitch and bank attitude against the natural horizon and setting power. Instrument flight is the same airplane and the same control inputs — the only difference is that the horizon now lives on the attitude indicator. The Instrument Flying Handbook (IFH) calls this attitude instrument flying: controlling the airplane's attitude and power by reference to instruments to achieve a desired performance. The IFH breaks the skill into three fundamentals: cross-check (scanning the instruments), instrument interpretation (understanding what each one is telling you) and aircraft control (making the right, small corrections). All three improve with practice; none can be skipped.",
         ),
         diagram(
           "six-pack",
           "The attitude indicator sits at the center of the scan. Performance instruments around it confirm that the attitude and power you set produce the result you want.",
         ),
-        h("Control and performance"),
         table(
           ["Group", "Instruments", "Role"],
           [
-            ["Control", "Attitude indicator; power instruments (tachometer, manifold pressure)", "Show immediate attitude and power — what you set"],
-            ["Performance", "Altimeter, airspeed indicator, VSI, heading indicator, turn coordinator", "Show the result of the attitude and power"],
+            [
+              "Control",
+              "Attitude indicator; power instruments (tachometer, manifold pressure)",
+              "Show immediate attitude and power — what you set",
+            ],
+            [
+              "Performance",
+              "Altimeter, airspeed indicator, VSI, heading indicator, turn coordinator",
+              "Show the result of the attitude and power",
+            ],
             ["Navigation", "CDI/HSI, GPS, DME, RMI", "Show position relative to a facility or fix"],
           ],
         ),
@@ -49,8 +68,18 @@ export const fundamentals: Module = {
           ["Maneuver", "Pitch primary", "Bank primary", "Power primary"],
           [
             ["Straight-and-level", "Altimeter", "Heading indicator", "Airspeed indicator"],
-            ["Standard-rate level turn (established)", "Altimeter", "Turn coordinator (miniature airplane)", "Airspeed indicator"],
-            ["Constant-airspeed climb (established)", "Airspeed indicator", "Heading indicator", "Tachometer/MP (climb power)"],
+            [
+              "Standard-rate level turn (established)",
+              "Altimeter",
+              "Turn coordinator (miniature airplane)",
+              "Airspeed indicator",
+            ],
+            [
+              "Constant-airspeed climb (established)",
+              "Airspeed indicator",
+              "Heading indicator",
+              "Tachometer/MP (climb power)",
+            ],
             ["Constant-rate descent", "VSI", "Heading indicator", "Airspeed indicator"],
           ],
         ),
@@ -62,7 +91,12 @@ export const fundamentals: Module = {
           id: "ifr.fundamentals.1.k1",
           kind: "mc",
           prompt: "In straight-and-level flight, which instrument is primary for bank?",
-          choices: ["Attitude indicator", "Turn coordinator", "Heading indicator", "Magnetic compass"],
+          choices: [
+            "Attitude indicator",
+            "Turn coordinator",
+            "Heading indicator",
+            "Magnetic compass",
+          ],
           answer: 2,
           explanation:
             "If heading is not changing, the wings are level, so the heading indicator gives the most pertinent bank information in straight flight. The attitude indicator is a supporting instrument here (and primary only during the transition into a turn).",
@@ -79,7 +113,10 @@ export const fundamentals: Module = {
         table(
           ["Common error", "Description"],
           [
-            ["Fixation", "Staring at one instrument (often the one with the problem) while others drift"],
+            [
+              "Fixation",
+              "Staring at one instrument (often the one with the problem) while others drift",
+            ],
             ["Omission", "Leaving an instrument out of the scan entirely"],
             ["Emphasis", "Relying on one instrument instead of the combination"],
           ],
@@ -89,7 +126,11 @@ export const fundamentals: Module = {
           "Standard-rate bank rule of thumb",
           "A standard-rate turn is 3° per second (360° in 2 minutes). The bank angle needed is roughly TAS ÷ 10 + 7: at 120 knots, about 19°.",
         ),
-        practice("/avionics", "Avionics lab", "Practice holding altitude, heading and airspeed using only the instruments."),
+        practice(
+          "/avionics",
+          "Avionics lab",
+          "Practice holding altitude, heading and airspeed using only the instruments.",
+        ),
       ],
     },
     {
@@ -123,7 +164,8 @@ export const fundamentals: Module = {
         check({
           id: "ifr.fundamentals.2.k1",
           kind: "calc",
-          prompt: "With the heading indicator inoperative, how long should a standard-rate turn last to change heading from 090° to 180°?",
+          prompt:
+            "With the heading indicator inoperative, how long should a standard-rate turn last to change heading from 090° to 180°?",
           choices: ["15 seconds", "30 seconds", "45 seconds", "60 seconds"],
           answer: 1,
           explanation:
@@ -141,7 +183,10 @@ export const fundamentals: Module = {
             ["1. Add power", "1. Reduce power"],
             ["2. Lower the nose to prevent a stall", "2. Level the wings to stop the spiral"],
             ["3. Level the wings", "3. Raise the nose smoothly to level flight"],
-            ["4. Return to the original altitude and heading", "4. Return to the original altitude and heading"],
+            [
+              "4. Return to the original altitude and heading",
+              "4. Return to the original altitude and heading",
+            ],
           ],
         ),
         caution(
@@ -151,15 +196,16 @@ export const fundamentals: Module = {
         check({
           id: "ifr.fundamentals.2.k2",
           kind: "scenario",
-          context: "You look up from a chart to see the airspeed increasing rapidly, the altimeter unwinding and the turn coordinator showing a steep right turn.",
+          context:
+            "You look up from a chart to see the airspeed increasing rapidly, the altimeter unwinding and the turn coordinator showing a steep right turn.",
           prompt: "What is the correct recovery sequence?",
           choices: [
-            "Pull back firmly, then level the wings, then reduce power",
             "Reduce power, level the wings, then smoothly raise the nose",
+            "Pull back firmly, then level the wings, then reduce power",
             "Add power, lower the nose, level the wings",
             "Level the wings, add power, pull back",
           ],
-          answer: 1,
+          answer: 0,
           explanation:
             "This is a nose-low spiral. Reduce power to stop the acceleration, level the wings, then raise the nose. Pulling first tightens the spiral; adding power is the nose-HIGH recovery.",
           subject: "Flight Instruments",
@@ -170,25 +216,53 @@ export const fundamentals: Module = {
           "Recover in the correct sequence with smooth, positive control inputs.",
           "Return to the assigned altitude and heading and tell ATC if you deviated.",
         ),
-        practice("/simulator?scenario=emg-vacuum", "Partial panel", "Fly timed turns and recover from unusual attitudes with the attitude indicator failed."),
+        practice(
+          "/simulator?scenario=emg-vacuum",
+          "Partial panel",
+          "Fly timed turns and recover from unusual attitudes with the attitude indicator failed.",
+        ),
       ],
     },
   ],
   flashcards: [
-    { id: "ifr.fundamentals.fc1", front: "Three fundamental skills of attitude instrument flying", back: "Cross-check, instrument interpretation and aircraft control." },
-    { id: "ifr.fundamentals.fc2", front: "Control instruments", back: "Attitude indicator and power instruments (tachometer / manifold pressure)." },
-    { id: "ifr.fundamentals.fc3", front: "Pitch primary in straight-and-level flight", back: "Altimeter." },
-    { id: "ifr.fundamentals.fc4", front: "Standard-rate turn", back: "3° per second — 360° in 2 minutes. Bank ≈ TAS ÷ 10 + 7." },
-    { id: "ifr.fundamentals.fc5", front: "Nose-low unusual attitude recovery", back: "Reduce power, level the wings, raise the nose." },
-    { id: "ifr.fundamentals.fc6", front: "Three common scan errors", back: "Fixation, omission and emphasis." },
+    {
+      id: "ifr.fundamentals.fc1",
+      front: "Three fundamental skills of attitude instrument flying",
+      back: "Cross-check, instrument interpretation and aircraft control.",
+    },
+    {
+      id: "ifr.fundamentals.fc2",
+      front: "Control instruments",
+      back: "Attitude indicator and power instruments (tachometer / manifold pressure).",
+    },
+    {
+      id: "ifr.fundamentals.fc3",
+      front: "Pitch primary in straight-and-level flight",
+      back: "Altimeter.",
+    },
+    {
+      id: "ifr.fundamentals.fc4",
+      front: "Standard-rate turn",
+      back: "3° per second — 360° in 2 minutes. Bank ≈ TAS ÷ 10 + 7.",
+    },
+    {
+      id: "ifr.fundamentals.fc5",
+      front: "Nose-low unusual attitude recovery",
+      back: "Reduce power, level the wings, raise the nose.",
+    },
+    {
+      id: "ifr.fundamentals.fc6",
+      front: "Three common scan errors",
+      back: "Fixation, omission and emphasis.",
+    },
   ],
   quiz: [
     q({
       id: "ifr.fundamentals.q1",
       kind: "mc",
       prompt: "What is the primary pitch instrument during a stabilized, constant-airspeed climb?",
-      choices: ["Altimeter", "Attitude indicator", "VSI", "Airspeed indicator"],
-      answer: 3,
+      choices: ["Altimeter", "Airspeed indicator", "VSI", "Attitude indicator"],
+      answer: 1,
       explanation:
         "In a constant-airspeed climb you hold airspeed with pitch, so the airspeed indicator is primary for pitch. The attitude indicator is primary only while establishing the climb; the altimeter is primary for pitch in level flight.",
       subject: "Flight Instruments",
@@ -200,16 +274,18 @@ export const fundamentals: Module = {
       prompt: "Approximately what bank angle produces a standard-rate turn at 150 knots TAS?",
       choices: ["15°", "18°", "22°", "30°"],
       answer: 2,
-      explanation: "TAS ÷ 10 + 7 = 15 + 7 = 22°. Using 15° (TAS ÷ 10 alone) forgets the +7 in the rule of thumb.",
+      explanation:
+        "TAS ÷ 10 + 7 = 15 + 7 = 22°. Using 15° (TAS ÷ 10 alone) forgets the +7 in the rule of thumb.",
       subject: "Flight Instruments",
       reference: "IFH Ch. 6",
     }),
     q({
       id: "ifr.fundamentals.q3",
       kind: "mc",
-      prompt: "Which scan error is most often associated with a pilot who stares at the heading indicator while altitude drifts?",
-      choices: ["Omission", "Fixation", "Emphasis", "Reversal"],
-      answer: 1,
+      prompt:
+        "Which scan error is most often associated with a pilot who stares at the heading indicator while altitude drifts?",
+      choices: ["Omission", "Reversal", "Emphasis", "Fixation"],
+      answer: 3,
       explanation:
         "Fixation is concentrating on a single instrument to the exclusion of others. Omission is leaving an instrument out altogether, and emphasis is relying on one instrument for information it cannot fully provide.",
       subject: "Flight Instruments",
@@ -218,7 +294,8 @@ export const fundamentals: Module = {
     q({
       id: "ifr.fundamentals.q4",
       kind: "scenario",
-      context: "In IMC the attitude indicator shows a nose-high attitude. Airspeed is decreasing and the altimeter is climbing.",
+      context:
+        "In IMC the attitude indicator shows a nose-high attitude. Airspeed is decreasing and the altimeter is climbing.",
       prompt: "What is the correct initial recovery action?",
       choices: [
         "Reduce power and pull back",
@@ -251,7 +328,8 @@ export const fundamentals: Module = {
     q({
       id: "ifr.fundamentals.q6",
       kind: "tf",
-      prompt: "True or false: during the transition into a turn, the attitude indicator is the primary bank instrument.",
+      prompt:
+        "True or false: during the transition into a turn, the attitude indicator is the primary bank instrument.",
       choices: ["True", "False"],
       answer: 0,
       explanation:
@@ -262,7 +340,8 @@ export const fundamentals: Module = {
     q({
       id: "ifr.fundamentals.q7",
       kind: "calc",
-      prompt: "You are climbing at 600 fpm to 6,000 ft. Using the 10% rule, at what altitude should you begin the level-off?",
+      prompt:
+        "You are climbing at 600 fpm to 6,000 ft. Using the 10% rule, at what altitude should you begin the level-off?",
       choices: ["5,400 ft", "5,800 ft", "5,940 ft", "6,000 ft"],
       answer: 2,
       explanation:

@@ -1,5 +1,19 @@
 import type { Module } from "../types";
-import { caution, check, exercise, h, info, link, ol, p, practice, q, table, tip, ul } from "../builders";
+import {
+  caution,
+  check,
+  exercise,
+  h,
+  info,
+  link,
+  ol,
+  p,
+  practice,
+  q,
+  table,
+  tip,
+  ul,
+} from "../builders";
 
 export const crossCountry: Module = {
   id: "cross-country",
@@ -49,14 +63,15 @@ export const crossCountry: Module = {
         check({
           id: "vfr.cross-country.1.k1",
           kind: "mc",
-          prompt: "If a VFR flight plan is not closed or extended, when does search and rescue normally begin?",
+          prompt:
+            "If a VFR flight plan is not closed or extended, when does search and rescue normally begin?",
           choices: [
             "15 minutes after the ETA",
-            "30 minutes after the ETA",
-            "1 hour after the ETA",
             "When the aircraft runs out of fuel",
+            "1 hour after the ETA",
+            "30 minutes after the ETA",
           ],
-          answer: 1,
+          answer: 3,
           explanation:
             "Flight Service begins search procedures if a VFR flight plan is not closed within 30 minutes after the ETA. This is why you must close every plan you open.",
           subject: "Regulations",
@@ -66,7 +81,11 @@ export const crossCountry: Module = {
           "Personal minimums",
           "Set personal limits for ceiling, visibility, wind and crosswind before you look at the forecast, and write them down. It is much easier to stick to a decision made on the ground with a clear head.",
         ),
-        practice("/planner", "Flight planner", "Plan a complete cross-country: route, weather, fuel and flight plan."),
+        practice(
+          "/planner",
+          "Flight planner",
+          "Plan a complete cross-country: route, weather, fuel and flight plan.",
+        ),
       ],
     },
     {
@@ -86,12 +105,21 @@ export const crossCountry: Module = {
         table(
           ["Term", "Meaning"],
           [
-            ["Datum", "An imaginary vertical reference plane from which all horizontal distances are measured"],
+            [
+              "Datum",
+              "An imaginary vertical reference plane from which all horizontal distances are measured",
+            ],
             ["Arm", "Horizontal distance from the datum to an item's CG, in inches (positive aft)"],
             ["Moment", "Weight × arm (often divided by 100 or 1,000 in POH tables)"],
             ["Center of gravity", "Total moment ÷ total weight"],
-            ["Basic empty weight", "Airframe, engine, fixed equipment, unusable fuel and full oil (on most modern airplanes)"],
-            ["Useful load", "Maximum weight minus basic empty weight: pilot, passengers, baggage and usable fuel"],
+            [
+              "Basic empty weight",
+              "Airframe, engine, fixed equipment, unusable fuel and full oil (on most modern airplanes)",
+            ],
+            [
+              "Useful load",
+              "Maximum weight minus basic empty weight: pilot, passengers, baggage and usable fuel",
+            ],
           ],
         ),
         info(
@@ -144,11 +172,27 @@ export const crossCountry: Module = {
   ],
   flashcards: [
     { id: "vfr.cross-country.fc1", front: "Avgas weight per gallon", back: "6 lb." },
-    { id: "vfr.cross-country.fc2", front: "Center of gravity formula", back: "CG = total moment ÷ total weight." },
+    {
+      id: "vfr.cross-country.fc2",
+      front: "Center of gravity formula",
+      back: "CG = total moment ÷ total weight.",
+    },
     { id: "vfr.cross-country.fc3", front: "Moment", back: "Weight × arm." },
-    { id: "vfr.cross-country.fc4", front: "When search and rescue begins for a VFR flight plan", back: "If not closed within 30 minutes after the ETA." },
-    { id: "vfr.cross-country.fc5", front: "Weight-shift formula", back: "ΔCG = (weight moved × distance moved) ÷ total weight." },
-    { id: "vfr.cross-country.fc6", front: "Useful load", back: "Maximum weight minus basic empty weight." },
+    {
+      id: "vfr.cross-country.fc4",
+      front: "When search and rescue begins for a VFR flight plan",
+      back: "If not closed within 30 minutes after the ETA.",
+    },
+    {
+      id: "vfr.cross-country.fc5",
+      front: "Weight-shift formula",
+      back: "ΔCG = (weight moved × distance moved) ÷ total weight.",
+    },
+    {
+      id: "vfr.cross-country.fc6",
+      front: "Useful load",
+      back: "Maximum weight minus basic empty weight.",
+    },
   ],
   quiz: [
     q({
@@ -168,7 +212,12 @@ export const crossCountry: Module = {
       id: "vfr.cross-country.q2",
       kind: "mc",
       prompt: "Which is included in useful load?",
-      choices: ["Unusable fuel", "Full engine oil (on most modern airplanes)", "Usable fuel", "Fixed avionics"],
+      choices: [
+        "Unusable fuel",
+        "Full engine oil (on most modern airplanes)",
+        "Usable fuel",
+        "Fixed avionics",
+      ],
       answer: 2,
       explanation:
         "Useful load includes pilot, passengers, baggage and usable fuel. Unusable fuel, full oil (on most modern airplanes) and fixed equipment are part of basic empty weight.",
@@ -196,12 +245,12 @@ export const crossCountry: Module = {
       kind: "mc",
       prompt: "A VFR flight plan filed with Flight Service must be:",
       choices: [
-        "Activated automatically when the tower clears you for takeoff",
         "Activated by the pilot, and closed upon arrival",
+        "Activated automatically when the tower clears you for takeoff",
         "Closed by the destination tower automatically",
         "Activated only if requested by ATC",
       ],
-      answer: 1,
+      answer: 0,
       explanation:
         "The pilot activates the VFR flight plan (usually with Flight Service) and must close it on arrival. Towers do not automatically activate or close VFR flight plans.",
       subject: "Regulations",
@@ -231,10 +280,15 @@ export const crossCountry: Module = {
       prompt: "How much does 36 gallons of avgas weigh?",
       choices: ["180 lb", "216 lb", "252 lb", "270 lb"],
       answer: 1,
-      explanation: "36 gal × 6 lb/gal = 216 lb. Using 7.5 lb/gal (the weight of oil) would give 270 lb.",
+      explanation:
+        "36 gal × 6 lb/gal = 216 lb. Using 7.5 lb/gal (the weight of oil) would give 270 lb.",
       subject: "Weight & Balance",
       reference: "PHAK Ch. 10",
     }),
   ],
-  practice: [link("/planner", "Flight planner"), link("/simulator?scenario=vfr-xc", "Fly a cross-country"), link("/weather", "Weather briefing")],
+  practice: [
+    link("/planner", "Flight planner"),
+    link("/simulator?scenario=vfr-xc", "Fly a cross-country"),
+    link("/weather", "Weather briefing"),
+  ],
 };

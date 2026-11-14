@@ -1,5 +1,18 @@
 import type { Module } from "../types";
-import { caution, check, h, info, link, p, practice, q, table, tip, ul, warning } from "../builders";
+import {
+  caution,
+  check,
+  h,
+  info,
+  link,
+  p,
+  practice,
+  q,
+  table,
+  tip,
+  ul,
+  warning,
+} from "../builders";
 
 export const night: Module = {
   id: "night",
@@ -34,11 +47,31 @@ export const night: Module = {
         table(
           ["Illusion", "What happens", "Risk"],
           [
-            ["Autokinesis", "Staring at a single light in the dark makes it appear to move", "Loss of control trying to follow it; keep eyes moving"],
-            ["False horizon", "Sloping cloud layers or ground lights mistaken for the horizon", "Flying with the wings banked or nose misaligned"],
-            ["Black-hole approach", "Approach over water or unlit terrain to a lighted runway; you feel higher than you are", "Flying a dangerously low approach and landing short"],
-            ["Narrow runway / upsloping runway", "Creates the illusion of being higher than actual", "Lower-than-normal approach"],
-            ["Wide runway / downsloping runway", "Creates the illusion of being lower than actual", "Higher-than-normal approach"],
+            [
+              "Autokinesis",
+              "Staring at a single light in the dark makes it appear to move",
+              "Loss of control trying to follow it; keep eyes moving",
+            ],
+            [
+              "False horizon",
+              "Sloping cloud layers or ground lights mistaken for the horizon",
+              "Flying with the wings banked or nose misaligned",
+            ],
+            [
+              "Black-hole approach",
+              "Approach over water or unlit terrain to a lighted runway; you feel higher than you are",
+              "Flying a dangerously low approach and landing short",
+            ],
+            [
+              "Narrow runway / upsloping runway",
+              "Creates the illusion of being higher than actual",
+              "Lower-than-normal approach",
+            ],
+            [
+              "Wide runway / downsloping runway",
+              "Creates the illusion of being lower than actual",
+              "Higher-than-normal approach",
+            ],
             ["Haze", "Objects appear farther away", "Lower-than-normal approach"],
           ],
         ),
@@ -51,12 +84,12 @@ export const night: Module = {
           kind: "mc",
           prompt: "What is the best technique for seeing objects at night?",
           choices: [
-            "Look directly at the object",
             "Use off-center vision, scanning slowly in small sectors",
+            "Look directly at the object",
             "Stare at one point until your eyes adjust",
             "Use bright white cockpit lights",
           ],
-          answer: 1,
+          answer: 0,
           explanation:
             "Off-center viewing places the image on the light-sensitive rods. Looking directly puts it in the night blind spot of the cone-rich center, and staring promotes autokinesis.",
           subject: "Night Operations",
@@ -85,7 +118,10 @@ export const night: Module = {
         table(
           ["What you see", "What the other aircraft is doing"],
           [
-            ["Both red and green (green on your left, red on your right)", "Coming toward you head-on — take evasive action"],
+            [
+              "Both red and green (green on your left, red on your right)",
+              "Coming toward you head-on — take evasive action",
+            ],
             ["Steady white only", "Moving away from you"],
             ["Red (and flashing beacon) only", "Crossing from right to left in front of you"],
             ["Green (and flashing beacon) only", "Crossing from left to right in front of you"],
@@ -94,7 +130,8 @@ export const night: Module = {
         check({
           id: "vfr.night.2.k1",
           kind: "scenario",
-          context: "At night, you see a steady red light and a flashing red light ahead at your altitude.",
+          context:
+            "At night, you see a steady red light and a flashing red light ahead at your altitude.",
           prompt: "What is the other aircraft doing?",
           choices: [
             "Approaching head-on",
@@ -112,8 +149,16 @@ export const night: Module = {
         table(
           ["Purpose", "Definition", "Rule"],
           [
-            ["Logging night flight time", "End of evening civil twilight to beginning of morning civil twilight", "14 CFR 1.1, 61.51"],
-            ["Night passenger currency", "1 hour after sunset to 1 hour before sunrise", "61.57(b)"],
+            [
+              "Logging night flight time",
+              "End of evening civil twilight to beginning of morning civil twilight",
+              "14 CFR 1.1, 61.51",
+            ],
+            [
+              "Night passenger currency",
+              "1 hour after sunset to 1 hour before sunrise",
+              "61.57(b)",
+            ],
             ["Aircraft position lights", "Sunset to sunrise", "91.209"],
           ],
         ),
@@ -133,25 +178,45 @@ export const night: Module = {
           "Preflight in daylight",
           "When possible, preflight before dark. Small fluid leaks, damage and contamination are much harder to see with a flashlight.",
         ),
-        practice("/simulator?scenario=vfr-landing", "Night landing", "Fly approaches to a lighted runway and use the PAPI to avoid a black-hole approach."),
+        practice(
+          "/simulator?scenario=vfr-landing",
+          "Night landing",
+          "Fly approaches to a lighted runway and use the PAPI to avoid a black-hole approach.",
+        ),
       ],
     },
   ],
   flashcards: [
     { id: "vfr.night.fc1", front: "Time for full dark adaptation", back: "About 30 minutes." },
-    { id: "vfr.night.fc2", front: "Off-center viewing", back: "Look 5°–10° to the side of an object at night so its image falls on the rods." },
-    { id: "vfr.night.fc3", front: "Autokinesis", back: "A stationary light stared at in the dark appears to move." },
-    { id: "vfr.night.fc4", front: "Left wingtip position light color", back: "Red (right is green, tail is white)." },
+    {
+      id: "vfr.night.fc2",
+      front: "Off-center viewing",
+      back: "Look 5°–10° to the side of an object at night so its image falls on the rods.",
+    },
+    {
+      id: "vfr.night.fc3",
+      front: "Autokinesis",
+      back: "A stationary light stared at in the dark appears to move.",
+    },
+    {
+      id: "vfr.night.fc4",
+      front: "Left wingtip position light color",
+      back: "Red (right is green, tail is white).",
+    },
     { id: "vfr.night.fc5", front: "Position lights required", back: "Sunset to sunrise (91.209)." },
-    { id: "vfr.night.fc6", front: "Black-hole approach tendency", back: "Feeling higher than actual — leading to a dangerously low approach." },
+    {
+      id: "vfr.night.fc6",
+      front: "Black-hole approach tendency",
+      back: "Feeling higher than actual — leading to a dangerously low approach.",
+    },
   ],
   quiz: [
     q({
       id: "vfr.night.q1",
       kind: "mc",
       prompt: "Which cells in the eye are primarily responsible for night vision?",
-      choices: ["Cones", "Rods", "The fovea", "The optic nerve"],
-      answer: 1,
+      choices: ["Cones", "The optic nerve", "The fovea", "Rods"],
+      answer: 3,
       explanation:
         "Rods are sensitive to dim light and are located around the periphery. Cones, concentrated in the fovea, need bright light and are responsible for color and detail.",
       subject: "Night Operations",
@@ -192,7 +257,8 @@ export const night: Module = {
     q({
       id: "vfr.night.q4",
       kind: "scenario",
-      context: "At night you see only a steady white light and a flashing anticollision light ahead at about your altitude. The lights are not getting brighter.",
+      context:
+        "At night you see only a steady white light and a flashing anticollision light ahead at about your altitude. The lights are not getting brighter.",
       prompt: "What should you conclude?",
       choices: [
         "The aircraft is moving away from you",
@@ -209,10 +275,12 @@ export const night: Module = {
     q({
       id: "vfr.night.q5",
       kind: "tf",
-      prompt: "True or false: the VFR fuel reserve requirement at night is 30 minutes at normal cruise speed.",
+      prompt:
+        "True or false: the VFR fuel reserve requirement at night is 30 minutes at normal cruise speed.",
       choices: ["True", "False"],
       answer: 1,
-      explanation: "False. The night requirement is 45 minutes; 30 minutes is the day requirement (91.151).",
+      explanation:
+        "False. The night requirement is 45 minutes; 30 minutes is the day requirement (91.151).",
       subject: "Regulations",
       reference: "14 CFR 91.151",
     }),
@@ -222,16 +290,19 @@ export const night: Module = {
       prompt: "What is the best defense against a black-hole approach illusion?",
       choices: [
         "Fly a long, flat, low approach",
-        "Look directly at the runway lights without scanning",
-        "Turn off the landing light",
         "Use a visual glide slope indicator or instrument glide path and cross-check the altimeter",
+        "Turn off the landing light",
+        "Look directly at the runway lights without scanning",
       ],
-      answer: 3,
+      answer: 1,
       explanation:
         "A VASI/PAPI or electronic glide path gives an objective reference, and the altimeter confirms height. A long, low approach is exactly what the illusion produces.",
       subject: "Night Operations",
       reference: "AIM 8-1-5",
     }),
   ],
-  practice: [link("/simulator?scenario=vfr-landing", "Night landings"), link("/simulator?scenario=vfr-pattern", "Night pattern")],
+  practice: [
+    link("/simulator?scenario=vfr-landing", "Night landings"),
+    link("/simulator?scenario=vfr-pattern", "Night pattern"),
+  ],
 };

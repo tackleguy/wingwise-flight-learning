@@ -1,5 +1,19 @@
 import type { Module } from "../types";
-import { caution, check, diagram, h, info, link, p, practice, q, table, tip, ul, warning } from "../builders";
+import {
+  caution,
+  check,
+  diagram,
+  h,
+  info,
+  link,
+  p,
+  practice,
+  q,
+  table,
+  tip,
+  ul,
+  warning,
+} from "../builders";
 
 export const systems: Module = {
   id: "systems",
@@ -40,8 +54,14 @@ export const systems: Module = {
         table(
           ["Mixture condition", "Typical symptoms"],
           [
-            ["Too rich", "Rough running, power loss, spark plug fouling, high fuel burn, lower cylinder temps"],
-            ["Too lean", "Rough running, high cylinder/oil temps, possible detonation, engine may quit"],
+            [
+              "Too rich",
+              "Rough running, power loss, spark plug fouling, high fuel burn, lower cylinder temps",
+            ],
+            [
+              "Too lean",
+              "Rough running, high cylinder/oil temps, possible detonation, engine may quit",
+            ],
             ["Correctly leaned", "Smooth operation, best power or best economy as selected"],
           ],
         ),
@@ -68,11 +88,11 @@ export const systems: Module = {
           prompt: "Detonation is most likely to occur when:",
           choices: [
             "The mixture is set excessively rich",
-            "A lower than specified grade of fuel is used",
-            "The engine is operated at low power settings in cool air",
             "Carburetor heat is applied",
+            "The engine is operated at low power settings in cool air",
+            "A lower than specified grade of fuel is used",
           ],
-          answer: 1,
+          answer: 3,
           explanation:
             "Lower-octane fuel cannot resist the compression and heat in the cylinder and detonates. A rich mixture actually helps cool the cylinders and suppresses detonation, so it is the opposite of the cause.",
           subject: "Aircraft Systems",
@@ -137,10 +157,26 @@ export const systems: Module = {
         table(
           ["Ammeter shows", "Meaning", "Action"],
           [
-            ["Small positive (charge)", "Alternator charging battery normally (e.g., after start)", "Normal"],
-            ["Zero/centered in cruise", "Alternator carrying the load, battery fully charged", "Normal"],
-            ["Sustained negative (discharge)", "Alternator not keeping up or failed; battery supplying load", "Follow POH checklist, shed load, land as soon as practical"],
-            ["Sustained high charge", "Possible voltage regulator fault / overcharging", "Follow POH checklist"],
+            [
+              "Small positive (charge)",
+              "Alternator charging battery normally (e.g., after start)",
+              "Normal",
+            ],
+            [
+              "Zero/centered in cruise",
+              "Alternator carrying the load, battery fully charged",
+              "Normal",
+            ],
+            [
+              "Sustained negative (discharge)",
+              "Alternator not keeping up or failed; battery supplying load",
+              "Follow POH checklist, shed load, land as soon as practical",
+            ],
+            [
+              "Sustained high charge",
+              "Possible voltage regulator fault / overcharging",
+              "Follow POH checklist",
+            ],
           ],
         ),
         tip(
@@ -182,20 +218,44 @@ export const systems: Module = {
         table(
           ["Failure", "Airspeed", "Altimeter", "VSI"],
           [
-            ["Pitot ram inlet and drain hole blocked", "Acts like an altimeter: increases in a climb, decreases in a descent", "Normal", "Normal"],
+            [
+              "Pitot ram inlet and drain hole blocked",
+              "Acts like an altimeter: increases in a climb, decreases in a descent",
+              "Normal",
+              "Normal",
+            ],
             ["Pitot ram inlet blocked, drain open", "Drops toward zero", "Normal", "Normal"],
-            ["Static port blocked", "Reads low in a climb, high in a descent", "Frozen at the altitude where blockage occurred", "Shows zero"],
-            ["Using alternate static (cabin air)", "Reads slightly high", "Reads slightly high", "Momentary climb indication"],
+            [
+              "Static port blocked",
+              "Reads low in a climb, high in a descent",
+              "Frozen at the altitude where blockage occurred",
+              "Shows zero",
+            ],
+            [
+              "Using alternate static (cabin air)",
+              "Reads slightly high",
+              "Reads slightly high",
+              "Momentary climb indication",
+            ],
           ],
         ),
         table(
           ["Marking", "Meaning"],
           [
-            ["White arc", "Flap operating range: bottom is VS0 (stall, landing configuration), top is VFE (max flap extended speed)"],
-            ["Green arc", "Normal operating range: bottom is VS1 (stall, specified configuration), top is VNO (max structural cruising speed)"],
+            [
+              "White arc",
+              "Flap operating range: bottom is VS0 (stall, landing configuration), top is VFE (max flap extended speed)",
+            ],
+            [
+              "Green arc",
+              "Normal operating range: bottom is VS1 (stall, specified configuration), top is VNO (max structural cruising speed)",
+            ],
             ["Yellow arc", "Caution range from VNO to VNE — smooth air only"],
             ["Red line", "VNE, never-exceed speed"],
-            ["Not marked: VA", "Design maneuvering speed is in the POH and on a placard, not on the indicator; it decreases as weight decreases"],
+            [
+              "Not marked: VA",
+              "Design maneuvering speed is in the POH and on a placard, not on the indicator; it decreases as weight decreases",
+            ],
           ],
         ),
         h("The altimeter"),
@@ -224,12 +284,12 @@ export const systems: Module = {
           kind: "mc",
           prompt: "If the static port becomes blocked during a climb, the altimeter will:",
           choices: [
-            "Continue to show an accurate climb",
             "Freeze at the altitude where the blockage occurred",
+            "Continue to show an accurate climb",
             "Read zero",
             "Read higher than actual altitude as you climb",
           ],
-          answer: 1,
+          answer: 0,
           explanation:
             "The altimeter has only static pressure as its input. Once that pressure is trapped, it can no longer change, so the altimeter freezes. The VSI goes to zero, and the airspeed indicator becomes inaccurate (reading low in a climb).",
           subject: "Flight Instruments",
@@ -239,7 +299,12 @@ export const systems: Module = {
           id: "vfr.systems.3.k2",
           kind: "mc",
           prompt: "Which instrument relies on the gyroscopic property of precession?",
-          choices: ["Attitude indicator", "Heading indicator", "Turn coordinator", "Magnetic compass"],
+          choices: [
+            "Attitude indicator",
+            "Heading indicator",
+            "Turn coordinator",
+            "Magnetic compass",
+          ],
           answer: 2,
           explanation:
             "The turn coordinator senses rate of roll and yaw through precession. The attitude and heading indicators depend on rigidity in space, and the magnetic compass is not gyroscopic at all.",
@@ -275,7 +340,11 @@ export const systems: Module = {
       front: "Top of the green arc",
       back: "VNO — maximum structural cruising speed. Above it (yellow arc) operate only in smooth air.",
     },
-    { id: "vfr.systems.fc5", front: "ANDS", back: "Compass acceleration error: Accelerate North, Decelerate South (Northern Hemisphere, E/W headings)." },
+    {
+      id: "vfr.systems.fc5",
+      front: "ANDS",
+      back: "Compass acceleration error: Accelerate North, Decelerate South (Northern Hemisphere, E/W headings).",
+    },
     { id: "vfr.systems.fc6", front: "100LL avgas color", back: "Blue." },
   ],
   quiz: [
@@ -298,7 +367,8 @@ export const systems: Module = {
     q({
       id: "vfr.systems.q2",
       kind: "mc",
-      prompt: "If the grade of fuel specified for an engine is not available, which is acceptable as a temporary substitute?",
+      prompt:
+        "If the grade of fuel specified for an engine is not available, which is acceptable as a temporary substitute?",
       choices: [
         "The next lower grade",
         "Automotive gasoline of the same octane",
@@ -319,11 +389,11 @@ export const systems: Module = {
       prompt: "What is the most likely cause?",
       choices: [
         "The static port is blocked",
-        "The pitot ram inlet and drain hole are both blocked",
-        "The alternate static source is open",
         "The vacuum pump has failed",
+        "The alternate static source is open",
+        "The pitot ram inlet and drain hole are both blocked",
       ],
-      answer: 1,
+      answer: 3,
       explanation:
         "With the pitot inlet and drain both blocked, trapped pitot pressure stays fixed while static pressure falls in the climb, so the airspeed indicator rises like an altimeter. A blocked static port would freeze the altimeter and zero the VSI, which is not happening here.",
       subject: "Flight Instruments",
@@ -360,8 +430,14 @@ export const systems: Module = {
     q({
       id: "vfr.systems.q6",
       kind: "mc",
-      prompt: "In the Northern Hemisphere, if an airplane on an easterly heading accelerates, the magnetic compass will initially indicate:",
-      choices: ["A turn toward the south", "A turn toward the north", "No change", "A turn toward the west"],
+      prompt:
+        "In the Northern Hemisphere, if an airplane on an easterly heading accelerates, the magnetic compass will initially indicate:",
+      choices: [
+        "A turn toward the south",
+        "A turn toward the north",
+        "No change",
+        "A turn toward the west",
+      ],
       answer: 1,
       explanation:
         "ANDS: Accelerate North, Decelerate South. Acceleration on an east or west heading causes an apparent turn toward north. Deceleration would show a turn toward south.",

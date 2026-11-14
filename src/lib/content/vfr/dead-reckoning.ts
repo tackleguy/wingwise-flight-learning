@@ -1,5 +1,19 @@
 import type { Module } from "../types";
-import { check, diagram, exercise, h, info, link, ol, p, practice, q, table, tip, ul } from "../builders";
+import {
+  check,
+  diagram,
+  exercise,
+  h,
+  info,
+  link,
+  ol,
+  p,
+  practice,
+  q,
+  table,
+  tip,
+  ul,
+} from "../builders";
 
 export const deadReckoning: Module = {
   id: "dead-reckoning",
@@ -37,15 +51,28 @@ export const deadReckoning: Module = {
         table(
           ["Step", "Apply", "Memory aid"],
           [
-            ["True course ± WCA = true heading", "Add WCA for a wind from the right, subtract for a wind from the left", "Correct into the wind"],
-            ["True heading ± variation = magnetic heading", "Subtract easterly variation, add westerly variation", "'East is least, west is best'"],
-            ["Magnetic heading ± deviation = compass heading", "Use the compass correction card", "—"],
+            [
+              "True course ± WCA = true heading",
+              "Add WCA for a wind from the right, subtract for a wind from the left",
+              "Correct into the wind",
+            ],
+            [
+              "True heading ± variation = magnetic heading",
+              "Subtract easterly variation, add westerly variation",
+              "'East is least, west is best'",
+            ],
+            [
+              "Magnetic heading ± deviation = compass heading",
+              "Use the compass correction card",
+              "—",
+            ],
           ],
         ),
         check({
           id: "vfr.dead-reckoning.1.k1",
           kind: "calc",
-          prompt: "True course 270°, wind correction angle 8° right, magnetic variation 5°W. What is the magnetic heading?",
+          prompt:
+            "True course 270°, wind correction angle 8° right, magnetic variation 5°W. What is the magnetic heading?",
           choices: ["257°", "273°", "283°", "287°"],
           answer: 2,
           explanation:
@@ -85,7 +112,8 @@ export const deadReckoning: Module = {
         check({
           id: "vfr.dead-reckoning.2.k1",
           kind: "calc",
-          prompt: "A leg is 75 NM. Groundspeed is 110 knots and fuel burn is 9 gallons per hour. About how long and how much fuel?",
+          prompt:
+            "A leg is 75 NM. Groundspeed is 110 knots and fuel burn is 9 gallons per hour. About how long and how much fuel?",
           choices: ["34 min, 5.1 gal", "41 min, 6.2 gal", "45 min, 6.8 gal", "68 min, 10.2 gal"],
           answer: 1,
           explanation:
@@ -119,7 +147,8 @@ export const deadReckoning: Module = {
         check({
           id: "vfr.dead-reckoning.2.k2",
           kind: "calc",
-          prompt: "After 30 NM you find yourself 3 NM left of course. Approximately how many degrees are you off course?",
+          prompt:
+            "After 30 NM you find yourself 3 NM left of course. Approximately how many degrees are you off course?",
           choices: ["3°", "6°", "10°", "18°"],
           answer: 1,
           explanation:
@@ -127,23 +156,52 @@ export const deadReckoning: Module = {
           subject: "Navigation",
           reference: "PHAK Ch. 16",
         }),
-        practice("/planner", "Flight planner", "Build a complete nav log with winds, times and fuel for a real route."),
+        practice(
+          "/planner",
+          "Flight planner",
+          "Build a complete nav log with winds, times and fuel for a real route.",
+        ),
       ],
     },
   ],
   flashcards: [
-    { id: "vfr.dead-reckoning.fc1", front: "TC → compass heading sequence", back: "TC ± WCA = TH; TH ± variation = MH; MH ± deviation = CH." },
-    { id: "vfr.dead-reckoning.fc2", front: "Applying variation", back: "East is least (subtract), west is best (add) when going from true to magnetic." },
-    { id: "vfr.dead-reckoning.fc3", front: "Maximum drift rule of thumb", back: "Wind speed × 60 ÷ TAS." },
-    { id: "vfr.dead-reckoning.fc4", front: "Time in minutes", back: "Distance ÷ groundspeed × 60." },
-    { id: "vfr.dead-reckoning.fc5", front: "1-in-60 rule", back: "1° of error ≈ 1 NM off course per 60 NM flown." },
-    { id: "vfr.dead-reckoning.fc6", front: "Winds aloft forecast direction reference", back: "True north." },
+    {
+      id: "vfr.dead-reckoning.fc1",
+      front: "TC → compass heading sequence",
+      back: "TC ± WCA = TH; TH ± variation = MH; MH ± deviation = CH.",
+    },
+    {
+      id: "vfr.dead-reckoning.fc2",
+      front: "Applying variation",
+      back: "East is least (subtract), west is best (add) when going from true to magnetic.",
+    },
+    {
+      id: "vfr.dead-reckoning.fc3",
+      front: "Maximum drift rule of thumb",
+      back: "Wind speed × 60 ÷ TAS.",
+    },
+    {
+      id: "vfr.dead-reckoning.fc4",
+      front: "Time in minutes",
+      back: "Distance ÷ groundspeed × 60.",
+    },
+    {
+      id: "vfr.dead-reckoning.fc5",
+      front: "1-in-60 rule",
+      back: "1° of error ≈ 1 NM off course per 60 NM flown.",
+    },
+    {
+      id: "vfr.dead-reckoning.fc6",
+      front: "Winds aloft forecast direction reference",
+      back: "True north.",
+    },
   ],
   quiz: [
     q({
       id: "vfr.dead-reckoning.q1",
       kind: "calc",
-      prompt: "True heading 155°, variation 9°E, deviation +2° (from the card). What is the compass heading?",
+      prompt:
+        "True heading 155°, variation 9°E, deviation +2° (from the card). What is the compass heading?",
       choices: ["144°", "148°", "162°", "166°"],
       answer: 1,
       explanation:
@@ -157,14 +215,16 @@ export const deadReckoning: Module = {
       prompt: "You cover 22 NM between two checkpoints in 12 minutes. What is your groundspeed?",
       choices: ["92 knots", "120 knots", "132 knots", "110 knots"],
       answer: 3,
-      explanation: "22 NM in 12 minutes = 22 × (60 ÷ 12) = 22 × 5 = 110 knots.",
+      explanation:
+        "Groundspeed = distance ÷ time. 12 minutes is 1/5 of an hour, so 22 × (60 ÷ 12) = 22 × 5 = 110 knots. Dividing 60 by 22 or forgetting to convert minutes to hours produces the other choices.",
       subject: "Navigation",
       reference: "PHAK Ch. 16",
     }),
     q({
       id: "vfr.dead-reckoning.q3",
       kind: "calc",
-      prompt: "TAS is 120 knots and the wind is 30 knots directly across your course. What is the approximate maximum wind correction angle?",
+      prompt:
+        "TAS is 120 knots and the wind is 30 knots directly across your course. What is the approximate maximum wind correction angle?",
       choices: ["4°", "8°", "15°", "30°"],
       answer: 2,
       explanation:
@@ -186,14 +246,10 @@ export const deadReckoning: Module = {
     q({
       id: "vfr.dead-reckoning.q5",
       kind: "calc",
-      context: "Day VFR. Planned flight time 1 hour 30 minutes. Fuel burn 8 gallons per hour. Usable fuel 24 gallons.",
+      context:
+        "Day VFR. Planned flight time 1 hour 30 minutes. Fuel burn 8 gallons per hour. Usable fuel 24 gallons.",
       prompt: "What is the minimum fuel required by 91.151, and is there enough?",
-      choices: [
-        "12 gal; yes",
-        "16 gal; yes",
-        "18 gal; no",
-        "24 gal; exactly enough",
-      ],
+      choices: ["12 gal; yes", "16 gal; yes", "18 gal; no", "24 gal; exactly enough"],
       answer: 1,
       explanation:
         "1.5 hours × 8 = 12 gallons plus a 30-minute day reserve (4 gallons) = 16 gallons, so 24 usable is enough. 12 gallons forgets the reserve; 18 gallons is what a 45-minute night reserve would require.",
@@ -203,7 +259,8 @@ export const deadReckoning: Module = {
     q({
       id: "vfr.dead-reckoning.q6",
       kind: "calc",
-      prompt: "After 20 NM you are 2 NM right of course with 40 NM remaining. What total heading change (to the left) will take you directly to the destination?",
+      prompt:
+        "After 20 NM you are 2 NM right of course with 40 NM remaining. What total heading change (to the left) will take you directly to the destination?",
       choices: ["3°", "6°", "9°", "12°"],
       answer: 2,
       explanation:
@@ -212,5 +269,8 @@ export const deadReckoning: Module = {
       reference: "PHAK Ch. 16",
     }),
   ],
-  practice: [link("/planner", "Flight planner"), link("/simulator?scenario=vfr-xc", "Fly the plan")],
+  practice: [
+    link("/planner", "Flight planner"),
+    link("/simulator?scenario=vfr-xc", "Fly the plan"),
+  ],
 };

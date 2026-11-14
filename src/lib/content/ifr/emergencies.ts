@@ -1,5 +1,19 @@
 import type { Module } from "../types";
-import { caution, check, h, info, link, ol, p, practice, q, table, tip, ul, warning } from "../builders";
+import {
+  caution,
+  check,
+  h,
+  info,
+  link,
+  ol,
+  p,
+  practice,
+  q,
+  table,
+  tip,
+  ul,
+  warning,
+} from "../builders";
 
 export const emergencies: Module = {
   id: "emergencies",
@@ -31,8 +45,14 @@ export const emergencies: Module = {
           ["Priority", "Route to fly"],
           [
             ["A — Assigned", "By the route assigned in the last ATC clearance received"],
-            ["V — Vectored", "If being radar vectored, by the direct route from the point of failure to the fix, route or airway specified in the vector clearance"],
-            ["E — Expected", "In the absence of an assigned route, by the route ATC has advised may be expected in a further clearance"],
+            [
+              "V — Vectored",
+              "If being radar vectored, by the direct route from the point of failure to the fix, route or airway specified in the vector clearance",
+            ],
+            [
+              "E — Expected",
+              "In the absence of an assigned route, by the route ATC has advised may be expected in a further clearance",
+            ],
             ["F — Filed", "In the absence of the above, by the route filed in the flight plan"],
           ],
         ),
@@ -71,7 +91,11 @@ export const emergencies: Module = {
           "Get an EFC",
           "Whenever you are told to hold, make sure you have an EFC time. It is the anchor for your lost-communication plan.",
         ),
-        practice("/simulator?scenario=emg-radio", "Lost comms", "Lose your radios in IMC and fly the 91.185 route and altitude to the approach."),
+        practice(
+          "/simulator?scenario=emg-radio",
+          "Lost comms",
+          "Lose your radios in IMC and fly the 91.185 route and altitude to the approach.",
+        ),
       ],
     },
     {
@@ -106,14 +130,15 @@ export const emergencies: Module = {
         check({
           id: "ifr.emergencies.2.k1",
           kind: "mc",
-          prompt: "On a no-gyro radar approach, how should you make turns after being established on final?",
+          prompt:
+            "On a no-gyro radar approach, how should you make turns after being established on final?",
           choices: [
-            "Standard-rate turns",
             "Half-standard-rate turns",
+            "Standard-rate turns",
             "Turns at 30° of bank",
             "Turns using the magnetic compass only",
           ],
-          answer: 1,
+          answer: 0,
           explanation:
             "ATC expects standard-rate turns until you are on final, then half-standard-rate turns for the small corrections on final. Using standard rate on final would overshoot the controller's corrections.",
           subject: "Emergency Procedures",
@@ -152,28 +177,55 @@ export const emergencies: Module = {
           prompt: "What is the best action?",
           choices: [
             "Continue and monitor the ice accumulation",
-            "Request a climb above the tops at 9,000 ft and advise ATC of the icing",
-            "Descend to 3,000 ft immediately without a clearance",
             "Reduce airspeed to minimize ice accumulation",
+            "Descend to 3,000 ft immediately without a clearance",
+            "Request a climb above the tops at 9,000 ft and advise ATC of the icing",
           ],
-          answer: 1,
+          answer: 3,
           explanation:
             "Tops at 8,000 ft are close, and getting out of the clouds removes the visible moisture. Descending to warmer air would put you below the MEA (5,000 ft) before reaching above-freezing air at 4,000 ft. Slowing down in ice increases the stall risk. Tell ATC and act early.",
           subject: "Emergency Procedures",
           reference: "AC 00-6B; AIM 7-1",
         }),
-        practice("/simulator?scenario=emg-vacuum", "Partial panel", "Lose the vacuum pump in IMC and fly a partial-panel approach."),
-        practice("/simulator?scenario=emg-electrical", "Electrical failure", "Manage an alternator failure in IMC and plan a diversion."),
+        practice(
+          "/simulator?scenario=emg-vacuum",
+          "Partial panel",
+          "Lose the vacuum pump in IMC and fly a partial-panel approach.",
+        ),
       ],
     },
   ],
   flashcards: [
-    { id: "ifr.emergencies.fc1", front: "Lost comms route (AVE-F)", back: "Assigned, Vectored, Expected, Filed." },
-    { id: "ifr.emergencies.fc2", front: "Lost comms altitude", back: "Highest of: assigned, MEA (minimum IFR altitude), expected — for each route segment." },
-    { id: "ifr.emergencies.fc3", front: "Lost comms in VFR conditions", back: "Continue VFR and land as soon as practicable (91.185(b))." },
-    { id: "ifr.emergencies.fc4", front: "91.187 malfunction report contents", back: "Aircraft ID, equipment affected, degree of impairment, assistance desired." },
-    { id: "ifr.emergencies.fc5", front: "Partial panel pitch instruments", back: "Altimeter, VSI and airspeed indicator." },
-    { id: "ifr.emergencies.fc6", front: "'Minimum fuel'", back: "An advisory that you can accept little or no delay — not an emergency and no priority." },
+    {
+      id: "ifr.emergencies.fc1",
+      front: "Lost comms route (AVE-F)",
+      back: "Assigned, Vectored, Expected, Filed.",
+    },
+    {
+      id: "ifr.emergencies.fc2",
+      front: "Lost comms altitude",
+      back: "Highest of: assigned, MEA (minimum IFR altitude), expected — for each route segment.",
+    },
+    {
+      id: "ifr.emergencies.fc3",
+      front: "Lost comms in VFR conditions",
+      back: "Continue VFR and land as soon as practicable (91.185(b)).",
+    },
+    {
+      id: "ifr.emergencies.fc4",
+      front: "91.187 malfunction report contents",
+      back: "Aircraft ID, equipment affected, degree of impairment, assistance desired.",
+    },
+    {
+      id: "ifr.emergencies.fc5",
+      front: "Partial panel pitch instruments",
+      back: "Altimeter, VSI and airspeed indicator.",
+    },
+    {
+      id: "ifr.emergencies.fc6",
+      front: "'Minimum fuel'",
+      back: "An advisory that you can accept little or no delay — not an emergency and no priority.",
+    },
   ],
   quiz: [
     q({
@@ -231,7 +283,8 @@ export const emergencies: Module = {
     q({
       id: "ifr.emergencies.q4",
       kind: "mc",
-      prompt: "With a vacuum failure, which instrument is primary for bank in a standard-rate turn?",
+      prompt:
+        "With a vacuum failure, which instrument is primary for bank in a standard-rate turn?",
       choices: ["Attitude indicator", "Heading indicator", "Turn coordinator", "VSI"],
       answer: 2,
       explanation:
@@ -242,7 +295,8 @@ export const emergencies: Module = {
     q({
       id: "ifr.emergencies.q5",
       kind: "mc",
-      prompt: "Which report must you make under 91.187 if your VOR receiver fails in controlled airspace under IFR?",
+      prompt:
+        "Which report must you make under 91.187 if your VOR receiver fails in controlled airspace under IFR?",
       choices: [
         "No report is required if you have GPS",
         "A written report to the FAA within 10 days",
@@ -258,7 +312,8 @@ export const emergencies: Module = {
     q({
       id: "ifr.emergencies.q6",
       kind: "tf",
-      prompt: "True or false: declaring 'minimum fuel' gives you priority handling over other traffic.",
+      prompt:
+        "True or false: declaring 'minimum fuel' gives you priority handling over other traffic.",
       choices: ["True", "False"],
       answer: 1,
       explanation:
@@ -269,7 +324,8 @@ export const emergencies: Module = {
     q({
       id: "ifr.emergencies.q7",
       kind: "calc",
-      prompt: "Partial panel, you need to turn from 270° to 030° (right) using a timed standard-rate turn. How long should the turn last?",
+      prompt:
+        "Partial panel, you need to turn from 270° to 030° (right) using a timed standard-rate turn. How long should the turn last?",
       choices: ["20 seconds", "40 seconds", "60 seconds", "80 seconds"],
       answer: 1,
       explanation:

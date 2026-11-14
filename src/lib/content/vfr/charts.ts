@@ -1,5 +1,18 @@
 import type { Module } from "../types";
-import { caution, check, exercise, h, info, link, p, practice, q, table, tip, ul } from "../builders";
+import {
+  caution,
+  check,
+  exercise,
+  h,
+  info,
+  link,
+  p,
+  practice,
+  q,
+  table,
+  tip,
+  ul,
+} from "../builders";
 
 export const charts: Module = {
   id: "charts",
@@ -29,7 +42,8 @@ export const charts: Module = {
         check({
           id: "vfr.charts.1.k1",
           kind: "calc",
-          prompt: "Two airports lie on the same meridian, one at 40°15'N and the other at 40°45'N. How far apart are they?",
+          prompt:
+            "Two airports lie on the same meridian, one at 40°15'N and the other at 40°45'N. How far apart are they?",
           choices: ["15 NM", "30 NM", "45 NM", "60 NM"],
           answer: 1,
           explanation:
@@ -49,7 +63,10 @@ export const charts: Module = {
         table(
           ["Symbol / number", "Meaning"],
           [
-            ["Single obstacle symbol (less than 1,000 ft AGL)", "Tower, stack or similar man-made obstacle"],
+            [
+              "Single obstacle symbol (less than 1,000 ft AGL)",
+              "Tower, stack or similar man-made obstacle",
+            ],
             ["Taller obstacle symbol", "1,000 ft AGL or higher"],
             ["Group obstacle symbol", "Multiple obstacles in close proximity"],
             ["Lightning-bolt rays on symbol", "High-intensity obstruction lights"],
@@ -103,7 +120,11 @@ export const charts: Module = {
             ["CTAF", "Ⓒ after a frequency", "Common traffic advisory frequency"],
             ["ATIS / AWOS / ASOS", "ATIS 124.5", "Automated weather/information frequency"],
             ["Elevation", "1125", "Field elevation in feet MSL"],
-            ["Lighting", "L / *L", "Runway lights sunset to sunrise / lighting limitations — see Chart Supplement"],
+            [
+              "Lighting",
+              "L / *L",
+              "Runway lights sunset to sunrise / lighting limitations — see Chart Supplement",
+            ],
             ["Longest runway", "72", "Length of longest runway in hundreds of feet (7,200 ft)"],
             ["UNICOM", "122.95", "Aeronautical advisory station frequency"],
             ["Right traffic", "RP 23", "Right-hand traffic pattern for runway 23"],
@@ -124,12 +145,12 @@ export const charts: Module = {
           context: "Airport data block: CT - 120.6 ★ Ⓒ   ATIS 127.25   874 *L 60 122.95",
           prompt: "Which statement is correct?",
           choices: [
-            "The tower operates 24 hours and the field elevation is 60 ft",
             "The tower is part-time, field elevation is 874 ft MSL, and the longest runway is 6,000 ft",
+            "The tower operates 24 hours and the field elevation is 60 ft",
             "The airport has no lighting and the UNICOM is 127.25",
             "Runway lighting is available sunset to sunrise without limitation",
           ],
-          answer: 1,
+          answer: 0,
           explanation:
             "The star after the tower frequency means part-time, 874 is the elevation, and 60 means the longest runway is 6,000 ft. *L means lighting limitations exist (see the Chart Supplement), and 127.25 is the ATIS, not UNICOM (122.95).",
           subject: "Charts",
@@ -143,16 +164,40 @@ export const charts: Module = {
           "Read the legend",
           "Every sectional has a legend panel. When you see a symbol you are unsure of, check the legend or the FAA Aeronautical Chart User's Guide rather than guessing.",
         ),
-        practice("/airports", "Airport directory", "Browse airport data and compare it with the chart symbols you have learned."),
+        practice(
+          "/airports",
+          "Airport directory",
+          "Browse airport data and compare it with the chart symbols you have learned.",
+        ),
       ],
     },
   ],
   flashcards: [
-    { id: "vfr.charts.fc1", front: "Sectional chart scale", back: "1:500,000 — about 6.86 NM (8 SM) per inch." },
-    { id: "vfr.charts.fc2", front: "Blue vs magenta airport symbol", back: "Blue: towered. Magenta: non-towered." },
-    { id: "vfr.charts.fc3", front: "Maximum Elevation Figure (MEF)", back: "Highest terrain or obstacle in the quadrangle, in thousands and hundreds of feet MSL." },
-    { id: "vfr.charts.fc4", front: "Obstacle numbers 1549 (1203)", back: "Top at 1,549 ft MSL; 1,203 ft above ground." },
-    { id: "vfr.charts.fc5", front: "Star after the tower frequency", back: "Part-time tower — check the Chart Supplement for hours." },
+    {
+      id: "vfr.charts.fc1",
+      front: "Sectional chart scale",
+      back: "1:500,000 — about 6.86 NM (8 SM) per inch.",
+    },
+    {
+      id: "vfr.charts.fc2",
+      front: "Blue vs magenta airport symbol",
+      back: "Blue: towered. Magenta: non-towered.",
+    },
+    {
+      id: "vfr.charts.fc3",
+      front: "Maximum Elevation Figure (MEF)",
+      back: "Highest terrain or obstacle in the quadrangle, in thousands and hundreds of feet MSL.",
+    },
+    {
+      id: "vfr.charts.fc4",
+      front: "Obstacle numbers 1549 (1203)",
+      back: "Top at 1,549 ft MSL; 1,203 ft above ground.",
+    },
+    {
+      id: "vfr.charts.fc5",
+      front: "Star after the tower frequency",
+      back: "Part-time tower — check the Chart Supplement for hours.",
+    },
     { id: "vfr.charts.fc6", front: "One minute of latitude", back: "One nautical mile." },
   ],
   quiz: [
@@ -162,11 +207,11 @@ export const charts: Module = {
       prompt: "A large '4' followed by a smaller '3' in a sectional chart quadrangle means:",
       choices: [
         "The highest terrain is 430 ft MSL",
-        "The highest terrain or obstacle elevation is 4,300 ft MSL",
-        "Minimum safe altitude is 4,300 ft AGL",
         "The Class E floor is 4,300 ft MSL",
+        "Minimum safe altitude is 4,300 ft AGL",
+        "The highest terrain or obstacle elevation is 4,300 ft MSL",
       ],
-      answer: 1,
+      answer: 3,
       explanation:
         "That is the Maximum Elevation Figure: 4,300 ft MSL, the highest known feature in the quadrangle. It is MSL, not AGL, and it is not a published minimum safe altitude.",
       subject: "Charts",
@@ -206,11 +251,11 @@ export const charts: Module = {
       prompt: "What does 'RP 17' mean?",
       choices: [
         "Runway 17 has a published approach",
-        "Runway 17 is closed",
-        "Runway 17 is the preferred calm-wind runway",
         "Right-hand traffic is used for runway 17",
+        "Runway 17 is the preferred calm-wind runway",
+        "Runway 17 is closed",
       ],
-      answer: 3,
+      answer: 1,
       explanation:
         "RP followed by runway numbers indicates right-hand traffic for those runways. Left traffic is standard everywhere else unless otherwise indicated.",
       subject: "Charts",
@@ -219,7 +264,8 @@ export const charts: Module = {
     q({
       id: "vfr.charts.q5",
       kind: "tf",
-      prompt: "True or false: one minute of longitude equals one nautical mile anywhere on the sectional chart.",
+      prompt:
+        "True or false: one minute of longitude equals one nautical mile anywhere on the sectional chart.",
       choices: ["True", "False"],
       answer: 1,
       explanation:
@@ -231,7 +277,12 @@ export const charts: Module = {
       id: "vfr.charts.q6",
       kind: "mc",
       prompt: "Where would you find the hours of operation of a part-time control tower?",
-      choices: ["The sectional chart legend", "The airport's TAF", "The POH", "The Chart Supplement"],
+      choices: [
+        "The sectional chart legend",
+        "The airport's TAF",
+        "The POH",
+        "The Chart Supplement",
+      ],
       answer: 3,
       explanation:
         "The Chart Supplement lists tower hours and what the airspace becomes when the tower closes. The sectional only marks a part-time tower with a star.",

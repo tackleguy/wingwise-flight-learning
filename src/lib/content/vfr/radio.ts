@@ -1,5 +1,19 @@
 import type { Module } from "../types";
-import { caution, check, diagram, exercise, h, info, link, p, practice, q, table, tip, ul } from "../builders";
+import {
+  caution,
+  check,
+  diagram,
+  exercise,
+  h,
+  info,
+  link,
+  p,
+  practice,
+  q,
+  table,
+  tip,
+  ul,
+} from "../builders";
 
 export const radio: Module = {
   id: "radio",
@@ -66,7 +80,12 @@ export const radio: Module = {
           id: "vfr.radio.1.k1",
           kind: "mc",
           prompt: "How should a pilot state an altitude of 4,500 ft MSL?",
-          choices: ["'Four point five'", "'Forty-five hundred'", "'Four thousand five hundred'", "'Four five zero zero'"],
+          choices: [
+            "'Four point five'",
+            "'Forty-five hundred'",
+            "'Four thousand five hundred'",
+            "'Four five zero zero'",
+          ],
           answer: 2,
           explanation:
             "Altitudes below 18,000 ft are spoken in thousands and hundreds: 'four thousand five hundred'. 'Forty-five hundred' is common in casual speech but is not the AIM phraseology.",
@@ -95,13 +114,25 @@ export const radio: Module = {
         table(
           ["Facility", "Purpose"],
           [
-            ["ATIS / AWOS / ASOS", "Recorded weather, runway in use and NOTAMs; listen before contacting ground or approach"],
-            ["Clearance delivery", "IFR clearances and, at some airports, VFR departure instructions"],
+            [
+              "ATIS / AWOS / ASOS",
+              "Recorded weather, runway in use and NOTAMs; listen before contacting ground or approach",
+            ],
+            [
+              "Clearance delivery",
+              "IFR clearances and, at some airports, VFR departure instructions",
+            ],
             ["Ground control", "Movement on taxiways and crossing runways"],
             ["Tower", "Takeoff and landing clearances and traffic in the Class D/C/B surface area"],
-            ["Approach / departure control", "Radar services, Class B/C entry and VFR flight following"],
+            [
+              "Approach / departure control",
+              "Radar services, Class B/C entry and VFR flight following",
+            ],
             ["Flight Service (e.g., 122.2)", "Briefings, flight plan activation/closing, PIREPs"],
-            ["CTAF / UNICOM", "Self-announced position reports at airports without an operating tower"],
+            [
+              "CTAF / UNICOM",
+              "Self-announced position reports at airports without an operating tower",
+            ],
           ],
         ),
         h("Non-towered airports"),
@@ -127,12 +158,19 @@ export const radio: Module = {
           "When changing codes, avoid inadvertently passing through 7500, 7600 or 7700 — they trigger alarms at ATC facilities.",
         ),
         h("Light gun signals"),
-        diagram("light-gun", "The tower can signal with a steady or flashing green, red or white light, or alternating red and green."),
+        diagram(
+          "light-gun",
+          "The tower can signal with a steady or flashing green, red or white light, or alternating red and green.",
+        ),
         table(
           ["Signal", "On the ground", "In flight"],
           [
             ["Steady green", "Cleared for takeoff", "Cleared to land"],
-            ["Flashing green", "Cleared to taxi", "Return for landing (to be followed by steady green at the proper time)"],
+            [
+              "Flashing green",
+              "Cleared to taxi",
+              "Return for landing (to be followed by steady green at the proper time)",
+            ],
             ["Steady red", "Stop", "Give way to other aircraft and continue circling"],
             ["Flashing red", "Taxi clear of the runway in use", "Airport unsafe — do not land"],
             ["Flashing white", "Return to starting point on the airport", "Not applicable"],
@@ -143,7 +181,8 @@ export const radio: Module = {
         check({
           id: "vfr.radio.2.k1",
           kind: "mc",
-          prompt: "While on final approach, you receive a flashing red light from the tower. What does it mean?",
+          prompt:
+            "While on final approach, you receive a flashing red light from the tower. What does it mean?",
           choices: [
             "Give way to other aircraft and continue circling",
             "Airport unsafe — do not land",
@@ -163,25 +202,54 @@ export const radio: Module = {
           "If only the transmitter has failed, monitor the tower frequency and watch for light signals.",
           "Acknowledge signals in the air by rocking the wings (day) or flashing the landing or navigation lights (night). On the ground, move the ailerons or rudder (day) or flash the landing or navigation lights (night).",
         ),
-        practice("/ai-atc", "AI ATC", "Practice calls to ground, tower and approach with an AI controller that responds like a real one."),
+        practice(
+          "/ai-atc",
+          "AI ATC",
+          "Practice calls to ground, tower and approach with an AI controller that responds like a real one.",
+        ),
       ],
     },
   ],
   flashcards: [
-    { id: "vfr.radio.fc1", front: "Four parts of an initial call", back: "Who you are calling, who you are, where you are, what you want (+ ATIS code)." },
+    {
+      id: "vfr.radio.fc1",
+      front: "Four parts of an initial call",
+      back: "Who you are calling, who you are, where you are, what you want (+ ATIS code).",
+    },
     { id: "vfr.radio.fc2", front: "Squawk 7600", back: "Lost communications." },
-    { id: "vfr.radio.fc3", front: "Steady red light — in flight", back: "Give way to other aircraft and continue circling." },
-    { id: "vfr.radio.fc4", front: "Flashing green light — on the ground", back: "Cleared to taxi." },
-    { id: "vfr.radio.fc5", front: "'Wilco'", back: "I have received your message, understand, and will comply." },
-    { id: "vfr.radio.fc6", front: "Recommended first CTAF report when inbound", back: "About 10 miles from the airport." },
+    {
+      id: "vfr.radio.fc3",
+      front: "Steady red light — in flight",
+      back: "Give way to other aircraft and continue circling.",
+    },
+    {
+      id: "vfr.radio.fc4",
+      front: "Flashing green light — on the ground",
+      back: "Cleared to taxi.",
+    },
+    {
+      id: "vfr.radio.fc5",
+      front: "'Wilco'",
+      back: "I have received your message, understand, and will comply.",
+    },
+    {
+      id: "vfr.radio.fc6",
+      front: "Recommended first CTAF report when inbound",
+      back: "About 10 miles from the airport.",
+    },
   ],
   quiz: [
     q({
       id: "vfr.radio.q1",
       kind: "mc",
       prompt: "A steady green light signal directed at an aircraft on the ground means:",
-      choices: ["Cleared to taxi", "Cleared for takeoff", "Return to starting point", "Taxi clear of runway"],
-      answer: 1,
+      choices: [
+        "Cleared to taxi",
+        "Taxi clear of runway",
+        "Return to starting point",
+        "Cleared for takeoff",
+      ],
+      answer: 3,
       explanation:
         "Steady green on the ground is cleared for takeoff; FLASHING green on the ground is cleared to taxi. Flashing white is return to starting point, and flashing red is taxi clear of the runway.",
       subject: "Radio & ATC",
@@ -193,14 +261,16 @@ export const radio: Module = {
       prompt: "Which transponder code indicates an emergency?",
       choices: ["7500", "7600", "1200", "7700"],
       answer: 3,
-      explanation: "7700 is the emergency code. 7500 is unlawful interference, 7600 is lost communications and 1200 is VFR.",
+      explanation:
+        "7700 is the emergency code. 7500 is unlawful interference, 7600 is lost communications and 1200 is VFR.",
       subject: "Radio & ATC",
       reference: "AIM 4-1-20; AIM 6-2-2",
     }),
     q({
       id: "vfr.radio.q3",
       kind: "scenario",
-      context: "You are on the ramp and tower instructs: 'Cessna Two Papa Kilo, runway three four, taxi via Alpha, hold short of runway two eight.'",
+      context:
+        "You are on the ramp and tower instructs: 'Cessna Two Papa Kilo, runway three four, taxi via Alpha, hold short of runway two eight.'",
       prompt: "Which readback is required?",
       choices: [
         "'Roger, Two Papa Kilo.'",
@@ -233,15 +303,16 @@ export const radio: Module = {
     q({
       id: "vfr.radio.q5",
       kind: "scenario",
-      context: "Your radio has failed completely. You are approaching a Class D airport and want to land.",
+      context:
+        "Your radio has failed completely. You are approaching a Class D airport and want to land.",
       prompt: "What should you do?",
       choices: [
         "Squawk 7700 and land on any runway immediately",
-        "Land at the airport only if a steady red light is shown",
-        "Enter the Class D directly and land without signals",
         "Squawk 7600, remain outside or above the Class D until you determine the traffic flow, then join the pattern and watch for light signals",
+        "Enter the Class D directly and land without signals",
+        "Land at the airport only if a steady red light is shown",
       ],
-      answer: 3,
+      answer: 1,
       explanation:
         "That is the AIM procedure for a receiver failure: 7600, stay outside or above until you know the flow, then enter the pattern and look for a steady green. A steady red would mean continue circling, not land.",
       subject: "Radio & ATC",
@@ -251,7 +322,12 @@ export const radio: Module = {
       id: "vfr.radio.q6",
       kind: "mc",
       prompt: "What is the correct way to say the frequency 119.1?",
-      choices: ["'One nineteen one'", "'Eleven nine decimal one'", "'One one niner point one'", "'One hundred nineteen point one'"],
+      choices: [
+        "'One nineteen one'",
+        "'Eleven nine decimal one'",
+        "'One one niner point one'",
+        "'One hundred nineteen point one'",
+      ],
       answer: 2,
       explanation:
         "Each digit is spoken separately with 'point' for the decimal: 'one one niner point one'. Grouping digits ('one nineteen') is not standard and invites errors.",
@@ -261,7 +337,8 @@ export const radio: Module = {
     q({
       id: "vfr.radio.q7",
       kind: "tf",
-      prompt: "True or false: 'Roger' is an appropriate way to answer 'yes' to a controller's question.",
+      prompt:
+        "True or false: 'Roger' is an appropriate way to answer 'yes' to a controller's question.",
       choices: ["True", "False"],
       answer: 1,
       explanation:
@@ -270,5 +347,9 @@ export const radio: Module = {
       reference: "AIM Pilot/Controller Glossary",
     }),
   ],
-  practice: [link("/ai-atc", "AI ATC practice"), link("/atc", "ATC communications"), link("/simulator?scenario=emg-radio", "Radio failure")],
+  practice: [
+    link("/ai-atc", "AI ATC practice"),
+    link("/atc", "ATC communications"),
+    link("/simulator?scenario=emg-radio", "Radio failure"),
+  ],
 };

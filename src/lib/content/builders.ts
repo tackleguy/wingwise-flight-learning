@@ -106,8 +106,10 @@ export const callout = (tone: CalloutTone, title: string, text: string): LessonB
 });
 export const tip = (title: string, text: string): LessonBlock => callout("tip", title, text);
 export const info = (title: string, text: string): LessonBlock => callout("info", title, text);
-export const caution = (title: string, text: string): LessonBlock => callout("caution", title, text);
-export const warning = (title: string, text: string): LessonBlock => callout("warning", title, text);
+export const caution = (title: string, text: string): LessonBlock =>
+  callout("caution", title, text);
+export const warning = (title: string, text: string): LessonBlock =>
+  callout("warning", title, text);
 export const table = (headers: string[], rows: string[][]): LessonBlock => ({
   type: "table",
   headers,

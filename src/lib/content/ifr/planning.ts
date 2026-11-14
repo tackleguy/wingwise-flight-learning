@@ -1,5 +1,19 @@
 import type { Module } from "../types";
-import { caution, check, exercise, h, info, link, ol, p, practice, q, table, tip, ul } from "../builders";
+import {
+  caution,
+  check,
+  exercise,
+  h,
+  info,
+  link,
+  ol,
+  p,
+  practice,
+  q,
+  table,
+  tip,
+  ul,
+} from "../builders";
 
 export const planning: Module = {
   id: "planning",
@@ -32,10 +46,19 @@ export const planning: Module = {
           ["Factor", "What to check"],
           [
             ["Minimum altitudes", "MEA on airways, OROCA or 91.177 off-airway; MCAs at fixes"],
-            ["Direction of flight", "91.179 hemispheric rule in uncontrolled airspace (odd thousands eastbound, even westbound); ATC assigns in controlled airspace"],
+            [
+              "Direction of flight",
+              "91.179 hemispheric rule in uncontrolled airspace (odd thousands eastbound, even westbound); ATC assigns in controlled airspace",
+            ],
             ["Winds", "Winds aloft forecast — a lower altitude may avoid a strong headwind"],
-            ["Icing", "Freezing level and cloud tops: is there an ice-free altitude above the MEA?"],
-            ["Oxygen and performance", "91.211 oxygen rules and your airplane's realistic climb capability"],
+            [
+              "Icing",
+              "Freezing level and cloud tops: is there an ice-free altitude above the MEA?",
+            ],
+            [
+              "Oxygen and performance",
+              "91.211 oxygen rules and your airplane's realistic climb capability",
+            ],
           ],
         ),
         h("NOTAMs"),
@@ -76,7 +99,11 @@ export const planning: Module = {
           "File what ATC expects",
           "Filing a route that ATC will accept without changes reduces workload during the busiest part of the flight — the clearance copy and departure.",
         ),
-        practice("/planner", "IFR planner", "Plan an IFR route with SID, airways, STAR and the expected approach."),
+        practice(
+          "/planner",
+          "IFR planner",
+          "Plan an IFR route with SID, airways, STAR and the expected approach.",
+        ),
       ],
     },
     {
@@ -100,12 +127,12 @@ export const planning: Module = {
             "ETA 1500Z. Destination TAF: FM1200 BKN025 P6SM; FM1530 OVC015 4SM -RA. The destination has an RNAV (GPS) approach.",
           prompt: "Is an alternate required?",
           choices: [
-            "No — the ceiling is 2,500 ft at ETA",
             "Yes — within 1 hour after ETA the forecast ceiling drops to 1,500 ft",
+            "No — the ceiling is 2,500 ft at ETA",
             "No — the visibility stays above 3 SM",
             "Yes — because the approach is GPS-based",
           ],
-          answer: 1,
+          answer: 0,
           explanation:
             "The 1-2-3 rule covers 1400Z to 1600Z. From 1530Z the ceiling is forecast at 1,500 ft, below 2,000 ft, so an alternate is required. Looking only at the forecast for the ETA itself is the common mistake.",
           subject: "Regulations",
@@ -115,10 +142,22 @@ export const planning: Module = {
         table(
           ["Alternate has…", "Forecast at ETA at the alternate must be at least"],
           [
-            ["A precision approach (no nonstandard minimums published)", "Ceiling 600 ft and visibility 2 SM"],
-            ["A nonprecision approach (no nonstandard minimums published)", "Ceiling 800 ft and visibility 2 SM"],
-            ["Nonstandard alternate minimums (▲A symbol)", "The published alternate minimums for that procedure"],
-            ["No instrument approach procedure", "Ceiling and visibility allowing descent from the MEA, approach and landing under basic VFR"],
+            [
+              "A precision approach (no nonstandard minimums published)",
+              "Ceiling 600 ft and visibility 2 SM",
+            ],
+            [
+              "A nonprecision approach (no nonstandard minimums published)",
+              "Ceiling 800 ft and visibility 2 SM",
+            ],
+            [
+              "Nonstandard alternate minimums (▲A symbol)",
+              "The published alternate minimums for that procedure",
+            ],
+            [
+              "No instrument approach procedure",
+              "Ceiling and visibility allowing descent from the MEA, approach and landing under basic VFR",
+            ],
           ],
         ),
         info(
@@ -151,23 +190,52 @@ export const planning: Module = {
           "Choose a good alternate",
           "Pick an alternate in a different weather pattern, with multiple approaches and good services — not just the closest airport that meets the minimums on paper.",
         ),
-        practice("/simulator?scenario=ifr-departure", "IFR departure", "Fly a departure procedure and climb gradient you planned."),
+        practice(
+          "/simulator?scenario=ifr-departure",
+          "IFR departure",
+          "Fly a departure procedure and climb gradient you planned.",
+        ),
       ],
     },
   ],
   flashcards: [
-    { id: "ifr.planning.fc1", front: "1-2-3 rule (91.169)", back: "No alternate needed if from 1 hr before to 1 hr after ETA the ceiling is ≥ 2,000 ft and visibility ≥ 3 SM (and the destination has an IAP)." },
-    { id: "ifr.planning.fc2", front: "Standard alternate minimums — precision approach", back: "600-ft ceiling and 2 SM visibility." },
-    { id: "ifr.planning.fc3", front: "Standard alternate minimums — nonprecision approach", back: "800-ft ceiling and 2 SM visibility." },
-    { id: "ifr.planning.fc4", front: "IFR fuel requirement (91.167)", back: "To destination (incl. approach), then to alternate if required, then 45 minutes at normal cruise." },
-    { id: "ifr.planning.fc5", front: "'A NA' on an approach chart", back: "Alternate minimums not authorized — cannot be used for alternate planning." },
-    { id: "ifr.planning.fc6", front: "Alternate with no IAP", back: "Forecast must allow descent from the MEA, approach and landing under basic VFR." },
+    {
+      id: "ifr.planning.fc1",
+      front: "1-2-3 rule (91.169)",
+      back: "No alternate needed if from 1 hr before to 1 hr after ETA the ceiling is ≥ 2,000 ft and visibility ≥ 3 SM (and the destination has an IAP).",
+    },
+    {
+      id: "ifr.planning.fc2",
+      front: "Standard alternate minimums — precision approach",
+      back: "600-ft ceiling and 2 SM visibility.",
+    },
+    {
+      id: "ifr.planning.fc3",
+      front: "Standard alternate minimums — nonprecision approach",
+      back: "800-ft ceiling and 2 SM visibility.",
+    },
+    {
+      id: "ifr.planning.fc4",
+      front: "IFR fuel requirement (91.167)",
+      back: "To destination (incl. approach), then to alternate if required, then 45 minutes at normal cruise.",
+    },
+    {
+      id: "ifr.planning.fc5",
+      front: "'A NA' on an approach chart",
+      back: "Alternate minimums not authorized — cannot be used for alternate planning.",
+    },
+    {
+      id: "ifr.planning.fc6",
+      front: "Alternate with no IAP",
+      back: "Forecast must allow descent from the MEA, approach and landing under basic VFR.",
+    },
   ],
   quiz: [
     q({
       id: "ifr.planning.q1",
       kind: "calc",
-      context: "Flight time to destination including approach: 1 hr 40 min. Destination to alternate: 30 min. Fuel burn: 12 gal/hr.",
+      context:
+        "Flight time to destination including approach: 1 hr 40 min. Destination to alternate: 30 min. Fuel burn: 12 gal/hr.",
       prompt: "What is the minimum fuel required under 91.167?",
       choices: ["26 gal", "29 gal", "35 gal", "41 gal"],
       answer: 2,
@@ -179,14 +247,15 @@ export const planning: Module = {
     q({
       id: "ifr.planning.q2",
       kind: "mc",
-      prompt: "Your planned alternate has only a VOR approach with standard alternate minimums. What must its forecast be at your ETA there?",
+      prompt:
+        "Your planned alternate has only a VOR approach with standard alternate minimums. What must its forecast be at your ETA there?",
       choices: [
         "Ceiling 600 ft and visibility 2 SM",
-        "Ceiling 800 ft and visibility 2 SM",
-        "Ceiling 1,000 ft and visibility 3 SM",
         "Ceiling 2,000 ft and visibility 3 SM",
+        "Ceiling 1,000 ft and visibility 3 SM",
+        "Ceiling 800 ft and visibility 2 SM",
       ],
-      answer: 1,
+      answer: 3,
       explanation:
         "A nonprecision approach requires 800-2 under 91.169(c). 600-2 applies to precision approaches, and 2,000-3 is the destination test for whether an alternate is needed at all.",
       subject: "Regulations",
@@ -195,7 +264,8 @@ export const planning: Module = {
     q({
       id: "ifr.planning.q3",
       kind: "tf",
-      prompt: "True or false: after diverting to your alternate, you must use the alternate minimums for the approach you fly there.",
+      prompt:
+        "True or false: after diverting to your alternate, you must use the alternate minimums for the approach you fly there.",
       choices: ["True", "False"],
       answer: 1,
       explanation:
@@ -206,7 +276,8 @@ export const planning: Module = {
     q({
       id: "ifr.planning.q4",
       kind: "scenario",
-      context: "Your destination has no instrument approach procedure. The forecast is ceiling 4,000 ft and visibility 6 SM all day.",
+      context:
+        "Your destination has no instrument approach procedure. The forecast is ceiling 4,000 ft and visibility 6 SM all day.",
       prompt: "Is an alternate required?",
       choices: [
         "No — the weather exceeds 2,000 and 3",
@@ -223,7 +294,8 @@ export const planning: Module = {
     q({
       id: "ifr.planning.q5",
       kind: "mc",
-      prompt: "What does a triangle with an 'A' in the minimums section of an approach chart indicate?",
+      prompt:
+        "What does a triangle with an 'A' in the minimums section of an approach chart indicate?",
       choices: [
         "Alternate minimums are standard",
         "The airport has an ATIS",
@@ -239,7 +311,8 @@ export const planning: Module = {
     q({
       id: "ifr.planning.q6",
       kind: "mc",
-      prompt: "Which type of NOTAM would announce an amendment to an instrument approach procedure?",
+      prompt:
+        "Which type of NOTAM would announce an amendment to an instrument approach procedure?",
       choices: ["FDC NOTAM", "Pointer NOTAM", "Military NOTAM", "SAA NOTAM"],
       answer: 0,
       explanation:
@@ -250,19 +323,24 @@ export const planning: Module = {
     q({
       id: "ifr.planning.q7",
       kind: "mc",
-      prompt: "When choosing an IFR cruising altitude, which consideration is MOST important for an airplane not certificated for flight into known icing?",
+      prompt:
+        "When choosing an IFR cruising altitude, which consideration is MOST important for an airplane not certificated for flight into known icing?",
       choices: [
-        "Choosing the altitude with the best tailwind regardless of temperature",
         "Selecting an altitude above the MEA where the temperature is above freezing or the airplane is out of clouds",
+        "Choosing the altitude with the best tailwind regardless of temperature",
         "Flying the lowest altitude available to save time climbing",
         "Always flying at an even altitude",
       ],
-      answer: 1,
+      answer: 0,
       explanation:
         "Avoiding icing — by staying in above-freezing air or out of visible moisture while above the MEA — is critical in a non-FIKI airplane. A great tailwind is worthless if the altitude puts you in icing clouds.",
       subject: "IFR Procedures",
       reference: "AC 00-6B; IFH Ch. 10",
     }),
   ],
-  practice: [link("/planner", "IFR flight planner"), link("/weather", "IFR weather briefing"), link("/simulator?scenario=ifr-departure", "IFR departure")],
+  practice: [
+    link("/planner", "IFR flight planner"),
+    link("/weather", "IFR weather briefing"),
+    link("/simulator?scenario=ifr-departure", "IFR departure"),
+  ],
 };

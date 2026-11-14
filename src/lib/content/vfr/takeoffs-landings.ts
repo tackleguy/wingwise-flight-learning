@@ -1,5 +1,19 @@
 import type { Module } from "../types";
-import { caution, check, h, info, link, ol, p, practice, q, table, tip, ul, warning } from "../builders";
+import {
+  caution,
+  check,
+  h,
+  info,
+  link,
+  ol,
+  p,
+  practice,
+  q,
+  table,
+  tip,
+  ul,
+  warning,
+} from "../builders";
 
 export const takeoffsLandings: Module = {
   id: "takeoffs-landings",
@@ -23,13 +37,33 @@ export const takeoffsLandings: Module = {
           ["Speed", "Name", "Use"],
           [
             ["VR", "Rotation speed", "Speed at which you begin raising the nose for liftoff"],
-            ["VX", "Best angle of climb", "Most altitude gained in the shortest horizontal distance — obstacle clearance"],
-            ["VY", "Best rate of climb", "Most altitude gained in the shortest time — normal climb"],
-            ["VS0", "Stall speed, landing configuration", "Bottom of the white arc; basis for approach speed (≈ 1.3 VS0)"],
+            [
+              "VX",
+              "Best angle of climb",
+              "Most altitude gained in the shortest horizontal distance — obstacle clearance",
+            ],
+            [
+              "VY",
+              "Best rate of climb",
+              "Most altitude gained in the shortest time — normal climb",
+            ],
+            [
+              "VS0",
+              "Stall speed, landing configuration",
+              "Bottom of the white arc; basis for approach speed (≈ 1.3 VS0)",
+            ],
             ["VS1", "Stall speed, specified configuration", "Bottom of the green arc"],
             ["VFE", "Maximum flap extended speed", "Top of the white arc"],
-            ["VA", "Design maneuvering speed", "Max speed for full, abrupt control deflection; decreases with weight"],
-            ["VG", "Best glide speed", "Greatest distance per altitude lost with the engine failed"],
+            [
+              "VA",
+              "Design maneuvering speed",
+              "Max speed for full, abrupt control deflection; decreases with weight",
+            ],
+            [
+              "VG",
+              "Best glide speed",
+              "Greatest distance per altitude lost with the engine failed",
+            ],
           ],
         ),
         info(
@@ -51,7 +85,8 @@ export const takeoffsLandings: Module = {
         check({
           id: "vfr.takeoffs-landings.1.k1",
           kind: "calc",
-          prompt: "You are landing on runway 27. The wind is 300° at 20 knots. What is the approximate crosswind component?",
+          prompt:
+            "You are landing on runway 27. The wind is 300° at 20 knots. What is the approximate crosswind component?",
           choices: ["5 knots", "10 knots", "14 knots", "17 knots"],
           answer: 1,
           explanation:
@@ -70,7 +105,11 @@ export const takeoffsLandings: Module = {
           "Never land in a crab",
           "Touching down while crabbed or drifting places severe side loads on the landing gear and can cause a ground loop. Align the airplane with the runway before touchdown.",
         ),
-        practice("/simulator?scenario=vfr-landing", "Landing practice", "Fly stabilized approaches and crosswind landings in variable winds."),
+        practice(
+          "/simulator?scenario=vfr-landing",
+          "Landing practice",
+          "Fly stabilized approaches and crosswind landings in variable winds.",
+        ),
       ],
     },
     {
@@ -102,14 +141,15 @@ export const takeoffsLandings: Module = {
         check({
           id: "vfr.takeoffs-landings.2.k1",
           kind: "mc",
-          prompt: "After a soft-field liftoff, why does the pilot lower the nose and remain close to the surface?",
+          prompt:
+            "After a soft-field liftoff, why does the pilot lower the nose and remain close to the surface?",
           choices: [
-            "To avoid a tail strike",
             "To accelerate in ground effect to a safe climb speed",
+            "To avoid a tail strike",
             "To check the engine instruments",
             "To reduce P-factor",
           ],
-          answer: 1,
+          answer: 0,
           explanation:
             "The airplane lifts off below normal climb speed thanks to ground effect. It must accelerate to VX or VY while still in ground effect; climbing out immediately can cause it to settle back onto the runway.",
           subject: "Aerodynamics",
@@ -134,25 +174,54 @@ export const takeoffsLandings: Module = {
           "Commit early",
           "Decide where you will go around before you start the approach — for example, if not stabilized by 300 ft AGL, or not touched down in the first third of the runway.",
         ),
-        practice("/simulator?scenario=vfr-takeoff-climb", "Takeoff and climb", "Practice normal, short- and soft-field takeoffs and climbs at VX and VY."),
+        practice(
+          "/simulator?scenario=vfr-takeoff-climb",
+          "Takeoff and climb",
+          "Practice normal, short- and soft-field takeoffs and climbs at VX and VY.",
+        ),
       ],
     },
   ],
   flashcards: [
-    { id: "vfr.takeoffs-landings.fc1", front: "VX", back: "Best angle of climb — most altitude per horizontal distance; obstacle clearance." },
-    { id: "vfr.takeoffs-landings.fc2", front: "VY", back: "Best rate of climb — most altitude per unit of time." },
-    { id: "vfr.takeoffs-landings.fc3", front: "Crosswind rule of thumb", back: "30° ≈ 50%, 45° ≈ 70%, 60° ≈ 90%, 90° = 100% of wind speed." },
-    { id: "vfr.takeoffs-landings.fc4", front: "Wing-low crosswind landing controls", back: "Aileron into the wind, opposite rudder to align with the runway." },
-    { id: "vfr.takeoffs-landings.fc5", front: "Go-around flow", back: "Power, attitude, configure (flaps incrementally after positive climb)." },
-    { id: "vfr.takeoffs-landings.fc6", front: "Typical approach speed", back: "About 1.3 VS0 (or the POH value), plus a gust factor." },
+    {
+      id: "vfr.takeoffs-landings.fc1",
+      front: "VX",
+      back: "Best angle of climb — most altitude per horizontal distance; obstacle clearance.",
+    },
+    {
+      id: "vfr.takeoffs-landings.fc2",
+      front: "VY",
+      back: "Best rate of climb — most altitude per unit of time.",
+    },
+    {
+      id: "vfr.takeoffs-landings.fc3",
+      front: "Crosswind rule of thumb",
+      back: "30° ≈ 50%, 45° ≈ 70%, 60° ≈ 90%, 90° = 100% of wind speed.",
+    },
+    {
+      id: "vfr.takeoffs-landings.fc4",
+      front: "Wing-low crosswind landing controls",
+      back: "Aileron into the wind, opposite rudder to align with the runway.",
+    },
+    {
+      id: "vfr.takeoffs-landings.fc5",
+      front: "Go-around flow",
+      back: "Power, attitude, configure (flaps incrementally after positive climb).",
+    },
+    {
+      id: "vfr.takeoffs-landings.fc6",
+      front: "Typical approach speed",
+      back: "About 1.3 VS0 (or the POH value), plus a gust factor.",
+    },
   ],
   quiz: [
     q({
       id: "vfr.takeoffs-landings.q1",
       kind: "mc",
-      prompt: "Which speed provides the greatest gain in altitude in the shortest horizontal distance?",
-      choices: ["VY", "VX", "VA", "VG"],
-      answer: 1,
+      prompt:
+        "Which speed provides the greatest gain in altitude in the shortest horizontal distance?",
+      choices: ["VY", "VG", "VA", "VX"],
+      answer: 3,
       explanation:
         "VX gives the best ANGLE (altitude per distance), used to clear obstacles. VY gives the best RATE (altitude per time).",
       subject: "Performance",
@@ -172,7 +241,8 @@ export const takeoffsLandings: Module = {
     q({
       id: "vfr.takeoffs-landings.q3",
       kind: "mc",
-      prompt: "During a wing-low crosswind landing with the wind from the left, the controls should be:",
+      prompt:
+        "During a wing-low crosswind landing with the wind from the left, the controls should be:",
       choices: [
         "Left aileron down, left rudder",
         "Right wing low, right rudder",
@@ -189,7 +259,12 @@ export const takeoffsLandings: Module = {
       id: "vfr.takeoffs-landings.q4",
       kind: "mc",
       prompt: "What is the FIRST action when initiating a go-around?",
-      choices: ["Retract the flaps fully", "Apply full power", "Raise the landing gear", "Call the tower"],
+      choices: [
+        "Retract the flaps fully",
+        "Apply full power",
+        "Raise the landing gear",
+        "Call the tower",
+      ],
       answer: 1,
       explanation:
         "Power first, then attitude, then configuration. Retracting flaps fully before power and climb are established can cause the airplane to sink or stall close to the ground.",
@@ -217,7 +292,8 @@ export const takeoffsLandings: Module = {
     q({
       id: "vfr.takeoffs-landings.q6",
       kind: "tf",
-      prompt: "True or false: in a soft-field takeoff, the airplane should lift off at the lowest possible airspeed and then accelerate in ground effect.",
+      prompt:
+        "True or false: in a soft-field takeoff, the airplane should lift off at the lowest possible airspeed and then accelerate in ground effect.",
       choices: ["True", "False"],
       answer: 0,
       explanation:

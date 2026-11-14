@@ -1,5 +1,19 @@
 import type { Module } from "../types";
-import { caution, check, diagram, h, info, link, p, practice, q, table, tip, ul, warning } from "../builders";
+import {
+  caution,
+  check,
+  diagram,
+  h,
+  info,
+  link,
+  p,
+  practice,
+  q,
+  table,
+  tip,
+  ul,
+  warning,
+} from "../builders";
 
 export const airportOps: Module = {
   id: "airport-ops",
@@ -30,9 +44,18 @@ export const airportOps: Module = {
           ["Marking", "Meaning and use"],
           [
             ["Threshold bars", "Beginning of the runway available for landing"],
-            ["Displaced threshold (white arrows leading to a white bar)", "The area before the bar may be used for taxi, takeoff and the landing rollout from the opposite direction, but NOT for touchdown"],
-            ["Blast pad / stopway (yellow chevrons)", "Not usable for taxi, takeoff or landing (except a stopway for an aborted takeoff where authorized)"],
-            ["Aiming point (large rectangular bars)", "Visual aiming point for landing, about 1,000 ft from the threshold"],
+            [
+              "Displaced threshold (white arrows leading to a white bar)",
+              "The area before the bar may be used for taxi, takeoff and the landing rollout from the opposite direction, but NOT for touchdown",
+            ],
+            [
+              "Blast pad / stopway (yellow chevrons)",
+              "Not usable for taxi, takeoff or landing (except a stopway for an aborted takeoff where authorized)",
+            ],
+            [
+              "Aiming point (large rectangular bars)",
+              "Visual aiming point for landing, about 1,000 ft from the threshold",
+            ],
             ["Closed runway or taxiway (yellow or white X)", "Closed to all operations"],
           ],
         ),
@@ -48,12 +71,36 @@ export const airportOps: Module = {
         table(
           ["Sign type", "Colors", "Example / meaning"],
           [
-            ["Mandatory instruction", "White text on red", "Runway holding position (e.g., '22-4'), ILS critical area, 'NO ENTRY'"],
-            ["Location", "Yellow text and border on black", "Taxiway or runway you are on (e.g., 'B')"],
-            ["Direction", "Black text on yellow, with arrows", "Direction to taxiways leading away from an intersection"],
-            ["Destination", "Black text on yellow, with arrow", "Direction to a destination such as a runway or 'FBO'"],
-            ["Information", "Black text on yellow", "Radio frequencies, noise-abatement procedures"],
-            ["Runway distance remaining", "White numbers on black", "Thousands of feet of runway remaining"],
+            [
+              "Mandatory instruction",
+              "White text on red",
+              "Runway holding position (e.g., '22-4'), ILS critical area, 'NO ENTRY'",
+            ],
+            [
+              "Location",
+              "Yellow text and border on black",
+              "Taxiway or runway you are on (e.g., 'B')",
+            ],
+            [
+              "Direction",
+              "Black text on yellow, with arrows",
+              "Direction to taxiways leading away from an intersection",
+            ],
+            [
+              "Destination",
+              "Black text on yellow, with arrow",
+              "Direction to a destination such as a runway or 'FBO'",
+            ],
+            [
+              "Information",
+              "Black text on yellow",
+              "Radio frequencies, noise-abatement procedures",
+            ],
+            [
+              "Runway distance remaining",
+              "White numbers on black",
+              "Thousands of feet of runway remaining",
+            ],
           ],
         ),
         check({
@@ -107,8 +154,14 @@ export const airportOps: Module = {
             ["Beacon: alternating white and green", "Lighted land airport"],
             ["Beacon: white, white, green (dual-peaked white)", "Military airport"],
             ["Beacon: white and yellow", "Lighted water airport"],
-            ["Runway edge lights", "White (on instrument runways, yellow on the last 2,000 ft or half the runway, whichever is less)"],
-            ["Threshold lights", "Green when seen on approach; runway end lights show red toward the runway"],
+            [
+              "Runway edge lights",
+              "White (on instrument runways, yellow on the last 2,000 ft or half the runway, whichever is less)",
+            ],
+            [
+              "Threshold lights",
+              "Green when seen on approach; runway end lights show red toward the runway",
+            ],
             ["Taxiway edge lights", "Blue"],
             ["Taxiway centerline lights", "Green"],
           ],
@@ -125,8 +178,13 @@ export const airportOps: Module = {
           id: "vfr.airport-ops.2.k1",
           kind: "mc",
           prompt: "On approach, the PAPI shows three white lights and one red light. You are:",
-          choices: ["On the glide path", "Slightly above the glide path", "Slightly below the glide path", "Well below the glide path"],
-          answer: 1,
+          choices: [
+            "Slightly above the glide path",
+            "On the glide path",
+            "Slightly below the glide path",
+            "Well below the glide path",
+          ],
+          answer: 0,
           explanation:
             "More white means higher. Two white and two red is on glide path; three white and one red is slightly high. Four red would be well below.",
           subject: "Airport Operations",
@@ -158,24 +216,54 @@ export const airportOps: Module = {
           "Runway incursion prevention",
           "Review the airport diagram and hot spots before taxi, write down taxi instructions, read back all hold-short instructions, keep your head up on the taxiway, and never hesitate to ask for progressive taxi instructions.",
         ),
-        practice("/airports", "Airport diagrams", "Study airport diagrams and hot spots before your next flight."),
+        practice(
+          "/airports",
+          "Airport diagrams",
+          "Study airport diagrams and hot spots before your next flight.",
+        ),
       ],
     },
   ],
   flashcards: [
-    { id: "vfr.airport-ops.fc1", front: "Holding position markings", back: "Four yellow lines, two solid and two dashed; stop on the solid side." },
-    { id: "vfr.airport-ops.fc2", front: "Location sign colors", back: "Yellow text and border on a black background." },
+    {
+      id: "vfr.airport-ops.fc1",
+      front: "Holding position markings",
+      back: "Four yellow lines, two solid and two dashed; stop on the solid side.",
+    },
+    {
+      id: "vfr.airport-ops.fc2",
+      front: "Location sign colors",
+      back: "Yellow text and border on a black background.",
+    },
     { id: "vfr.airport-ops.fc3", front: "PAPI 2 white / 2 red", back: "On the glide path." },
-    { id: "vfr.airport-ops.fc4", front: "Pilot-controlled lighting — high intensity", back: "Key the mic 7 times within 5 seconds." },
-    { id: "vfr.airport-ops.fc5", front: "Beacon for a lighted civilian land airport", back: "Alternating white and green." },
-    { id: "vfr.airport-ops.fc6", front: "Landing behind a large aircraft", back: "Stay at or above its flight path and land beyond its touchdown point." },
+    {
+      id: "vfr.airport-ops.fc4",
+      front: "Pilot-controlled lighting — high intensity",
+      back: "Key the mic 7 times within 5 seconds.",
+    },
+    {
+      id: "vfr.airport-ops.fc5",
+      front: "Beacon for a lighted civilian land airport",
+      back: "Alternating white and green.",
+    },
+    {
+      id: "vfr.airport-ops.fc6",
+      front: "Landing behind a large aircraft",
+      back: "Stay at or above its flight path and land beyond its touchdown point.",
+    },
   ],
   quiz: [
     q({
       id: "vfr.airport-ops.q1",
       kind: "mc",
-      prompt: "The numbers 8 and 26 on the approach ends of a runway indicate that the runway is oriented approximately:",
-      choices: ["008° and 026° true", "080° and 260° true", "080° and 260° magnetic", "008° and 026° magnetic"],
+      prompt:
+        "The numbers 8 and 26 on the approach ends of a runway indicate that the runway is oriented approximately:",
+      choices: [
+        "008° and 026° true",
+        "080° and 260° true",
+        "080° and 260° magnetic",
+        "008° and 026° magnetic",
+      ],
       answer: 2,
       explanation:
         "Runway numbers are magnetic headings rounded to the nearest 10° with the final zero dropped: 080° and 260° magnetic. They are not true headings.",
@@ -204,11 +292,11 @@ export const airportOps: Module = {
       prompt: "When exiting a runway after landing, you are clear of the runway when:",
       choices: [
         "The nose wheel crosses the solid lines",
-        "The entire aircraft has crossed the holding position markings",
-        "You have turned onto the taxiway",
         "Tower tells you to contact ground",
+        "You have turned onto the taxiway",
+        "The entire aircraft has crossed the holding position markings",
       ],
-      answer: 1,
+      answer: 3,
       explanation:
         "You are not clear until the entire airplane is past the holding position markings. Turning onto the taxiway or getting a frequency change does not by itself make you clear.",
       subject: "Airport Operations",
@@ -218,9 +306,10 @@ export const airportOps: Module = {
       id: "vfr.airport-ops.q4",
       kind: "mc",
       prompt: "Taxiway edge lights are:",
-      choices: ["Green", "White", "Yellow", "Blue"],
-      answer: 3,
-      explanation: "Taxiway edge lights are blue; taxiway centerline lights are green. Runway edge lights are white (yellow near the end of instrument runways).",
+      choices: ["Green", "Blue", "Yellow", "White"],
+      answer: 1,
+      explanation:
+        "Taxiway edge lights are blue; taxiway centerline lights are green. Runway edge lights are white (yellow near the end of instrument runways).",
       subject: "Airport Operations",
       reference: "AIM Ch. 2, Sec. 1",
     }),
@@ -231,11 +320,11 @@ export const airportOps: Module = {
       prompt: "How should you plan your landing to avoid its wake?",
       choices: [
         "Land beyond the point where it rotated",
-        "Land before the point where it rotated",
-        "Land at the normal aiming point regardless",
         "Stay below its flight path and land long",
+        "Land at the normal aiming point regardless",
+        "Land before the point where it rotated",
       ],
-      answer: 1,
+      answer: 3,
       explanation:
         "The departing jet starts producing vortices at rotation, so land well before that point. Landing beyond its rotation point would put you in its wake. (Landing behind a LANDING aircraft is the opposite: land beyond its touchdown point.)",
       subject: "Airport Operations",
@@ -244,9 +333,15 @@ export const airportOps: Module = {
     q({
       id: "vfr.airport-ops.q6",
       kind: "mc",
-      prompt: "Which wind condition is most likely to keep wake vortices in the touchdown zone of a runway?",
-      choices: ["A strong headwind", "A light quartering tailwind", "A strong crosswind", "Calm wind"],
-      answer: 1,
+      prompt:
+        "Which wind condition is most likely to keep wake vortices in the touchdown zone of a runway?",
+      choices: [
+        "A light quartering tailwind",
+        "A strong headwind",
+        "A strong crosswind",
+        "Calm wind",
+      ],
+      answer: 0,
       explanation:
         "A light quartering tailwind can move vortices of a preceding landing aircraft forward into the touchdown zone. A strong wind breaks vortices up quickly; calm wind lets them move outward and sink.",
       subject: "Airport Operations",
@@ -255,7 +350,8 @@ export const airportOps: Module = {
     q({
       id: "vfr.airport-ops.q7",
       kind: "tf",
-      prompt: "True or false: a sign with white letters on a red background is a mandatory instruction sign.",
+      prompt:
+        "True or false: a sign with white letters on a red background is a mandatory instruction sign.",
       choices: ["True", "False"],
       answer: 0,
       explanation:

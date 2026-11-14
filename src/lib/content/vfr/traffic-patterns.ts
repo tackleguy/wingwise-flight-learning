@@ -1,5 +1,19 @@
 import type { Module } from "../types";
-import { caution, check, diagram, h, info, link, ol, p, practice, q, table, tip, ul } from "../builders";
+import {
+  caution,
+  check,
+  diagram,
+  h,
+  info,
+  link,
+  ol,
+  p,
+  practice,
+  q,
+  table,
+  tip,
+  ul,
+} from "../builders";
 
 export const trafficPatterns: Module = {
   id: "traffic-patterns",
@@ -29,9 +43,15 @@ export const trafficPatterns: Module = {
         table(
           ["Leg", "Description"],
           [
-            ["Upwind / departure", "Flight path aligned with and in the direction of landing, after takeoff or on a go-around"],
+            [
+              "Upwind / departure",
+              "Flight path aligned with and in the direction of landing, after takeoff or on a go-around",
+            ],
             ["Crosswind", "Perpendicular to the runway at the departure end"],
-            ["Downwind", "Parallel to the runway in the opposite direction of landing, typically ½ to 1 mile from the runway"],
+            [
+              "Downwind",
+              "Parallel to the runway in the opposite direction of landing, typically ½ to 1 mile from the runway",
+            ],
             ["Base", "Perpendicular to the runway, between downwind and final"],
             ["Final", "Aligned with the runway centerline, descending to land"],
           ],
@@ -60,12 +80,12 @@ export const trafficPatterns: Module = {
           kind: "mc",
           prompt: "What is the recommended entry to the traffic pattern at a non-towered airport?",
           choices: [
-            "A straight-in approach to final",
             "A 45° entry to the downwind leg abeam midfield at pattern altitude",
+            "A straight-in approach to final",
             "Entering on the base leg from the opposite side",
             "Crossing over the runway at pattern altitude at the departure end",
           ],
-          answer: 1,
+          answer: 0,
           explanation:
             "AC 90-66C recommends a 45° entry to downwind abeam the midpoint of the runway at pattern altitude. Straight-in approaches are not prohibited but are discouraged because they conflict with pattern traffic.",
           subject: "Airport Operations",
@@ -75,7 +95,11 @@ export const trafficPatterns: Module = {
         p(
           "At many non-towered airports, the wind indicator is surrounded by a segmented circle. L-shaped traffic pattern indicators attached to the circle show the direction of turns: imagine the indicator as the base and final legs for that runway. If the short arm of the 'L' points right of the runway direction, right traffic is in use.",
         ),
-        practice("/simulator?scenario=vfr-pattern", "Fly the pattern", "Fly a full pattern with radio calls, maintaining 1,000 ft AGL and spacing."),
+        practice(
+          "/simulator?scenario=vfr-pattern",
+          "Fly the pattern",
+          "Fly a full pattern with radio calls, maintaining 1,000 ft AGL and spacing.",
+        ),
       ],
     },
     {
@@ -99,9 +123,18 @@ export const trafficPatterns: Module = {
         table(
           ["Maneuver", "What you practice"],
           [
-            ["Rectangular course", "Tracking a rectangular ground path, like a traffic pattern, with crab angles on each side"],
-            ["S-turns across a road", "Semicircles of equal radius on each side of a straight reference line"],
-            ["Turns around a point", "A constant-radius circle around a ground point with continuously varying bank"],
+            [
+              "Rectangular course",
+              "Tracking a rectangular ground path, like a traffic pattern, with crab angles on each side",
+            ],
+            [
+              "S-turns across a road",
+              "Semicircles of equal radius on each side of a straight reference line",
+            ],
+            [
+              "Turns around a point",
+              "A constant-radius circle around a ground point with continuously varying bank",
+            ],
           ],
         ),
         h("The key relationship"),
@@ -135,47 +168,79 @@ export const trafficPatterns: Module = {
         check({
           id: "vfr.traffic-patterns.2.k2",
           kind: "scenario",
-          context: "On left downwind for runway 36, the wind is from 270° (from your left as you fly south on downwind).",
+          context:
+            "On left downwind for runway 36, the wind is from 270° (from your left as you fly south on downwind).",
           prompt: "How will the wind affect your base leg?",
           choices: [
             "Headwind on base — you may need to turn base earlier",
-            "Tailwind on base — you may overshoot final unless you turn base earlier",
-            "No effect on base",
             "Strong crosswind from the right on base",
+            "No effect on base",
+            "Tailwind on base — you may overshoot final unless you turn base earlier",
           ],
-          answer: 1,
+          answer: 3,
           explanation:
             "Flying south on left downwind for 36, base is flown heading east. A west wind is then a tailwind on base, increasing groundspeed and risking an overshoot of final. Plan an earlier base turn and avoid steep, skidding turns to final.",
           subject: "Airport Operations",
           reference: "AFH Ch. 8",
         }),
-        practice("/simulator?scenario=vfr-ground-ref", "Ground reference maneuvers", "Fly a rectangular course and turns around a point with a 15-knot wind."),
+        practice(
+          "/simulator?scenario=vfr-ground-ref",
+          "Ground reference maneuvers",
+          "Fly a rectangular course and turns around a point with a 15-knot wind.",
+        ),
       ],
     },
   ],
   flashcards: [
-    { id: "vfr.traffic-patterns.fc1", front: "Standard direction of pattern turns", back: "Left, unless otherwise indicated (91.126)." },
-    { id: "vfr.traffic-patterns.fc2", front: "Recommended pattern altitude for propeller airplanes", back: "1,000 ft AGL unless otherwise established (AC 90-66C)." },
-    { id: "vfr.traffic-patterns.fc3", front: "Recommended pattern entry at a non-towered airport", back: "45° to downwind, abeam midfield, at pattern altitude." },
-    { id: "vfr.traffic-patterns.fc4", front: "When to turn crosswind after takeoff", back: "Beyond the departure end of the runway and within 300 ft of pattern altitude." },
-    { id: "vfr.traffic-patterns.fc5", front: "Steepest bank in a turn around a point", back: "Directly downwind, where groundspeed is highest." },
-    { id: "vfr.traffic-patterns.fc6", front: "Overflying an airport", back: "At least 500 ft above the highest pattern altitude." },
+    {
+      id: "vfr.traffic-patterns.fc1",
+      front: "Standard direction of pattern turns",
+      back: "Left, unless otherwise indicated (91.126).",
+    },
+    {
+      id: "vfr.traffic-patterns.fc2",
+      front: "Recommended pattern altitude for propeller airplanes",
+      back: "1,000 ft AGL unless otherwise established (AC 90-66C).",
+    },
+    {
+      id: "vfr.traffic-patterns.fc3",
+      front: "Recommended pattern entry at a non-towered airport",
+      back: "45° to downwind, abeam midfield, at pattern altitude.",
+    },
+    {
+      id: "vfr.traffic-patterns.fc4",
+      front: "When to turn crosswind after takeoff",
+      back: "Beyond the departure end of the runway and within 300 ft of pattern altitude.",
+    },
+    {
+      id: "vfr.traffic-patterns.fc5",
+      front: "Steepest bank in a turn around a point",
+      back: "Directly downwind, where groundspeed is highest.",
+    },
+    {
+      id: "vfr.traffic-patterns.fc6",
+      front: "Overflying an airport",
+      back: "At least 500 ft above the highest pattern altitude.",
+    },
   ],
   quiz: [
     q({
       id: "vfr.traffic-patterns.q1",
       kind: "mc",
-      prompt: "Which leg of the traffic pattern is flown parallel to the landing runway in the direction opposite to landing?",
+      prompt:
+        "Which leg of the traffic pattern is flown parallel to the landing runway in the direction opposite to landing?",
       choices: ["Upwind", "Crosswind", "Downwind", "Base"],
       answer: 2,
-      explanation: "The downwind leg parallels the runway in the opposite direction of landing. The upwind (departure) leg parallels it in the direction of landing.",
+      explanation:
+        "The downwind leg parallels the runway in the opposite direction of landing. The upwind (departure) leg parallels it in the direction of landing.",
       subject: "Airport Operations",
       reference: "AIM 4-3-3",
     }),
     q({
       id: "vfr.traffic-patterns.q2",
       kind: "mc",
-      prompt: "When approaching to land at an airport without an operating control tower in Class G airspace, the pilot should:",
+      prompt:
+        "When approaching to land at an airport without an operating control tower in Class G airspace, the pilot should:",
       choices: [
         "Make all turns to the left unless otherwise indicated",
         "Enter and fly a pattern in either direction",
@@ -194,8 +259,8 @@ export const trafficPatterns: Module = {
       context:
         "A segmented circle shows a landing strip indicator for runway 9-27 with traffic pattern indicators. The traffic pattern indicator at the east end of the strip (the approach end for runway 27) has its short arm extending to the north.",
       prompt: "For landing on runway 27, what pattern is in use?",
-      choices: ["Left traffic", "Right traffic", "Straight-in only", "Cannot be determined"],
-      answer: 1,
+      choices: ["Right traffic", "Left traffic", "Straight-in only", "Cannot be determined"],
+      answer: 0,
       explanation:
         "The indicator depicts base and final. Base is north of the extended centerline, so downwind is flown eastbound north of the runway, base southbound and final westbound — every turn is to the right. Left traffic for runway 27 would put the base leg to the south.",
       subject: "Airport Operations",
@@ -204,7 +269,8 @@ export const trafficPatterns: Module = {
     q({
       id: "vfr.traffic-patterns.q4",
       kind: "mc",
-      prompt: "When departing a non-towered airport's traffic pattern, the recommended procedure is to:",
+      prompt:
+        "When departing a non-towered airport's traffic pattern, the recommended procedure is to:",
       choices: [
         "Turn in any direction immediately after takeoff",
         "Climb on the downwind leg and depart from there",
@@ -220,7 +286,8 @@ export const trafficPatterns: Module = {
     q({
       id: "vfr.traffic-patterns.q5",
       kind: "mc",
-      prompt: "During S-turns across a road with the wind perpendicular to the road, the bank is steepest when:",
+      prompt:
+        "During S-turns across a road with the wind perpendicular to the road, the bank is steepest when:",
       choices: [
         "Crossing the road heading downwind",
         "Crossing the road heading upwind",
@@ -236,7 +303,8 @@ export const trafficPatterns: Module = {
     q({
       id: "vfr.traffic-patterns.q6",
       kind: "tf",
-      prompt: "True or false: at a non-towered airport, straight-in approaches are prohibited by regulation.",
+      prompt:
+        "True or false: at a non-towered airport, straight-in approaches are prohibited by regulation.",
       choices: ["True", "False"],
       answer: 1,
       explanation:
@@ -245,5 +313,8 @@ export const trafficPatterns: Module = {
       reference: "AC 90-66C",
     }),
   ],
-  practice: [link("/simulator?scenario=vfr-pattern", "Traffic pattern"), link("/simulator?scenario=vfr-ground-ref", "Ground reference maneuvers")],
+  practice: [
+    link("/simulator?scenario=vfr-pattern", "Traffic pattern"),
+    link("/simulator?scenario=vfr-ground-ref", "Ground reference maneuvers"),
+  ],
 };

@@ -1,5 +1,18 @@
 import type { Module } from "../types";
-import { caution, check, h, info, link, p, practice, q, table, tip, ul, warning } from "../builders";
+import {
+  caution,
+  check,
+  h,
+  info,
+  link,
+  p,
+  practice,
+  q,
+  table,
+  tip,
+  ul,
+  warning,
+} from "../builders";
 
 export const regulations: Module = {
   id: "regulations",
@@ -33,8 +46,16 @@ export const regulations: Module = {
           ["Time since last current", "Status", "How to regain"],
           [
             ["Within 6 calendar months", "Current", "—"],
-            ["6 to 12 calendar months", "Not current for IFR PIC", "Complete the 6-HIT tasks with a safety pilot, instructor or approved device (you cannot act as PIC under IFR in IMC meanwhile)"],
-            ["More than 12 calendar months", "Not current", "Instrument proficiency check (IPC) with a CFII, examiner or other authorized person (61.57(d))"],
+            [
+              "6 to 12 calendar months",
+              "Not current for IFR PIC",
+              "Complete the 6-HIT tasks with a safety pilot, instructor or approved device (you cannot act as PIC under IFR in IMC meanwhile)",
+            ],
+            [
+              "More than 12 calendar months",
+              "Not current",
+              "Instrument proficiency check (IPC) with a CFII, examiner or other authorized person (61.57(d))",
+            ],
           ],
         ),
         info(
@@ -49,11 +70,11 @@ export const regulations: Module = {
           prompt: "Are you instrument current today?",
           choices: [
             "Yes — through the end of September",
-            "No — currency expired at the end of September; you have until the end of March next year to regain it without an IPC",
-            "Yes — 6 calendar months means through October 31",
             "No — you need an IPC immediately",
+            "Yes — 6 calendar months means through October 31",
+            "No — currency expired at the end of September; you have until the end of March next year to regain it without an IPC",
           ],
-          answer: 1,
+          answer: 3,
           explanation:
             "Tasks logged in March keep you current through the end of September (6 calendar months preceding the month of flight: April–September). In October you are not current, but within the following 6 calendar months you may regain currency by completing the tasks; only after 12 calendar months is an IPC required.",
           subject: "Regulations",
@@ -67,10 +88,16 @@ export const regulations: Module = {
           ["Item", "Requirement"],
           [
             ["G — Generator or alternator", "Of adequate capacity"],
-            ["R — Radios", "Two-way radio communication and navigation equipment suitable for the route"],
+            [
+              "R — Radios",
+              "Two-way radio communication and navigation equipment suitable for the route",
+            ],
             ["A — Altimeter", "Sensitive altimeter adjustable for barometric pressure"],
             ["B — Ball", "Slip-skid indicator"],
-            ["C — Clock", "Displaying hours, minutes and seconds with a sweep-second pointer or digital presentation"],
+            [
+              "C — Clock",
+              "Displaying hours, minutes and seconds with a sweep-second pointer or digital presentation",
+            ],
             ["A — Attitude indicator", "Gyroscopic pitch and bank indicator"],
             ["R — Rate-of-turn indicator", "Gyroscopic rate-of-turn indicator"],
             ["D — Directional gyro", "Gyroscopic direction indicator"],
@@ -80,9 +107,17 @@ export const regulations: Module = {
         table(
           ["Item", "Requirement", "Rule"],
           [
-            ["Altimeter, static system and automatic altitude reporting", "Tested within the preceding 24 calendar months for IFR in controlled airspace", "91.411"],
+            [
+              "Altimeter, static system and automatic altitude reporting",
+              "Tested within the preceding 24 calendar months for IFR in controlled airspace",
+              "91.411",
+            ],
             ["Transponder", "Tested within the preceding 24 calendar months", "91.413"],
-            ["VOR receiver", "Operationally checked within the preceding 30 days for IFR use", "91.171"],
+            [
+              "VOR receiver",
+              "Operationally checked within the preceding 30 days for IFR use",
+              "91.171",
+            ],
           ],
         ),
         table(
@@ -120,7 +155,10 @@ export const regulations: Module = {
           [
             ["C — Clearance limit", "'Cleared to the Springfield airport'"],
             ["R — Route", "'Via the RIVER ONE departure, then as filed'"],
-            ["A — Altitude", "'Climb and maintain 5,000, expect 9,000 ten minutes after departure'"],
+            [
+              "A — Altitude",
+              "'Climb and maintain 5,000, expect 9,000 ten minutes after departure'",
+            ],
             ["F — Frequency", "'Departure frequency 124.35'"],
             ["T — Transponder", "'Squawk 4521'"],
           ],
@@ -179,7 +217,11 @@ export const regulations: Module = {
           "91.187 malfunction reports",
           "Report as soon as practical any loss of VOR, ILS or other navigation receiver capability or impairment of air/ground communication, including the aircraft identification, the equipment affected, how much your IFR capability is impaired and what assistance you want.",
         ),
-        practice("/ai-atc", "Copy a clearance", "Request and read back IFR clearances with an AI controller."),
+        practice(
+          "/ai-atc",
+          "Copy a clearance",
+          "Request and read back IFR clearances with an AI controller.",
+        ),
       ],
     },
     {
@@ -196,12 +238,30 @@ export const regulations: Module = {
         table(
           ["Altitude", "What it guarantees"],
           [
-            ["MEA — minimum en route altitude", "Acceptable navigation signal coverage and obstacle clearance between fixes"],
-            ["MOCA — minimum obstruction clearance altitude", "Obstacle clearance for the entire segment, but navigation signal coverage only within 22 NM of a VOR"],
-            ["MRA — minimum reception altitude", "Lowest altitude at which an intersection can be identified using the specified navaids"],
-            ["MCA — minimum crossing altitude", "Lowest altitude at which a fix must be crossed when proceeding toward a higher MEA"],
-            ["MAA — maximum authorized altitude", "Highest usable altitude for the segment (signal interference above it)"],
-            ["OROCA — off-route obstruction clearance altitude", "1,000 ft obstacle clearance (2,000 ft in designated mountainous areas) within a grid; no navigation or communication coverage guarantee"],
+            [
+              "MEA — minimum en route altitude",
+              "Acceptable navigation signal coverage and obstacle clearance between fixes",
+            ],
+            [
+              "MOCA — minimum obstruction clearance altitude",
+              "Obstacle clearance for the entire segment, but navigation signal coverage only within 22 NM of a VOR",
+            ],
+            [
+              "MRA — minimum reception altitude",
+              "Lowest altitude at which an intersection can be identified using the specified navaids",
+            ],
+            [
+              "MCA — minimum crossing altitude",
+              "Lowest altitude at which a fix must be crossed when proceeding toward a higher MEA",
+            ],
+            [
+              "MAA — maximum authorized altitude",
+              "Highest usable altitude for the segment (signal interference above it)",
+            ],
+            [
+              "OROCA — off-route obstruction clearance altitude",
+              "1,000 ft obstacle clearance (2,000 ft in designated mountainous areas) within a grid; no navigation or communication coverage guarantee",
+            ],
           ],
         ),
         h("91.177: minimum altitudes for IFR operations"),
@@ -216,12 +276,12 @@ export const regulations: Module = {
           kind: "mc",
           prompt: "What does the MOCA guarantee that the MEA also guarantees?",
           choices: [
-            "Two-way communication with ATC",
             "Obstacle clearance on the route segment",
+            "Two-way communication with ATC",
             "Navigation signal coverage along the entire segment",
             "Radar coverage",
           ],
-          answer: 1,
+          answer: 0,
           explanation:
             "Both provide obstacle clearance. The MEA additionally assures navigation signal coverage for the whole segment, whereas the MOCA assures it only within 22 NM of the VOR. Neither guarantees communication or radar coverage.",
           subject: "IFR Procedures",
@@ -243,7 +303,8 @@ export const regulations: Module = {
         check({
           id: "ifr.regulations.3.k2",
           kind: "calc",
-          prompt: "A departure procedure requires 300 ft per NM to 3,000 ft. Your climb groundspeed is 90 knots. What minimum climb rate is required?",
+          prompt:
+            "A departure procedure requires 300 ft per NM to 3,000 ft. Your climb groundspeed is 90 knots. What minimum climb rate is required?",
           choices: ["300 fpm", "450 fpm", "540 fpm", "900 fpm"],
           answer: 1,
           explanation:
@@ -263,25 +324,50 @@ export const regulations: Module = {
     },
   ],
   flashcards: [
-    { id: "ifr.regulations.fc1", front: "Instrument currency (61.57(c))", back: "Within 6 calendar months: 6 approaches, holding, intercepting and tracking courses." },
-    { id: "ifr.regulations.fc2", front: "When an IPC is required", back: "If not current for more than 12 calendar months (61.57(d))." },
-    { id: "ifr.regulations.fc3", front: "GRABCARD", back: "Generator, Radios, Altimeter, Ball, Clock, Attitude indicator, Rate-of-turn, Directional gyro (91.205(d))." },
-    { id: "ifr.regulations.fc4", front: "VOR check interval and tolerances", back: "30 days. VOT/ground ±4°, airborne ±6°, dual 4° between receivers (91.171)." },
-    { id: "ifr.regulations.fc5", front: "CRAFT", back: "Clearance limit, Route, Altitude, Frequency, Transponder." },
-    { id: "ifr.regulations.fc6", front: "91.177 off-airway minimum altitude", back: "2,000 ft above obstacles within 4 NM in mountainous areas; 1,000 ft elsewhere." },
+    {
+      id: "ifr.regulations.fc1",
+      front: "Instrument currency (61.57(c))",
+      back: "Within 6 calendar months: 6 approaches, holding, intercepting and tracking courses.",
+    },
+    {
+      id: "ifr.regulations.fc2",
+      front: "When an IPC is required",
+      back: "If not current for more than 12 calendar months (61.57(d)).",
+    },
+    {
+      id: "ifr.regulations.fc3",
+      front: "GRABCARD",
+      back: "Generator, Radios, Altimeter, Ball, Clock, Attitude indicator, Rate-of-turn, Directional gyro (91.205(d)).",
+    },
+    {
+      id: "ifr.regulations.fc4",
+      front: "VOR check interval and tolerances",
+      back: "30 days. VOT/ground ±4°, airborne ±6°, dual 4° between receivers (91.171).",
+    },
+    {
+      id: "ifr.regulations.fc5",
+      front: "CRAFT",
+      back: "Clearance limit, Route, Altitude, Frequency, Transponder.",
+    },
+    {
+      id: "ifr.regulations.fc6",
+      front: "91.177 off-airway minimum altitude",
+      back: "2,000 ft above obstacles within 4 NM in mountainous areas; 1,000 ft elsewhere.",
+    },
   ],
   quiz: [
     q({
       id: "ifr.regulations.q1",
       kind: "mc",
-      prompt: "Which tasks must be logged within the preceding 6 calendar months for instrument currency?",
+      prompt:
+        "Which tasks must be logged within the preceding 6 calendar months for instrument currency?",
       choices: [
         "Six approaches and three holds",
-        "Six approaches, holding procedures and tasks, and intercepting and tracking courses",
-        "Six hours of instrument time and six approaches",
         "Three approaches and an IPC",
+        "Six hours of instrument time and six approaches",
+        "Six approaches, holding procedures and tasks, and intercepting and tracking courses",
       ],
-      answer: 1,
+      answer: 3,
       explanation:
         "61.57(c) requires six instrument approaches, holding procedures and tasks, and intercepting and tracking courses through the use of navigational electronic systems. There is no hours requirement and only one 'holding procedures and tasks' item.",
       subject: "Regulations",
@@ -290,7 +376,8 @@ export const regulations: Module = {
     q({
       id: "ifr.regulations.q2",
       kind: "mc",
-      prompt: "What is the maximum permissible bearing error when checking a VOR receiver against a designated airborne checkpoint?",
+      prompt:
+        "What is the maximum permissible bearing error when checking a VOR receiver against a designated airborne checkpoint?",
       choices: ["±4°", "4° between receivers", "±10°", "±6°"],
       answer: 3,
       explanation:
@@ -301,7 +388,8 @@ export const regulations: Module = {
     q({
       id: "ifr.regulations.q3",
       kind: "scenario",
-      context: "You receive: 'N123AB is cleared to the Riverside airport via V25 SALLY, direct. Climb and maintain 6,000. Departure frequency 125.1. Squawk 2241.'",
+      context:
+        "You receive: 'N123AB is cleared to the Riverside airport via V25 SALLY, direct. Climb and maintain 6,000. Departure frequency 125.1. Squawk 2241.'",
       prompt: "What is the clearance limit?",
       choices: ["SALLY intersection", "6,000 ft", "The Riverside airport", "V25"],
       answer: 2,
@@ -316,11 +404,11 @@ export const regulations: Module = {
       prompt: "When not in radar contact, which of these reports is required?",
       choices: [
         "Leaving every assigned altitude only when in VFR conditions",
-        "Passing every VOR on the route",
-        "Turning on the landing light",
         "A corrected ETA whenever the previous estimate is in error by more than 2 minutes",
+        "Turning on the landing light",
+        "Passing every VOR on the route",
       ],
-      answer: 3,
+      answer: 1,
       explanation:
         "In a non-radar environment, you must report when an ETA changes by more than 2 minutes, plus compulsory reporting points and FAF inbound. Vacating an altitude is required at ALL times, not only in VFR conditions.",
       subject: "IFR Procedures",
@@ -329,7 +417,8 @@ export const regulations: Module = {
     q({
       id: "ifr.regulations.q5",
       kind: "mc",
-      prompt: "En route in uncontrolled airspace under IFR on a magnetic course of 120°, which cruising altitude is appropriate?",
+      prompt:
+        "En route in uncontrolled airspace under IFR on a magnetic course of 120°, which cruising altitude is appropriate?",
       choices: ["6,000 ft", "6,500 ft", "7,000 ft", "7,500 ft"],
       answer: 2,
       explanation:
@@ -340,7 +429,8 @@ export const regulations: Module = {
     q({
       id: "ifr.regulations.q6",
       kind: "tf",
-      prompt: "True or false: ATC may initiate a contact approach if the pilot has the airport in sight.",
+      prompt:
+        "True or false: ATC may initiate a contact approach if the pilot has the airport in sight.",
       choices: ["True", "False"],
       answer: 1,
       explanation:
@@ -351,7 +441,8 @@ export const regulations: Module = {
     q({
       id: "ifr.regulations.q7",
       kind: "mc",
-      prompt: "In a designated mountainous area with no published minimum altitude, what is the minimum IFR altitude?",
+      prompt:
+        "In a designated mountainous area with no published minimum altitude, what is the minimum IFR altitude?",
       choices: [
         "1,000 ft above the highest obstacle within 4 NM of the course",
         "2,000 ft above the highest obstacle within 4 NM of the course",
@@ -381,5 +472,9 @@ export const regulations: Module = {
       reference: "AIM Ch. 5, Sec. 2",
     }),
   ],
-  practice: [link("/ai-atc", "Clearances with AI ATC"), link("/planner", "IFR planning"), link("/simulator?scenario=ifr-departure", "IFR departure")],
+  practice: [
+    link("/ai-atc", "Clearances with AI ATC"),
+    link("/planner", "IFR planning"),
+    link("/simulator?scenario=ifr-departure", "IFR departure"),
+  ],
 };

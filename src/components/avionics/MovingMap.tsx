@@ -2,7 +2,7 @@
  * Moving map shared by the MFD and the TX-750 Navigator: aircraft symbol, flight plan
  * (active leg magenta), airports, VORs, relative terrain, simulated weather and traffic.
  */
-import { memo, useEffect, useRef } from "react";
+import { memo, useEffect, useId, useRef } from "react";
 import { AIRPORTS, NAVAIDS } from "@/lib/data/airports";
 import { distanceNm, norm360, toRad } from "@/lib/geo";
 import { cn } from "@/lib/utils";
@@ -72,6 +72,7 @@ const TerrainLayer = memo(function TerrainLayer({ grid, altBucket }: { grid: Ter
 export function MovingMap({ rangeNm, orientation, layers, width = 800, height = 600, fill, onZoom, className }: MovingMapProps) {
   const s = useSimSnapshot();
   const ref = useRef<SVGSVGElement>(null);
+  const clipId = `tx-map-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const zoomRef = useRef(onZoom);
   zoomRef.current = onZoom;
   useEffect(() => {
@@ -128,11 +129,11 @@ export function MovingMap({ rangeNm, orientation, layers, width = 800, height = 
       fontFamily={MONO}
     >
       <defs>
-        <clipPath id="tx-map-clip">
+        <clipPath id={clipId}>
           <rect x={0} y={0} width={width} height={height} />
         </clipPath>
       </defs>
-      <g clipPath="url(#tx-map-clip)" opacity={gpsOk ? 1 : 0.35}>
+      <g clipPath={`url(#${clipId})`} opacity={gpsOk ? 1 : 0.35}>
         {grid ? (
           <g transform={terrainTf}>
             <TerrainLayer grid={grid} altBucket={altBucket} />

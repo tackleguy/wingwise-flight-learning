@@ -32,7 +32,11 @@ export const regulations: Module = {
           [
             ["First class (ATP privileges)", "12 calendar months", "6 calendar months"],
             ["Second class (commercial privileges)", "12 calendar months", "12 calendar months"],
-            ["Third class (private/student privileges)", "60 calendar months", "24 calendar months"],
+            [
+              "Third class (private/student privileges)",
+              "60 calendar months",
+              "24 calendar months",
+            ],
           ],
         ),
         info(
@@ -47,9 +51,18 @@ export const regulations: Module = {
         table(
           ["Requirement", "Rule (14 CFR 61.57)"],
           [
-            ["Day passengers", "3 takeoffs and 3 landings within the preceding 90 days, as sole manipulator of the controls, in the same category and class (and type, if a type rating is required)"],
-            ["Tailwheel airplanes", "The 3 landings must be to a full stop in a tailwheel airplane"],
-            ["Night passengers", "3 takeoffs and 3 landings to a full stop within the preceding 90 days during the period beginning 1 hour after sunset and ending 1 hour before sunrise"],
+            [
+              "Day passengers",
+              "3 takeoffs and 3 landings within the preceding 90 days, as sole manipulator of the controls, in the same category and class (and type, if a type rating is required)",
+            ],
+            [
+              "Tailwheel airplanes",
+              "The 3 landings must be to a full stop in a tailwheel airplane",
+            ],
+            [
+              "Night passengers",
+              "3 takeoffs and 3 landings to a full stop within the preceding 90 days during the period beginning 1 hour after sunset and ending 1 hour before sunrise",
+            ],
           ],
         ),
         check({
@@ -59,12 +72,12 @@ export const regulations: Module = {
             "Your last three landings were touch-and-goes at 20:30 local, which was 1 hour 15 minutes after sunset, 40 days ago.",
           prompt: "May you carry passengers tonight at 21:00 (more than 1 hour after sunset)?",
           choices: [
-            "Yes — the landings were within 90 days and at night",
             "No — night currency requires the landings to be to a full stop",
+            "Yes — the landings were within 90 days and at night",
             "Yes, because touch-and-goes count for night currency in tricycle-gear airplanes",
             "No — night currency requires landings within 30 days",
           ],
-          answer: 1,
+          answer: 0,
           explanation:
             "Night passenger-carrying currency requires 3 takeoffs and 3 landings to a FULL STOP between 1 hour after sunset and 1 hour before sunrise. The timing was correct and within 90 days, but touch-and-goes do not count for night currency. They would count for DAY currency in a tricycle-gear airplane.",
           subject: "Regulations",
@@ -114,10 +127,22 @@ export const regulations: Module = {
           [
             ["Annual", "Within the preceding 12 calendar months", "91.409(a)"],
             ["VOR check (IFR only)", "Within the preceding 30 days", "91.171"],
-            ["100-hour", "Every 100 hours of time in service if carrying a person for hire, or giving flight instruction for hire in an aircraft the instructor provides. May be exceeded by up to 10 hours to reach a place where it can be done; the excess counts toward the next 100 hours.", "91.409(b)"],
-            ["Altimeter / static system (IFR in controlled airspace)", "Within the preceding 24 calendar months", "91.411"],
+            [
+              "100-hour",
+              "Every 100 hours of time in service if carrying a person for hire, or giving flight instruction for hire in an aircraft the instructor provides. May be exceeded by up to 10 hours to reach a place where it can be done; the excess counts toward the next 100 hours.",
+              "91.409(b)",
+            ],
+            [
+              "Altimeter / static system (IFR in controlled airspace)",
+              "Within the preceding 24 calendar months",
+              "91.411",
+            ],
             ["Transponder", "Within the preceding 24 calendar months", "91.413"],
-            ["ELT", "Within the preceding 12 calendar months; battery replaced after 1 cumulative hour of use or 50% of its useful life", "91.207"],
+            [
+              "ELT",
+              "Within the preceding 12 calendar months; battery replaced after 1 cumulative hour of use or 50% of its useful life",
+              "91.207",
+            ],
           ],
         ),
         tip(
@@ -130,9 +155,15 @@ export const regulations: Module = {
           [
             ["Airspeed indicator", "Fuses — one spare set, accessible (if fuses are used)"],
             ["Tachometer for each engine", "Landing light — if operated for hire"],
-            ["Oil pressure gauge for each engine using a pressure system", "Anticollision light system"],
+            [
+              "Oil pressure gauge for each engine using a pressure system",
+              "Anticollision light system",
+            ],
             ["Manifold pressure gauge for each altitude engine", "Position lights"],
-            ["Altimeter", "Source of electrical energy for all installed electrical and radio equipment"],
+            [
+              "Altimeter",
+              "Source of electrical energy for all installed electrical and radio equipment",
+            ],
             ["Temperature gauge for each liquid-cooled engine", ""],
             ["Oil temperature gauge for each air-cooled engine", ""],
             ["Fuel gauge for each tank", ""],
@@ -140,7 +171,10 @@ export const regulations: Module = {
             ["Anticollision lights (aircraft certificated after March 11, 1996)", ""],
             ["Magnetic direction indicator", ""],
             ["ELT, if required by 91.207", ""],
-            ["Safety belts (and shoulder harnesses for front seats of small airplanes manufactured after July 18, 1978)", ""],
+            [
+              "Safety belts (and shoulder harnesses for front seats of small airplanes manufactured after July 18, 1978)",
+              "",
+            ],
           ],
         ),
         h("Flying with inoperative equipment (91.213)"),
@@ -150,14 +184,15 @@ export const regulations: Module = {
         check({
           id: "vfr.regulations.2.k1",
           kind: "mc",
-          prompt: "An aircraft used for flight instruction for hire, provided by the flight instructor, requires which inspection in addition to the annual?",
+          prompt:
+            "An aircraft used for flight instruction for hire, provided by the flight instructor, requires which inspection in addition to the annual?",
           choices: [
             "A transponder inspection every 12 months",
-            "A 100-hour inspection",
-            "A VOR check every 30 days",
             "A 50-hour inspection",
+            "A VOR check every 30 days",
+            "A 100-hour inspection",
           ],
-          answer: 1,
+          answer: 3,
           explanation:
             "91.409(b) requires a 100-hour inspection for aircraft carrying any person for hire or used for flight instruction for hire when the aircraft is provided by the instructor. The VOR check applies only to IFR operations and the transponder interval is 24 calendar months.",
           subject: "Regulations",
@@ -191,13 +226,37 @@ export const regulations: Module = {
             ["Class B", "3 SM", "Clear of clouds"],
             ["Class C", "3 SM", "500 ft below, 1,000 ft above, 2,000 ft horizontal"],
             ["Class D", "3 SM", "500 ft below, 1,000 ft above, 2,000 ft horizontal"],
-            ["Class E below 10,000 ft MSL", "3 SM", "500 ft below, 1,000 ft above, 2,000 ft horizontal"],
-            ["Class E at or above 10,000 ft MSL", "5 SM", "1,000 ft below, 1,000 ft above, 1 SM horizontal"],
+            [
+              "Class E below 10,000 ft MSL",
+              "3 SM",
+              "500 ft below, 1,000 ft above, 2,000 ft horizontal",
+            ],
+            [
+              "Class E at or above 10,000 ft MSL",
+              "5 SM",
+              "1,000 ft below, 1,000 ft above, 1 SM horizontal",
+            ],
             ["Class G, 1,200 ft or less AGL — day", "1 SM", "Clear of clouds"],
-            ["Class G, 1,200 ft or less AGL — night", "3 SM", "500 ft below, 1,000 ft above, 2,000 ft horizontal"],
-            ["Class G, more than 1,200 ft AGL but below 10,000 ft MSL — day", "1 SM", "500 ft below, 1,000 ft above, 2,000 ft horizontal"],
-            ["Class G, more than 1,200 ft AGL but below 10,000 ft MSL — night", "3 SM", "500 ft below, 1,000 ft above, 2,000 ft horizontal"],
-            ["Class G, more than 1,200 ft AGL and at or above 10,000 ft MSL", "5 SM", "1,000 ft below, 1,000 ft above, 1 SM horizontal"],
+            [
+              "Class G, 1,200 ft or less AGL — night",
+              "3 SM",
+              "500 ft below, 1,000 ft above, 2,000 ft horizontal",
+            ],
+            [
+              "Class G, more than 1,200 ft AGL but below 10,000 ft MSL — day",
+              "1 SM",
+              "500 ft below, 1,000 ft above, 2,000 ft horizontal",
+            ],
+            [
+              "Class G, more than 1,200 ft AGL but below 10,000 ft MSL — night",
+              "3 SM",
+              "500 ft below, 1,000 ft above, 2,000 ft horizontal",
+            ],
+            [
+              "Class G, more than 1,200 ft AGL and at or above 10,000 ft MSL",
+              "5 SM",
+              "1,000 ft below, 1,000 ft above, 1 SM horizontal",
+            ],
           ],
         ),
         info(
@@ -244,17 +303,33 @@ export const regulations: Module = {
         table(
           ["Rule", "Requirement"],
           [
-            ["VFR fuel, day (91.151)", "Enough to fly to the first point of intended landing and then at least 30 minutes at normal cruising speed"],
-            ["VFR fuel, night (91.151)", "To the first point of intended landing plus at least 45 minutes at normal cruising speed"],
-            ["Alcohol (91.17)", "Not within 8 hours of consuming alcohol, while under the influence, or with a blood alcohol concentration of 0.04 or greater"],
-            ["Oxygen (91.211)", "Required crew must use oxygen above 12,500 ft MSL up to and including 14,000 ft MSL for flight time beyond 30 minutes; at all times above 14,000 ft MSL; each occupant must be provided oxygen above 15,000 ft MSL"],
-            ["Seat belts (91.107)", "PIC must brief passengers on seat belts and ensure each is notified to fasten them; each person must be belted for taxi, takeoff and landing"],
+            [
+              "VFR fuel, day (91.151)",
+              "Enough to fly to the first point of intended landing and then at least 30 minutes at normal cruising speed",
+            ],
+            [
+              "VFR fuel, night (91.151)",
+              "To the first point of intended landing plus at least 45 minutes at normal cruising speed",
+            ],
+            [
+              "Alcohol (91.17)",
+              "Not within 8 hours of consuming alcohol, while under the influence, or with a blood alcohol concentration of 0.04 or greater",
+            ],
+            [
+              "Oxygen (91.211)",
+              "Required crew must use oxygen above 12,500 ft MSL up to and including 14,000 ft MSL for flight time beyond 30 minutes; at all times above 14,000 ft MSL; each occupant must be provided oxygen above 15,000 ft MSL",
+            ],
+            [
+              "Seat belts (91.107)",
+              "PIC must brief passengers on seat belts and ensure each is notified to fasten them; each person must be belted for taxi, takeoff and landing",
+            ],
           ],
         ),
         check({
           id: "vfr.regulations.3.k2",
           kind: "mc",
-          prompt: "You plan a VFR flight on a magnetic course of 225° at more than 3,000 ft AGL. Which cruising altitude is appropriate?",
+          prompt:
+            "You plan a VFR flight on a magnetic course of 225° at more than 3,000 ft AGL. Which cruising altitude is appropriate?",
           choices: ["5,500 ft MSL", "6,000 ft MSL", "6,500 ft MSL", "7,500 ft MSL"],
           answer: 2,
           explanation:
@@ -270,19 +345,49 @@ export const regulations: Module = {
     },
   ],
   flashcards: [
-    { id: "vfr.regulations.fc1", front: "Flight review interval", back: "Every 24 calendar months: at least 1 hour of ground and 1 hour of flight training (61.56)." },
-    { id: "vfr.regulations.fc2", front: "Night passenger currency", back: "3 takeoffs and 3 landings to a full stop, 1 hr after sunset to 1 hr before sunrise, within 90 days (61.57(b))." },
-    { id: "vfr.regulations.fc3", front: "ARROW", back: "Airworthiness cert, Registration, Radio license (international), Operating limitations, Weight & balance." },
-    { id: "vfr.regulations.fc4", front: "Transponder inspection interval", back: "24 calendar months (91.413)." },
-    { id: "vfr.regulations.fc5", front: "VFR fuel reserve day / night", back: "30 minutes day, 45 minutes night at normal cruising speed (91.151)." },
-    { id: "vfr.regulations.fc6", front: "Minimum altitude over congested areas", back: "1,000 ft above the highest obstacle within 2,000 ft horizontally (91.119)." },
+    {
+      id: "vfr.regulations.fc1",
+      front: "Flight review interval",
+      back: "Every 24 calendar months: at least 1 hour of ground and 1 hour of flight training (61.56).",
+    },
+    {
+      id: "vfr.regulations.fc2",
+      front: "Night passenger currency",
+      back: "3 takeoffs and 3 landings to a full stop, 1 hr after sunset to 1 hr before sunrise, within 90 days (61.57(b)).",
+    },
+    {
+      id: "vfr.regulations.fc3",
+      front: "ARROW",
+      back: "Airworthiness cert, Registration, Radio license (international), Operating limitations, Weight & balance.",
+    },
+    {
+      id: "vfr.regulations.fc4",
+      front: "Transponder inspection interval",
+      back: "24 calendar months (91.413).",
+    },
+    {
+      id: "vfr.regulations.fc5",
+      front: "VFR fuel reserve day / night",
+      back: "30 minutes day, 45 minutes night at normal cruising speed (91.151).",
+    },
+    {
+      id: "vfr.regulations.fc6",
+      front: "Minimum altitude over congested areas",
+      back: "1,000 ft above the highest obstacle within 2,000 ft horizontally (91.119).",
+    },
   ],
   quiz: [
     q({
       id: "vfr.regulations.q1",
       kind: "mc",
-      prompt: "A third-class medical certificate issued to a 45-year-old pilot is valid for private pilot privileges until the end of the:",
-      choices: ["12th calendar month", "24th calendar month", "36th calendar month", "60th calendar month"],
+      prompt:
+        "A third-class medical certificate issued to a 45-year-old pilot is valid for private pilot privileges until the end of the:",
+      choices: [
+        "12th calendar month",
+        "24th calendar month",
+        "36th calendar month",
+        "60th calendar month",
+      ],
       answer: 1,
       explanation:
         "For pilots age 40 or older at the time of the exam, a third-class medical is valid for 24 calendar months. The 60-calendar-month duration applies only if the pilot was under 40 at the exam.",
@@ -312,12 +417,12 @@ export const regulations: Module = {
         "Your rental airplane's last annual inspection was completed on March 14 of last year. Today is March 20 of this year.",
       prompt: "May the airplane be flown?",
       choices: [
-        "Yes, an annual is valid for 13 months",
         "Yes, until the end of March",
+        "Yes, an annual is valid for 13 months",
         "No, the annual expired at the end of February",
         "No, the annual expired on March 14",
       ],
-      answer: 1,
+      answer: 0,
       explanation:
         "An annual is due within the preceding 12 CALENDAR months, so an inspection completed March 14 last year is valid through March 31 this year. It does not expire on the anniversary date.",
       subject: "Regulations",
@@ -327,7 +432,12 @@ export const regulations: Module = {
       id: "vfr.regulations.q4",
       kind: "mc",
       prompt: "Which is NOT required equipment for day VFR flight under 91.205?",
-      choices: ["Airspeed indicator", "Magnetic direction indicator", "Attitude indicator", "Fuel gauge for each tank"],
+      choices: [
+        "Airspeed indicator",
+        "Magnetic direction indicator",
+        "Attitude indicator",
+        "Fuel gauge for each tank",
+      ],
       answer: 2,
       explanation:
         "An attitude indicator is required for IFR, not day VFR. Airspeed indicator, magnetic direction indicator and fuel gauges are all on the day VFR list (ATOMATOFLAMES).",
@@ -337,7 +447,8 @@ export const regulations: Module = {
     q({
       id: "vfr.regulations.q5",
       kind: "mc",
-      prompt: "During the day in Class G airspace at 1,000 ft AGL, what are the minimum VFR visibility and cloud clearance?",
+      prompt:
+        "During the day in Class G airspace at 1,000 ft AGL, what are the minimum VFR visibility and cloud clearance?",
       choices: [
         "1 SM and clear of clouds",
         "3 SM and clear of clouds",
@@ -381,7 +492,8 @@ export const regulations: Module = {
     q({
       id: "vfr.regulations.q8",
       kind: "mc",
-      prompt: "Under 91.17, no person may act as a crewmember with a blood alcohol concentration of:",
+      prompt:
+        "Under 91.17, no person may act as a crewmember with a blood alcohol concentration of:",
       choices: ["0.08 or greater", "0.02 or greater", "0.04 or greater", "0.10 or greater"],
       answer: 2,
       explanation:
@@ -390,5 +502,8 @@ export const regulations: Module = {
       reference: "14 CFR 91.17",
     }),
   ],
-  practice: [link("/planner", "Preflight planning"), link("/aircraft", "Aircraft documents and equipment")],
+  practice: [
+    link("/planner", "Preflight planning"),
+    link("/aircraft", "Aircraft documents and equipment"),
+  ],
 };

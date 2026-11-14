@@ -1,5 +1,20 @@
 import type { Module } from "../types";
-import { caution, check, diagram, exercise, h, info, link, ol, p, practice, q, table, tip, ul } from "../builders";
+import {
+  caution,
+  check,
+  diagram,
+  exercise,
+  h,
+  info,
+  link,
+  ol,
+  p,
+  practice,
+  q,
+  table,
+  tip,
+  ul,
+} from "../builders";
 
 export const navigation: Module = {
   id: "navigation",
@@ -22,12 +37,18 @@ export const navigation: Module = {
         p(
           "A VOR transmits 360 magnetic radials. On a conventional CDI, the needle shows your position relative to the course selected with the OBS: full-scale deflection is 10° or more, so each of the five dots is about 2°. The TO/FROM flag shows whether the selected course would take you toward or away from the station. When flying a VOR course, keep your heading roughly aligned with the selected course to avoid reverse sensing.",
         ),
-        diagram("vor-cdi", "A conventional VOR CDI with OBS, TO/FROM flag and five-dot deflection scale."),
+        diagram(
+          "vor-cdi",
+          "A conventional VOR CDI with OBS, TO/FROM flag and five-dot deflection scale.",
+        ),
         h("The HSI"),
         p(
           "A horizontal situation indicator combines the heading indicator and CDI in one display. The course pointer is set on the rotating compass card, and the deviation bar shows where the course is relative to the airplane — so the picture matches the view from above. Because the HSI shows the course pointer against your actual heading, it does not reverse-sense when flying a localizer back course, provided the front course is set.",
         ),
-        diagram("hsi", "Horizontal situation indicator: heading card, course pointer, course deviation bar, TO/FROM indicator and glideslope."),
+        diagram(
+          "hsi",
+          "Horizontal situation indicator: heading card, course pointer, course deviation bar, TO/FROM indicator and glideslope.",
+        ),
         h("Intercepting and tracking"),
         ol(
           "Turn to a heading parallel to the desired course to see which side you are on.",
@@ -35,7 +56,10 @@ export const navigation: Module = {
           "As the needle starts to center, lead the turn onto course.",
           "Once established, bracket: if the needle drifts, turn 10°–20° toward it, then reduce the correction until you find the heading that holds it centered.",
         ),
-        exercise("vor-orientation", "Determine position and intercept headings from VOR indications"),
+        exercise(
+          "vor-orientation",
+          "Determine position and intercept headings from VOR indications",
+        ),
         check({
           id: "ifr.navigation.1.k1",
           kind: "scenario",
@@ -60,8 +84,16 @@ export const navigation: Module = {
           "Service volumes",
           "Each VOR is classified as terminal, low or high altitude, with a standard service volume (horizontal range by altitude) published in the AIM and Chart Supplement. Use a navaid outside its service volume only when it is on a published route or ATC provides radar monitoring.",
         ),
-        practice("/simulator?scenario=ifr-vor-intercept", "VOR intercepts", "Intercept and track radials inbound and outbound."),
-        practice("/simulator?scenario=ifr-dme-arc", "DME arc", "Fly a 10-NM DME arc and intercept the final approach course."),
+        practice(
+          "/simulator?scenario=ifr-vor-intercept",
+          "VOR intercepts",
+          "Intercept and track radials inbound and outbound.",
+        ),
+        practice(
+          "/simulator?scenario=ifr-dme-arc",
+          "DME arc",
+          "Fly a 10-NM DME arc and intercept the final approach course.",
+        ),
       ],
     },
     {
@@ -86,7 +118,10 @@ export const navigation: Module = {
           [
             ["En route", "About 2 NM on WAAS units (5 NM on older TSO-C129 units)"],
             ["Terminal (within 30 NM of departure or destination airport)", "1 NM"],
-            ["Approach (final approach segment)", "0.3 NM, or angular like a localizer on LPV/LNAV/VNAV"],
+            [
+              "Approach (final approach segment)",
+              "0.3 NM, or angular like a localizer on LPV/LNAV/VNAV",
+            ],
           ],
         ),
         caution(
@@ -96,7 +131,8 @@ export const navigation: Module = {
         check({
           id: "ifr.navigation.2.k1",
           kind: "mc",
-          prompt: "What is the minimum number of satellites RAIM needs to detect (but not exclude) a faulty satellite?",
+          prompt:
+            "What is the minimum number of satellites RAIM needs to detect (but not exclude) a faulty satellite?",
           choices: ["Three", "Four", "Five", "Six"],
           answer: 2,
           explanation:
@@ -127,7 +163,11 @@ export const navigation: Module = {
           "Verify the flight plan",
           "After loading a route, check each waypoint against the clearance and chart: names, sequence, distances and courses. A single mis-keyed identifier can send you toward the wrong fix.",
         ),
-        practice("/simulator?scenario=ifr-rnav", "RNAV navigation", "Load and fly an RNAV route with fly-by and fly-over waypoints."),
+        practice(
+          "/simulator?scenario=ifr-rnav",
+          "RNAV navigation",
+          "Load and fly an RNAV route with fly-by and fly-over waypoints.",
+        ),
       ],
     },
     {
@@ -140,7 +180,6 @@ export const navigation: Module = {
         "Apply holding timing, wind correction and maximum holding speeds",
       ],
       blocks: [
-        h("Why hold"),
         p(
           "Holding keeps an airplane in a defined piece of airspace while it waits — for weather to improve, for traffic to clear, for an approach clearance, or as a course reversal on some approaches. A holding pattern is a racetrack: a fix, an inbound leg to that fix, a 180° turn, an outbound leg and another 180° turn back to the inbound course.",
         ),
@@ -150,11 +189,7 @@ export const navigation: Module = {
         ),
         h("Holding instructions"),
         p(
-          "When ATC issues holding instructions for a pattern that is not charted, they include: the direction to hold from the fix (e.g., 'northwest'), the holding fix, the radial, course, bearing or airway on which to hold, leg length in miles if DME or RNAV is used (otherwise legs are timed), the direction of turns if left (right turns are standard), and an expect-further-clearance (EFC) time.",
-        ),
-        info(
-          "Example",
-          "'Hold southeast of the SPRING VOR on the 140 radial, left turns, expect further clearance at 1545.' The inbound course is 320° (toward the VOR on the 140 radial), and the turns are to the left.",
+          "When ATC issues holding instructions for a pattern that is not charted, they include: the direction to hold from the fix (e.g., 'northwest'), the holding fix, the radial, course, bearing or airway on which to hold, leg length in miles if DME or RNAV is used (otherwise legs are timed), the direction of turns if left (right turns are standard), and an expect-further-clearance (EFC) time. Example: 'Hold southeast of the SPRING VOR on the 140 radial, left turns, expect further clearance at 1545' — the inbound course is 320° and the turns are to the left.",
         ),
         h("Entries"),
         p(
@@ -163,9 +198,24 @@ export const navigation: Module = {
         table(
           ["Entry", "Sector size", "Arrival heading (right-turn pattern)", "Procedure"],
           [
-            ["Direct", "180°", "From I − 70° clockwise to I + 110°", "Cross the fix and turn right to fly the pattern"],
-            ["Teardrop", "70°", "From I + 110° clockwise to I + 180°", "Cross the fix, turn to a heading 30° into the holding side from the outbound course, fly 1 minute, turn right to intercept inbound"],
-            ["Parallel", "110°", "From I + 180° clockwise to I + 290°", "Cross the fix, turn to parallel the outbound course on the non-holding side for 1 minute, then turn back toward the holding side through more than 180° to intercept the inbound course or return to the fix"],
+            [
+              "Direct",
+              "180°",
+              "From I − 70° clockwise to I + 110°",
+              "Cross the fix and turn right to fly the pattern",
+            ],
+            [
+              "Teardrop",
+              "70°",
+              "From I + 110° clockwise to I + 180°",
+              "Cross the fix, turn to a heading 30° into the holding side from the outbound course, fly 1 minute, turn right to intercept inbound",
+            ],
+            [
+              "Parallel",
+              "110°",
+              "From I + 180° clockwise to I + 290°",
+              "Cross the fix, turn to parallel the outbound course on the non-holding side for 1 minute, then turn back toward the holding side through more than 180° to intercept the inbound course or return to the fix",
+            ],
           ],
         ),
         exercise("holding-entry", "Choose the correct holding entry for any arrival heading"),
@@ -207,23 +257,52 @@ export const navigation: Module = {
           "No EFC? Ask",
           "If you are told to hold and do not receive an EFC time, request one. It is critical if you lose communications — the lost-comm rules use the EFC to decide when to leave the hold.",
         ),
-        practice("/simulator?scenario=ifr-hold", "Holding practice", "Fly published and non-published holds with each entry type in a crosswind."),
+        practice(
+          "/simulator?scenario=ifr-hold",
+          "Holding practice",
+          "Fly published and non-published holds with each entry type in a crosswind.",
+        ),
       ],
     },
   ],
   flashcards: [
-    { id: "ifr.navigation.fc1", front: "DME slant-range error is negligible when…", back: "The aircraft is 1 NM or more from the station for each 1,000 ft of altitude above it." },
-    { id: "ifr.navigation.fc2", front: "RAIM satellite requirements", back: "5 for fault detection (or 4 + baro-aiding); 6 for fault detection and exclusion." },
-    { id: "ifr.navigation.fc3", front: "Standard holding pattern", back: "Right turns; 1-minute inbound legs at or below 14,000 ft MSL (1½ minutes above)." },
-    { id: "ifr.navigation.fc4", front: "Maximum holding speeds", back: "200 KIAS up to 6,000 ft; 230 KIAS 6,001–14,000 ft; 265 KIAS above 14,000 ft." },
-    { id: "ifr.navigation.fc5", front: "When to start outbound timing in a hold", back: "Over or abeam the fix, whichever occurs later." },
-    { id: "ifr.navigation.fc6", front: "Victor airway width", back: "4 NM either side of centerline (8 NM total), widening beyond 51 NM from the VOR." },
+    {
+      id: "ifr.navigation.fc1",
+      front: "DME slant-range error is negligible when…",
+      back: "The aircraft is 1 NM or more from the station for each 1,000 ft of altitude above it.",
+    },
+    {
+      id: "ifr.navigation.fc2",
+      front: "RAIM satellite requirements",
+      back: "5 for fault detection (or 4 + baro-aiding); 6 for fault detection and exclusion.",
+    },
+    {
+      id: "ifr.navigation.fc3",
+      front: "Standard holding pattern",
+      back: "Right turns; 1-minute inbound legs at or below 14,000 ft MSL (1½ minutes above).",
+    },
+    {
+      id: "ifr.navigation.fc4",
+      front: "Maximum holding speeds",
+      back: "200 KIAS up to 6,000 ft; 230 KIAS 6,001–14,000 ft; 265 KIAS above 14,000 ft.",
+    },
+    {
+      id: "ifr.navigation.fc5",
+      front: "When to start outbound timing in a hold",
+      back: "Over or abeam the fix, whichever occurs later.",
+    },
+    {
+      id: "ifr.navigation.fc6",
+      front: "Victor airway width",
+      back: "4 NM either side of centerline (8 NM total), widening beyond 51 NM from the VOR.",
+    },
   ],
   quiz: [
     q({
       id: "ifr.navigation.q1",
       kind: "calc",
-      prompt: "An aircraft is directly over a VORTAC at 12,000 ft above the station. What will the DME read?",
+      prompt:
+        "An aircraft is directly over a VORTAC at 12,000 ft above the station. What will the DME read?",
       choices: ["0 NM", "1 NM", "2 NM", "12 NM"],
       answer: 2,
       explanation:
@@ -234,10 +313,11 @@ export const navigation: Module = {
     q({
       id: "ifr.navigation.q2",
       kind: "scenario",
-      context: "Hold southwest of the XYZ VOR on the 230 radial, right turns. You arrive at the VOR on a heading of 190°.",
+      context:
+        "Hold southwest of the XYZ VOR on the 230 radial, right turns. You arrive at the VOR on a heading of 190°.",
       prompt: "Which entry should you use?",
-      choices: ["Direct", "Teardrop", "Parallel", "Either direct or parallel"],
-      answer: 1,
+      choices: ["Teardrop", "Direct", "Parallel", "Either direct or parallel"],
+      answer: 0,
       explanation:
         "The inbound course is 050°. For a right-turn pattern, teardrop headings run from I + 110° (160°) clockwise to I + 180° (230°), so 190° is a teardrop: cross the VOR, turn right to about 200° (30° from the 230° outbound course toward the holding side), fly 1 minute, then turn right to intercept 050° inbound. Direct would apply to arrival headings from 340° clockwise to 160°.",
       subject: "IFR Procedures",
@@ -246,7 +326,8 @@ export const navigation: Module = {
     q({
       id: "ifr.navigation.q3",
       kind: "mc",
-      prompt: "What is the maximum holding airspeed for a propeller aircraft holding at 8,000 ft MSL at a civil fix with no published restriction?",
+      prompt:
+        "What is the maximum holding airspeed for a propeller aircraft holding at 8,000 ft MSL at a civil fix with no published restriction?",
       choices: ["200 KIAS", "210 KIAS", "230 KIAS", "265 KIAS"],
       answer: 2,
       explanation:
@@ -257,9 +338,15 @@ export const navigation: Module = {
     q({
       id: "ifr.navigation.q4",
       kind: "scenario",
-      context: "In a hold at 5,000 ft with a 1-minute inbound leg, you time the inbound leg at 1 minute 20 seconds.",
+      context:
+        "In a hold at 5,000 ft with a 1-minute inbound leg, you time the inbound leg at 1 minute 20 seconds.",
       prompt: "How should you adjust the next outbound leg?",
-      choices: ["Fly 40 seconds outbound", "Fly 1 minute 20 seconds outbound", "Fly 1 minute outbound", "Fly 2 minutes outbound"],
+      choices: [
+        "Fly 40 seconds outbound",
+        "Fly 1 minute 20 seconds outbound",
+        "Fly 1 minute outbound",
+        "Fly 2 minutes outbound",
+      ],
       answer: 0,
       explanation:
         "The inbound leg was 20 seconds too long, so shorten the outbound leg by about 20 seconds: 1:00 − 0:20 = 40 seconds. Lengthening the outbound leg would make the inbound leg even longer.",
@@ -269,7 +356,8 @@ export const navigation: Module = {
     q({
       id: "ifr.navigation.q5",
       kind: "mc",
-      prompt: "A WAAS-capable GPS in terminal mode (within 30 NM of the airport) has a full-scale CDI deflection of:",
+      prompt:
+        "A WAAS-capable GPS in terminal mode (within 30 NM of the airport) has a full-scale CDI deflection of:",
       choices: ["5 NM", "2 NM", "0.3 NM", "1 NM"],
       answer: 3,
       explanation:
@@ -294,11 +382,11 @@ export const navigation: Module = {
       prompt: "When should you begin timing the outbound leg of a holding pattern?",
       choices: [
         "When crossing the fix inbound",
-        "Over or abeam the fix, whichever occurs later",
-        "When the turn outbound begins",
         "One minute after crossing the fix",
+        "When the turn outbound begins",
+        "Over or abeam the fix, whichever occurs later",
       ],
-      answer: 1,
+      answer: 3,
       explanation:
         "Outbound timing begins over or abeam the fix, whichever occurs later; if abeam cannot be determined, start when the turn to outbound is complete.",
       subject: "IFR Procedures",
@@ -307,7 +395,8 @@ export const navigation: Module = {
     q({
       id: "ifr.navigation.q8",
       kind: "tf",
-      prompt: "True or false: on an HSI with the localizer front course set, flying the back course produces reverse sensing.",
+      prompt:
+        "True or false: on an HSI with the localizer front course set, flying the back course produces reverse sensing.",
       choices: ["True", "False"],
       answer: 1,
       explanation:

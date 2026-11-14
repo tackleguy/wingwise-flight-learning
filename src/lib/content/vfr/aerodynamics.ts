@@ -1,5 +1,20 @@
 import type { Module } from "../types";
-import { caution, check, diagram, h, info, link, ol, p, practice, q, table, tip, ul, warning } from "../builders";
+import {
+  caution,
+  check,
+  diagram,
+  h,
+  info,
+  link,
+  ol,
+  p,
+  practice,
+  q,
+  table,
+  tip,
+  ul,
+  warning,
+} from "../builders";
 
 export const aerodynamics: Module = {
   id: "aerodynamics",
@@ -50,7 +65,12 @@ export const aerodynamics: Module = {
           id: "vfr.aerodynamics.1.k1",
           kind: "mc",
           prompt: "What is the FIRST and most important action in recovering from a stall?",
-          choices: ["Add full power", "Level the wings with aileron", "Reduce the angle of attack", "Apply opposite rudder"],
+          choices: [
+            "Add full power",
+            "Level the wings with aileron",
+            "Reduce the angle of attack",
+            "Apply opposite rudder",
+          ],
           answer: 2,
           explanation:
             "The stall is caused by exceeding the critical angle of attack, so reducing AOA is the only thing that actually breaks the stall. Adding power helps minimize altitude loss but does not unstall a wing that is still above its critical AOA.",
@@ -63,7 +83,7 @@ export const aerodynamics: Module = {
         ),
         h("Spins"),
         p(
-          "A spin is an aggravated stall that results in autorotation: the airplane descends in a corkscrew path. Two ingredients are required: the wing must be stalled, and there must be yaw. In a spin one wing is more deeply stalled than the other. Uncoordinated flight at low airspeed — particularly skidding with too much rudder on the base-to-final turn — is the classic spin entry.",
+          "A spin is an aggravated stall that results in autorotation: the airplane descends in a corkscrew path. Two ingredients are required: the wing must be stalled, and there must be yaw. In a spin one wing is more deeply stalled than the other. Uncoordinated flight at low airspeed — particularly skidding with too much rudder on the base-to-final turn — is the classic spin entry. PARE (below) is the general recovery; your airplane's POH procedure takes precedence, and many airplanes are placarded against intentional spins.",
         ),
         table(
           ["PARE step", "Action"],
@@ -71,16 +91,15 @@ export const aerodynamics: Module = {
             ["P — Power", "Reduce to idle"],
             ["A — Ailerons", "Neutral"],
             ["R — Rudder", "Full opposite the direction of rotation"],
-            ["E — Elevator", "Briskly forward to break the stall; when rotation stops, neutralize rudder and recover from the dive"],
+            [
+              "E — Elevator",
+              "Briskly forward to break the stall; when rotation stops, neutralize rudder and recover from the dive",
+            ],
           ],
         ),
         warning(
           "Base-to-final skid",
           "Overshooting final and adding inside rudder to tighten the turn creates a skid. If the airplane stalls in a skid, the inside wing drops sharply and the airplane can enter an incipient spin far too low to recover. Shallow the bank, accept the overshoot and go around if needed.",
-        ),
-        info(
-          "Always use the POH",
-          "PARE is the general recovery; your airplane's POH procedure takes precedence, and many airplanes are placarded against intentional spins.",
         ),
         practice(
           "/simulator?scenario=vfr-stall",
@@ -177,8 +196,14 @@ export const aerodynamics: Module = {
         table(
           ["CG position", "Effect"],
           [
-            ["Forward CG", "More stable; higher stall speed; lower cruise speed; heavier elevator forces; may lack elevator authority to flare"],
-            ["Aft CG", "Less stable; lower stall speed; slightly faster cruise; light controls; stall and spin recovery can be difficult or impossible beyond the aft limit"],
+            [
+              "Forward CG",
+              "More stable; higher stall speed; lower cruise speed; heavier elevator forces; may lack elevator authority to flare",
+            ],
+            [
+              "Aft CG",
+              "Less stable; lower stall speed; slightly faster cruise; light controls; stall and spin recovery can be difficult or impossible beyond the aft limit",
+            ],
           ],
         ),
         h("Left-turning tendencies"),
@@ -212,7 +237,8 @@ export const aerodynamics: Module = {
         check({
           id: "vfr.aerodynamics.3.k1",
           kind: "calc",
-          context: "Field elevation 5,000 ft, altimeter setting 29.92 in Hg, outside air temperature 30°C.",
+          context:
+            "Field elevation 5,000 ft, altimeter setting 29.92 in Hg, outside air temperature 30°C.",
           prompt: "Using the rule of thumb, what is the approximate density altitude?",
           choices: ["5,000 ft", "6,800 ft", "8,000 ft", "9,500 ft"],
           answer: 2,
@@ -229,19 +255,48 @@ export const aerodynamics: Module = {
     },
   ],
   flashcards: [
-    { id: "vfr.aerodynamics.fc1", front: "Cause of every stall", back: "Exceeding the critical angle of attack." },
-    { id: "vfr.aerodynamics.fc2", front: "PARE", back: "Spin recovery: Power idle, Ailerons neutral, Rudder opposite rotation, Elevator forward." },
-    { id: "vfr.aerodynamics.fc3", front: "Load factor in a 60° level turn", back: "2 G; stall speed increases about 41%." },
-    { id: "vfr.aerodynamics.fc4", front: "Normal category limit load factors", back: "+3.8 G and −1.52 G." },
-    { id: "vfr.aerodynamics.fc5", front: "Four left-turning tendencies", back: "Torque, spiraling slipstream, gyroscopic precession and P-factor." },
-    { id: "vfr.aerodynamics.fc6", front: "Effect of high density altitude", back: "Longer takeoff roll, reduced climb rate, less engine power and propeller efficiency." },
+    {
+      id: "vfr.aerodynamics.fc1",
+      front: "Cause of every stall",
+      back: "Exceeding the critical angle of attack.",
+    },
+    {
+      id: "vfr.aerodynamics.fc2",
+      front: "PARE",
+      back: "Spin recovery: Power idle, Ailerons neutral, Rudder opposite rotation, Elevator forward.",
+    },
+    {
+      id: "vfr.aerodynamics.fc3",
+      front: "Load factor in a 60° level turn",
+      back: "2 G; stall speed increases about 41%.",
+    },
+    {
+      id: "vfr.aerodynamics.fc4",
+      front: "Normal category limit load factors",
+      back: "+3.8 G and −1.52 G.",
+    },
+    {
+      id: "vfr.aerodynamics.fc5",
+      front: "Four left-turning tendencies",
+      back: "Torque, spiraling slipstream, gyroscopic precession and P-factor.",
+    },
+    {
+      id: "vfr.aerodynamics.fc6",
+      front: "Effect of high density altitude",
+      back: "Longer takeoff roll, reduced climb rate, less engine power and propeller efficiency.",
+    },
   ],
   quiz: [
     q({
       id: "vfr.aerodynamics.q1",
       kind: "mc",
       prompt: "In what flight condition must an airplane be placed to spin?",
-      choices: ["Partially stalled with one wing low", "In a steep diving spiral", "Stalled", "In a high-speed skid"],
+      choices: [
+        "Partially stalled with one wing low",
+        "In a steep diving spiral",
+        "Stalled",
+        "In a high-speed skid",
+      ],
       answer: 2,
       explanation:
         "A spin requires a stall plus yaw. Without a stall there is no spin — a steep diving spiral is unstalled and has rapidly increasing airspeed, which is a different situation with a different recovery.",
@@ -262,7 +317,8 @@ export const aerodynamics: Module = {
     q({
       id: "vfr.aerodynamics.q3",
       kind: "calc",
-      prompt: "An airplane stalls at 52 knots in level flight. Approximately what is its stall speed in a level 60° bank?",
+      prompt:
+        "An airplane stalls at 52 knots in level flight. Approximately what is its stall speed in a level 60° bank?",
       choices: ["56 knots", "62 knots", "74 knots", "104 knots"],
       answer: 2,
       explanation:
@@ -276,11 +332,11 @@ export const aerodynamics: Module = {
       prompt: "What is an effect of a forward center of gravity?",
       choices: [
         "Lower stall speed",
-        "Higher stall speed and lower cruise speed",
-        "Reduced longitudinal stability",
         "Lighter elevator control forces",
+        "Reduced longitudinal stability",
+        "Higher stall speed and lower cruise speed",
       ],
-      answer: 1,
+      answer: 3,
       explanation:
         "With a forward CG the tail must push down harder, effectively adding weight, so stall speed rises and cruise speed falls. Forward CG makes the airplane MORE stable and the elevator heavier — the other choices describe an aft CG.",
       subject: "Weight & Balance",
@@ -291,12 +347,12 @@ export const aerodynamics: Module = {
       kind: "mc",
       prompt: "P-factor causes a left-turning tendency most pronounced when the airplane is:",
       choices: [
-        "At high airspeed and low angle of attack",
         "At low airspeed, high angle of attack and high power",
+        "At high airspeed and low angle of attack",
         "Gliding at idle",
         "In straight-and-level cruise",
       ],
-      answer: 1,
+      answer: 0,
       explanation:
         "P-factor comes from the descending blade meeting the air at a higher AOA than the ascending blade, which happens at high airplane angles of attack with high power — classic climb conditions. In cruise or at idle the asymmetry is small.",
       subject: "Aerodynamics",
@@ -305,7 +361,8 @@ export const aerodynamics: Module = {
     q({
       id: "vfr.aerodynamics.q6",
       kind: "tf",
-      prompt: "True or false: ground effect reduces induced drag and can allow an airplane to become airborne before reaching the speed needed to climb.",
+      prompt:
+        "True or false: ground effect reduces induced drag and can allow an airplane to become airborne before reaching the speed needed to climb.",
       choices: ["True", "False"],
       answer: 0,
       explanation:
@@ -319,11 +376,11 @@ export const aerodynamics: Module = {
       prompt: "Which combination results in the HIGHEST density altitude?",
       choices: [
         "Low elevation, low temperature, low humidity",
-        "High elevation, low temperature, high humidity",
-        "Low elevation, high temperature, low humidity",
         "High elevation, high temperature, high humidity",
+        "Low elevation, high temperature, low humidity",
+        "High elevation, low temperature, high humidity",
       ],
-      answer: 3,
+      answer: 1,
       explanation:
         "High, hot and humid all reduce air density. Many pilots forget humidity: moist air is lighter than dry air, so it raises density altitude too.",
       subject: "Performance",
@@ -333,8 +390,8 @@ export const aerodynamics: Module = {
       id: "vfr.aerodynamics.q8",
       kind: "mc",
       prompt: "How does maneuvering speed (VA) change as gross weight decreases?",
-      choices: ["It increases", "It decreases", "It stays the same", "It is unrelated to weight"],
-      answer: 1,
+      choices: ["It increases", "It is unrelated to weight", "It stays the same", "It decreases"],
+      answer: 3,
       explanation:
         "A lighter airplane reaches the limit load factor at a lower speed, because it needs less lift to produce the same G. So VA decreases as weight decreases — the opposite of what many pilots assume.",
       subject: "Aerodynamics",

@@ -1,5 +1,20 @@
 import type { Module } from "../types";
-import { caution, check, diagram, exercise, h, info, link, ol, p, practice, q, table, tip, ul } from "../builders";
+import {
+  caution,
+  check,
+  diagram,
+  exercise,
+  h,
+  info,
+  link,
+  ol,
+  p,
+  practice,
+  q,
+  table,
+  tip,
+  ul,
+} from "../builders";
 
 export const pilotage: Module = {
   id: "pilotage",
@@ -30,10 +45,19 @@ export const pilotage: Module = {
           ["Good checkpoints", "Poor checkpoints"],
           [
             ["Large lakes and reservoirs with distinctive shapes", "Small ponds that look alike"],
-            ["Intersections of major highways and railroads", "Minor roads, especially in farm country grids"],
-            ["Towns with an airport, river or distinctive layout", "Small towns that look the same"],
+            [
+              "Intersections of major highways and railroads",
+              "Minor roads, especially in farm country grids",
+            ],
+            [
+              "Towns with an airport, river or distinctive layout",
+              "Small towns that look the same",
+            ],
             ["Prominent bends in rivers, dams and bridges", "Power lines alone (hard to see)"],
-            ["Tall, lighted obstacles and mountain peaks", "Features that change with season (snow, flooding)"],
+            [
+              "Tall, lighted obstacles and mountain peaks",
+              "Features that change with season (snow, flooding)",
+            ],
           ],
         ),
         tip(
@@ -65,7 +89,11 @@ export const pilotage: Module = {
           "Head down, not out",
           "Folding charts and studying a tablet can consume your attention. Plan and fold your chart before flight, and keep scanning for traffic between checkpoint checks.",
         ),
-        practice("/simulator?scenario=vfr-xc", "VFR cross-country", "Fly a short leg using only landmarks and your chart."),
+        practice(
+          "/simulator?scenario=vfr-xc",
+          "VFR cross-country",
+          "Fly a short leg using only landmarks and your chart.",
+        ),
       ],
     },
     {
@@ -96,7 +124,8 @@ export const pilotage: Module = {
         check({
           id: "vfr.pilotage.2.k1",
           kind: "scenario",
-          context: "You are northeast of a VOR and want to fly directly to it along the 045° radial.",
+          context:
+            "You are northeast of a VOR and want to fly directly to it along the 045° radial.",
           prompt: "What should you set in the OBS to get a TO indication with a centered needle?",
           choices: ["045", "225", "135", "315"],
           answer: 1,
@@ -124,7 +153,10 @@ export const pilotage: Module = {
         table(
           ["Step", "Action"],
           [
-            ["Climb", "Higher altitude improves visibility of landmarks and radio/radar reception (stay clear of clouds and airspace)"],
+            [
+              "Climb",
+              "Higher altitude improves visibility of landmarks and radio/radar reception (stay clear of clouds and airspace)",
+            ],
             ["Communicate", "Call ATC, Flight Service or 121.5 MHz; ask for help"],
             ["Confess", "Admit you are lost or unsure of your position"],
             ["Comply", "Follow the instructions you are given"],
@@ -138,7 +170,8 @@ export const pilotage: Module = {
         check({
           id: "vfr.pilotage.2.k2",
           kind: "tf",
-          prompt: "True or false: when diverting, you should first compute exact heading, distance and fuel, then turn toward the alternate.",
+          prompt:
+            "True or false: when diverting, you should first compute exact heading, distance and fuel, then turn toward the alternate.",
           choices: ["True", "False"],
           answer: 1,
           explanation:
@@ -150,12 +183,36 @@ export const pilotage: Module = {
     },
   ],
   flashcards: [
-    { id: "vfr.pilotage.fc1", front: "Pilotage", back: "Navigation by visual reference to landmarks compared with a chart." },
-    { id: "vfr.pilotage.fc2", front: "VOR radial", back: "A magnetic bearing extending outbound FROM the station." },
-    { id: "vfr.pilotage.fc3", front: "VOR CDI full-scale deflection", back: "10° or more off the selected course (2° per dot on a 5-dot scale)." },
-    { id: "vfr.pilotage.fc4", front: "Lost procedure (5 Cs)", back: "Climb, Communicate, Confess, Comply, Conserve." },
-    { id: "vfr.pilotage.fc5", front: "Diversion rule", back: "Turn toward the alternate promptly on an estimated heading, then refine." },
-    { id: "vfr.pilotage.fc6", front: "Chart orientation for pilotage", back: "Hold the chart aligned with the direction of flight; navigate chart-to-ground." },
+    {
+      id: "vfr.pilotage.fc1",
+      front: "Pilotage",
+      back: "Navigation by visual reference to landmarks compared with a chart.",
+    },
+    {
+      id: "vfr.pilotage.fc2",
+      front: "VOR radial",
+      back: "A magnetic bearing extending outbound FROM the station.",
+    },
+    {
+      id: "vfr.pilotage.fc3",
+      front: "VOR CDI full-scale deflection",
+      back: "10° or more off the selected course (2° per dot on a 5-dot scale).",
+    },
+    {
+      id: "vfr.pilotage.fc4",
+      front: "Lost procedure (5 Cs)",
+      back: "Climb, Communicate, Confess, Comply, Conserve.",
+    },
+    {
+      id: "vfr.pilotage.fc5",
+      front: "Diversion rule",
+      back: "Turn toward the alternate promptly on an estimated heading, then refine.",
+    },
+    {
+      id: "vfr.pilotage.fc6",
+      front: "Chart orientation for pilotage",
+      back: "Hold the chart aligned with the direction of flight; navigate chart-to-ground.",
+    },
   ],
   quiz: [
     q({
@@ -163,8 +220,13 @@ export const pilotage: Module = {
       kind: "scenario",
       context: "The OBS is set to 090. The CDI needle is centered and the flag shows FROM.",
       prompt: "Where is the airplane relative to the VOR?",
-      choices: ["West of the station", "East of the station", "North of the station", "South of the station"],
-      answer: 1,
+      choices: [
+        "East of the station",
+        "West of the station",
+        "North of the station",
+        "South of the station",
+      ],
+      answer: 0,
       explanation:
         "A centered needle with a FROM flag on 090 means you are on the 090 radial — east of the station. Heading does not matter. West would correspond to a TO indication on 090.",
       subject: "Navigation",
@@ -205,11 +267,11 @@ export const pilotage: Module = {
       prompt: "What is the best course of action?",
       choices: [
         "Continue and descend below the clouds to stay VFR",
-        "Turn toward the alternate immediately, then refine heading and inform ATC or Flight Service",
-        "Circle until the weather improves",
         "Climb above the clouds and continue VFR on top",
+        "Circle until the weather improves",
+        "Turn toward the alternate immediately, then refine heading and inform ATC or Flight Service",
       ],
-      answer: 1,
+      answer: 3,
       explanation:
         "Divert promptly while conditions are still good. Descending under lowering clouds ('scud running') is a leading cause of VFR-into-IMC accidents, and VFR on top risks being trapped above a cloud layer.",
       subject: "ADM",
@@ -218,7 +280,8 @@ export const pilotage: Module = {
     q({
       id: "vfr.pilotage.q5",
       kind: "mc",
-      prompt: "When unsure of your position, why is climbing (when weather and airspace allow) usually helpful?",
+      prompt:
+        "When unsure of your position, why is climbing (when weather and airspace allow) usually helpful?",
       choices: [
         "It saves fuel at all altitudes",
         "It improves the range of radio communication, radar coverage and visibility of landmarks",

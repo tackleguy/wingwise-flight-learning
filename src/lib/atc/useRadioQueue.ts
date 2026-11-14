@@ -34,6 +34,7 @@ const lineId = () => `l${Date.now().toString(36)}${(lineSeq++).toString(36)}`;
 
 export function useRadioQueue(opts: RadioQueueOptions) {
   const [lines, setLines] = useState<RadioLine[]>([]);
+  const linesRef = useRef<RadioLine[]>([]);
   const [receiving, setReceiving] = useState<{ station: string; from: "atc" | "traffic" } | null>(null);
   const [active, setActive] = useState(false);
   const queue = useRef<QueueItem[]>([]);
@@ -49,7 +50,8 @@ export function useRadioQueue(opts: RadioQueueOptions) {
   const append = useCallback((l: Omit<RadioLine, "id" | "t">) => {
     if (!startedAt.current) startedAt.current = Date.now();
     const line: RadioLine = { ...l, id: lineId(), t: Date.now() - startedAt.current };
-    setLines((prev) => [...prev, line]);
+    linesRef.current = [...linesRef.current, line];
+    setLines(linesRef.current);
   }, []);
 
   const run = useCallback(async () => {
@@ -117,6 +119,7 @@ export function useRadioQueue(opts: RadioQueueOptions) {
     lastAtcEnd.current = null;
     startedAt.current = Date.now();
     stopSpeaking();
+    linesRef.current = [];
     setLines([]);
     setReceiving(null);
     setActive(false);
@@ -159,5 +162,7 @@ export function useRadioQueue(opts: RadioQueueOptions) {
     /** Epoch ms when the last ATC transmission ended (null if none yet). */
     lastAtcEnd: () => lastAtcEnd.current,
     startedAt: () => startedAt.current,
+    /** Synchronous snapshot of the transcript (includes lines not yet rendered). */
+    getLines: () => linesRef.current,
   };
 }

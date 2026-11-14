@@ -2,7 +2,15 @@ import type { Course, Lesson, Module } from "./types";
 import { VFR_COURSE } from "./vfr";
 import { IFR_COURSE } from "./ifr";
 
-export type { Course, Lesson, Module, LessonBlock, QuizQuestion, Flashcard, CalloutTone } from "./types";
+export type {
+  Course,
+  Lesson,
+  Module,
+  LessonBlock,
+  QuizQuestion,
+  Flashcard,
+  CalloutTone,
+} from "./types";
 export { VFR_COURSE } from "./vfr";
 export { IFR_COURSE } from "./ifr";
 
@@ -16,7 +24,9 @@ export function getModule(courseId: string, moduleId: string): Module | undefine
   return getCourse(courseId)?.modules.find((m) => m.id === moduleId);
 }
 
-export function allLessons(courseId?: string): { course: Course; module: Module; lesson: Lesson }[] {
+export function allLessons(
+  courseId?: string,
+): { course: Course; module: Module; lesson: Lesson }[] {
   const courses = courseId === undefined ? COURSES : COURSES.filter((c) => c.id === courseId);
   const out: { course: Course; module: Module; lesson: Lesson }[] = [];
   for (const course of courses) {
