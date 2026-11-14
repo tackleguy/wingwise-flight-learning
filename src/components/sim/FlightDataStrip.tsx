@@ -65,10 +65,7 @@ export function FlightDataStrip({ className }: { className?: string }) {
       <Cell label="HDG" value={String(hdg === 0 ? 360 : hdg).padStart(3, "0")} unit="°" />
       <Cell label="PWR" value={String(Math.round(s.controls.throttle * 100))} unit="%" />
       <Cell label="FLAP" value={`${Math.round(a.flapsDeg)}°`} />
-      <Cell
-        label="TRIM"
-        value={`${s.controls.trim >= 0 ? "+" : ""}${Math.round(s.controls.trim * 100)}`}
-      />
+
       {a.onGround ? (
         <Cell
           label="BRK"

@@ -140,7 +140,7 @@ function SimulatorPage() {
         eyebrow="Fly"
         icon={PlaneTakeoff}
         title="Flight Simulator"
-        description="A physics-based 3D simulator: choose free flight or a structured training scenario. Every flight is scored against measurable objectives and saved to your logbook."
+        description="Pick a scenario, fly it, get scored."
       />
       {search.checkride ? (
         <Notice className="mb-4" title="Checkride in progress.">
@@ -166,12 +166,12 @@ function SimulatorPage() {
             });
         }}
       />
-      <p className="mt-6 text-[11px] leading-relaxed text-muted-foreground">
+      <Notice className="mt-6" tone="caution" title="Simplified, educational flight model.">
         Flight model: simplified point-mass aerodynamics with angle-of-attack based lift, stall,
         propeller/jet thrust, density altitude, wind, gusts and turbulence. Aircraft numbers are
         educational approximations — not POH/AFM data. Scenery, terrain and approach procedures are
         synthetic training representations and must not be used for real-world navigation.
-      </p>
+      </Notice>
     </Page>
   );
 }

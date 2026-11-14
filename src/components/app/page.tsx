@@ -211,31 +211,47 @@ export function EmptyState({
 }
 
 /** Notice used to clearly label simulated / educational / non-official content. */
+/**
+ * Quiet notice used to label simulated / educational / non-official content.
+ * Disclaimers (tone "caution" with a title) show only their headline; the full text is one
+ * click away under "Details", so pages stay uncluttered without hiding the key message.
+ */
 export function Notice({
   children,
   tone = "info",
   title,
   className,
+  open,
 }: {
   children: ReactNode;
   tone?: "info" | "caution";
   title?: string;
   className?: string;
+  /** Force the details open (or closed). Defaults: caution+title → collapsed. */
+  open?: boolean;
 }) {
   const Icon = tone === "caution" ? AlertTriangle : Info;
+  const iconCls = tone === "caution" ? "text-caution" : "text-primary";
+  const collapsible = !!title && (open === undefined ? tone === "caution" : !open);
+  if (collapsible) {
+    return (
+      <details className={cn("group text-xs text-muted-foreground", className)}>
+        <summary className="flex cursor-pointer list-none items-center gap-2 py-1 select-none [&::-webkit-details-marker]:hidden">
+          <Icon className={cn("size-3.5 shrink-0", iconCls)} />
+          <span className="font-medium text-foreground/80">{title}</span>
+          <span className="text-[11px] text-muted-foreground/80 underline-offset-2 group-open:hidden hover:underline">
+            Details
+          </span>
+        </summary>
+        <div className="mt-1 border-l border-border pl-3 leading-relaxed">{children}</div>
+      </details>
+    );
+  }
   return (
-    <div
-      className={cn(
-        "flex gap-2.5 rounded-md border px-3 py-2.5 text-xs leading-relaxed",
-        tone === "caution"
-          ? "border-caution/30 bg-caution/5 text-caution"
-          : "border-primary/25 bg-primary/5 text-primary",
-        className,
-      )}
-    >
-      <Icon className="mt-0.5 size-3.5 shrink-0" />
-      <div className="text-foreground/85">
-        {title ? <span className="font-semibold text-foreground">{title} </span> : null}
+    <div className={cn("flex gap-2 border-l-2 py-1 pl-3 text-xs leading-relaxed text-muted-foreground", tone === "caution" ? "border-caution/60" : "border-primary/50", className)}>
+      <Icon className={cn("mt-0.5 size-3.5 shrink-0", iconCls)} />
+      <div>
+        {title ? <span className="font-medium text-foreground/85">{title} </span> : null}
         {children}
       </div>
     </div>

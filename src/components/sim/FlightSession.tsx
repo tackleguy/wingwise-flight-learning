@@ -3,14 +3,12 @@ import { Link } from "@tanstack/react-router";
 import {
   CheckCircle2,
   Circle,
-  Eye,
   Flag,
   Pause,
   Play,
   RotateCcw,
   XCircle,
   Video,
-  ListChecks,
   PanelBottomClose,
   PanelBottomOpen,
 } from "lucide-react";
@@ -104,7 +102,11 @@ function ActiveFlight({
   const settings = useStore((s) => s.settings);
   const [camera, setCamera] = useState<CameraMode>("cockpit");
   const [panelOpen, setPanelOpen] = useState(true);
-  const [showObjectives, setShowObjectives] = useState(true);
+  const [showObjectives, setShowObjectives] = useState(false);
+  const [coarsePointer, setCoarsePointer] = useState(false);
+  useEffect(() => {
+    setCoarsePointer(window.matchMedia("(pointer: coarse)").matches);
+  }, []);
   const [messages, setMessages] = useState<{ id: number; text: string; level: "info" | "warn" }[]>(
     [],
   );
@@ -311,39 +313,44 @@ function ActiveFlight({
               </div>
               <button
                 onClick={() => setShowObjectives((v) => !v)}
-                className="rounded p-1 hover:bg-white/10"
-                aria-label="Toggle objectives"
+                className="rounded px-1.5 py-0.5 text-[10px] text-white/60 hover:bg-white/10 hover:text-white"
+                aria-label="Toggle objective details"
+                aria-expanded={showObjectives}
               >
-                <ListChecks className="size-4" />
+                {showObjectives ? "Less" : "Details"}
               </button>
             </div>
-            {showObjectives ? (
-              <>
-                <ul className="mt-2 space-y-1.5">
-                  {live.results.map((r) => (
-                    <li key={r.id} className="flex gap-1.5 text-[11px] leading-snug">
-                      {r.met ? (
-                        <CheckCircle2 className="mt-px size-3.5 shrink-0 text-ok" />
-                      ) : r.score > 0 ? (
-                        <Circle className="mt-px size-3.5 shrink-0 text-caution" />
-                      ) : (
-                        <Circle className="mt-px size-3.5 shrink-0 text-white/40" />
-                      )}
-                      <span>
-                        <span className={r.met ? "text-white" : "text-white/85"}>{r.text}</span>
-                        <span className="block text-white/50">{r.detail}</span>
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-                {built.instructions.length ? (
-                  <div className="mt-2 border-t border-white/10 pt-2 text-[11px] leading-relaxed text-white/75">
-                    {built.instructions.map((i, k) => (
-                      <p key={k}>{i}</p>
-                    ))}
-                  </div>
-                ) : null}
-              </>
+            <ul className="mt-2 space-y-1.5">
+              {live.results.map((r) => (
+                <li key={r.id} className="flex gap-1.5 text-[11px] leading-snug">
+                  {r.met ? (
+                    <CheckCircle2 className="mt-px size-3.5 shrink-0 text-ok" />
+                  ) : r.score > 0 ? (
+                    <Circle className="mt-px size-3.5 shrink-0 text-caution" />
+                  ) : (
+                    <Circle className="mt-px size-3.5 shrink-0 text-white/40" />
+                  )}
+                  <span>
+                    <span
+                      className={
+                        r.met ? "text-white/60 line-through decoration-white/30" : "text-white/90"
+                      }
+                    >
+                      {r.text}
+                    </span>
+                    {showObjectives ? (
+                      <span className="block text-white/50">{r.detail}</span>
+                    ) : null}
+                  </span>
+                </li>
+              ))}
+            </ul>
+            {showObjectives && built.instructions.length ? (
+              <div className="mt-2 border-t border-white/10 pt-2 text-[11px] leading-relaxed text-white/75">
+                {built.instructions.map((i, k) => (
+                  <p key={k}>{i}</p>
+                ))}
+              </div>
             ) : null}
           </div>
         </div>
@@ -377,7 +384,9 @@ function ActiveFlight({
         {settings.sim.hud ? (
           <FlightDataStrip className="absolute bottom-3 left-1/2 z-10 -translate-x-1/2" />
         ) : null}
-        <VirtualYoke virtual={virtual} className="absolute right-3 bottom-3 z-10" />
+        {coarsePointer || settings.sim.mouseYoke ? (
+          <VirtualYoke virtual={virtual} className="absolute right-3 bottom-3 z-10" />
+        ) : null}
         <PausedOverlay engine={engine} />
       </div>
 
@@ -515,11 +524,6 @@ function TopRight({
           <Flag className="size-3.5" /> End & debrief
         </Button>
       </div>
-      {camera === "cockpit" ? (
-        <p className="flex items-center gap-1 text-[10px] text-white/60">
-          <Eye className="size-3" /> Out-the-window view
-        </p>
-      ) : null}
       {snap.aircraft.crashed ? (
         <p className="flex items-center gap-1 rounded bg-warning px-2 py-1 text-xs font-bold text-white">
           <XCircle className="size-3.5" /> {snap.aircraft.crashReason}

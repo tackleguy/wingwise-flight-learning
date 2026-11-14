@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import {
   AlertTriangle,
+  ChevronRight,
   Clock,
   Cloud,
   Gauge,
@@ -22,7 +23,7 @@ import {
   type ScenarioDef,
 } from "@/sim/scenarios";
 import { useStore } from "@/lib/store";
-import { Notice, Pill } from "@/components/app/page";
+import { Pill } from "@/components/app/page";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
@@ -254,55 +255,62 @@ export function SimSetup({
                   ))}
                 </div>
               </div>
-              <div>
-                <label className="flex items-center gap-2 text-xs">
-                  <input
-                    type="checkbox"
-                    checked={customWind}
-                    onChange={(e) => setCustomWind(e.target.checked)}
-                  />{" "}
-                  Custom surface wind
-                </label>
-                {customWind ? (
-                  <div className="mt-2 grid grid-cols-2 gap-3">
-                    <div>
-                      <span className="text-[11px] text-muted-foreground">
-                        From {windDir}° true
-                      </span>
-                      <Slider
-                        min={0}
-                        max={359}
-                        step={10}
-                        value={[windDir]}
-                        onValueChange={(v) => setWindDir(v[0] ?? 0)}
-                      />
-                    </div>
-                    <div>
-                      <span className="text-[11px] text-muted-foreground">{windKt} kt</span>
-                      <Slider
-                        min={0}
-                        max={35}
-                        step={1}
-                        value={[windKt]}
-                        onValueChange={(v) => setWindKt(v[0] ?? 0)}
-                      />
-                    </div>
+              <details className="group">
+                <summary className="cursor-pointer text-xs text-muted-foreground select-none hover:text-foreground">
+                  Wind &amp; visibility
+                </summary>
+                <div className="mt-3 space-y-4">
+                  <div>
+                    <label className="flex items-center gap-2 text-xs">
+                      <input
+                        type="checkbox"
+                        checked={customWind}
+                        onChange={(e) => setCustomWind(e.target.checked)}
+                      />{" "}
+                      Custom surface wind
+                    </label>
+                    {customWind ? (
+                      <div className="mt-2 grid grid-cols-2 gap-3">
+                        <div>
+                          <span className="text-[11px] text-muted-foreground">
+                            From {windDir}° true
+                          </span>
+                          <Slider
+                            min={0}
+                            max={359}
+                            step={10}
+                            value={[windDir]}
+                            onValueChange={(v) => setWindDir(v[0] ?? 0)}
+                          />
+                        </div>
+                        <div>
+                          <span className="text-[11px] text-muted-foreground">{windKt} kt</span>
+                          <Slider
+                            min={0}
+                            max={35}
+                            step={1}
+                            value={[windKt]}
+                            onValueChange={(v) => setWindKt(v[0] ?? 0)}
+                          />
+                        </div>
+                      </div>
+                    ) : null}
                   </div>
-                ) : null}
-              </div>
-              <div>
-                <span className="label-caps">
-                  Visibility {vis === null ? "(preset)" : `${vis} SM`}
-                </span>
-                <Slider
-                  className="mt-2"
-                  min={0.5}
-                  max={30}
-                  step={0.5}
-                  value={[vis ?? 10]}
-                  onValueChange={(v) => setVis(v[0] ?? 10)}
-                />
-              </div>
+                  <div>
+                    <span className="label-caps">
+                      Visibility {vis === null ? "(preset)" : `${vis} SM`}
+                    </span>
+                    <Slider
+                      className="mt-2"
+                      min={0.5}
+                      max={30}
+                      step={0.5}
+                      value={[vis ?? 10]}
+                      onValueChange={(v) => setVis(v[0] ?? 10)}
+                    />
+                  </div>
+                </div>
+              </details>
             </>
           ) : null}
 
@@ -353,28 +361,24 @@ export function SimSetup({
             </div>
           ) : null}
 
-          <div>
-            <p className="label-caps mb-1.5 flex items-center gap-1">
-              <Gauge className="size-3" /> Briefing
-            </p>
-            <ol className="list-decimal space-y-1.5 pl-4 text-xs leading-relaxed text-foreground/85">
+          <details className="group" open={scenario.category !== "free"}>
+            <summary className="label-caps flex cursor-pointer items-center gap-1 select-none">
+              <ChevronRight className="size-3 transition-transform group-open:rotate-90" /> Briefing
+            </summary>
+            <ol className="mt-2 list-decimal space-y-1.5 pl-4 text-xs leading-relaxed text-foreground/85">
               {scenario.briefing.map((b, i) => (
                 <li key={i}>{b}</li>
               ))}
             </ol>
-          </div>
-          <div className="space-y-1.5">
-            {scenario.safety.map((s, i) => (
-              <div key={i} className="flex gap-2 text-[11px] leading-relaxed text-caution/90">
-                <ShieldCheck className="mt-0.5 size-3.5 shrink-0" />
-                {s}
-              </div>
-            ))}
-          </div>
-          <Notice tone="caution" title="Desktop recommended.">
-            Fly with the keyboard (W/S pitch, A/D roll, Shift/Ctrl throttle) or the on-screen yoke.
-            A gamepad-free setup works on tablets too.
-          </Notice>
+            <div className="mt-2 space-y-1">
+              {scenario.safety.map((s, i) => (
+                <p key={i} className="flex gap-2 text-[11px] leading-relaxed text-muted-foreground">
+                  <ShieldCheck className="mt-0.5 size-3.5 shrink-0 text-caution" />
+                  {s}
+                </p>
+              ))}
+            </div>
+          </details>
         </div>
         <div className="mt-auto border-t p-4">
           <Button

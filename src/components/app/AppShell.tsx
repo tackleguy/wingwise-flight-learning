@@ -1,6 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import type { ReactNode } from "react";
-import { Plane, UserCircle2 } from "lucide-react";
+import { useEffect, useState, type ReactNode } from "react";
+import { ChevronDown, Plane, UserCircle2 } from "lucide-react";
 
 import {
   Sidebar,
@@ -46,46 +46,82 @@ function Brand() {
   );
 }
 
+const NAV_OPEN_KEY = "teachx-nav-open";
+
 function NavMenu() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const { setOpenMobile, isMobile } = useSidebar();
+  const { setOpenMobile, isMobile, state } = useSidebar();
   const resolved = navItemFor(pathname);
+  const activeGroup = NAV.find((g) => g.items.some((i) => i.to === resolved?.to))?.label;
+  // Only the current section (and Overview) start expanded; the user's choices are remembered.
+  const [manual, setManual] = useState<Record<string, boolean>>({});
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(NAV_OPEN_KEY);
+      if (raw) setManual(JSON.parse(raw) as Record<string, boolean>);
+    } catch {
+      /* ignore */
+    }
+  }, []);
+  const isOpen = (label: string) => state === "collapsed" || label === activeGroup || (manual[label] ?? label === "Overview");
+  const toggle = (label: string) => {
+    const next = { ...manual, [label]: !isOpen(label) };
+    setManual(next);
+    try {
+      window.localStorage.setItem(NAV_OPEN_KEY, JSON.stringify(next));
+    } catch {
+      /* ignore */
+    }
+  };
   return (
     <>
-      {NAV.map((group) => (
-        <SidebarGroup key={group.label} className="py-1">
-          <SidebarGroupLabel className="text-[10px] tracking-[0.16em] uppercase">
-            {group.label}
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {group.items.map((item) => {
-                const active = isActive(pathname, item.to) || resolved?.to === item.to;
-                return (
-                  <SidebarMenuItem key={item.to}>
-                    <SidebarMenuButton asChild isActive={active} tooltip={item.label}>
-                      <Link
-                        to={item.to}
-                        onClick={() => {
-                          if (isMobile) setOpenMobile(false);
-                        }}
-                        className={
-                          active
-                            ? "relative before:absolute before:inset-y-1.5 before:left-0 before:w-0.5 before:rounded before:bg-primary"
-                            : ""
-                        }
-                      >
-                        <item.icon className={active ? "text-primary" : ""} />
-                        <span>{item.label}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      ))}
+      {NAV.map((group) => {
+        const open = isOpen(group.label);
+        return (
+          <SidebarGroup key={group.label} className="py-0.5">
+            <SidebarGroupLabel asChild className="text-[10px] tracking-[0.16em] uppercase">
+              <button
+                type="button"
+                onClick={() => toggle(group.label)}
+                aria-expanded={open}
+                className="flex w-full items-center justify-between hover:text-sidebar-foreground"
+              >
+                {group.label}
+                <ChevronDown className={open ? "size-3 transition-transform" : "size-3 -rotate-90 transition-transform"} />
+              </button>
+            </SidebarGroupLabel>
+            {open ? (
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {group.items.map((item) => {
+                    const active = isActive(pathname, item.to) || resolved?.to === item.to;
+                    return (
+                      <SidebarMenuItem key={item.to}>
+                        <SidebarMenuButton asChild isActive={active} tooltip={item.label}>
+                          <Link
+                            to={item.to}
+                            onClick={() => {
+                              if (isMobile) setOpenMobile(false);
+                            }}
+                            className={
+                              active
+                                ? "relative before:absolute before:inset-y-1.5 before:left-0 before:w-0.5 before:rounded before:bg-primary"
+                                : ""
+                            }
+                          >
+                            <item.icon className={active ? "text-primary" : ""} />
+                            <span>{item.label}</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    );
+                  })}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            ) : null}
+          </SidebarGroup>
+        );
+      })}
     </>
   );
 }
@@ -132,9 +168,6 @@ function TopBar() {
         <span className="truncate text-sm font-semibold">{item?.label ?? "TeachX"}</span>
       </div>
       <div className="ml-auto flex items-center gap-3">
-        <span className="hidden items-center gap-1.5 rounded border border-caution/30 bg-caution/10 px-2 py-0.5 text-[10px] font-semibold tracking-wider text-caution uppercase lg:inline-flex">
-          Simulation · Training use only
-        </span>
         <ProfileChip />
       </div>
     </header>
@@ -154,8 +187,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </SidebarContent>
         <SidebarFooter className="border-t border-sidebar-border">
           <p className="px-2 text-[10px] leading-snug text-muted-foreground group-data-[collapsible=icon]:hidden">
-            Educational simulator. Not a substitute for a certificated flight instructor, approved
-            aircraft documents or current FAA publications.
+            Training simulator — not for real-world flight or navigation.
           </p>
         </SidebarFooter>
         <SidebarRail />
