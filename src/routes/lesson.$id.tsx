@@ -24,7 +24,7 @@ function LessonPage() {
   const [hearts, setHearts] = useState(3);
   const [correct, setCorrect] = useState(0);
   const finished = i >= lesson.questions.length;
-  const q = lesson.questions[i];
+  const q = lesson.questions[i]!;
 
   if (hearts <= 0) return <End title="Out of fuel! 💔" sub="You ran out of hearts. Try again." btn="Retry" onClick={() => location.reload()} />;
   if (finished) return <End title="Lesson complete! 🎉" sub={`${correct}/${lesson.questions.length} correct · +${correct * 10} XP`} btn="Continue"
