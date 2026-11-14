@@ -70,30 +70,33 @@
   --color-amber: var(--amber);
 }
 :root {
-  --radius: 0.5rem;
-  --background: oklch(0.17 0.03 255);
-  --foreground: oklch(0.96 0.01 240);
-  --card: oklch(0.22 0.035 255);
-  --card-foreground: oklch(0.96 0.01 240);
-  --popover: oklch(0.22 0.035 255);
-  --popover-foreground: oklch(0.96 0.01 240);
-  --primary: oklch(0.8 0.16 75);
-  --primary-foreground: oklch(0.17 0.03 255);
-  --secondary: oklch(0.28 0.04 255);
-  --secondary-foreground: oklch(0.96 0.01 240);
-  --muted: oklch(0.26 0.03 255);
-  --muted-foreground: oklch(0.7 0.03 245);
-  --accent: oklch(0.72 0.12 210);
-  --accent-foreground: oklch(0.17 0.03 255);
-  --destructive: oklch(0.65 0.2 25);
-  --destructive-foreground: oklch(0.98 0 0);
-  --border: oklch(0.33 0.04 255);
-  --input: oklch(0.33 0.04 255);
-  --ring: oklch(0.8 0.16 75);
-  --amber: oklch(0.8 0.16 75);
+  --radius: 1rem;
+  --background: oklch(0.98 0.01 230);
+  --foreground: oklch(0.25 0.04 250);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.25 0.04 250);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.25 0.04 250);
+  --primary: oklch(0.72 0.19 145);
+  --primary-foreground: oklch(1 0 0);
+  --primary-shadow: oklch(0.58 0.17 145);
+  --secondary: oklch(0.93 0.02 230);
+  --secondary-foreground: oklch(0.3 0.04 250);
+  --muted: oklch(0.93 0.015 230);
+  --muted-foreground: oklch(0.55 0.03 250);
+  --accent: oklch(0.68 0.15 235);
+  --accent-foreground: oklch(1 0 0);
+  --destructive: oklch(0.65 0.22 25);
+  --destructive-foreground: oklch(1 0 0);
+  --border: oklch(0.88 0.02 230);
+  --input: oklch(0.88 0.02 230);
+  --ring: oklch(0.68 0.15 235);
+  --amber: oklch(0.82 0.16 80);
+  --locked: oklch(0.85 0.01 250);
 }
+@theme inline { --color-primary-shadow: var(--primary-shadow); --color-locked: var(--locked); }
+@utility btn-3d { box-shadow: 0 5px 0 var(--primary-shadow); &:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--primary-shadow); } }
 @layer base {
   * { border-color: var(--color-border); }
-  body { background-color: var(--color-background); color: var(--color-foreground); font-family: var(--font-display);
-    background-image: radial-gradient(circle at 80% -10%, color-mix(in oklab, var(--accent) 18%, transparent), transparent 50%); min-height: 100vh; }
+  body { background-color: var(--color-background); color: var(--color-foreground); font-family: var(--font-display); }
 }
