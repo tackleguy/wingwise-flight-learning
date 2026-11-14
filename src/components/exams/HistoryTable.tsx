@@ -11,8 +11,12 @@ export function HistoryTable({ rows }: { rows: ExamAttempt[] }) {
             <th className="px-3 py-2 text-xs font-medium text-muted-foreground">Date</th>
             <th className="px-3 py-2 text-xs font-medium text-muted-foreground">Exam</th>
             <th className="px-3 py-2 text-xs font-medium text-muted-foreground">Mode</th>
-            <th className="px-3 py-2 text-xs font-medium text-muted-foreground text-right">Score</th>
-            <th className="px-3 py-2 text-xs font-medium text-muted-foreground text-right">Correct</th>
+            <th className="px-3 py-2 text-xs font-medium text-muted-foreground text-right">
+              Score
+            </th>
+            <th className="px-3 py-2 text-xs font-medium text-muted-foreground text-right">
+              Correct
+            </th>
             <th className="px-3 py-2 text-xs font-medium text-muted-foreground text-right">Time</th>
           </tr>
         </thead>
