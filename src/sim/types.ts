@@ -96,6 +96,8 @@ export interface AircraftState {
   oilTempF: number;
   manifoldInHg: number;
   carbIce: number;
+  /** Engine-driven vacuum pump suction, inHg (normal ≈ 4.5–5.5) */
+  vacuumInHg: number;
 
   flapsDeg: number;
   /** 0 = up, 1 = down & locked */

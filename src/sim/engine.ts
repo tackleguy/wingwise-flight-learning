@@ -42,6 +42,7 @@ import {
   windAt,
 } from "./environment";
 import { computeNav, type TrainingNdb } from "./navigation";
+import { calibratedAirspeedKt, SteamInstruments, type InstrumentInputs } from "./instruments";
 import type {
   AircraftState,
   AutopilotState,
@@ -153,7 +154,7 @@ export class SimEngine {
 
   // instrument memory for failures
   private frozen = { ias: 0, alt: 0, pitch: 0, bank: 0, hdg: 0, staticAlt: 0, pitotAlt: 0 };
-  private compass = 0;
+  private inst = new SteamInstruments();
   private filteredSlip = 0;
   private filteredVsi = 0;
   private gustPhase = Math.random() * 100;
@@ -175,7 +176,7 @@ export class SimEngine {
     this.radios = { ...defaultRadios(), ...(opts.radios ?? {}) };
     this.ac = this.initialAircraft(opts.start);
     this.applyStartControls(opts.start);
-    this.compass = norm360(this.ac.heading - this.magVar);
+    this.inst.reset(this.instrumentInputs());
     this.snapshot = this.buildSnapshot();
   }
 
@@ -227,6 +228,7 @@ export class SimEngine {
       oilTempF: s.engineRunning ? 160 : 70,
       manifoldInHg: 29.9,
       carbIce: 0,
+      vacuumInHg: s.engineRunning ? 5 : 0,
       flapsDeg: p.flapDetents[s.flapIndex ?? 0] ?? 0,
       gearPosition: s.gearDown === false && p.retractableGear ? 0 : 1,
       busVolts: 28,
@@ -645,6 +647,29 @@ export class SimEngine {
   }
 
   /** Move the aircraft (e.g. scenario reset). */
+  private instrumentInputs(vacuumPower = 1): InstrumentInputs {
+    const a = this.ac;
+    return {
+      pitch: a.pitch,
+      bank: a.bank,
+      headingMag: norm360(a.heading - this.magVar),
+      rollRate: a.rollRate,
+      turnRate: a.turnRate,
+      slip: a.slip,
+      tasKt: a.tasKt,
+      onGround: a.onGround,
+      vacuumPower,
+      electricPower: this.controls.masterBattery ? clamp((a.busVolts - 18) / 6, 0, 1) : 0,
+      dipDeg: 61,
+    };
+  }
+
+  /** Re-align the heading indicator with the magnetic compass (corrects gyro precession). */
+  syncHeadingIndicator() {
+    this.inst.syncHeadingIndicator();
+    this.publish();
+  }
+
   reposition(s: StartState) {
     const weight = this.ac.weightLb;
     this.ac = this.initialAircraft(s);
@@ -653,6 +678,7 @@ export class SimEngine {
     this.ap = { ...INITIAL_AP };
     this.apInt = { ...INITIAL_AP_INTERNAL };
     this.failures = { ...NO_FAILURES };
+    this.inst.reset(this.instrumentInputs());
     this.publish();
   }
 
@@ -858,7 +884,9 @@ export class SimEngine {
     }
 
     // airspeeds
-    a.iasKt = a.tasKt * Math.sqrt(sigma);
+    // Indicated (calibrated) airspeed from impact pressure — compressibility matters for jets.
+    const pressureRatio = Math.pow(Math.max(0.05, 1 - 6.8756e-6 * pa), 5.2559);
+    a.iasKt = calibratedAirspeedKt(a.tasKt, speedOfSoundKt(a.oatC), pressureRatio);
     a.mach = a.tasKt / speedOfSoundKt(a.oatC);
     a.overspeed = a.iasKt > p.v.ne;
     if (a.overspeed && !this.overspeedNotified) {
@@ -882,6 +910,12 @@ export class SimEngine {
       if (!this.gearHornNotified) this.emit("gear-warning", "GEAR UP — landing gear not down");
       this.gearHornNotified = true;
     } else this.gearHornNotified = false;
+
+    // Instruments: engine-driven vacuum feeds the attitude & heading gyros; the turn
+    // coordinator is electric. Failures degrade them gradually, as in a real aircraft.
+    const vacuumPower = a.engineRunning && !this.failures.vacuum ? clamp(a.rpm / 1100, 0, 1) : 0;
+    a.vacuumInHg = 5.2 * vacuumPower;
+    this.inst.update(dt, this.instrumentInputs(vacuumPower), this.failures.static ? 0 : a.vsFpm);
 
     // Fuel burn
     const flowGph = a.fuelFlowGph;
@@ -1233,40 +1267,47 @@ export class SimEngine {
       // Blocked pitot (and drain): ASI behaves like an altimeter.
       ias = Math.max(0, this.frozen.ias + (a.altMslFt - this.frozen.pitotAlt) * 0.015);
     }
+    // Glass (air-data computer) VSI responds almost instantly; a mechanical VSI lags.
     this.filteredVsi += (vs - this.filteredVsi) * 0.08;
     let pitch = a.pitch;
     let bank = a.bank;
     let attitudeValid = true;
     let headingValid = true;
     let hdg = norm360(a.heading - this.magVar);
-    if ((f.vacuum && !glass) || (f.ahrs && glass) || (glass && !avionicsPowered)) {
-      attitudeValid = false;
-      headingValid = false;
-      // Gyros spin down: attitude slowly tips over, heading freezes/drifts.
-      const t = a.simTimeSec;
-      this.frozen.pitch += (smoothNoise(t * 0.05, 7) * 12 - this.frozen.pitch) * 0.002;
-      this.frozen.bank += (smoothNoise(t * 0.04, 9) * 35 - this.frozen.bank) * 0.002;
-      this.frozen.hdg = norm360(this.frozen.hdg + 0.02);
-      pitch = this.frozen.pitch;
-      bank = this.frozen.bank;
-      hdg = this.frozen.hdg;
+    let turnRate = a.turnRate;
+    let slip = a.slip;
+    let vsOut = f.static ? 0 : this.filteredVsi;
+    if (glass) {
+      // AHRS: accurate until it fails, then the display shows red X's.
+      if (f.ahrs || !avionicsPowered) {
+        attitudeValid = false;
+        headingValid = false;
+        pitch = this.frozen.pitch;
+        bank = this.frozen.bank;
+        hdg = this.frozen.hdg;
+      }
+      if (!avionicsPowered) turnRate = 0;
+    } else {
+      // Steam gauges: vacuum gyros wind down gradually after a failure — no warning flag.
+      pitch = this.inst.aiPitch;
+      bank = this.inst.aiRoll;
+      hdg = this.inst.headingIndicator;
+      attitudeValid = this.inst.aiGyro.spin > 0.2;
+      headingValid = this.inst.hiGyro.spin > 0.2;
+      turnRate = this.inst.tcRate * 3;
+      slip = this.inst.ball;
+      vsOut = f.static ? 0 : this.inst.vsi;
     }
-    // Magnetic compass: northerly turning error & lag.
-    const hdgMag = norm360(a.heading - this.magVar);
-    const turnErr = -a.bank * 0.6 * Math.cos(toRad(hdgMag));
-    const target = norm360(hdgMag + (a.onGround ? 0 : turnErr));
-    this.compass = norm360(this.compass + norm180(target - this.compass) * 0.06);
-    const turnRate = this.controls.masterBattery && a.busVolts > 18 ? a.turnRate : 0;
     return {
       iasKt: Math.max(0, ias),
       altFt: alt,
-      vsFpm: f.static ? 0 : this.filteredVsi,
+      vsFpm: vsOut,
       headingMag: hdg,
-      compass: this.compass,
+      compass: this.inst.compass,
       pitch,
       bank,
       turnRate,
-      slip: a.slip,
+      slip,
       attitudeValid,
       headingValid,
       airDataValid: !(glass && !avionicsPowered),

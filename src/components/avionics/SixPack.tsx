@@ -519,19 +519,29 @@ export function HeadingIndicator({ className }: GaugeProps) {
       explainId="hi"
       className={className}
       controls={
-        <div className="absolute -right-1 -bottom-1">
-          <Knob
-            size="sm"
-            label="Heading bug"
-            caption=""
-            valueNow={bug}
-            valueMin={0}
-            valueMax={359}
-            valueText={`Heading bug ${pad3(bug)}`}
-            onStep={(d, big) => stepHeadingBug(engine, d, big)}
-            onPush={() => syncHeadingBug(engine)}
-          />
-        </div>
+        <>
+          <button
+            type="button"
+            onClick={() => engine.syncHeadingIndicator()}
+            title="Gyros precess (drift) over time. Every ~15 minutes in level, unaccelerated flight, re-align the heading indicator with the magnetic compass."
+            className="absolute -bottom-1 -left-1 rounded border border-white/20 bg-black/70 px-1.5 py-0.5 font-mono text-[9px] font-semibold tracking-wider text-white/80 hover:border-cyan hover:text-cyan"
+          >
+            SYNC
+          </button>
+          <div className="absolute -right-1 -bottom-1">
+            <Knob
+              size="sm"
+              label="Heading bug"
+              caption=""
+              valueNow={bug}
+              valueMin={0}
+              valueMax={359}
+              valueText={`Heading bug ${pad3(bug)}`}
+              onStep={(d, big) => stepHeadingBug(engine, d, big)}
+              onPush={() => syncHeadingBug(engine)}
+            />
+          </div>
+        </>
       }
     >
       <svg
