@@ -2,9 +2,9 @@
  * Moving map shared by the MFD and the TX-750 Navigator: aircraft symbol, flight plan
  * (active leg magenta), airports, VORs, relative terrain, simulated weather and traffic.
  */
-import { memo, useEffect, useId, useRef } from "react";
+import { memo, useEffect, useId, useRef, useState } from "react";
 import { AIRPORTS, NAVAIDS } from "@/lib/data/airports";
-import { distanceNm, norm360, toRad } from "@/lib/geo";
+import { clamp, distanceNm, norm360, toRad } from "@/lib/geo";
 import { cn } from "@/lib/utils";
 import {
   precipitationCells,
@@ -22,7 +22,10 @@ export const MAP_RANGES = [2, 5, 10, 15, 20, 30, 50, 100] as const;
 
 export function nextRange(range: number, dir: 1 | -1): number {
   const i = MAP_RANGES.findIndex((r) => r >= range);
-  const idx = Math.min(MAP_RANGES.length - 1, Math.max(0, (i < 0 ? MAP_RANGES.length - 1 : i) + dir));
+  const idx = Math.min(
+    MAP_RANGES.length - 1,
+    Math.max(0, (i < 0 ? MAP_RANGES.length - 1 : i) + dir),
+  );
   return MAP_RANGES[idx]!;
 }
 
@@ -48,7 +51,13 @@ export interface MovingMapProps {
 
 const TERRAIN_COLORS = { red: "#c8352b", yellow: "#d4a91c" } as const;
 
-const TerrainLayer = memo(function TerrainLayer({ grid, altBucket }: { grid: TerrainGrid; altBucket: number }) {
+const TerrainLayer = memo(function TerrainLayer({
+  grid,
+  altBucket,
+}: {
+  grid: TerrainGrid;
+  altBucket: number;
+}) {
   const c = grid.cellNm * 1.04;
   return (
     <g>
@@ -63,15 +72,51 @@ const TerrainLayer = memo(function TerrainLayer({ grid, altBucket }: { grid: Ter
           op = Math.min(0.6, 0.18 + cell.elev / 4000);
         }
         if (!fill) return null;
-        return <rect key={i} x={cell.e - c / 2} y={-cell.n - c / 2} width={c} height={c} fill={fill} opacity={op} />;
+        return (
+          <rect
+            key={i}
+            x={cell.e - c / 2}
+            y={-cell.n - c / 2}
+            width={c}
+            height={c}
+            fill={fill}
+            opacity={op}
+          />
+        );
       })}
     </g>
   );
 });
 
-export function MovingMap({ rangeNm, orientation, layers, width = 800, height = 600, fill, onZoom, className }: MovingMapProps) {
+export function MovingMap({
+  rangeNm,
+  orientation,
+  layers,
+  width: widthProp = 800,
+  height: heightProp = 600,
+  fill,
+  onZoom,
+  className,
+}: MovingMapProps) {
   const s = useSimSnapshot();
   const ref = useRef<SVGSVGElement>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const [dims, setDims] = useState<{ w: number; h: number } | null>(null);
+  useEffect(() => {
+    if (!fill) return;
+    const el = wrapRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver((entries) => {
+      const r = entries[0]?.contentRect;
+      if (r && r.width > 10 && r.height > 10)
+        setDims({ w: Math.round(r.width), h: Math.round(r.height) });
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [fill]);
+  // When filling a box, use its real pixel size as the viewBox so nothing is cropped.
+  const width = fill && dims ? dims.w : widthProp;
+  const height = fill && dims ? dims.h : heightProp;
   const clipId = `tx-map-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const zoomRef = useRef(onZoom);
   zoomRef.current = onZoom;
@@ -97,7 +142,7 @@ export function MovingMap({ rangeNm, orientation, layers, width = 800, height = 
   const scale = (cy - 24) / rangeNm;
   const P: MapProjection = { scale, cx, cy, lat0: a.lat, lon0: a.lon, rot };
   const pr = (lat: number, lon: number) => project(P, lat, lon);
-  const fs = width / 60;
+  const fs = fill && dims ? clamp(width / 55, 10.5, 14) : width / 60;
   const view = rangeNm * 1.7;
 
   // Terrain (cached grid, memoized layer)
@@ -115,15 +160,24 @@ export function MovingMap({ rangeNm, orientation, layers, width = 800, height = 
   const dto = s.gps.directTo;
   const traffic = L.traffic ? syntheticTraffic(a.simTimeSec, a.lat, a.lon) : [];
   const anyTa = traffic.some((t) => t.ta);
-  const wx = L.weather && s.weather.precipitation !== "none" ? precipitationCells(a.lat, a.lon, rangeNm, s.weather.turbulence) : [];
+  const wx =
+    L.weather && s.weather.precipitation !== "none"
+      ? precipitationCells(a.lat, a.lon, rangeNm, s.weather.turbulence)
+      : [];
   const ringR = (rangeNm / 2) * scale;
+  // Keep the TRAFFIC banner clear of the corner boxes on narrow maps.
+  const taY = width < 560 ? 40 : 8;
 
-  return (
+  const svg = (
     <svg
       ref={ref}
       viewBox={`0 0 ${width} ${height}`}
-      preserveAspectRatio={fill ? "xMidYMid slice" : "xMidYMid meet"}
-      className={cn("block bg-[#03060a] select-none", fill ? "h-full w-full" : "h-auto w-full", className)}
+      preserveAspectRatio={fill && !dims ? "xMidYMid slice" : "xMidYMid meet"}
+      className={cn(
+        "block bg-[#03060a] select-none",
+        fill ? "h-full w-full" : "h-auto w-full",
+        className,
+      )}
       role="img"
       aria-label={`Moving map, ${rangeNm} nautical mile range, ${trackUp ? "track up" : "north up"}`}
       fontFamily={MONO}
@@ -154,8 +208,21 @@ export function MovingMap({ rangeNm, orientation, layers, width = 800, height = 
         })}
 
         {/* range ring */}
-        <circle cx={cx} cy={cy} r={ringR} fill="none" stroke="#5b6570" strokeDasharray="6 6" strokeWidth={1.2} />
-        <text x={cx + ringR * 0.72 + 4} y={cy - ringR * 0.72 - 4} fill="#9aa3ad" fontSize={fs * 0.9}>
+        <circle
+          cx={cx}
+          cy={cy}
+          r={ringR}
+          fill="none"
+          stroke="#5b6570"
+          strokeDasharray="6 6"
+          strokeWidth={1.2}
+        />
+        <text
+          x={cx + ringR * 0.72 + 4}
+          y={cy - ringR * 0.72 - 4}
+          fill="#9aa3ad"
+          fontSize={fs * 0.9}
+        >
           {rangeNm / 2 >= 1 ? rangeNm / 2 : (rangeNm / 2).toFixed(1)}
         </text>
 
@@ -170,10 +237,23 @@ export function MovingMap({ rangeNm, orientation, layers, width = 800, height = 
                 ? ap.runways.map((r) => {
                     const t1 = pr(r.ends[0].threshold.lat, r.ends[0].threshold.lon);
                     const t2 = pr(r.ends[1].threshold.lat, r.ends[1].threshold.lon);
-                    return <line key={r.name} x1={t1.x} y1={t1.y} x2={t2.x} y2={t2.y} stroke="#c9d1da" strokeWidth={Math.max(2, (r.widthFt / 6076) * scale)} strokeLinecap="butt" />;
+                    return (
+                      <line
+                        key={r.name}
+                        x1={t1.x}
+                        y1={t1.y}
+                        x2={t2.x}
+                        y2={t2.y}
+                        stroke="#c9d1da"
+                        strokeWidth={Math.max(2, (r.widthFt / 6076) * scale)}
+                        strokeLinecap="butt"
+                      />
+                    );
                   })
                 : null}
-              {rangeNm > 15 ? <circle cx={p.x} cy={p.y} r={6} fill="none" stroke={col} strokeWidth={2.5} /> : null}
+              {rangeNm > 15 ? (
+                <circle cx={p.x} cy={p.y} r={6} fill="none" stroke={col} strokeWidth={2.5} />
+              ) : null}
               <text x={p.x + 9} y={p.y - 8} fill={col} fontSize={fs} fontWeight={600}>
                 {ap.icao}
               </text>
@@ -187,7 +267,11 @@ export function MovingMap({ rangeNm, orientation, layers, width = 800, height = 
           if (distanceNm(a.lat, a.lon, n.lat, n.lon) > view) return null;
           const p = pr(n.lat, n.lon);
           const r = 8;
-          const pts = Array.from({ length: 6 }, (_, k) => `${p.x + r * Math.cos((k * Math.PI) / 3)},${p.y + r * Math.sin((k * Math.PI) / 3)}`).join(" ");
+          const pts = Array.from(
+            { length: 6 },
+            (_, k) =>
+              `${p.x + r * Math.cos((k * Math.PI) / 3)},${p.y + r * Math.sin((k * Math.PI) / 3)}`,
+          ).join(" ");
           return (
             <g key={`${n.id}${n.lat}`}>
               <polygon points={pts} fill="none" stroke="#3fd0c9" strokeWidth={2} />
@@ -225,27 +309,35 @@ export function MovingMap({ rangeNm, orientation, layers, width = 800, height = 
           const isTo = dto ? false : i === active;
           return (
             <g key={`wp${i}`}>
-              <path d={`M ${p.x} ${p.y - 8} L ${p.x + 3} ${p.y - 3} L ${p.x + 8} ${p.y} L ${p.x + 3} ${p.y + 3} L ${p.x} ${p.y + 8} L ${p.x - 3} ${p.y + 3} L ${p.x - 8} ${p.y} L ${p.x - 3} ${p.y - 3} Z`} fill={isTo ? "var(--magenta)" : "#f1f3f5"} />
-              <text x={p.x + 10} y={p.y + 16} fill={isTo ? "var(--magenta)" : "#f1f3f5"} fontSize={fs * 0.92}>
+              <path
+                d={`M ${p.x} ${p.y - 8} L ${p.x + 3} ${p.y - 3} L ${p.x + 8} ${p.y} L ${p.x + 3} ${p.y + 3} L ${p.x} ${p.y + 8} L ${p.x - 3} ${p.y + 3} L ${p.x - 8} ${p.y} L ${p.x - 3} ${p.y - 3} Z`}
+                fill={isTo ? "var(--magenta)" : "#f1f3f5"}
+              />
+              <text
+                x={p.x + 10}
+                y={p.y + 16}
+                fill={isTo ? "var(--magenta)" : "#f1f3f5"}
+                fontSize={fs * 0.92}
+              >
                 {w.id}
                 {w.altFt !== undefined && w.kind === "fix" ? ` ${w.altFt}` : ""}
               </text>
             </g>
           );
         })}
-        {dto ? (
-          (() => {
-            const p = pr(dto.lat, dto.lon);
-            return (
-              <g>
-                <circle cx={p.x} cy={p.y} r={7} fill="var(--magenta)" />
-                <text x={p.x + 10} y={p.y + 16} fill="var(--magenta)" fontSize={fs}>
-                  {dto.id}
-                </text>
-              </g>
-            );
-          })()
-        ) : null}
+        {dto
+          ? (() => {
+              const p = pr(dto.lat, dto.lon);
+              return (
+                <g>
+                  <circle cx={p.x} cy={p.y} r={7} fill="var(--magenta)" />
+                  <text x={p.x + 10} y={p.y + 16} fill="var(--magenta)" fontSize={fs}>
+                    {dto.id}
+                  </text>
+                </g>
+              );
+            })()
+          : null}
 
         {/* traffic */}
         {traffic.map((t) => {
@@ -257,9 +349,20 @@ export function MovingMap({ rangeNm, orientation, layers, width = 800, height = 
               {t.ta ? (
                 <circle cx={p.x} cy={p.y} r={8} fill={col} />
               ) : (
-                <polygon points={`${p.x},${p.y - 9} ${p.x + 7},${p.y} ${p.x},${p.y + 9} ${p.x - 7},${p.y}`} fill={t.proximate ? col : "none"} stroke={col} strokeWidth={2} />
+                <polygon
+                  points={`${p.x},${p.y - 9} ${p.x + 7},${p.y} ${p.x},${p.y + 9} ${p.x - 7},${p.y}`}
+                  fill={t.proximate ? col : "none"}
+                  stroke={col}
+                  strokeWidth={2}
+                />
               )}
-              <text x={p.x} y={t.relAltFt >= 0 ? p.y - 13 : p.y + 23} textAnchor="middle" fill={col} fontSize={fs * 0.85}>
+              <text
+                x={p.x}
+                y={t.relAltFt >= 0 ? p.y - 13 : p.y + 23}
+                textAnchor="middle"
+                fill={col}
+                fontSize={fs * 0.85}
+              >
                 {tag}
                 {t.trend > 0 ? "↑" : t.trend < 0 ? "↓" : ""}
               </text>
@@ -270,7 +373,12 @@ export function MovingMap({ rangeNm, orientation, layers, width = 800, height = 
 
       {/* own aircraft */}
       <g transform={`translate(${cx} ${cy}) rotate(${a.heading - rot})`}>
-        <path d="M 0 -16 L 3 -4 L 15 2 L 15 6 L 3 4 L 2 12 L 7 15 L 7 18 L -7 18 L -7 15 L -2 12 L -3 4 L -15 6 L -15 2 L -3 -4 Z" fill="#f1f3f5" stroke="black" strokeWidth={1.5} />
+        <path
+          d="M 0 -16 L 3 -4 L 15 2 L 15 6 L 3 4 L 2 12 L 7 15 L 7 18 L -7 18 L -7 15 L -2 12 L -3 4 L -15 6 L -15 2 L -3 -4 Z"
+          fill="#f1f3f5"
+          stroke="black"
+          strokeWidth={1.5}
+        />
       </g>
 
       {/* overlays */}
@@ -282,7 +390,15 @@ export function MovingMap({ rangeNm, orientation, layers, width = 800, height = 
         <NorthArrow x={width - 30} y={58} rot={rot} />
         {L.terrain ? (
           <g>
-            <rect x={8} y={height - 32} width={180} height={24} rx={3} fill="black" opacity={0.75} />
+            <rect
+              x={8}
+              y={height - 32}
+              width={180}
+              height={24}
+              rx={3}
+              fill="black"
+              opacity={0.75}
+            />
             <rect x={14} y={height - 25} width={10} height={10} fill={TERRAIN_COLORS.red} />
             <text x={28} y={height - 15} fill="#c8ced6" fontSize={fs * 0.75}>
               &lt;100FT
@@ -303,22 +419,50 @@ export function MovingMap({ rangeNm, orientation, layers, width = 800, height = 
         ) : null}
         {anyTa ? (
           <g className="animate-annunciator">
-            <rect x={cx - 60} y={8} width={120} height={26} rx={3} fill="var(--caution)" />
-            <text x={cx} y={27} textAnchor="middle" fill="black" fontSize={fs * 1.05} fontWeight={800}>
+            <rect x={cx - 60} y={taY} width={120} height={26} rx={3} fill="var(--caution)" />
+            <text
+              x={cx}
+              y={taY + 19}
+              textAnchor="middle"
+              fill="black"
+              fontSize={fs * 1.05}
+              fontWeight={800}
+            >
               TRAFFIC
             </text>
           </g>
         ) : null}
         {!gpsOk ? (
           <g>
-            <rect x={cx - 150} y={height / 2 - 70} width={300} height={40} fill="black" stroke="var(--caution)" />
-            <text x={cx} y={height / 2 - 44} textAnchor="middle" fill="var(--caution)" fontSize={fs * 1.2} fontWeight={700}>
+            <rect
+              x={cx - 150}
+              y={height / 2 - 70}
+              width={300}
+              height={40}
+              fill="black"
+              stroke="var(--caution)"
+            />
+            <text
+              x={cx}
+              y={height / 2 - 44}
+              textAnchor="middle"
+              fill="var(--caution)"
+              fontSize={fs * 1.2}
+              fontWeight={700}
+            >
               NO GPS POSITION
             </text>
           </g>
         ) : null}
       </g>
     </svg>
+  );
+  return fill ? (
+    <div ref={wrapRef} className="absolute inset-0 overflow-hidden">
+      {svg}
+    </div>
+  ) : (
+    svg
   );
 }
 
@@ -327,21 +471,35 @@ function NorthArrow({ x, y, rot }: { x: number; y: number; rot: number }) {
     <g transform={`translate(${x} ${y}) rotate(${-rot})`}>
       <circle r={14} fill="black" opacity={0.7} stroke="#5b6570" />
       <polygon points="0,-11 5,4 0,1 -5,4" fill="#f1f3f5" />
-      <text y={-15} textAnchor="middle" fill="#f1f3f5" fontSize={10} transform={`rotate(${rot} 0 -19)`}>
+      <text
+        y={-15}
+        textAnchor="middle"
+        fill="#f1f3f5"
+        fontSize={10}
+        transform={`rotate(${rot} 0 -19)`}
+      >
         N
       </text>
     </g>
   );
 }
 
-function DirectToLine({ s, pr, rangeNm }: { s: ReturnType<typeof useSimSnapshot>; pr: (lat: number, lon: number) => { x: number; y: number }; rangeNm: number }) {
+function DirectToLine({
+  s,
+  pr,
+  rangeNm,
+}: {
+  s: ReturnType<typeof useSimSnapshot>;
+  pr: (lat: number, lon: number) => { x: number; y: number };
+  rangeNm: number;
+}) {
   const dto = s.gps.directTo!;
   // Draw the desired track as a line through the target along the D→ course.
   const dtkTrue = norm360(s.nav.gps.dtk + s.magVar);
   const back = (dtkTrue + 180) * (Math.PI / 180);
   const len = Math.max(rangeNm * 2, s.nav.gps.distNm + rangeNm);
   const dLat = (len / 60) * Math.cos(back);
-  const dLon = (len / 60) * Math.sin(back) / Math.cos((dto.lat * Math.PI) / 180);
+  const dLon = ((len / 60) * Math.sin(back)) / Math.cos((dto.lat * Math.PI) / 180);
   const p1 = pr(dto.lat + dLat, dto.lon + dLon);
   const p2 = pr(dto.lat, dto.lon);
   return <line x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y} stroke="var(--magenta)" strokeWidth={4.5} />;

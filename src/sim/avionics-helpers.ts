@@ -55,9 +55,42 @@ export function stepAdf(khz: number, step: number): number {
 }
 
 const MORSE: Record<string, string> = {
-  A: ".-", B: "-...", C: "-.-.", D: "-..", E: ".", F: "..-.", G: "--.", H: "....", I: "..", J: ".---", K: "-.-", L: ".-..", M: "--",
-  N: "-.", O: "---", P: ".--.", Q: "--.-", R: ".-.", S: "...", T: "-", U: "..-", V: "...-", W: ".--", X: "-..-", Y: "-.--", Z: "--..",
-  "0": "-----", "1": ".----", "2": "..---", "3": "...--", "4": "....-", "5": ".....", "6": "-....", "7": "--...", "8": "---..", "9": "----.",
+  A: ".-",
+  B: "-...",
+  C: "-.-.",
+  D: "-..",
+  E: ".",
+  F: "..-.",
+  G: "--.",
+  H: "....",
+  I: "..",
+  J: ".---",
+  K: "-.-",
+  L: ".-..",
+  M: "--",
+  N: "-.",
+  O: "---",
+  P: ".--.",
+  Q: "--.-",
+  R: ".-.",
+  S: "...",
+  T: "-",
+  U: "..-",
+  V: "...-",
+  W: ".--",
+  X: "-..-",
+  Y: "-.--",
+  Z: "--..",
+  "0": "-----",
+  "1": ".----",
+  "2": "..---",
+  "3": "...--",
+  "4": "....-",
+  "5": ".....",
+  "6": "-....",
+  "7": "--...",
+  "8": "---..",
+  "9": "----.",
 };
 
 /** Morse code for a station identifier, letters separated by spaces (e.g. "OAK" → "--- .- -.-"). */
@@ -76,7 +109,9 @@ export function morse(ident: string): string {
  * Wind computed the way a glass cockpit does it: ground vector (GPS track & groundspeed) minus
  * air vector (heading & true airspeed). Returns FROM direction (true) and speed.
  */
-export function computedWind(a: Pick<AircraftState, "heading" | "tasKt" | "track" | "gsKt" | "onGround">): { valid: boolean; fromTrue: number; kt: number } {
+export function computedWind(
+  a: Pick<AircraftState, "heading" | "tasKt" | "track" | "gsKt" | "onGround">,
+): { valid: boolean; fromTrue: number; kt: number } {
   if (a.onGround || a.tasKt < 30 || a.gsKt < 20) return { valid: false, fromTrue: 0, kt: 0 };
   const airN = a.tasKt * Math.cos(toRad(a.heading));
   const airE = a.tasKt * Math.sin(toRad(a.heading));
@@ -100,7 +135,13 @@ export function waypointFromAirport(a: Airport): Waypoint {
 }
 
 export function waypointFromNavaid(n: Navaid): Waypoint {
-  return { id: n.id, lat: n.lat, lon: n.lon, kind: n.type === "FIX" ? "fix" : "vor", label: `${n.name} ${n.type}` };
+  return {
+    id: n.id,
+    lat: n.lat,
+    lon: n.lon,
+    kind: n.type === "FIX" ? "fix" : "vor",
+    label: `${n.name} ${n.type}`,
+  };
 }
 
 export interface IdentHit {
@@ -116,38 +157,95 @@ export interface IdentHit {
 }
 
 /** Identifier/name search across AIRPORTS and NAVAIDS (prefix matches on the identifier rank first). */
-export function searchIdentifiers(query: string, near?: { lat: number; lon: number }, limit = 8): IdentHit[] {
+export function searchIdentifiers(
+  query: string,
+  near?: { lat: number; lon: number },
+  limit = 8,
+): IdentHit[] {
   const q = query.trim().toUpperCase();
   if (!q) return [];
   const hits: (IdentHit & { score: number })[] = [];
   for (const a of AIRPORTS) {
-    const ids = [a.icao, a.iata ?? ""];
-    const idx = ids.some((i) => i.startsWith(q)) ? 0 : ids.some((i) => i.includes(q)) ? 1 : a.name.toUpperCase().includes(q) || a.city.toUpperCase().includes(q) ? 2 : -1;
+    const iata = a.iata ?? "";
+    const idx =
+      a.icao === q
+        ? 0
+        : iata === q
+          ? 0.5
+          : a.icao.startsWith(q) || iata.startsWith(q)
+            ? 1
+            : a.icao.includes(q)
+              ? 2
+              : a.name.toUpperCase().includes(q) || a.city.toUpperCase().includes(q)
+                ? 3
+                : -1;
     if (idx < 0) continue;
-    const h: IdentHit & { score: number } = { id: a.icao, name: a.name, kind: "airport", type: "APT", lat: a.lat, lon: a.lon, airport: a, score: idx };
+    const h: IdentHit & { score: number } = {
+      id: a.icao,
+      name: a.name,
+      kind: "airport",
+      type: "APT",
+      lat: a.lat,
+      lon: a.lon,
+      airport: a,
+      score: idx,
+    };
     if (near) h.distNm = distanceNm(near.lat, near.lon, a.lat, a.lon);
     hits.push(h);
   }
   for (const n of NAVAIDS) {
-    const idx = n.id.startsWith(q) ? 0 : n.id.includes(q) ? 1 : n.name.toUpperCase().includes(q) ? 2 : -1;
+    const idx =
+      n.id === q
+        ? 0
+        : n.id.startsWith(q)
+          ? 1
+          : n.id.includes(q)
+            ? 2
+            : n.name.toUpperCase().includes(q)
+              ? 3
+              : -1;
     if (idx < 0) continue;
-    const h: IdentHit & { score: number } = { id: n.id, name: n.name, kind: "navaid", type: n.type, lat: n.lat, lon: n.lon, navaid: n, score: idx };
+    const h: IdentHit & { score: number } = {
+      id: n.id,
+      name: n.name,
+      kind: "navaid",
+      type: n.type,
+      lat: n.lat,
+      lon: n.lon,
+      navaid: n,
+      score: idx,
+    };
     if (near) h.distNm = distanceNm(near.lat, near.lon, n.lat, n.lon);
     hits.push(h);
   }
-  hits.sort((x, y) => x.score - y.score || (x.distNm ?? 0) - (y.distNm ?? 0) || x.id.localeCompare(y.id));
+  hits.sort(
+    (x, y) => x.score - y.score || (x.distNm ?? 0) - (y.distNm ?? 0) || x.id.localeCompare(y.id),
+  );
   return hits.slice(0, limit).map(({ score: _s, ...h }) => h);
 }
 
-/** Exact identifier → waypoint (airport ICAO/IATA first, then navaid). Nearest wins for duplicate navaid ids. */
-export function resolveIdentifier(id: string, near?: { lat: number; lon: number }): Waypoint | null {
+/** Exact identifier → waypoint. Nearest wins for duplicate navaid ids. */
+export function resolveIdentifier(
+  id: string,
+  near?: { lat: number; lon: number },
+): Waypoint | null {
   const k = id.trim().toUpperCase();
   if (!k) return null;
-  const ap = AIRPORTS.find((a) => a.icao === k || a.iata === k);
+  // Like a real GPS database: ICAO airport ids first, then navaids, then IATA codes.
+  const ap = AIRPORTS.find((a) => a.icao === k);
   if (ap) return waypointFromAirport(ap);
   const navs = NAVAIDS.filter((n) => n.id === k);
-  if (navs.length === 0) return null;
-  const n = near ? navs.reduce((b, x) => (distanceNm(near.lat, near.lon, x.lat, x.lon) < distanceNm(near.lat, near.lon, b.lat, b.lon) ? x : b)) : navs[0]!;
+  if (navs.length === 0) {
+    const byIata = AIRPORTS.find((a) => a.iata === k);
+    return byIata ? waypointFromAirport(byIata) : null;
+  }
+  const n = near
+    ? navs.reduce((b, x) =>
+        distanceNm(near.lat, near.lon, x.lat, x.lon) < distanceNm(near.lat, near.lon, b.lat, b.lon)
+          ? x
+          : b,
+      )
+    : navs[0]!;
   return waypointFromNavaid(n);
 }
 
@@ -270,7 +368,11 @@ export function terrainGridAround(lat: number, lon: number, rangeNm: number): Te
   for (let i = i0 - n; i <= i0 + n; i++) {
     for (let j = j0 - n; j <= j0 + n; j++) {
       const elev = cachedElev(cellNm, i, j, latDeg, lonDeg);
-      cells.push({ e: ((j + 0.5) * lonDeg - anchorLon) * 60 * cosA, n: ((i + 0.5) * latDeg - anchorLat) * 60, elev });
+      cells.push({
+        e: ((j + 0.5) * lonDeg - anchorLon) * 60 * cosA,
+        n: ((i + 0.5) * latDeg - anchorLat) * 60,
+        elev,
+      });
     }
   }
   const grid: TerrainGrid = { key, anchorLat, anchorLon, cellNm, cells };
@@ -329,7 +431,17 @@ export function syntheticTraffic(simTimeSec: number, lat: number, lon: number): 
     const trend: -1 | 0 | 1 = Math.abs(dAlt) < Math.abs(d.alt) * 0.3 ? 0 : dAlt > 0 ? 1 : -1;
     const track = norm360(brg + (d.w > 0 ? 90 : -90));
     const ta = dist < 2 && Math.abs(relAltFt) < 600;
-    return { id: d.id, lat: pos.lat, lon: pos.lon, relAltFt, trend, track, distNm: dist, ta, proximate: dist < 6 && Math.abs(relAltFt) < 1200 };
+    return {
+      id: d.id,
+      lat: pos.lat,
+      lon: pos.lon,
+      relAltFt,
+      trend,
+      track,
+      distNm: dist,
+      ta,
+      proximate: dist < 6 && Math.abs(relAltFt) < 1200,
+    };
   });
 }
 
@@ -349,7 +461,12 @@ function h2(a: number, b: number) {
 }
 
 /** Deterministic simulated precipitation cells on a 6-nm lattice around a position (educational). */
-export function precipitationCells(lat: number, lon: number, rangeNm: number, turbulence: number): PrecipCell[] {
+export function precipitationCells(
+  lat: number,
+  lon: number,
+  rangeNm: number,
+  turbulence: number,
+): PrecipCell[] {
   const stepDeg = 6 / 60;
   const n = Math.min(14, Math.ceil(rangeNm / 6) + 1);
   const ci = Math.round(lat / stepDeg);
@@ -362,8 +479,14 @@ export function precipitationCells(lat: number, lon: number, rangeNm: number, tu
       const jitterLat = (h2(i + 7, j) - 0.5) * stepDeg;
       const jitterLon = (h2(i, j + 7) - 0.5) * stepDeg;
       const k = h2(i + 3, j + 5);
-      const intensity: 1 | 2 | 3 = k > 0.85 - turbulence * 0.08 ? 3 : k > 0.5 - turbulence * 0.05 ? 2 : 1;
-      out.push({ lat: i * stepDeg + jitterLat, lon: j * stepDeg + jitterLon, radiusNm: 1.2 + r * 7, intensity });
+      const intensity: 1 | 2 | 3 =
+        k > 0.85 - turbulence * 0.08 ? 3 : k > 0.5 - turbulence * 0.05 ? 2 : 1;
+      out.push({
+        lat: i * stepDeg + jitterLat,
+        lon: j * stepDeg + jitterLon,
+        radiusNm: 1.2 + r * 7,
+        intensity,
+      });
     }
   }
   return out;
@@ -389,4 +512,3 @@ export function makeRateTracker(tau = 0.8) {
     return rate;
   };
 }
-

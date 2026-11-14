@@ -12,13 +12,46 @@ import type { CallsignInfo, Phrase } from "./types";
 import { formatFreqShort } from "./frequency";
 
 export const PHONETIC: Record<string, string> = {
-  A: "Alpha", B: "Bravo", C: "Charlie", D: "Delta", E: "Echo", F: "Foxtrot", G: "Golf", H: "Hotel",
-  I: "India", J: "Juliett", K: "Kilo", L: "Lima", M: "Mike", N: "November", O: "Oscar", P: "Papa",
-  Q: "Quebec", R: "Romeo", S: "Sierra", T: "Tango", U: "Uniform", V: "Victor", W: "Whiskey",
-  X: "X-ray", Y: "Yankee", Z: "Zulu",
+  A: "Alpha",
+  B: "Bravo",
+  C: "Charlie",
+  D: "Delta",
+  E: "Echo",
+  F: "Foxtrot",
+  G: "Golf",
+  H: "Hotel",
+  I: "India",
+  J: "Juliett",
+  K: "Kilo",
+  L: "Lima",
+  M: "Mike",
+  N: "November",
+  O: "Oscar",
+  P: "Papa",
+  Q: "Quebec",
+  R: "Romeo",
+  S: "Sierra",
+  T: "Tango",
+  U: "Uniform",
+  V: "Victor",
+  W: "Whiskey",
+  X: "X-ray",
+  Y: "Yankee",
+  Z: "Zulu",
 };
 
-const DIGIT_WORD = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "niner"];
+const DIGIT_WORD = [
+  "zero",
+  "one",
+  "two",
+  "three",
+  "four",
+  "five",
+  "six",
+  "seven",
+  "eight",
+  "niner",
+];
 
 export type PhrasePart = string | number | Phrase | null | undefined | false;
 
@@ -61,7 +94,9 @@ export function plain(s: string): Phrase {
 }
 
 export function join(parts: PhrasePart[], sep = ", "): Phrase {
-  const ok = parts.filter((p): p is string | number | Phrase => p !== null && p !== undefined && p !== false && p !== "");
+  const ok = parts.filter(
+    (p): p is string | number | Phrase => p !== null && p !== undefined && p !== false && p !== "",
+  );
   return {
     text: tidy(ok.map((p) => (isPhrase(p) ? p.text : String(p))).join(sep)),
     spoken: tidy(ok.map((p) => (isPhrase(p) ? p.spoken : String(p))).join(sep)),
@@ -77,7 +112,9 @@ export function sentence(p: Phrase): Phrase {
 export function spellDigits(s: string): string {
   return s
     .split("")
-    .map((c) => (c === "." ? "point" : /\d/.test(c) ? DIGIT_WORD[Number(c)] : PHONETIC[c.toUpperCase()] ?? c))
+    .map((c) =>
+      c === "." ? "point" : /\d/.test(c) ? DIGIT_WORD[Number(c)] : (PHONETIC[c.toUpperCase()] ?? c),
+    )
     .join(" ");
 }
 
@@ -111,7 +148,8 @@ export function spokenAlt(ft: number): string {
   const th = Math.floor(ft / 1000);
   const hu = Math.round((ft % 1000) / 100);
   const parts: string[] = [];
-  if (th > 0) parts.push(`${th >= 10 ? spellDigits(String(th)) : (DIGIT_WORD[th] ?? String(th))} thousand`);
+  if (th > 0)
+    parts.push(`${th >= 10 ? spellDigits(String(th)) : (DIGIT_WORD[th] ?? String(th))} thousand`);
   if (hu > 0) parts.push(`${DIGIT_WORD[hu] ?? hu} hundred`);
   if (!parts.length) return "zero";
   return parts.join(" ");
@@ -148,7 +186,10 @@ export function letter(l: string): Phrase {
 
 /** Taxi route ["Z","A"] -> "Zulu, Alpha" */
 export function route(taxiways: string[]): Phrase {
-  return join(taxiways.map((t) => (t.length === 1 ? letter(t) : digits(t))), ", ");
+  return join(
+    taxiways.map((t) => (t.length === 1 ? letter(t) : digits(t))),
+    ", ",
+  );
 }
 
 export function wind(dirMag: number, kt: number): Phrase {
@@ -169,7 +210,7 @@ export function spellCallsign(cs: string): string {
   return cs
     .toUpperCase()
     .split("")
-    .map((c) => (/\d/.test(c) ? cap(DIGIT_WORD[Number(c)] ?? c) : PHONETIC[c] ?? c))
+    .map((c) => (/\d/.test(c) ? cap(DIGIT_WORD[Number(c)] ?? c) : (PHONETIC[c] ?? c)))
     .join(" ");
 }
 
@@ -182,7 +223,11 @@ function cap(s: string) {
  * prefix plus the last three characters ("N2TX") — but only after ATC has done so.
  */
 export function makeCallsign(raw: string, typeWords: string[] = []): CallsignInfo {
-  const full = (raw || "N172TX").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8) || "N172TX";
+  const full =
+    (raw || "N172TX")
+      .toUpperCase()
+      .replace(/[^A-Z0-9]/g, "")
+      .slice(0, 8) || "N172TX";
   const isN = /^N\d[0-9A-Z]{1,5}$/.test(full);
   const canAbbreviate = isN && full.length > 4;
   const abbrev = canAbbreviate ? `N${full.slice(-3)}` : full;
@@ -211,7 +256,9 @@ export function makeCallsign(raw: string, typeWords: string[] = []): CallsignInf
 }
 
 export function csPhrase(cs: CallsignInfo, abbreviated: boolean): Phrase {
-  return abbreviated && cs.canAbbreviate ? { text: cs.abbrev, spoken: cs.abbrevSpoken } : { text: cs.full, spoken: cs.fullSpoken };
+  return abbreviated && cs.canAbbreviate
+    ? { text: cs.abbrev, spoken: cs.abbrevSpoken }
+    : { text: cs.full, spoken: cs.fullSpoken };
 }
 
 /** Convert an arbitrary written ATC-ish string into something TTS reads in radio style. */
@@ -222,7 +269,12 @@ export function speakify(text: string): string {
     .replace(/\b([0-3]\d\.\d{2})\b/g, (m: string) => spellDigits(m.replace(".", "")))
     .replace(/\bheading (\d{3})\b/gi, (_, n: string) => `heading ${spellDigits(n)}`)
     .replace(/\bsquawk (\d{4})\b/gi, (_, n: string) => `squawk ${spellDigits(n)}`)
-    .replace(/\brunway (\d{1,2})([LRC])?\b/gi, (_, n: string, s: string | undefined) => `runway ${rwy(`${n}${s ?? ""}`).spoken}`)
-    .replace(/\b(\d{1,2}),?(\d)00\b/g, (_, th: string, h: string) => spokenAlt(Number(th) * 1000 + Number(h) * 100))
+    .replace(
+      /\brunway (\d{1,2})([LRC])?\b/gi,
+      (_, n: string, s: string | undefined) => `runway ${rwy(`${n}${s ?? ""}`).spoken}`,
+    )
+    .replace(/\b(\d{1,2}),?(\d)00\b/g, (_, th: string, h: string) =>
+      spokenAlt(Number(th) * 1000 + Number(h) * 100),
+    )
     .replace(/\bN(\d[0-9A-Z]{1,5})\b/g, (m: string) => spellCallsign(m));
 }

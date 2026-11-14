@@ -41,7 +41,10 @@ export function Pfd({ className, hideSoftKeys }: PfdProps) {
       >
         CDI
       </SoftKey>
-      <SoftKey title="Sync the heading bug to the current heading" onClick={() => syncHeadingBug(engine)}>
+      <SoftKey
+        title="Sync the heading bug to the current heading"
+        onClick={() => syncHeadingBug(engine)}
+      >
         HDG SYNC
       </SoftKey>
       <SoftKey title="Decrease barometric setting 0.01 inHg" onClick={() => stepBaro(engine, -1)}>
@@ -50,18 +53,36 @@ export function Pfd({ className, hideSoftKeys }: PfdProps) {
       <SoftKey title="Increase barometric setting 0.01 inHg" onClick={() => stepBaro(engine, 1)}>
         BARO +
       </SoftKey>
-      <SoftKey title="Standard pressure 29.92 inHg (used at/above the transition altitude)" onClick={() => engine.setRadios({ altimeterInHg: 29.92 })}>
+      <SoftKey
+        title="Standard pressure 29.92 inHg (used at/above the transition altitude)"
+        onClick={() => engine.setRadios({ altimeterInHg: 29.92 })}
+      >
         STD BARO
       </SoftKey>
-      <SoftKey title="Set the selected altitude to the current altitude" onClick={() => engine.setRadios({ altBug: Math.round(engine.getSnapshot().indicated.altFt / 100) * 100 })}>
+      <SoftKey
+        title="Set the selected altitude to the current altitude"
+        onClick={() =>
+          engine.setRadios({ altBug: Math.round(engine.getSnapshot().indicated.altFt / 100) * 100 })
+        }
+      >
         ALT SYNC
       </SoftKey>
     </div>
   );
 
   return (
-    <DisplayBezel title="TeachX Flight Display · PFD" explainId="pfd" className={className} footer={softKeys}>
-      <svg viewBox={`0 0 ${W} ${H}`} className="block h-auto w-full rounded-md bg-black select-none" role="img" aria-label="Primary flight display">
+    <DisplayBezel
+      title="TeachX Flight Display · PFD"
+      explainId="pfd"
+      className={className}
+      footer={softKeys}
+    >
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        className="block h-auto w-full rounded-md bg-black select-none"
+        role="img"
+        aria-label="Primary flight display"
+      >
         {powered ? <PfdContent s={s} perf={engine.perf} /> : <NoPower />}
       </svg>
     </DisplayBezel>
@@ -72,10 +93,25 @@ function NoPower() {
   return (
     <g>
       <rect x={0} y={0} width={W} height={H} fill="#020304" />
-      <text x={CX} y={H / 2 - 8} textAnchor="middle" fill="#3a4048" fontSize={22} fontFamily={MONO} fontWeight={700}>
+      <text
+        x={CX}
+        y={H / 2 - 8}
+        textAnchor="middle"
+        fill="#3a4048"
+        fontSize={22}
+        fontFamily={MONO}
+        fontWeight={700}
+      >
         DISPLAY UNPOWERED
       </text>
-      <text x={CX} y={H / 2 + 22} textAnchor="middle" fill="#2c3138" fontSize={15} fontFamily={MONO}>
+      <text
+        x={CX}
+        y={H / 2 + 22}
+        textAnchor="middle"
+        fill="#2c3138"
+        fontSize={15}
+        fontFamily={MONO}
+      >
         Check MASTER (BAT/ALT) and AVIONICS switches
       </text>
     </g>
@@ -93,9 +129,28 @@ function PfdContent({ s, perf }: { s: SimSnapshot; perf: AircraftPerf }) {
   return (
     <g fontFamily={MONO}>
       <AttitudeLayer s={s} />
-      <SpeedTape ias={ind.iasKt} valid={ind.airDataValid} bug={s.radios.iasBug} tas={s.aircraft.tasKt} trend={iasRate * 6} perf={perf} flc={s.ap.vertical === "FLC"} />
-      <AltTape alt={ind.altFt} valid={ind.airDataValid} sel={s.radios.altBug} baro={s.radios.altimeterInHg} trend={altRate * 6} />
-      <VsiTape vs={ind.vsFpm} valid={ind.airDataValid} bug={s.radios.vsBug} showBug={s.ap.vertical === "VS" && (s.ap.fd || s.ap.engaged)} />
+      <SpeedTape
+        ias={ind.iasKt}
+        valid={ind.airDataValid}
+        bug={s.radios.iasBug}
+        tas={s.aircraft.tasKt}
+        trend={iasRate * 6}
+        perf={perf}
+        flc={s.ap.vertical === "FLC"}
+      />
+      <AltTape
+        alt={ind.altFt}
+        valid={ind.airDataValid}
+        sel={s.radios.altBug}
+        baro={s.radios.altimeterInHg}
+        trend={altRate * 6}
+      />
+      <VsiTape
+        vs={ind.vsFpm}
+        valid={ind.airDataValid}
+        bug={s.radios.vsBug}
+        showBug={s.ap.vertical === "VS" && (s.ap.fd || s.ap.engaged)}
+      />
       <VerticalDeviation nav={s.nav} />
       <MarkerBox marker={s.nav.marker} />
       <Hsi s={s} />
@@ -126,14 +181,34 @@ function AttitudeLayer({ s }: { s: SimSnapshot }) {
         <clipPath id="pfd-att">
           <rect x={0} y={72} width={W} height={H - 72} />
         </clipPath>
-        <clipPath id="pfd-ladder">
-          <rect x={370} y={128} width={260} height={262} rx={30} />
-        </clipPath>
-        <linearGradient id="pfd-sky" gradientUnits="userSpaceOnUse" x1={0} y1={CY - 420} x2={0} y2={CY}>
+        <linearGradient id="pfd-ladder-fade" x1={0} y1={0} x2={0} y2={1}>
+          <stop offset="0%" stopColor="white" stopOpacity={0} />
+          <stop offset="14%" stopColor="white" stopOpacity={1} />
+          <stop offset="86%" stopColor="white" stopOpacity={1} />
+          <stop offset="100%" stopColor="white" stopOpacity={0} />
+        </linearGradient>
+        <mask id="pfd-ladder" maskUnits="userSpaceOnUse" x={360} y={118} width={280} height={282}>
+          <rect x={360} y={118} width={280} height={282} fill="url(#pfd-ladder-fade)" />
+        </mask>
+        <linearGradient
+          id="pfd-sky"
+          gradientUnits="userSpaceOnUse"
+          x1={0}
+          y1={CY - 420}
+          x2={0}
+          y2={CY}
+        >
           <stop offset="0%" stopColor="#0c3f8a" />
           <stop offset="100%" stopColor="#3f86d8" />
         </linearGradient>
-        <linearGradient id="pfd-gnd" gradientUnits="userSpaceOnUse" x1={0} y1={CY} x2={0} y2={CY + 420}>
+        <linearGradient
+          id="pfd-gnd"
+          gradientUnits="userSpaceOnUse"
+          x1={0}
+          y1={CY}
+          x2={0}
+          y2={CY + 420}
+        >
           <stop offset="0%" stopColor="#7a5226" />
           <stop offset="100%" stopColor="#4a2f12" />
         </linearGradient>
@@ -147,7 +222,7 @@ function AttitudeLayer({ s }: { s: SimSnapshot }) {
               <line x1={-1500} x2={2500} y1={CY} y2={CY} stroke={WHITE} strokeWidth={2} />
             </g>
           </g>
-          <g clipPath="url(#pfd-ladder)">
+          <g mask="url(#pfd-ladder)">
             <g transform={tf}>
               <PitchLadder pitch={pitch} />
             </g>
@@ -159,7 +234,12 @@ function AttitudeLayer({ s }: { s: SimSnapshot }) {
       <BankScale />
       {valid ? (
         <g transform={`rotate(${-bank} ${CX} ${CY})`}>
-          <polygon points={`${CX},${CY - 167} ${CX - 11},${CY - 148} ${CX + 11},${CY - 148}`} fill={WHITE} stroke="black" strokeWidth={1} />
+          <polygon
+            points={`${CX},${CY - 167} ${CX - 11},${CY - 148} ${CX + 11},${CY - 148}`}
+            fill={WHITE}
+            stroke="black"
+            strokeWidth={1}
+          />
           <polygon
             transform={`translate(${clamp(ind.slip, -1, 1) * 20} 0)`}
             points={`${CX - 11},${CY - 145} ${CX + 11},${CY - 145} ${CX + 15},${CY - 137} ${CX - 15},${CY - 137}`}
@@ -171,8 +251,18 @@ function AttitudeLayer({ s }: { s: SimSnapshot }) {
       ) : null}
       {fdOn ? (
         <g transform={`rotate(${fdRot} ${CX} ${CY}) translate(0 ${-fdDy})`}>
-          <polygon points={`${CX},${CY - 4} ${CX - 108},${CY + 30} ${CX - 108},${CY + 19} ${CX},${CY - 15}`} fill="var(--magenta)" stroke="black" strokeWidth={1.5} />
-          <polygon points={`${CX},${CY - 4} ${CX + 108},${CY + 30} ${CX + 108},${CY + 19} ${CX},${CY - 15}`} fill="var(--magenta)" stroke="black" strokeWidth={1.5} />
+          <polygon
+            points={`${CX},${CY - 4} ${CX - 108},${CY + 30} ${CX - 108},${CY + 19} ${CX},${CY - 15}`}
+            fill="var(--magenta)"
+            stroke="black"
+            strokeWidth={1.5}
+          />
+          <polygon
+            points={`${CX},${CY - 4} ${CX + 108},${CY + 30} ${CX + 108},${CY + 19} ${CX},${CY - 15}`}
+            fill="var(--magenta)"
+            stroke="black"
+            strokeWidth={1.5}
+          />
         </g>
       ) : null}
       <AircraftSymbol />
@@ -190,14 +280,42 @@ function PitchLadder({ pitch }: { pitch: number }) {
     const major = Math.abs(p % 10) < 0.01;
     const mid = Math.abs(p % 5) < 0.01;
     const w = major ? 120 : mid ? 60 : 28;
-    lines.push(<line key={`l${p}`} x1={CX - w / 2} x2={CX + w / 2} y1={y} y2={y} stroke={WHITE} strokeWidth={2} />);
+    lines.push(
+      <line
+        key={`l${p}`}
+        x1={CX - w / 2}
+        x2={CX + w / 2}
+        y1={y}
+        y2={y}
+        stroke={WHITE}
+        strokeWidth={2}
+      />,
+    );
     if (major) {
       const lbl = String(Math.abs(p));
       lines.push(
-        <text key={`a${p}`} x={CX - w / 2 - 8} y={y + 7} textAnchor="end" fill={WHITE} fontSize={20} stroke="black" strokeWidth={0.6}>
+        <text
+          key={`a${p}`}
+          x={CX - w / 2 - 8}
+          y={y + 7}
+          textAnchor="end"
+          fill={WHITE}
+          fontSize={20}
+          stroke="black"
+          strokeWidth={0.6}
+        >
           {lbl}
         </text>,
-        <text key={`b${p}`} x={CX + w / 2 + 8} y={y + 7} textAnchor="start" fill={WHITE} fontSize={20} stroke="black" strokeWidth={0.6}>
+        <text
+          key={`b${p}`}
+          x={CX + w / 2 + 8}
+          y={y + 7}
+          textAnchor="start"
+          fill={WHITE}
+          fontSize={20}
+          stroke="black"
+          strokeWidth={0.6}
+        >
           {lbl}
         </text>,
       );
@@ -220,11 +338,26 @@ const BankScale = memo(function BankScale() {
           const tip = polar(CX, CY, R + 2, a);
           const l = polar(CX, CY, R + 14, a - 2.4);
           const r = polar(CX, CY, R + 14, a + 2.4);
-          return <polygon key={a} points={`${tip.x},${tip.y} ${l.x},${l.y} ${r.x},${r.y}`} fill="none" stroke={WHITE} strokeWidth={1.8} />;
+          return (
+            <polygon
+              key={a}
+              points={`${tip.x},${tip.y} ${l.x},${l.y} ${r.x},${r.y}`}
+              fill="none"
+              stroke={WHITE}
+              strokeWidth={1.8}
+            />
+          );
         }
-        return <line key={a} x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y} stroke={WHITE} strokeWidth={2.5} />;
+        return (
+          <line key={a} x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y} stroke={WHITE} strokeWidth={2.5} />
+        );
       })}
-      <polygon points={`${CX},${CY - R - 1} ${CX - 10},${CY - R - 18} ${CX + 10},${CY - R - 18}`} fill="none" stroke={WHITE} strokeWidth={2} />
+      <polygon
+        points={`${CX},${CY - R - 1} ${CX - 10},${CY - R - 18} ${CX + 10},${CY - R - 18}`}
+        fill="none"
+        stroke={WHITE}
+        strokeWidth={2}
+      />
     </g>
   );
 });
@@ -233,9 +366,30 @@ const AircraftSymbol = memo(function AircraftSymbol() {
   const y = "#ffd21f";
   return (
     <g pointerEvents="none">
-      <polygon points={`${CX},${CY} ${CX - 92},${CY + 34} ${CX - 66},${CY + 34} ${CX},${CY + 12} ${CX + 66},${CY + 34} ${CX + 92},${CY + 34}`} fill={y} stroke="black" strokeWidth={1.5} />
-      <rect x={CX - 175} y={CY - 4} width={56} height={8} fill={y} stroke="black" strokeWidth={1.5} />
-      <rect x={CX + 119} y={CY - 4} width={56} height={8} fill={y} stroke="black" strokeWidth={1.5} />
+      <polygon
+        points={`${CX},${CY} ${CX - 92},${CY + 34} ${CX - 66},${CY + 34} ${CX},${CY + 12} ${CX + 66},${CY + 34} ${CX + 92},${CY + 34}`}
+        fill={y}
+        stroke="black"
+        strokeWidth={1.5}
+      />
+      <rect
+        x={CX - 175}
+        y={CY - 4}
+        width={56}
+        height={8}
+        fill={y}
+        stroke="black"
+        strokeWidth={1.5}
+      />
+      <rect
+        x={CX + 119}
+        y={CY - 4}
+        width={56}
+        height={8}
+        fill={y}
+        stroke="black"
+        strokeWidth={1.5}
+      />
     </g>
   );
 });
@@ -244,7 +398,23 @@ const AircraftSymbol = memo(function AircraftSymbol() {
 
 const ST = { x: 105, w: 90, top: 110, bot: 420 };
 
-function SpeedTape({ ias, valid, bug, tas, trend, perf, flc }: { ias: number; valid: boolean; bug: number; tas: number; trend: number; perf: AircraftPerf; flc: boolean }) {
+function SpeedTape({
+  ias,
+  valid,
+  bug,
+  tas,
+  trend,
+  perf,
+  flc,
+}: {
+  ias: number;
+  valid: boolean;
+  bug: number;
+  tas: number;
+  trend: number;
+  perf: AircraftPerf;
+  flc: boolean;
+}) {
   const K = 4;
   const v = Math.max(ias, 20);
   const y = (kt: number) => CY - (kt - v) * K;
@@ -254,10 +424,27 @@ function SpeedTape({ ias, valid, bug, tas, trend, perf, flc }: { ias: number; va
     if (kt < 20) continue;
     const yy = y(kt);
     const major = kt % 10 === 0;
-    ticks.push(<line key={`t${kt}`} x1={ST.x + ST.w - (major ? 22 : 13)} x2={ST.x + ST.w} y1={yy} y2={yy} stroke={WHITE} strokeWidth={2} />);
+    ticks.push(
+      <line
+        key={`t${kt}`}
+        x1={ST.x + ST.w - (major ? 22 : 13)}
+        x2={ST.x + ST.w}
+        y1={yy}
+        y2={yy}
+        stroke={WHITE}
+        strokeWidth={2}
+      />,
+    );
     if (major) {
       ticks.push(
-        <text key={`n${kt}`} x={ST.x + ST.w - 28} y={yy + 8} textAnchor="end" fill={WHITE} fontSize={23}>
+        <text
+          key={`n${kt}`}
+          x={ST.x + ST.w - 28}
+          y={yy + 8}
+          textAnchor="end"
+          fill={WHITE}
+          fontSize={23}
+        >
           {kt}
         </text>,
       );
@@ -268,7 +455,16 @@ function SpeedTape({ ias, valid, bug, tas, trend, perf, flc }: { ias: number; va
     const y1 = y(to);
     const y2 = y(from);
     if (y2 < ST.top || y1 > ST.bot) return null;
-    return <rect key={key} x={x} y={Math.max(ST.top, y1)} width={w} height={Math.min(ST.bot, y2) - Math.max(ST.top, y1)} fill={fill} />;
+    return (
+      <rect
+        key={key}
+        x={x}
+        y={Math.max(ST.top, y1)}
+        width={w}
+        height={Math.min(ST.bot, y2) - Math.max(ST.top, y1)}
+        fill={fill}
+      />
+    );
   };
   const bx = ST.x + ST.w - 7;
   const textFill = ias > pv.ne ? "var(--warning)" : ias > pv.no ? "var(--caution)" : WHITE;
@@ -292,7 +488,16 @@ function SpeedTape({ ias, valid, bug, tas, trend, perf, flc }: { ias: number; va
             {band(pv.s1, pv.no, bx, 7, "var(--ok)", "green")}
             {band(pv.no, pv.ne, bx, 7, "var(--caution)", "yellow")}
             {band(pv.ne, pv.ne + 80, bx, 7, "var(--warning)", "red")}
-            {Math.abs(trendLen) > 1.5 ? <line x1={ST.x + ST.w - 3} x2={ST.x + ST.w - 3} y1={CY} y2={CY - trendLen * K} stroke="var(--magenta)" strokeWidth={4} /> : null}
+            {Math.abs(trendLen) > 1.5 ? (
+              <line
+                x1={ST.x + ST.w - 3}
+                x2={ST.x + ST.w - 3}
+                y1={CY}
+                y2={CY - trendLen * K}
+                stroke="var(--magenta)"
+                strokeWidth={4}
+              />
+            ) : null}
           </g>
           <path
             d={`M ${ST.x + ST.w} ${bugY - 11} h 11 v 22 h -11 v -6 h 5 v -10 h -5 Z`}
@@ -306,7 +511,14 @@ function SpeedTape({ ias, valid, bug, tas, trend, perf, flc }: { ias: number; va
             stroke={WHITE}
             strokeWidth={1.8}
           />
-          <text x={ST.x + 66} y={CY + 11} textAnchor="end" fill={textFill} fontSize={32} fontWeight={700}>
+          <text
+            x={ST.x + 66}
+            y={CY + 11}
+            textAnchor="end"
+            fill={textFill}
+            fontSize={32}
+            fontWeight={700}
+          >
             {ias < 20 ? "---" : Math.round(ias)}
           </text>
         </>
@@ -314,7 +526,14 @@ function SpeedTape({ ias, valid, bug, tas, trend, perf, flc }: { ias: number; va
         <RedX x={ST.x} y={ST.top} w={ST.w} h={ST.bot - ST.top} />
       )}
       <rect x={ST.x} y={80} width={ST.w} height={26} fill="black" stroke="#444" />
-      <text x={ST.x + ST.w / 2} y={100} textAnchor="middle" fill="var(--cyan)" fontSize={19} opacity={flc ? 1 : 0.8}>
+      <text
+        x={ST.x + ST.w / 2}
+        y={100}
+        textAnchor="middle"
+        fill="var(--cyan)"
+        fontSize={19}
+        opacity={flc ? 1 : 0.8}
+      >
         {Math.round(bug)}KT
       </text>
       <rect x={ST.x} y={424} width={ST.w} height={26} fill="black" stroke="#444" />
@@ -356,7 +575,19 @@ function useAltAlert(alt: number, sel: number) {
   return { approaching: r.phase === "approach" && now < r.until, deviation };
 }
 
-function AltTape({ alt, valid, sel, baro, trend }: { alt: number; valid: boolean; sel: number; baro: number; trend: number }) {
+function AltTape({
+  alt,
+  valid,
+  sel,
+  baro,
+  trend,
+}: {
+  alt: number;
+  valid: boolean;
+  sel: number;
+  baro: number;
+  trend: number;
+}) {
   const K = 0.3;
   const y = (a: number) => CY - (a - alt) * K;
   const ticks: React.ReactNode[] = [];
@@ -364,7 +595,17 @@ function AltTape({ alt, valid, sel, baro, trend }: { alt: number; valid: boolean
   for (let a = start; a <= alt + 540; a += 20) {
     const yy = y(a);
     const major = a % 100 === 0;
-    ticks.push(<line key={`t${a}`} x1={AT.x} x2={AT.x + (major ? 18 : 9)} y1={yy} y2={yy} stroke={WHITE} strokeWidth={2} />);
+    ticks.push(
+      <line
+        key={`t${a}`}
+        x1={AT.x}
+        x2={AT.x + (major ? 18 : 9)}
+        y1={yy}
+        y2={yy}
+        stroke={WHITE}
+        strokeWidth={2}
+      />,
+    );
     if (major) {
       ticks.push(
         <text key={`n${a}`} x={AT.x + 22} y={yy + 7} fill={WHITE} fontSize={20}>
@@ -393,16 +634,37 @@ function AltTape({ alt, valid, sel, baro, trend }: { alt: number; valid: boolean
         <>
           <g clipPath="url(#pfd-at-clip)">
             {ticks}
-            {Math.abs(trendLen) > 20 ? <line x1={AT.x + 3} x2={AT.x + 3} y1={CY} y2={CY - trendLen * K} stroke="var(--magenta)" strokeWidth={4} /> : null}
+            {Math.abs(trendLen) > 20 ? (
+              <line
+                x1={AT.x + 3}
+                x2={AT.x + 3}
+                y1={CY}
+                y2={CY - trendLen * K}
+                stroke="var(--magenta)"
+                strokeWidth={4}
+              />
+            ) : null}
           </g>
-          <path d={`M ${AT.x} ${bugY - 11} h -11 v 22 h 11 v -6 h -5 v -10 h 5 Z`} fill="var(--cyan)" stroke="black" strokeWidth={1} />
+          <path
+            d={`M ${AT.x} ${bugY - 11} h -11 v 22 h 11 v -6 h -5 v -10 h 5 Z`}
+            fill="var(--cyan)"
+            stroke="black"
+            strokeWidth={1}
+          />
           <polygon
             points={`${AT.x - 14},${CY} ${AT.x},${CY - 12} ${AT.x},${CY - 26} ${AT.x + AT.w + 6},${CY - 26} ${AT.x + AT.w + 6},${CY + 26} ${AT.x},${CY + 26} ${AT.x},${CY + 12}`}
             fill="black"
             stroke={WHITE}
             strokeWidth={1.8}
           />
-          <text x={AT.x + 58} y={CY + 11} textAnchor="end" fill={WHITE} fontSize={30} fontWeight={700}>
+          <text
+            x={AT.x + 58}
+            y={CY + 11}
+            textAnchor="end"
+            fill={WHITE}
+            fontSize={30}
+            fontWeight={700}
+          >
             {main}
           </text>
           <text x={AT.x + 60} y={CY + 9} fill={WHITE} fontSize={22} fontWeight={700}>
@@ -413,8 +675,22 @@ function AltTape({ alt, valid, sel, baro, trend }: { alt: number; valid: boolean
         <RedX x={AT.x} y={AT.top} w={AT.w} h={AT.bot - AT.top} />
       )}
       <g className={approaching || deviation ? "animate-annunciator" : undefined}>
-        <rect x={AT.x} y={80} width={AT.w} height={26} fill={approaching ? "var(--cyan)" : "black"} stroke={deviation ? "var(--caution)" : "#444"} />
-        <text x={AT.x + AT.w / 2} y={100} textAnchor="middle" fill={approaching ? "black" : deviation ? "var(--caution)" : "var(--cyan)"} fontSize={20} fontWeight={600}>
+        <rect
+          x={AT.x}
+          y={80}
+          width={AT.w}
+          height={26}
+          fill={approaching ? "var(--cyan)" : "black"}
+          stroke={deviation ? "var(--caution)" : "#444"}
+        />
+        <text
+          x={AT.x + AT.w / 2}
+          y={100}
+          textAnchor="middle"
+          fill={approaching ? "black" : deviation ? "var(--caution)" : "var(--cyan)"}
+          fontSize={20}
+          fontWeight={600}
+        >
           {sel}
           <tspan fontSize={12}>FT</tspan>
         </text>
@@ -428,7 +704,17 @@ function AltTape({ alt, valid, sel, baro, trend }: { alt: number; valid: boolean
   );
 }
 
-function VsiTape({ vs, valid, bug, showBug }: { vs: number; valid: boolean; bug: number; showBug: boolean }) {
+function VsiTape({
+  vs,
+  valid,
+  bug,
+  showBug,
+}: {
+  vs: number;
+  valid: boolean;
+  bug: number;
+  showBug: boolean;
+}) {
   const x = 885;
   const w = 56;
   const half = 135;
@@ -439,10 +725,21 @@ function VsiTape({ vs, valid, bug, showBug }: { vs: number; valid: boolean; bug:
   const shown = Math.abs(vs) >= 100;
   return (
     <g>
-      <path d={`M ${x} ${CY - half - 10} h ${w - 10} l 10 10 v ${2 * half} l -10 10 h ${-(w - 10)} Z`} fill="black" opacity={0.42} />
+      <path
+        d={`M ${x} ${CY - half - 10} h ${w - 10} l 10 10 v ${2 * half} l -10 10 h ${-(w - 10)} Z`}
+        fill="black"
+        opacity={0.42}
+      />
       {marks.map((m) => (
         <g key={m}>
-          <line x1={x} x2={x + (m % 1000 === 0 ? 14 : 8)} y1={y(m)} y2={y(m)} stroke={WHITE} strokeWidth={2} />
+          <line
+            x1={x}
+            x2={x + (m % 1000 === 0 ? 14 : 8)}
+            y1={y(m)}
+            y2={y(m)}
+            stroke={WHITE}
+            strokeWidth={2}
+          />
           {m % 1000 === 0 ? (
             <text x={x + 18} y={y(m) + 6} fill={WHITE} fontSize={16}>
               {Math.abs(m) / 1000}
@@ -453,8 +750,19 @@ function VsiTape({ vs, valid, bug, showBug }: { vs: number; valid: boolean; bug:
       <line x1={x} x2={x + 16} y1={CY} y2={CY} stroke={WHITE} strokeWidth={3} />
       {valid ? (
         <>
-          {showBug ? <path d={`M ${x} ${y(bug) - 9} h 9 v 18 h -9 v -5 h 4 v -8 h -4 Z`} fill="var(--cyan)" stroke="black" /> : null}
-          <polygon points={`${x + 2},${py} ${x + 14},${py - 13} ${x + 74},${py - 13} ${x + 74},${py + 13} ${x + 14},${py + 13}`} fill="black" stroke={WHITE} strokeWidth={1.5} />
+          {showBug ? (
+            <path
+              d={`M ${x} ${y(bug) - 9} h 9 v 18 h -9 v -5 h 4 v -8 h -4 Z`}
+              fill="var(--cyan)"
+              stroke="black"
+            />
+          ) : null}
+          <polygon
+            points={`${x + 2},${py} ${x + 14},${py - 13} ${x + 74},${py - 13} ${x + 74},${py + 13} ${x + 14},${py + 13}`}
+            fill="black"
+            stroke={WHITE}
+            strokeWidth={1.5}
+          />
           {shown ? (
             <text x={x + 71} y={py + 6} textAnchor="end" fill={WHITE} fontSize={16}>
               {Math.round(vs / 50) * 50}
@@ -478,22 +786,52 @@ function VerticalDeviation({ nav }: { nav: NavOutputs }) {
   const y = CY - clamp(h.gsDots, -2.5, 2.5) * dot;
   return (
     <g>
-      <rect x={x - 13} y={CY - 2.5 * dot - 26} width={26} height={5 * dot + 32} fill="black" opacity={0.45} />
-      <text x={x} y={CY - 2.5 * dot - 9} textAnchor="middle" fill={color} fontSize={16} fontWeight={700}>
+      <rect
+        x={x - 13}
+        y={CY - 2.5 * dot - 26}
+        width={26}
+        height={5 * dot + 32}
+        fill="black"
+        opacity={0.45}
+      />
+      <text
+        x={x}
+        y={CY - 2.5 * dot - 9}
+        textAnchor="middle"
+        fill={color}
+        fontSize={16}
+        fontWeight={700}
+      >
         {gps ? "V" : "G"}
       </text>
       {[-2, -1, 1, 2].map((d) => (
-        <circle key={d} cx={x} cy={CY + d * dot} r={5} fill="none" stroke={WHITE} strokeWidth={1.8} />
+        <circle
+          key={d}
+          cx={x}
+          cy={CY + d * dot}
+          r={5}
+          fill="none"
+          stroke={WHITE}
+          strokeWidth={1.8}
+        />
       ))}
       <line x1={x - 10} x2={x + 10} y1={CY} y2={CY} stroke={WHITE} strokeWidth={2} />
-      <polygon points={`${x},${y - 12} ${x + 9},${y} ${x},${y + 12} ${x - 9},${y}`} fill={color} stroke="black" />
+      <polygon
+        points={`${x},${y - 12} ${x + 9},${y} ${x},${y + 12} ${x - 9},${y}`}
+        fill={color}
+        stroke="black"
+      />
     </g>
   );
 }
 
 function MarkerBox({ marker }: { marker: NavOutputs["marker"] }) {
   if (!marker) return null;
-  const map = { OM: { t: "O", c: "var(--cyan)" }, MM: { t: "M", c: "var(--caution)" }, IM: { t: "I", c: WHITE } } as const;
+  const map = {
+    OM: { t: "O", c: "var(--cyan)" },
+    MM: { t: "M", c: "var(--caution)" },
+    IM: { t: "I", c: WHITE },
+  } as const;
   const m = map[marker];
   return (
     <g className="animate-annunciator">
@@ -519,12 +857,23 @@ const RoseMarks = memo(function RoseMarks() {
     const long = d % 10 === 0;
     const a = polar(HX, HY, HR, d);
     const b = polar(HX, HY, HR - (long ? 15 : 8), d);
-    out.push(<line key={`k${d}`} x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke={WHITE} strokeWidth={2} />);
+    out.push(
+      <line key={`k${d}`} x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke={WHITE} strokeWidth={2} />,
+    );
     if (d % 30 === 0) {
       const p = polar(HX, HY, HR - 32, d);
       const lbl = labels[d] ?? String(d / 10);
       out.push(
-        <text key={`l${d}`} x={p.x} y={p.y + 8} textAnchor="middle" fill={WHITE} fontSize={labels[d] ? 22 : 19} fontWeight={labels[d] ? 700 : 500} transform={`rotate(${d} ${p.x} ${p.y})`}>
+        <text
+          key={`l${d}`}
+          x={p.x}
+          y={p.y + 8}
+          textAnchor="middle"
+          fill={WHITE}
+          fontSize={labels[d] ? 22 : 19}
+          fontWeight={labels[d] ? 700 : 500}
+          transform={`rotate(${d} ${p.x} ${p.y})`}
+        >
           {lbl}
         </text>,
       );
@@ -539,10 +888,15 @@ const FixedHsiMarks = memo(function FixedHsiMarks() {
       {[45, 90, 135, 180, 225, 270, 315].map((d) => {
         const a = polar(HX, HY, HR + 4, d);
         const b = polar(HX, HY, HR + 14, d);
-        return <line key={d} x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke={WHITE} strokeWidth={2.5} />;
+        return (
+          <line key={d} x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke={WHITE} strokeWidth={2.5} />
+        );
       })}
       {/* own-ship symbol */}
-      <path d={`M ${HX} ${HY - 22} L ${HX + 3} ${HY - 4} L ${HX + 20} ${HY + 2} L ${HX + 20} ${HY + 6} L ${HX + 3} ${HY + 4} L ${HX + 2} ${HY + 16} L ${HX + 8} ${HY + 20} L ${HX - 8} ${HY + 20} L ${HX - 2} ${HY + 16} L ${HX - 3} ${HY + 4} L ${HX - 20} ${HY + 6} L ${HX - 20} ${HY + 2} L ${HX - 3} ${HY - 4} Z`} fill={WHITE} />
+      <path
+        d={`M ${HX} ${HY - 22} L ${HX + 3} ${HY - 4} L ${HX + 20} ${HY + 2} L ${HX + 20} ${HY + 6} L ${HX + 3} ${HY + 4} L ${HX + 2} ${HY + 16} L ${HX + 8} ${HY + 20} L ${HX - 8} ${HY + 20} L ${HX - 2} ${HY + 16} L ${HX - 3} ${HY + 4} L ${HX - 20} ${HY + 6} L ${HX - 20} ${HY + 2} L ${HX - 3} ${HY - 4} Z`}
+        fill={WHITE}
+      />
     </g>
   );
 });
@@ -562,45 +916,136 @@ function Hsi({ s }: { s: SimSnapshot }) {
 
   return (
     <g>
-      <circle cx={HX} cy={HY} r={HR + 2} fill="black" opacity={0.72} stroke="#5a6068" strokeWidth={1.5} />
+      <circle
+        cx={HX}
+        cy={HY}
+        r={HR + 2}
+        fill="black"
+        opacity={0.72}
+        stroke="#5a6068"
+        strokeWidth={1.5}
+      />
       {ind.headingValid ? (
         <>
           {Math.abs(turn6) > 1 ? (
-            <path d={turn6 > 0 ? arcPath(HX, HY, HR + 8, 0, turn6) : arcPath(HX, HY, HR + 8, turn6, 0)} fill="none" stroke="var(--magenta)" strokeWidth={4} />
+            <path
+              d={turn6 > 0 ? arcPath(HX, HY, HR + 8, 0, turn6) : arcPath(HX, HY, HR + 8, turn6, 0)}
+              fill="none"
+              stroke="var(--magenta)"
+              strokeWidth={4}
+            />
           ) : null}
           <g transform={`rotate(${-hdg} ${HX} ${HY})`}>
             <RoseMarks />
             <g transform={`rotate(${s.radios.hdgBug} ${HX} ${HY})`}>
-              <path d={`M ${HX - 12} ${HY - HR - 2} h 24 v 14 h -6 l -6 -8 l -6 8 h -6 Z`} fill="var(--cyan)" stroke="black" strokeWidth={1} />
+              <path
+                d={`M ${HX - 12} ${HY - HR - 2} h 24 v 14 h -6 l -6 -8 l -6 8 h -6 Z`}
+                fill="var(--cyan)"
+                stroke="black"
+                strokeWidth={1}
+              />
             </g>
           </g>
           <g transform={`rotate(${crsRot} ${HX} ${HY})`}>
-            <polygon points={`${HX},${HY - HR + 14} ${HX - 11},${HY - HR + 36} ${HX + 11},${HY - HR + 36}`} fill={color} stroke="black" />
-            <rect x={HX - 3} y={HY - HR + 36} width={6} height={HR - 36 - 64} fill={color} stroke="black" strokeWidth={0.5} />
-            <rect x={HX - 3} y={HY + 64} width={6} height={HR - 64 - 14} fill={color} stroke="black" strokeWidth={0.5} />
+            <polygon
+              points={`${HX},${HY - HR + 14} ${HX - 11},${HY - HR + 36} ${HX + 11},${HY - HR + 36}`}
+              fill={color}
+              stroke="black"
+            />
+            <rect
+              x={HX - 3}
+              y={HY - HR + 36}
+              width={6}
+              height={HR - 36 - 64}
+              fill={color}
+              stroke="black"
+              strokeWidth={0.5}
+            />
+            <rect
+              x={HX - 3}
+              y={HY + 64}
+              width={6}
+              height={HR - 64 - 14}
+              fill={color}
+              stroke="black"
+              strokeWidth={0.5}
+            />
             {[-2, -1, 1, 2].map((d) => (
-              <circle key={d} cx={HX + d * DOT} cy={HY} r={5} fill="none" stroke={WHITE} strokeWidth={1.8} />
+              <circle
+                key={d}
+                cx={HX + d * DOT}
+                cy={HY}
+                r={5}
+                fill="none"
+                stroke={WHITE}
+                strokeWidth={1.8}
+              />
             ))}
-            {showCdi ? <rect x={HX + dev - 3.5} y={HY - 58} width={7} height={116} fill={color} stroke="black" strokeWidth={0.5} /> : null}
+            {showCdi ? (
+              <rect
+                x={HX + dev - 3.5}
+                y={HY - 58}
+                width={7}
+                height={116}
+                fill={color}
+                stroke="black"
+                strokeWidth={0.5}
+              />
+            ) : null}
             {showCdi ? (
               h.toFrom === "TO" ? (
-                <polygon points={`${HX + 34},${HY - 52} ${HX + 26},${HY - 38} ${HX + 42},${HY - 38}`} fill={WHITE} />
+                <polygon
+                  points={`${HX + 34},${HY - 52} ${HX + 26},${HY - 38} ${HX + 42},${HY - 38}`}
+                  fill={WHITE}
+                />
               ) : (
-                <polygon points={`${HX + 34},${HY + 52} ${HX + 26},${HY + 38} ${HX + 42},${HY + 38}`} fill={WHITE} />
+                <polygon
+                  points={`${HX + 34},${HY + 52} ${HX + 26},${HY + 38} ${HX + 42},${HY + 38}`}
+                  fill={WHITE}
+                />
               )
             ) : null}
           </g>
           <FixedHsiMarks />
-          <text x={HX - 78} y={HY - 26} textAnchor="middle" fill={color} fontSize={17} fontWeight={700}>
+          <text
+            x={HX - 56}
+            y={HY - 44}
+            textAnchor="middle"
+            fill={color}
+            fontSize={16}
+            fontWeight={700}
+            stroke="black"
+            strokeWidth={3}
+            paintOrder="stroke"
+          >
             {srcLabel}
           </text>
           {sub ? (
-            <text x={HX + 78} y={HY - 26} textAnchor="middle" fill={color} fontSize={14}>
+            <text
+              x={HX + 56}
+              y={HY - 44}
+              textAnchor="middle"
+              fill={color}
+              fontSize={13}
+              stroke="black"
+              strokeWidth={3}
+              paintOrder="stroke"
+            >
               {sub}
             </text>
           ) : null}
           {!showCdi && !gps ? (
-            <text x={HX - 78} y={HY - 8} textAnchor="middle" fill="var(--warning)" fontSize={13} fontWeight={700}>
+            <text
+              x={HX - 56}
+              y={HY - 26}
+              textAnchor="middle"
+              fill="var(--warning)"
+              fontSize={12}
+              fontWeight={700}
+              stroke="black"
+              strokeWidth={3}
+              paintOrder="stroke"
+            >
               NO SIG
             </text>
           ) : null}
@@ -609,8 +1054,19 @@ function Hsi({ s }: { s: SimSnapshot }) {
         <RedX x={HX - HR} y={HY - HR} w={HR * 2} h={HR * 2} label="HDG" />
       )}
       {/* lubber + heading box */}
-      <polygon points={`${HX},${HY - HR + 2} ${HX - 8},${HY - HR - 10} ${HX + 8},${HY - HR - 10}`} fill={WHITE} />
-      <rect x={HX - 36} y={HY - HR - 40} width={72} height={30} fill="black" stroke={WHITE} strokeWidth={1.5} />
+      <polygon
+        points={`${HX},${HY - HR + 2} ${HX - 8},${HY - HR - 10} ${HX + 8},${HY - HR - 10}`}
+        fill={WHITE}
+      />
+      <rect
+        x={HX - 36}
+        y={HY - HR - 40}
+        width={72}
+        height={30}
+        fill="black"
+        stroke={WHITE}
+        strokeWidth={1.5}
+      />
       <text x={HX} y={HY - HR - 17} textAnchor="middle" fill={WHITE} fontSize={23} fontWeight={700}>
         {ind.headingValid ? `${pad3(hdg)}°` : "---"}
       </text>
@@ -725,14 +1181,21 @@ function TopBar({ s }: { s: SimSnapshot }) {
       {g.valid && g.toId ? (
         <>
           <text x={312} y={28} fill="var(--magenta)" fontSize={16}>
-            {s.gps.directTo ? "D→" : g.fromId ? `${g.fromId.slice(0, 6)} →` : "→"} {g.toId.slice(0, 7)}
+            {s.gps.directTo ? "D→" : g.fromId ? `${g.fromId.slice(0, 6)} →` : "→"}{" "}
+            {g.toId.slice(0, 7)}
           </text>
           <text x={530} y={28} fill={WHITE} fontSize={14}>
-            DIS <tspan fill="var(--magenta)" fontSize={16}>{g.distNm.toFixed(1)}</tspan>
+            DIS{" "}
+            <tspan fill="var(--magenta)" fontSize={16}>
+              {g.distNm.toFixed(1)}
+            </tspan>
             <tspan fontSize={11}>NM</tspan>
           </text>
           <text x={690} y={28} textAnchor="end" fill={WHITE} fontSize={14}>
-            DTK <tspan fill="var(--magenta)" fontSize={16}>{pad3(g.dtk)}°</tspan>
+            DTK{" "}
+            <tspan fill="var(--magenta)" fontSize={16}>
+              {pad3(g.dtk)}°
+            </tspan>
           </text>
         </>
       ) : (
@@ -794,19 +1257,41 @@ export function verticalTarget(ap: AutopilotState, r: SimSnapshot["radios"]): st
   }
 }
 
-function AfcsStrip({ ap, nav, radios }: { ap: AutopilotState; nav: NavOutputs; radios: SimSnapshot["radios"] }) {
+function AfcsStrip({
+  ap,
+  nav,
+  radios,
+}: {
+  ap: AutopilotState;
+  nav: NavOutputs;
+  radios: SimSnapshot["radios"];
+}) {
   const on = ap.fd || ap.engaged;
   const lat = on ? lateralLabel(ap, nav) : "";
   const latArm = on ? lateralArmedLabel(ap, nav) : "";
-  const vert = on ? (ap.vertical === "GS" ? (nav.hsi.source === "GPS" ? "GP" : "GS") : ap.vertical) : "";
-  const vArm = on ? (ap.verticalArmed === "GS" ? (nav.hsi.source === "GPS" ? "GP" : "GS") : (ap.verticalArmed ?? "")) : "";
+  const vert = on
+    ? ap.vertical === "GS"
+      ? nav.hsi.source === "GPS"
+        ? "GP"
+        : "GS"
+      : ap.vertical
+    : "";
+  const vArm = on
+    ? ap.verticalArmed === "GS"
+      ? nav.hsi.source === "GPS"
+        ? "GP"
+        : "GS"
+      : (ap.verticalArmed ?? "")
+    : "";
   const tgt = on ? verticalTarget(ap, radios) : "";
   const disc = !ap.engaged && ap.annunciation.includes("DISCONNECT");
   const fLat = useFlash(lat);
   const fVert = useFlash(vert);
   const y0 = 46;
   const h = 25;
-  const cell = (x: number, w: number) => <rect x={x} y={y0} width={w} height={h} fill="black" stroke="#30353c" />;
+  const cell = (x: number, w: number) => (
+    <rect x={x} y={y0} width={w} height={h} fill="black" stroke="#30353c" />
+  );
   return (
     <g>
       {cell(240, 110)}
@@ -816,7 +1301,13 @@ function AfcsStrip({ ap, nav, radios }: { ap: AutopilotState; nav: NavOutputs; r
       {cell(665, 95)}
       <g className={disc ? "animate-annunciator" : undefined}>
         {ap.engaged || disc ? (
-          <text x={262} y={y0 + 19} fill={disc ? "var(--caution)" : "var(--ok)"} fontSize={18} fontWeight={700}>
+          <text
+            x={262}
+            y={y0 + 19}
+            fill={disc ? "var(--caution)" : "var(--ok)"}
+            fontSize={18}
+            fontWeight={700}
+          >
             AP
           </text>
         ) : null}
@@ -827,7 +1318,14 @@ function AfcsStrip({ ap, nav, radios }: { ap: AutopilotState; nav: NavOutputs; r
         </text>
       ) : null}
       <g className={fLat ? "animate-annunciator" : undefined}>
-        <text x={392} y={y0 + 19} textAnchor="middle" fill="var(--ok)" fontSize={18} fontWeight={700}>
+        <text
+          x={392}
+          y={y0 + 19}
+          textAnchor="middle"
+          fill="var(--ok)"
+          fontSize={18}
+          fontWeight={700}
+        >
           {lat}
         </text>
       </g>

@@ -49,8 +49,24 @@ export type Expect =
   | { kind: "atis"; letter: string; severity?: Severity }
   | { kind: "runway"; runway: string; readback: boolean; severity?: Severity; say?: string }
   | { kind: "holdShort"; runway: string; say?: string }
-  | { kind: "altitude"; ft: number; readback: boolean; label?: string; severity?: Severity; say?: string; tolerance?: number }
-  | { kind: "heading"; deg: number | "runway"; turn?: "left" | "right"; readback: boolean; severity?: Severity; say?: string; tolerance?: number }
+  | {
+      kind: "altitude";
+      ft: number;
+      readback: boolean;
+      label?: string;
+      severity?: Severity;
+      say?: string;
+      tolerance?: number;
+    }
+  | {
+      kind: "heading";
+      deg: number | "runway";
+      turn?: "left" | "right";
+      readback: boolean;
+      severity?: Severity;
+      say?: string;
+      tolerance?: number;
+    }
   | { kind: "frequency"; mhz: number; readback: boolean; severity?: Severity; say?: string }
   | { kind: "squawk"; code: string; severity?: Severity; say?: string }
   | { kind: "altimeter"; inHg: number; severity?: Severity }
@@ -67,7 +83,15 @@ export type Expect =
       /** e.g. MAYDAY must be said three times */
       repeat?: { phrase: string; times: number };
     }
-  | { kind: "number"; label: string; value: number; near: string[]; category: Category; severity: Severity; tip: string }
+  | {
+      kind: "number";
+      label: string;
+      value: number;
+      near: string[];
+      category: Category;
+      severity: Severity;
+      tip: string;
+    }
   | { kind: "maxWords"; max: number; tip: string };
 
 export interface EvaluateInput {
@@ -82,7 +106,14 @@ export interface EvaluateInput {
 
 const cats = (c: Category | Category[]) => (Array.isArray(c) ? c : [c]);
 
-function item(label: string, categories: Category[], ok: boolean, severity: Severity, message: string, correct?: string): EvalItem {
+function item(
+  label: string,
+  categories: Category[],
+  ok: boolean,
+  severity: Severity,
+  message: string,
+  correct?: string,
+): EvalItem {
   const it: EvalItem = { label, categories, ok, severity, message };
   if (correct) it.correct = correct;
   return it;
@@ -146,8 +177,26 @@ function checkExpect(p: ParsedTransmission, e: Expect, kind: StepKind): EvalItem
       const out: EvalItem[] = [];
       const categories: Category[] = e.readback ? ["runway", "readback"] : ["runway"];
       if (exact || bare) {
-        out.push(item("Runway", categories, true, e.severity ?? (e.readback ? "critical" : "major"), `Runway ${rid} identified.`));
-        if (bare) out.push(item("Say \"runway\"", ["phraseology"], false, "minor", `Say the word "runway" before the number ("runway ${rid}") so it can't be confused with a heading or altitude.`, `runway ${rid}`));
+        out.push(
+          item(
+            "Runway",
+            categories,
+            true,
+            e.severity ?? (e.readback ? "critical" : "major"),
+            `Runway ${rid} identified.`,
+          ),
+        );
+        if (bare)
+          out.push(
+            item(
+              'Say "runway"',
+              ["phraseology"],
+              false,
+              "minor",
+              `Say the word "runway" before the number ("runway ${rid}") so it can't be confused with a heading or altitude.`,
+              `runway ${rid}`,
+            ),
+          );
       } else {
         out.push(
           item(
@@ -168,7 +217,9 @@ function checkExpect(p: ParsedTransmission, e: Expect, kind: StepKind): EvalItem
     }
     case "holdShort": {
       const rid = usRunway(e.runway);
-      const ok = hasPhrase(p, "hold short") && (readRunways(p).includes(rid) || mentionsRunwayNumber(p, rid));
+      const ok =
+        hasPhrase(p, "hold short") &&
+        (readRunways(p).includes(rid) || mentionsRunwayNumber(p, rid));
       return [
         item(
           "Hold short readback",
@@ -208,15 +259,28 @@ function checkExpect(p: ParsedTransmission, e: Expect, kind: StepKind): EvalItem
     case "heading": {
       const out: EvalItem[] = [];
       const label = e.readback ? "Heading readback" : "Heading report";
-      const categories: Category[] = e.readback ? ["heading", "readback"] : ["heading", "awareness"];
+      const categories: Category[] = e.readback
+        ? ["heading", "readback"]
+        : ["heading", "awareness"];
       if (e.deg === "runway") {
         const ok = hasPhrase(p, "runway heading");
-        out.push(item(label, categories, ok, e.severity ?? "critical", ok ? "Runway heading read back." : `Read back "fly runway heading".`, e.say ?? "runway heading"));
+        out.push(
+          item(
+            label,
+            categories,
+            ok,
+            e.severity ?? "critical",
+            ok ? "Runway heading read back." : `Read back "fly runway heading".`,
+            e.say ?? "runway heading",
+          ),
+        );
         return out;
       }
       const hs = readHeadings(p);
       const tol = e.tolerance ?? 0;
-      const match = hs.find((h) => Math.abs(((h.deg - (e.deg as number) + 540) % 360) - 180) <= tol);
+      const match = hs.find(
+        (h) => Math.abs(((h.deg - (e.deg as number) + 540) % 360) - 180) <= tol,
+      );
       const want = String(e.deg).padStart(3, "0");
       if (!match) {
         const wrong = hs[0];
@@ -234,12 +298,32 @@ function checkExpect(p: ParsedTransmission, e: Expect, kind: StepKind): EvalItem
         );
         return out;
       }
-      out.push(item(label, categories, true, e.severity ?? "critical", `Heading ${want} confirmed.`));
+      out.push(
+        item(label, categories, true, e.severity ?? "critical", `Heading ${want} confirmed.`),
+      );
       if (e.turn && e.readback) {
         if (match.turn && match.turn !== e.turn)
-          out.push(item("Turn direction", ["heading", "readback"], false, "critical", `You read back a ${match.turn} turn, but ATC assigned a ${e.turn} turn. Turning the wrong way can create a conflict.`, `${e.turn} heading ${want}`));
+          out.push(
+            item(
+              "Turn direction",
+              ["heading", "readback"],
+              false,
+              "critical",
+              `You read back a ${match.turn} turn, but ATC assigned a ${e.turn} turn. Turning the wrong way can create a conflict.`,
+              `${e.turn} heading ${want}`,
+            ),
+          );
         else if (!match.turn)
-          out.push(item("Turn direction", ["heading"], false, "minor", `Include the direction of turn in your readback: "${e.turn} heading ${want}".`, `${e.turn} heading ${want}`));
+          out.push(
+            item(
+              "Turn direction",
+              ["heading"],
+              false,
+              "minor",
+              `Include the direction of turn in your readback: "${e.turn} heading ${want}".`,
+              `${e.turn} heading ${want}`,
+            ),
+          );
       }
       return out;
     }
@@ -271,7 +355,9 @@ function checkExpect(p: ParsedTransmission, e: Expect, kind: StepKind): EvalItem
           ["readback"],
           ok,
           e.severity ?? "critical",
-          ok ? `Squawk ${e.code} read back.` : `Read back the transponder code — "squawk ${e.code}". Transponder codes are always read back.`,
+          ok
+            ? `Squawk ${e.code} read back.`
+            : `Read back the transponder code — "squawk ${e.code}". Transponder codes are always read back.`,
           e.say ?? `squawk ${e.code}`,
         ),
       ];
@@ -279,7 +365,18 @@ function checkExpect(p: ParsedTransmission, e: Expect, kind: StepKind): EvalItem
     case "altimeter": {
       const ok = readAltimeters(p).some((v) => Math.abs(v - e.inHg) < 0.005);
       const want = e.inHg.toFixed(2);
-      return [item("Altimeter", ["readback"], ok, e.severity ?? "minor", ok ? `Altimeter ${want} read back.` : `Read back the altimeter setting (${want}) — it confirms you set the right value.`, want)];
+      return [
+        item(
+          "Altimeter",
+          ["readback"],
+          ok,
+          e.severity ?? "minor",
+          ok
+            ? `Altimeter ${want} read back.`
+            : `Read back the altimeter setting (${want}) — it confirms you set the right value.`,
+          want,
+        ),
+      ];
     }
     case "phrase": {
       let ok = e.all ? e.all.every((x) => hasPhrase(p, x)) : hasAny(p, e.any);
@@ -297,7 +394,15 @@ function checkExpect(p: ParsedTransmission, e: Expect, kind: StepKind): EvalItem
     }
     case "maxWords": {
       const ok = p.wordCount <= e.max;
-      return [item("Initial call length", ["phraseology"], ok, "minor", ok ? "Short initial call." : e.tip)];
+      return [
+        item(
+          "Initial call length",
+          ["phraseology"],
+          ok,
+          "minor",
+          ok ? "Short initial call." : e.tip,
+        ),
+      ];
     }
     case "number": {
       const t = p.tokens;
@@ -311,21 +416,65 @@ function checkExpect(p: ParsedTransmission, e: Expect, kind: StepKind): EvalItem
         }
       }
       const ok = found === e.value;
-      return [item(e.label, [e.category], ok, e.severity, ok ? `${e.label}: ✓` : found !== null ? `${e.label}: you said ${found}, expected ${e.value}. ${e.tip}` : e.tip)];
+      return [
+        item(
+          e.label,
+          [e.category],
+          ok,
+          e.severity,
+          ok
+            ? `${e.label}: ✓`
+            : found !== null
+              ? `${e.label}: you said ${found}, expected ${e.value}. ${e.tip}`
+              : e.tip,
+        ),
+      ];
     }
   }
 }
 
 const NONSTANDARD: { any: string[]; unless?: string[]; message: string; correct?: string }[] = [
-  { any: ["over and out"], message: `"Over and out" isn't used in aviation — simply end with your callsign.` },
-  { any: ["10 4", "ten four"], message: `Avoid CB slang like "ten-four". Use "roger" (received) or "wilco" (will comply).`, correct: "wilco" },
-  { any: ["copy that", "copy"], unless: ["ready to copy", "copy the clearance"], message: `"Copy" isn't standard phraseology — use "roger" (received) or read the instruction back.`, correct: "roger" },
-  { any: ["repeat"], message: `Say "say again" — "repeat" is not used on ATC frequencies (Pilot/Controller Glossary).`, correct: "say again" },
-  { any: ["with you"], message: `Avoid "with you". On initial contact state your altitude instead, e.g. "level 4,500" (AIM 5-3-1).` },
-  { any: ["um", "uh", "erm", "uhh", "umm"], message: `Filler words ("um", "uh") tie up the frequency — plan the call before you key the mic.` },
-  { any: ["yes", "yeah", "yep", "nope"], message: `Use "affirmative" / "negative" instead of yes/no.`, correct: "affirmative" },
-  { any: ["the active", "active runway"], message: `Say the runway number — "the active" is ambiguous (AIM 4-1-9).` },
-  { any: ["any traffic in the area please advise", "any traffic please advise"], message: `"Any traffic please advise" is not a recognized call (AIM 4-1-9) — state your position and intentions instead.` },
+  {
+    any: ["over and out"],
+    message: `"Over and out" isn't used in aviation — simply end with your callsign.`,
+  },
+  {
+    any: ["10 4", "ten four"],
+    message: `Avoid CB slang like "ten-four". Use "roger" (received) or "wilco" (will comply).`,
+    correct: "wilco",
+  },
+  {
+    any: ["copy that", "copy"],
+    unless: ["ready to copy", "copy the clearance"],
+    message: `"Copy" isn't standard phraseology — use "roger" (received) or read the instruction back.`,
+    correct: "roger",
+  },
+  {
+    any: ["repeat"],
+    message: `Say "say again" — "repeat" is not used on ATC frequencies (Pilot/Controller Glossary).`,
+    correct: "say again",
+  },
+  {
+    any: ["with you"],
+    message: `Avoid "with you". On initial contact state your altitude instead, e.g. "level 4,500" (AIM 5-3-1).`,
+  },
+  {
+    any: ["um", "uh", "erm", "uhh", "umm"],
+    message: `Filler words ("um", "uh") tie up the frequency — plan the call before you key the mic.`,
+  },
+  {
+    any: ["yes", "yeah", "yep", "nope"],
+    message: `Use "affirmative" / "negative" instead of yes/no.`,
+    correct: "affirmative",
+  },
+  {
+    any: ["the active", "active runway"],
+    message: `Say the runway number — "the active" is ambiguous (AIM 4-1-9).`,
+  },
+  {
+    any: ["any traffic in the area please advise", "any traffic please advise"],
+    message: `"Any traffic please advise" is not a recognized call (AIM 4-1-9) — state your position and intentions instead.`,
+  },
 ];
 
 function universalChecks(p: ParsedTransmission, input: EvaluateInput): EvalItem[] {
@@ -346,24 +495,77 @@ function universalChecks(p: ParsedTransmission, input: EvaluateInput): EvalItem[
     );
   } else {
     if (cs.form === "abbrev" && !input.abbreviatedAllowed)
-      out.push(item("Callsign abbreviation", ["identification"], false, "minor", `You abbreviated your callsign to ${abbrev} before the controller did. Use the full callsign (${full}) until ATC abbreviates it (AIM 4-2-4).`, full));
-    else out.push(item("Callsign", ["identification"], true, "critical", `Identified as ${cs.form === "full" ? full : abbrev}.`));
+      out.push(
+        item(
+          "Callsign abbreviation",
+          ["identification"],
+          false,
+          "minor",
+          `You abbreviated your callsign to ${abbrev} before the controller did. Use the full callsign (${full}) until ATC abbreviates it (AIM 4-2-4).`,
+          full,
+        ),
+      );
+    else
+      out.push(
+        item(
+          "Callsign",
+          ["identification"],
+          true,
+          "critical",
+          `Identified as ${cs.form === "full" ? full : abbrev}.`,
+        ),
+      );
     if ((input.kind === "initial" || input.kind === "request") && cs.position === "end")
-      out.push(item("Call order", ["phraseology"], false, "minor", `On an initial call use the order: who you're calling → who you are → where you are → what you want (AIM 4-2-3).`));
+      out.push(
+        item(
+          "Call order",
+          ["phraseology"],
+          false,
+          "minor",
+          `On an initial call use the order: who you're calling → who you are → where you are → what you want (AIM 4-2-3).`,
+        ),
+      );
     if (input.kind === "readback" && cs.position === "middle")
-      out.push(item("Callsign placement", ["identification"], false, "minor", `End your readback with your callsign (e.g. "…, ${input.abbreviatedAllowed ? abbrev : full}") so the controller knows who read it back.`));
+      out.push(
+        item(
+          "Callsign placement",
+          ["identification"],
+          false,
+          "minor",
+          `End your readback with your callsign (e.g. "…, ${input.abbreviatedAllowed ? abbrev : full}") so the controller knows who read it back.`,
+        ),
+      );
   }
   let ns = 0;
   for (const n of NONSTANDARD) {
     if (ns >= 3) break;
     if (hasAny(p, n.any) && !(n.unless && hasAny(p, n.unless))) {
-      out.push(item("Non-standard phraseology", ["phraseology"], false, "minor", n.message, n.correct));
+      out.push(
+        item("Non-standard phraseology", ["phraseology"], false, "minor", n.message, n.correct),
+      );
       ns++;
     }
   }
   if (input.kind === "readback" && p.wordCount <= 4 && hasAny(p, ["roger", "wilco", "copy"]))
-    out.push(item("Readback vs. roger", ["phraseology", "readback"], false, "major", `"Roger" or "wilco" alone is not a readback. Read back runway assignments, hold-short instructions, altitudes, headings, frequencies and codes (AIM 4-4-7).`));
-  if (p.wordCount > 45) out.push(item("Brevity", ["phraseology"], false, "minor", `That call was long (${p.wordCount} words). Keep transmissions concise — say only what's required (AIM 4-2-2).`));
+    out.push(
+      item(
+        "Readback vs. roger",
+        ["phraseology", "readback"],
+        false,
+        "major",
+        `"Roger" or "wilco" alone is not a readback. Read back runway assignments, hold-short instructions, altitudes, headings, frequencies and codes (AIM 4-4-7).`,
+      ),
+    );
+  if (p.wordCount > 45)
+    out.push(
+      item(
+        "Brevity",
+        ["phraseology"],
+        false,
+        "minor",
+        `That call was long (${p.wordCount} words). Keep transmissions concise — say only what's required (AIM 4-2-2).`,
+      ),
+    );
   return out;
 }
 
@@ -384,10 +586,17 @@ export function summarize(items: EvalItem[]): string {
   const c = bad.filter((i) => i.severity === "critical").length;
   const M = bad.filter((i) => i.severity === "major").length;
   const m = bad.filter((i) => i.severity === "minor").length;
-  return [c ? `${c} critical` : "", M ? `${M} major` : "", m ? `${m} minor` : ""].filter(Boolean).join(", ") + ` issue${bad.length > 1 ? "s" : ""}`;
+  return (
+    [c ? `${c} critical` : "", M ? `${M} major` : "", m ? `${m} minor` : ""]
+      .filter(Boolean)
+      .join(", ") + ` issue${bad.length > 1 ? "s" : ""}`
+  );
 }
 
-export function evaluateTransmission(input: EvaluateInput): { items: EvalItem[]; parsed: ParsedTransmission } {
+export function evaluateTransmission(input: EvaluateInput): {
+  items: EvalItem[];
+  parsed: ParsedTransmission;
+} {
   const p = parseTransmission(input.text);
   const items: EvalItem[] = [];
   for (const e of input.expects) items.push(...checkExpect(p, e, input.kind));
@@ -395,10 +604,27 @@ export function evaluateTransmission(input: EvaluateInput): { items: EvalItem[];
   return { items, parsed: p };
 }
 
-export function timingItem(delaySec: number | null, difficulty: Difficulty, urgent: boolean): EvalItem | null {
+export function timingItem(
+  delaySec: number | null,
+  difficulty: Difficulty,
+  urgent: boolean,
+): EvalItem | null {
   if (delaySec === null) return null;
-  const limit = urgent ? 6 : difficulty === "beginner" ? 30 : difficulty === "intermediate" ? 15 : 10;
-  if (delaySec <= limit) return item("Response time", ["timing"], true, "minor", `Responded in ${delaySec.toFixed(1)} s.`);
+  const limit = urgent
+    ? 6
+    : difficulty === "beginner"
+      ? 30
+      : difficulty === "intermediate"
+        ? 15
+        : 10;
+  if (delaySec <= limit)
+    return item(
+      "Response time",
+      ["timing"],
+      true,
+      "minor",
+      `Responded in ${delaySec.toFixed(1)} s.`,
+    );
   const sev: Severity = urgent ? "major" : delaySec > limit * 2 ? "major" : "minor";
   return item(
     "Response time",
@@ -433,7 +659,13 @@ export function wrongFrequencyItem(expected: Facility, tunedMhz: number): EvalIt
 }
 
 export function correctFrequencyItem(f: Facility): EvalItem {
-  return item("Frequency management", ["frequency"], true, "major", `Transmitted on ${f.name} ${formatFreqShort(f.mhz)}.`);
+  return item(
+    "Frequency management",
+    ["frequency"],
+    true,
+    "major",
+    `Transmitted on ${f.name} ${formatFreqShort(f.mhz)}.`,
+  );
 }
 
 // ---------- session report ----------
@@ -454,12 +686,19 @@ export function buildReport(evals: TransmissionEval[]): SessionReport {
   }
   const categories = CATEGORY_ORDER.filter((c) => acc.has(c)).map((c) => {
     const a = acc.get(c) ?? { pass: 0, total: 1, checks: 0 };
-    return { key: c, label: CATEGORY_LABEL[c], score: Math.round((a.pass / Math.max(1, a.total)) * 100), checks: a.checks };
+    return {
+      key: c,
+      label: CATEGORY_LABEL[c],
+      score: Math.round((a.pass / Math.max(1, a.total)) * 100),
+      checks: a.checks,
+    };
   });
   const breakdown: Record<string, number> = {};
   for (const c of categories) breakdown[c.label] = c.score;
   const txScore = evals.length ? evals.reduce((s, e) => s + e.score, 0) / evals.length : 0;
-  const catScore = categories.length ? categories.reduce((s, c) => s + c.score, 0) / categories.length : 0;
+  const catScore = categories.length
+    ? categories.reduce((s, c) => s + c.score, 0) / categories.length
+    : 0;
   const score = evals.length ? Math.round(txScore * 0.6 + catScore * 0.4) : 0;
 
   const feedback: string[] = [];
@@ -472,11 +711,28 @@ export function buildReport(evals: TransmissionEval[]): SessionReport {
         const key = `${it.label}|${it.message}`;
         if (seen.has(key)) continue;
         seen.add(key);
-        feedback.push(`${ev.stepTitle}: ${it.message}${ev.example && sev !== "minor" ? ` Correct example: “${ev.example}”` : ""}`);
+        feedback.push(
+          `${ev.stepTitle}: ${it.message}${ev.example && sev !== "minor" ? ` Correct example: “${ev.example}”` : ""}`,
+        );
       }
     }
   }
   const strengths = categories.filter((c) => c.score >= 90).map((c) => `${c.label}: ${c.score}%`);
-  const grade: SessionReport["grade"] = score >= 90 ? "Excellent" : score >= 75 ? "Proficient" : score >= 60 ? "Needs practice" : "Unsatisfactory";
-  return { score, breakdown, categories, feedback: feedback.slice(0, 16), strengths, transmissions: evals, grade };
+  const grade: SessionReport["grade"] =
+    score >= 90
+      ? "Excellent"
+      : score >= 75
+        ? "Proficient"
+        : score >= 60
+          ? "Needs practice"
+          : "Unsatisfactory";
+  return {
+    score,
+    breakdown,
+    categories,
+    feedback: feedback.slice(0, 16),
+    strengths,
+    transmissions: evals,
+    grade,
+  };
 }

@@ -28,7 +28,19 @@ export const AP_HELP: Record<string, string> = {
   DN: "Nose DN: VS −100 fpm, FLC +1 kt, pitch −0.5°, or ALT hold −10 ft.",
 };
 
-function ApButton({ label, lit, onClick, help, wide }: { label: string; lit: Lit; onClick: () => void; help: string; wide?: boolean }) {
+function ApButton({
+  label,
+  lit,
+  onClick,
+  help,
+  wide,
+}: {
+  label: string;
+  lit: Lit;
+  onClick: () => void;
+  help: string;
+  wide?: boolean;
+}) {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
@@ -45,13 +57,20 @@ function ApButton({ label, lit, onClick, help, wide }: { label: string; lit: Lit
           <span
             className={cn(
               "absolute top-1.5 h-1 w-7 rounded-full transition",
-              lit === "active" ? "bg-ok shadow-[0_0_8px_var(--ok)]" : lit === "armed" ? "bg-white shadow-[0_0_6px_white]" : "bg-black/60",
+              lit === "active"
+                ? "bg-ok shadow-[0_0_8px_var(--ok)]"
+                : lit === "armed"
+                  ? "bg-white shadow-[0_0_6px_white]"
+                  : "bg-black/60",
             )}
           />
           {label}
         </button>
       </TooltipTrigger>
-      <TooltipContent side="top" className="max-w-64 bg-popover text-popover-foreground ring-1 ring-border">
+      <TooltipContent
+        side="top"
+        className="max-w-64 bg-popover text-popover-foreground ring-1 ring-border"
+      >
         <p className="font-semibold">{label}</p>
         <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">{help}</p>
       </TooltipContent>
@@ -60,7 +79,11 @@ function ApButton({ label, lit, onClick, help, wide }: { label: string; lit: Lit
 }
 
 function ModeDisplay({ children }: { children: ReactNode }) {
-  return <div className="grid grid-cols-[auto_1fr_auto_1fr_auto] items-center gap-x-2 rounded-md border border-black bg-black px-2 py-1.5 font-mono text-[12px] shadow-[inset_0_0_0_1px_oklch(1_0_0/0.05)]">{children}</div>;
+  return (
+    <div className="grid grid-cols-[auto_1fr_auto_1fr_auto] items-center gap-x-2 rounded-md border border-black bg-black px-2 py-1.5 font-mono text-[12px] shadow-[inset_0_0_0_1px_oklch(1_0_0/0.05)]">
+      {children}
+    </div>
+  );
 }
 
 export interface AutopilotPanelProps {
@@ -76,21 +99,47 @@ export function AutopilotPanel({ className }: AutopilotPanelProps) {
   const disc = !ap.engaged && ap.annunciation.includes("DISCONNECT");
   const lat = on ? lateralLabel(ap, s.nav) : "";
   const latArm = on ? lateralArmedLabel(ap, s.nav) : "";
-  const vert = on ? (ap.vertical === "GS" ? (s.nav.hsi.source === "GPS" ? "GP" : "GS") : ap.vertical) : "";
-  const vArm = on ? (ap.verticalArmed === "GS" ? (s.nav.hsi.source === "GPS" ? "GP" : "GS") : (ap.verticalArmed ?? "")) : "";
+  const vert = on
+    ? ap.vertical === "GS"
+      ? s.nav.hsi.source === "GPS"
+        ? "GP"
+        : "GS"
+      : ap.vertical
+    : "";
+  const vArm = on
+    ? ap.verticalArmed === "GS"
+      ? s.nav.hsi.source === "GPS"
+        ? "GP"
+        : "GS"
+      : (ap.verticalArmed ?? "")
+    : "";
   const tgt = on ? verticalTarget(ap, r) : "";
   const gpsCrs = r.cdiSource === "GPS";
 
   return (
     <TooltipProvider delayDuration={350}>
-      <div className={cn("relative rounded-xl border border-white/10 bg-bezel p-2.5 shadow-[inset_0_1px_0_oklch(1_0_0/0.06)]", className)}>
+      <div
+        className={cn(
+          "relative rounded-xl border border-white/10 bg-bezel p-2.5 shadow-[inset_0_1px_0_oklch(1_0_0/0.06)]",
+          className,
+        )}
+      >
         <div className="mb-2 flex items-center justify-between px-0.5">
-          <span className="text-[10px] font-semibold tracking-[0.2em] text-white/45 uppercase">Autopilot · Flight director</span>
+          <span className="text-[10px] font-semibold tracking-[0.2em] text-white/45 uppercase">
+            Autopilot · Flight director
+          </span>
           <ExplainButton id="autopilot" label="Autopilot" />
         </div>
 
         <ModeDisplay>
-          <span className={cn("font-bold", disc ? "animate-annunciator text-caution" : ap.engaged ? "text-ok" : "text-white/20")}>AP</span>
+          <span
+            className={cn(
+              "font-bold",
+              disc ? "animate-annunciator text-caution" : ap.engaged ? "text-ok" : "text-white/20",
+            )}
+          >
+            AP
+          </span>
           <span className="flex gap-2">
             <span className="font-bold text-ok">{lat}</span>
             <span className="text-white">{latArm}</span>
@@ -104,7 +153,10 @@ export function AutopilotPanel({ className }: AutopilotPanelProps) {
           <span className={cn("font-bold", ap.fd ? "text-ok" : "text-white/20")}>FD</span>
         </ModeDisplay>
         {disc ? (
-          <div className="animate-annunciator mt-1.5 rounded border border-caution bg-caution/15 py-1 text-center font-mono text-[11px] font-bold tracking-widest text-caution" role="alert">
+          <div
+            className="animate-annunciator mt-1.5 rounded border border-caution bg-caution/15 py-1 text-center font-mono text-[11px] font-bold tracking-widest text-caution"
+            role="alert"
+          >
             {ap.annunciation || "AP DISCONNECT"}
           </div>
         ) : null}
@@ -130,18 +182,96 @@ export function AutopilotPanel({ className }: AutopilotPanelProps) {
         </div>
 
         <div className="mt-2 grid grid-cols-6 gap-1.5">
-          <ApButton label="AP" lit={ap.engaged ? "active" : null} onClick={() => engine.apToggle()} help={AP_HELP["AP"]!} />
-          <ApButton label="FD" lit={ap.fd ? "active" : null} onClick={() => engine.fdToggle()} help={AP_HELP["FD"]!} />
-          <ApButton label="YD" lit={ap.yd ? "active" : null} onClick={() => engine.yawDamperToggle()} help={AP_HELP["YD"]!} />
-          <ApButton label="HDG" lit={on && ap.lateral === "HDG" ? "active" : null} onClick={() => engine.apLateral("HDG")} help={AP_HELP["HDG"]!} />
-          <ApButton label="NAV" lit={on && ap.lateral === "NAV" ? "active" : on && ap.lateralArmed === "NAV" ? "armed" : null} onClick={() => engine.apLateral("NAV")} help={AP_HELP["NAV"]!} />
-          <ApButton label="APR" lit={on && ap.lateral === "APR" ? "active" : on && ap.lateralArmed === "LOC" ? "armed" : null} onClick={() => engine.apLateral("APR")} help={AP_HELP["APR"]!} />
-          <ApButton label="ALT" lit={on && ap.vertical === "ALT" ? "active" : on && ap.verticalArmed === "ALTS" ? "armed" : null} onClick={() => engine.apVertical("ALT")} help={AP_HELP["ALT"]!} />
-          <ApButton label="VS" lit={on && ap.vertical === "VS" ? "active" : null} onClick={() => engine.apVertical("VS")} help={AP_HELP["VS"]!} />
-          <ApButton label="FLC" lit={on && ap.vertical === "FLC" ? "active" : null} onClick={() => engine.apVertical("FLC")} help={AP_HELP["FLC"]!} />
-          <ApButton label="▲ UP" lit={null} onClick={() => engine.apWheel(1)} help={AP_HELP["UP"]!} />
-          <ApButton label="▼ DN" lit={null} onClick={() => engine.apWheel(-1)} help={AP_HELP["DN"]!} />
-          <ApButton label="SYNC" lit={null} onClick={() => syncHeadingBug(engine)} help="Heading SYNC: sets the heading bug to the current heading (same as pushing the HDG knob)." />
+          <ApButton
+            label="AP"
+            lit={ap.engaged ? "active" : null}
+            onClick={() => engine.apToggle()}
+            help={AP_HELP["AP"]!}
+          />
+          <ApButton
+            label="FD"
+            lit={ap.fd ? "active" : null}
+            onClick={() => engine.fdToggle()}
+            help={AP_HELP["FD"]!}
+          />
+          <ApButton
+            label="YD"
+            lit={ap.yd ? "active" : null}
+            onClick={() => engine.yawDamperToggle()}
+            help={AP_HELP["YD"]!}
+          />
+          <ApButton
+            label="HDG"
+            lit={on && ap.lateral === "HDG" ? "active" : null}
+            onClick={() => engine.apLateral("HDG")}
+            help={AP_HELP["HDG"]!}
+          />
+          <ApButton
+            label="NAV"
+            lit={
+              on && ap.lateral === "NAV"
+                ? "active"
+                : on && ap.lateralArmed === "NAV"
+                  ? "armed"
+                  : null
+            }
+            onClick={() => engine.apLateral("NAV")}
+            help={AP_HELP["NAV"]!}
+          />
+          <ApButton
+            label="APR"
+            lit={
+              on && ap.lateral === "APR"
+                ? "active"
+                : on && ap.lateralArmed === "LOC"
+                  ? "armed"
+                  : null
+            }
+            onClick={() => engine.apLateral("APR")}
+            help={AP_HELP["APR"]!}
+          />
+          <ApButton
+            label="ALT"
+            lit={
+              on && ap.vertical === "ALT"
+                ? "active"
+                : on && ap.verticalArmed === "ALTS"
+                  ? "armed"
+                  : null
+            }
+            onClick={() => engine.apVertical("ALT")}
+            help={AP_HELP["ALT"]!}
+          />
+          <ApButton
+            label="VS"
+            lit={on && ap.vertical === "VS" ? "active" : null}
+            onClick={() => engine.apVertical("VS")}
+            help={AP_HELP["VS"]!}
+          />
+          <ApButton
+            label="FLC"
+            lit={on && ap.vertical === "FLC" ? "active" : null}
+            onClick={() => engine.apVertical("FLC")}
+            help={AP_HELP["FLC"]!}
+          />
+          <ApButton
+            label="▲ UP"
+            lit={null}
+            onClick={() => engine.apWheel(1)}
+            help={AP_HELP["UP"]!}
+          />
+          <ApButton
+            label="▼ DN"
+            lit={null}
+            onClick={() => engine.apWheel(-1)}
+            help={AP_HELP["DN"]!}
+          />
+          <ApButton
+            label="SYNC"
+            lit={null}
+            onClick={() => syncHeadingBug(engine)}
+            help="Heading SYNC: sets the heading bug to the current heading (same as pushing the HDG knob)."
+          />
         </div>
 
         <div className="mt-3 flex items-end justify-around gap-2">
@@ -176,7 +306,9 @@ export function AutopilotPanel({ className }: AutopilotPanelProps) {
             valueNow={Math.round(s.nav.hsi.course)}
             valueMin={0}
             valueMax={359}
-            valueText={gpsCrs ? "GPS course is set by the flight plan" : `Course ${pad3(s.nav.hsi.course)}`}
+            valueText={
+              gpsCrs ? "GPS course is set by the flight plan" : `Course ${pad3(s.nav.hsi.course)}`
+            }
             onStep={(d, big) => stepCourse(engine, d, big)}
             onPush={() => syncCourse(engine)}
           />

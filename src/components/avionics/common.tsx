@@ -15,7 +15,15 @@ import type { InstrumentId } from "./instrument-info";
  */
 export const InstrumentExplainContext = createContext<((id: InstrumentId) => void) | null>(null);
 
-export function ExplainButton({ id, className, label }: { id: InstrumentId; className?: string | undefined; label?: string | undefined }) {
+export function ExplainButton({
+  id,
+  className,
+  label,
+}: {
+  id: InstrumentId;
+  className?: string | undefined;
+  label?: string | undefined;
+}) {
   const explain = useContext(InstrumentExplainContext);
   if (!explain) return null;
   return (
@@ -62,7 +70,9 @@ export function DisplayBezel({
     >
       {title || explainId ? (
         <div className="mb-1.5 flex items-center justify-between px-1">
-          <span className="text-[10px] font-semibold tracking-[0.2em] text-white/40 uppercase">{title}</span>
+          <span className="text-[10px] font-semibold tracking-[0.2em] text-white/40 uppercase">
+            {title}
+          </span>
           {explainId ? <ExplainButton id={explainId} /> : null}
         </div>
       ) : null}
@@ -73,15 +83,33 @@ export function DisplayBezel({
 }
 
 /** Round steam-gauge frame with caption and optional explain button. */
-export function GaugeFrame({ children, caption, explainId, className, controls }: { children: ReactNode; caption?: string | undefined; explainId?: InstrumentId | undefined; className?: string | undefined; controls?: ReactNode | undefined}) {
+export function GaugeFrame({
+  children,
+  caption,
+  explainId,
+  className,
+  controls,
+}: {
+  children: ReactNode;
+  caption?: string | undefined;
+  explainId?: InstrumentId | undefined;
+  className?: string | undefined;
+  controls?: ReactNode | undefined;
+}) {
   return (
     <figure className={cn("relative flex flex-col items-center", className)}>
       <div className="relative aspect-square w-full rounded-2xl bg-bezel p-1.5 shadow-[inset_0_1px_0_oklch(1_0_0/0.07),0_6px_18px_oklch(0_0_0/0.5)]">
         {children}
-        {explainId ? <ExplainButton id={explainId} label={caption} className="absolute top-1 right-1" /> : null}
+        {explainId ? (
+          <ExplainButton id={explainId} label={caption} className="absolute top-1 right-1" />
+        ) : null}
         {controls}
       </div>
-      {caption ? <figcaption className="mt-1 text-[10px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">{caption}</figcaption> : null}
+      {caption ? (
+        <figcaption className="mt-1 text-[10px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+          {caption}
+        </figcaption>
+      ) : null}
     </figure>
   );
 }
@@ -136,7 +164,19 @@ export function SoftKey({
 // ---------------------------------------------------------------- SVG helpers
 
 /** Red X failure overlay inside an SVG. */
-export function RedX({ x, y, w, h, label }: { x: number; y: number; w: number; h: number; label?: string | undefined}) {
+export function RedX({
+  x,
+  y,
+  w,
+  h,
+  label,
+}: {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  label?: string | undefined;
+}) {
   return (
     <g pointerEvents="none">
       <rect x={x} y={y} width={w} height={h} fill="black" opacity={0.55} />
@@ -144,8 +184,23 @@ export function RedX({ x, y, w, h, label }: { x: number; y: number; w: number; h
       <line x1={x + w} y1={y} x2={x} y2={y + h} stroke="var(--warning)" strokeWidth={4} />
       {label ? (
         <g>
-          <rect x={x + w / 2 - label.length * 6 - 8} y={y + h / 2 - 13} width={label.length * 12 + 16} height={26} fill="black" stroke="var(--warning)" />
-          <text x={x + w / 2} y={y + h / 2 + 6} textAnchor="middle" fill="var(--warning)" fontSize={17} fontWeight={700} fontFamily="var(--font-mono)">
+          <rect
+            x={x + w / 2 - label.length * 6 - 8}
+            y={y + h / 2 - 13}
+            width={label.length * 12 + 16}
+            height={26}
+            fill="black"
+            stroke="var(--warning)"
+          />
+          <text
+            x={x + w / 2}
+            y={y + h / 2 + 6}
+            textAnchor="middle"
+            fill="var(--warning)"
+            fontSize={17}
+            fontWeight={700}
+            fontFamily="var(--font-mono)"
+          >
             {label}
           </text>
         </g>
@@ -172,7 +227,7 @@ export function arcPath(cx: number, cy: number, r: number, from: number, to: num
 export const MONO = "var(--font-mono)";
 
 /** Standard dark gauge face (circle) for steam gauges in a 200×200 viewBox. */
-export function GaugeFace({ children }: { children?: ReactNode | undefined}) {
+export function GaugeFace({ children }: { children?: ReactNode | undefined }) {
   return (
     <>
       <defs>
@@ -196,19 +251,47 @@ export function GaugeFace({ children }: { children?: ReactNode | undefined}) {
 export function GaugeGlass() {
   return (
     <g pointerEvents="none">
-      <circle cx={100} cy={100} r={92} fill="none" stroke="black" strokeOpacity={0.6} strokeWidth={3} />
+      <circle
+        cx={100}
+        cy={100}
+        r={92}
+        fill="none"
+        stroke="black"
+        strokeOpacity={0.6}
+        strokeWidth={3}
+      />
       <path d="M 30 70 A 80 80 0 0 1 150 25 A 95 95 0 0 0 30 70 Z" fill="white" opacity={0.05} />
     </g>
   );
 }
 
 /** Small flag (e.g. "OFF", "NAV", "GS") drawn in a gauge. */
-export function Flag({ x, y, text, color = "var(--warning)", w }: { x: number; y: number; text: string; color?: string | undefined; w?: number | undefined}) {
+export function Flag({
+  x,
+  y,
+  text,
+  color = "var(--warning)",
+  w,
+}: {
+  x: number;
+  y: number;
+  text: string;
+  color?: string | undefined;
+  w?: number | undefined;
+}) {
   const width = w ?? text.length * 8 + 10;
   return (
     <g>
       <rect x={x - width / 2} y={y - 9} width={width} height={18} rx={2} fill={color} />
-      <text x={x} y={y + 4.5} textAnchor="middle" fontSize={12} fontWeight={800} fill="black" fontFamily={MONO}>
+      <text
+        x={x}
+        y={y + 4.5}
+        textAnchor="middle"
+        fontSize={12}
+        fontWeight={800}
+        fill="black"
+        fontFamily={MONO}
+      >
         {text}
       </text>
     </g>

@@ -15,7 +15,9 @@ export const COM_MAX_KHZ_833 = 136_990;
 /** Last two digits of 8.33 kHz channel names inside each 100 kHz block. */
 const SUFFIX_833 = [0, 5, 10, 15, 25, 30, 35, 40, 50, 55, 60, 65, 75, 80, 85, 90];
 /** All valid kHz offsets (0–999) within one MHz for 8.33 kHz channel names. */
-const OFFSETS_833: number[] = Array.from({ length: 10 }, (_, h) => SUFFIX_833.map((s) => h * 100 + s)).flat();
+const OFFSETS_833: number[] = Array.from({ length: 10 }, (_, h) =>
+  SUFFIX_833.map((s) => h * 100 + s),
+).flat();
 const OFFSETS_25: number[] = Array.from({ length: 40 }, (_, i) => i * 25);
 
 export const toKhz = (mhz: number) => Math.round(mhz * 1000);
@@ -53,7 +55,9 @@ export function validateComInput(mhz: number, spacing: ChannelSpacing): string |
   if (k < COM_MIN_KHZ || k > (spacing === 25 ? COM_MAX_KHZ_25 : COM_MAX_KHZ_833))
     return "COM range is 118.000 – 136.975 MHz";
   if (!isValidCom(mhz, spacing))
-    return spacing === 25 ? "Not a 25 kHz channel (must end in .x00, .x25, .x50 or .x75)" : "Not a valid 8.33 kHz channel name";
+    return spacing === 25
+      ? "Not a 25 kHz channel (must end in .x00, .x25, .x50 or .x75)"
+      : "Not a valid 8.33 kHz channel name";
   return null;
 }
 
@@ -90,7 +94,10 @@ export function stepCoarse(mhz: number, dir: number): number {
 
 /** Parse what a user types: "121.6", "121,60", "1216", "121600". */
 export function parseFreqInput(raw: string): number | null {
-  const s = raw.trim().replace(",", ".").replace(/[^\d.]/g, "");
+  const s = raw
+    .trim()
+    .replace(",", ".")
+    .replace(/[^\d.]/g, "");
   if (!s) return null;
   if (s.includes(".")) {
     const v = Number(s);

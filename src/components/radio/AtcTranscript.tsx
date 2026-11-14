@@ -33,12 +33,24 @@ export function AtcTranscript({
   }, [lines.length, autoScroll]);
 
   return (
-    <div ref={ref} className={cn("avionics-screen overflow-y-auto p-3 font-mono text-[13px] leading-relaxed", className)} aria-live="polite" aria-label="Radio transcript">
-      {lines.length === 0 ? <p className="py-6 text-center font-sans text-xs text-muted-foreground">{emptyText}</p> : null}
+    <div
+      ref={ref}
+      className={cn(
+        "avionics-screen overflow-y-auto p-3 font-mono text-[13px] leading-relaxed",
+        className,
+      )}
+      aria-live="polite"
+      aria-label="Radio transcript"
+    >
+      {lines.length === 0 ? (
+        <p className="py-6 text-center font-sans text-xs text-muted-foreground">{emptyText}</p>
+      ) : null}
       <ul className="space-y-2">
         {lines.map((l) => (
           <li key={l.id} className="flex gap-2">
-            <span className="mt-0.5 shrink-0 text-[10px] text-muted-foreground/70 tabular">{stamp(l.t)}</span>
+            <span className="mt-0.5 shrink-0 text-[10px] text-muted-foreground/70 tabular">
+              {stamp(l.t)}
+            </span>
             {l.from === "system" ? (
               <div
                 className={cn(
@@ -59,13 +71,27 @@ export function AtcTranscript({
                 <span
                   className={cn(
                     "mr-1.5 text-[10px] font-bold tracking-wide uppercase",
-                    l.from === "pilot" ? "text-primary" : l.from === "atc" ? "text-ok" : "text-muted-foreground",
+                    l.from === "pilot"
+                      ? "text-primary"
+                      : l.from === "atc"
+                        ? "text-ok"
+                        : "text-muted-foreground",
                   )}
                 >
-                  {l.from === "pilot" ? pilotLabel : l.station ?? "ATC"}
+                  {l.from === "pilot" ? pilotLabel : (l.station ?? "ATC")}
                   {l.from === "traffic" ? " · other traffic" : ""}
                 </span>
-                <span className={cn(l.from === "pilot" ? "text-foreground" : l.from === "atc" ? "text-ok/95" : "text-muted-foreground italic")}>{l.text}</span>
+                <span
+                  className={cn(
+                    l.from === "pilot"
+                      ? "text-foreground"
+                      : l.from === "atc"
+                        ? "text-ok/95"
+                        : "text-muted-foreground italic",
+                  )}
+                >
+                  {l.text}
+                </span>
               </div>
             )}
           </li>
@@ -73,7 +99,8 @@ export function AtcTranscript({
       </ul>
       {receiving ? (
         <div className="mt-2 flex items-center gap-2 font-sans text-[11px] text-ok">
-          <span className="size-2 animate-annunciator rounded-full bg-ok" /> {receiving.station} transmitting…
+          <span className="size-2 animate-annunciator rounded-full bg-ok" /> {receiving.station}{" "}
+          transmitting…
         </div>
       ) : null}
     </div>

@@ -36,24 +36,61 @@ function env(name: string): string | undefined {
 export function cloudConfig(): ProviderConfig | null {
   const key = env("LOVABLE_API_KEY");
   if (!key) return null;
-  return { id: "cloud", label: "Lovable AI", baseUrl: LOVABLE_GATEWAY, model: env("LOVABLE_AI_MODEL") ?? DEFAULT_CLOUD_MODEL, apiKey: key };
+  return {
+    id: "cloud",
+    label: "Lovable AI",
+    baseUrl: LOVABLE_GATEWAY,
+    model: env("LOVABLE_AI_MODEL") ?? DEFAULT_CLOUD_MODEL,
+    apiKey: key,
+  };
 }
 
 export function localServerConfig(): ProviderConfig | null {
   const base = env("LOCAL_AI_BASE_URL");
   if (!base || !/^https?:\/\//i.test(base)) return null;
-  return { id: "local-server", label: "Local model (server)", baseUrl: base.replace(/\/+$/, ""), model: env("LOCAL_AI_MODEL") ?? "llama3.1", apiKey: env("LOCAL_AI_API_KEY") ?? null };
+  return {
+    id: "local-server",
+    label: "Local model (server)",
+    baseUrl: base.replace(/\/+$/, ""),
+    model: env("LOCAL_AI_MODEL") ?? "llama3.1",
+    apiKey: env("LOCAL_AI_API_KEY") ?? null,
+  };
 }
 
 export function serverAiStatus() {
   return { cloud: !!cloudConfig(), localServer: !!localServerConfig() };
 }
 
-export type ProviderResult = { ok: true; text: string; provider: ServerProviderId } | { ok: false; reason: string; code: "not-configured" | "rate-limit" | "credits" | "auth" | "timeout" | "error" | "bad-response" };
+export type ProviderResult =
+  | { ok: true; text: string; provider: ServerProviderId }
+  | {
+      ok: false;
+      reason: string;
+      code:
+        "not-configured" | "rate-limit" | "credits" | "auth" | "timeout" | "error" | "bad-response";
+    };
 
-async function callChat(cfg: ProviderConfig, req: { service: AiService; system: string; messages: AiMessage[]; temperature?: number | undefined; json?: boolean | undefined }, timeoutMs: number): Promise<ProviderResult> {
-  const messages = [{ role: "system", content: guardedSystem(req.service, req.system, req.json) }, ...req.messages.map((m) => ({ role: m.role, content: m.content }))];
-  const body: Record<string, unknown> = { model: cfg.model, messages, temperature: req.temperature ?? 0.4, stream: false };
+async function callChat(
+  cfg: ProviderConfig,
+  req: {
+    service: AiService;
+    system: string;
+    messages: AiMessage[];
+    temperature?: number | undefined;
+    json?: boolean | undefined;
+  },
+  timeoutMs: number,
+): Promise<ProviderResult> {
+  const messages = [
+    { role: "system", content: guardedSystem(req.service, req.system, req.json) },
+    ...req.messages.map((m) => ({ role: m.role, content: m.content })),
+  ];
+  const body: Record<string, unknown> = {
+    model: cfg.model,
+    messages,
+    temperature: req.temperature ?? 0.4,
+    stream: false,
+  };
   if (req.json) body["response_format"] = { type: "json_object" };
 
   const attempt = async (payload: Record<string, unknown>) => {
@@ -62,7 +99,10 @@ async function callChat(cfg: ProviderConfig, req: { service: AiService; system: 
     try {
       return await fetch(`${cfg.baseUrl}/chat/completions`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", ...(cfg.apiKey ? { Authorization: `Bearer ${cfg.apiKey}` } : {}) },
+        headers: {
+          "Content-Type": "application/json",
+          ...(cfg.apiKey ? { Authorization: `Bearer ${cfg.apiKey}` } : {}),
+        },
         body: JSON.stringify(payload),
         signal: ctrl.signal,
       });
@@ -78,18 +118,47 @@ async function callChat(cfg: ProviderConfig, req: { service: AiService; system: 
       const { response_format: _rf, ...rest } = body;
       res = await attempt(rest);
     }
-    if (res.status === 429) return { ok: false, code: "rate-limit", reason: "The AI service is busy (rate limited). Please wait a moment and try again — scripted mode is used meanwhile." };
-    if (res.status === 402) return { ok: false, code: "credits", reason: "AI credits are exhausted for this workspace. Add credits in Lovable (Settings → Workspace → Usage) — scripted mode is used meanwhile." };
-    if (res.status === 401 || res.status === 403) return { ok: false, code: "auth", reason: `${cfg.label} rejected the server's credentials. Check the configured key.` };
-    if (!res.ok) return { ok: false, code: "error", reason: `${cfg.label} returned an error (HTTP ${res.status}).` };
+    if (res.status === 429)
+      return {
+        ok: false,
+        code: "rate-limit",
+        reason:
+          "The AI service is busy (rate limited). Please wait a moment and try again — scripted mode is used meanwhile.",
+      };
+    if (res.status === 402)
+      return {
+        ok: false,
+        code: "credits",
+        reason:
+          "AI credits are exhausted for this workspace. Add credits in Lovable (Settings → Workspace → Usage) — scripted mode is used meanwhile.",
+      };
+    if (res.status === 401 || res.status === 403)
+      return {
+        ok: false,
+        code: "auth",
+        reason: `${cfg.label} rejected the server's credentials. Check the configured key.`,
+      };
+    if (!res.ok)
+      return {
+        ok: false,
+        code: "error",
+        reason: `${cfg.label} returned an error (HTTP ${res.status}).`,
+      };
     const data = (await res.json()) as { choices?: { message?: { content?: unknown } }[] };
     const content = data.choices?.[0]?.message?.content;
     const text = typeof content === "string" ? stripReasoning(content) : "";
-    if (!text) return { ok: false, code: "bad-response", reason: `${cfg.label} returned an empty response.` };
+    if (!text)
+      return {
+        ok: false,
+        code: "bad-response",
+        reason: `${cfg.label} returned an empty response.`,
+      };
     return { ok: true, text: text.slice(0, 16000), provider: cfg.id };
   } catch (e) {
     const aborted = e instanceof Error && (e.name === "AbortError" || /abort/i.test(e.message));
-    return aborted ? { ok: false, code: "timeout", reason: `${cfg.label} timed out.` } : { ok: false, code: "error", reason: `${cfg.label} could not be reached.` };
+    return aborted
+      ? { ok: false, code: "timeout", reason: `${cfg.label} timed out.` }
+      : { ok: false, code: "error", reason: `${cfg.label} could not be reached.` };
   }
 }
 
@@ -100,7 +169,11 @@ const hits = new Map<string, number[]>();
 
 function clientKey(): string {
   try {
-    return getRequestHeader("cf-connecting-ip") ?? getRequestHeader("x-forwarded-for")?.split(",")[0]?.trim() ?? "anon";
+    return (
+      getRequestHeader("cf-connecting-ip") ??
+      getRequestHeader("x-forwarded-for")?.split(",")[0]?.trim() ??
+      "anon"
+    );
   } catch {
     return "anon";
   }
@@ -124,15 +197,29 @@ export async function runServerChat(req: {
   json?: boolean | undefined;
   provider: "auto" | "cloud" | "local-server";
 }): Promise<ProviderResult> {
-  if (rateLimited()) return { ok: false, code: "rate-limit", reason: "Too many AI requests from this device — please slow down for a minute." };
+  if (rateLimited())
+    return {
+      ok: false,
+      code: "rate-limit",
+      reason: "Too many AI requests from this device — please slow down for a minute.",
+    };
   const order: ProviderConfig[] = [];
   const cloud = cloudConfig();
   const local = localServerConfig();
   if (req.provider === "cloud" || req.provider === "auto") if (cloud) order.push(cloud);
   if (req.provider === "local-server" || req.provider === "auto") if (local) order.push(local);
   if (!order.length) {
-    const which = req.provider === "cloud" ? "Lovable AI (LOVABLE_API_KEY)" : req.provider === "local-server" ? "a server-side local model (LOCAL_AI_BASE_URL)" : "an AI provider";
-    return { ok: false, code: "not-configured", reason: `The server has no ${which} configured — using scripted training mode.` };
+    const which =
+      req.provider === "cloud"
+        ? "Lovable AI (LOVABLE_API_KEY)"
+        : req.provider === "local-server"
+          ? "a server-side local model (LOCAL_AI_BASE_URL)"
+          : "an AI provider";
+    return {
+      ok: false,
+      code: "not-configured",
+      reason: `The server has no ${which} configured — using scripted training mode.`,
+    };
   }
   const deadline = Date.now() + 23_000;
   let last: ProviderResult = { ok: false, code: "error", reason: "No provider responded." };

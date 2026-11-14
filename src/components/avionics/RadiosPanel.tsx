@@ -13,19 +13,49 @@ import { ExplainButton } from "./common";
 import { stepBaro } from "./controls";
 import { Knob } from "./Knob";
 
-function Row({ label, children, className }: { label: string; children: ReactNode; className?: string }) {
+function Row({
+  label,
+  children,
+  className,
+}: {
+  label: string;
+  children: ReactNode;
+  className?: string;
+}) {
   return (
-    <div className={cn("flex items-center gap-2 rounded-lg border border-white/5 bg-[oklch(0.14_0.006_258)] px-2 py-1.5", className)}>
-      <span className="w-10 shrink-0 font-mono text-[10px] font-bold tracking-wider text-white/55">{label}</span>
+    <div
+      className={cn(
+        "flex items-center gap-2 rounded-lg border border-white/5 bg-[oklch(0.14_0.006_258)] px-2 py-1.5",
+        className,
+      )}
+    >
+      <span className="w-10 shrink-0 font-mono text-[10px] font-bold tracking-wider text-white/55">
+        {label}
+      </span>
       {children}
     </div>
   );
 }
 
-function Lcd({ children, className, label }: { children: ReactNode; className?: string; label?: string }) {
+function Lcd({
+  children,
+  className,
+  label,
+}: {
+  children: ReactNode;
+  className?: string;
+  label?: string;
+}) {
   return (
-    <div className={cn("flex min-w-0 flex-col rounded border border-black bg-black px-1.5 py-0.5 shadow-[inset_0_0_0_1px_oklch(1_0_0/0.05)]", className)}>
-      {label ? <span className="text-[8px] leading-none tracking-wider text-white/40">{label}</span> : null}
+    <div
+      className={cn(
+        "flex min-w-0 flex-col rounded border border-black bg-black px-1.5 py-0.5 shadow-[inset_0_0_0_1px_oklch(1_0_0/0.05)]",
+        className,
+      )}
+    >
+      {label ? (
+        <span className="text-[8px] leading-none tracking-wider text-white/40">{label}</span>
+      ) : null}
       <span className="font-mono text-[15px] leading-tight font-semibold tabular">{children}</span>
     </div>
   );
@@ -45,7 +75,19 @@ function SwapBtn({ onClick, label }: { onClick: () => void; label: string }) {
   );
 }
 
-function SmallBtn({ children, onClick, active, title, className }: { children: ReactNode; onClick: () => void; active?: boolean; title?: string; className?: string }) {
+function SmallBtn({
+  children,
+  onClick,
+  active,
+  title,
+  className,
+}: {
+  children: ReactNode;
+  onClick: () => void;
+  active?: boolean;
+  title?: string;
+  className?: string;
+}) {
   return (
     <button
       type="button"
@@ -77,7 +119,9 @@ function ComRow({ n, s, engine }: { n: 1 | 2; s: SimSnapshot; engine: SimEngine 
   return (
     <Row label={`COM${n}`}>
       <Lcd label="ACTIVE" className="flex-1">
-        <span className={failed ? "text-white/25" : "text-ok"}>{failed ? "-----" : fmtCom(c.active)}</span>
+        <span className={failed ? "text-white/25" : "text-ok"}>
+          {failed ? "-----" : fmtCom(c.active)}
+        </span>
       </Lcd>
       <SwapBtn onClick={() => engine.swapCom(n)} label={`Swap COM${n} active and standby`} />
       <Lcd label="STBY" className="flex-1">
@@ -90,7 +134,13 @@ function ComRow({ n, s, engine }: { n: 1 | 2; s: SimSnapshot; engine: SimEngine 
         valueNow={c.standby}
         valueText={`${fmtCom(c.standby)} megahertz`}
         onStep={(d) => tune("mhz", d)}
-        inner={{ label: `COM${n} standby kHz (inner)`, valueNow: c.standby, valueText: fmtCom(c.standby), onStep: (d) => tune("khz", d), onPush: () => engine.swapCom(n) }}
+        inner={{
+          label: `COM${n} standby kHz (inner)`,
+          valueNow: c.standby,
+          valueText: fmtCom(c.standby),
+          onStep: (d) => tune("khz", d),
+          onPush: () => engine.swapCom(n),
+        }}
       />
     </Row>
   );
@@ -107,10 +157,12 @@ function NavRow({ n, s, engine }: { n: 1 | 2; s: SimSnapshot; engine: SimEngine 
   };
   const sel = s.radios.cdiSource === (n === 1 ? "NAV1" : "NAV2");
   return (
-    <Row label={`NAV${n}`} className="flex-wrap sm:flex-nowrap">
+    <Row label={`NAV${n}`} className="flex-wrap gap-y-1">
       <Lcd label={sel ? "ACTIVE · CDI" : "ACTIVE"} className="flex-1">
         <span className="text-ok">{fmtNav(r.active)}</span>
-        <span className={cn("ml-1.5 text-[11px]", rx.valid ? "text-ok" : "text-white/30")}>{rx.valid ? rx.ident : rx.ident ? `${rx.ident}?` : "---"}</span>
+        <span className={cn("ml-1.5 text-[11px]", rx.valid ? "text-ok" : "text-white/30")}>
+          {rx.valid ? rx.ident : rx.ident ? `${rx.ident}?` : "---"}
+        </span>
       </Lcd>
       <SwapBtn onClick={() => engine.swapNav(n)} label={`Swap NAV${n} active and standby`} />
       <Lcd label="STBY" className="flex-1">
@@ -123,11 +175,26 @@ function NavRow({ n, s, engine }: { n: 1 | 2; s: SimSnapshot; engine: SimEngine 
         valueNow={r.standby}
         valueText={`${fmtNav(r.standby)} megahertz`}
         onStep={(d) => tune("mhz", d)}
-        inner={{ label: `NAV${n} standby kHz (inner)`, valueNow: r.standby, valueText: fmtNav(r.standby), onStep: (d) => tune("khz", d), onPush: () => engine.swapNav(n) }}
+        inner={{
+          label: `NAV${n} standby kHz (inner)`,
+          valueNow: r.standby,
+          valueText: fmtNav(r.standby),
+          onStep: (d) => tune("khz", d),
+          onPush: () => engine.swapNav(n),
+        }}
       />
-      <div className="w-full basis-full pl-12 font-mono text-[10px] text-white/45 sm:hidden">{rx.valid ? `${rx.ident} ${morse(rx.ident)}` : ""}</div>
-      <div className="hidden w-24 shrink-0 truncate font-mono text-[10px] tracking-widest text-ok/80 sm:block" title={rx.valid ? `Morse ident ${rx.ident}` : "No station received"}>
-        {rx.valid ? morse(rx.ident) : <span className="tracking-normal text-white/30">no ident</span>}
+      <div
+        className="w-full basis-full truncate pl-12 font-mono text-[10px] tracking-widest text-ok/80"
+        title={rx.valid ? `Morse ident ${rx.ident}` : "No station received"}
+      >
+        {rx.valid ? (
+          <>
+            <span className="mr-2 tracking-normal text-white/45">IDENT</span>
+            {morse(rx.ident)}
+          </>
+        ) : (
+          <span className="tracking-normal text-white/30">no station received</span>
+        )}
       </div>
     </Row>
   );
@@ -138,15 +205,30 @@ function NavRow({ n, s, engine }: { n: 1 | 2; s: SimSnapshot; engine: SimEngine 
 function AdfRow({ s, engine }: { s: SimSnapshot; engine: SimEngine }) {
   const adf = s.nav.adf;
   const khz = s.radios.adfKhz;
-  const step = (d: number) => engine.setRadios({ adfKhz: stepAdf(engine.getSnapshot().radios.adfKhz, d) });
+  const step = (d: number) =>
+    engine.setRadios({ adfKhz: stepAdf(engine.getSnapshot().radios.adfKhz, d) });
   return (
     <Row label="ADF">
       <Lcd label="FREQ kHz" className="flex-1">
         <span className="text-ok">{khz}</span>
-        <span className={cn("ml-1.5 text-[11px]", adf.valid ? "text-ok" : "text-white/30")}>{adf.valid ? adf.ident : "---"}</span>
+        <span className={cn("ml-1.5 text-[11px]", adf.valid ? "text-ok" : "text-white/30")}>
+          {adf.valid ? adf.ident : "---"}
+        </span>
       </Lcd>
-      <div className="hidden flex-1 truncate font-mono text-[10px] tracking-widest text-ok/80 sm:block">{adf.valid ? morse(adf.ident) : ""}</div>
-      <Knob size="sm" caption="" label="ADF tens (outer)" valueNow={khz} valueMin={190} valueMax={1750} valueText={`${khz} kilohertz`} onStep={(d) => step(d * 10)} inner={{ label: "ADF units (inner)", valueNow: khz, onStep: (d) => step(d) }} />
+      <div className="hidden flex-1 truncate font-mono text-[10px] tracking-widest text-ok/80 sm:block">
+        {adf.valid ? morse(adf.ident) : ""}
+      </div>
+      <Knob
+        size="sm"
+        caption=""
+        label="ADF tens (outer)"
+        valueNow={khz}
+        valueMin={190}
+        valueMax={1750}
+        valueText={`${khz} kilohertz`}
+        onStep={(d) => step(d * 10)}
+        inner={{ label: "ADF units (inner)", valueNow: khz, onStep: (d) => step(d) }}
+      />
     </Row>
   );
 }
@@ -160,13 +242,17 @@ function XpdrRow({ s, engine }: { s: SimSnapshot; engine: SimEngine }) {
   const [, force] = useState(0);
   useEffect(() => {
     if (!identUntil) return;
-    const id = setTimeout(() => {
-      setIdentUntil(0);
-      force((x) => x + 1);
-    }, Math.max(0, identUntil - Date.now()));
+    const id = setTimeout(
+      () => {
+        setIdentUntil(0);
+        force((x) => x + 1);
+      },
+      Math.max(0, identUntil - Date.now()),
+    );
     return () => clearTimeout(id);
   }, [identUntil]);
-  const setCode = (code: string) => engine.setRadios({ transponder: { ...engine.getSnapshot().radios.transponder, code } });
+  const setCode = (code: string) =>
+    engine.setRadios({ transponder: { ...engine.getSnapshot().radios.transponder, code } });
   const digit = (d: number) => {
     const next = (pending ?? "") + String(d);
     if (next.length >= 4) {
@@ -176,21 +262,43 @@ function XpdrRow({ s, engine }: { s: SimSnapshot; engine: SimEngine }) {
   };
   const shown = pending !== null ? pending.padEnd(4, "_") : xp.code;
   const ident = identUntil > Date.now();
-  const modeColor = xp.mode === "ALT" ? "text-ok" : xp.mode === "ON" ? "text-white" : "text-white/40";
+  const modeColor =
+    xp.mode === "ALT" ? "text-ok" : xp.mode === "ON" ? "text-white" : "text-white/40";
   return (
     <Row label="XPDR" className="flex-wrap">
       <Lcd label={ident ? "IDENT" : "SQUAWK"} className="w-[7.5rem]">
-        <span className={cn(pending !== null ? "text-cyan" : modeColor, "tracking-[0.2em]")}>{shown}</span>
+        <span className={cn(pending !== null ? "text-cyan" : modeColor, "tracking-[0.2em]")}>
+          {shown}
+        </span>
         <span className={cn("ml-1 text-[11px]", modeColor)}>{xp.mode}</span>
         {ident ? <span className="animate-annunciator ml-1 text-[10px] text-cyan">ID</span> : null}
       </Lcd>
       <div className="flex flex-wrap gap-1">
         {(["STBY", "ON", "ALT"] as const).map((m) => (
-          <SmallBtn key={m} active={xp.mode === m} onClick={() => engine.setRadios({ transponder: { ...engine.getSnapshot().radios.transponder, mode: m } })} title={m === "STBY" ? "Standby: not replying" : m === "ON" ? "Mode A: code only" : "Mode C/S: code and pressure altitude"}>
+          <SmallBtn
+            key={m}
+            active={xp.mode === m}
+            onClick={() =>
+              engine.setRadios({
+                transponder: { ...engine.getSnapshot().radios.transponder, mode: m },
+              })
+            }
+            title={
+              m === "STBY"
+                ? "Standby: not replying"
+                : m === "ON"
+                  ? "Mode A: code only"
+                  : "Mode C/S: code and pressure altitude"
+            }
+          >
             {m}
           </SmallBtn>
         ))}
-        <SmallBtn onClick={() => setIdentUntil(Date.now() + 18000)} title="IDENT: highlights your target on the controller's radar for about 18 seconds — only when ATC asks" className={ident ? "border-cyan/60 text-cyan" : ""}>
+        <SmallBtn
+          onClick={() => setIdentUntil(Date.now() + 18000)}
+          title="IDENT: highlights your target on the controller's radar for about 18 seconds — only when ATC asks"
+          className={ident ? "border-cyan/60 text-cyan" : ""}
+        >
           IDENT
         </SmallBtn>
         <SmallBtn
@@ -203,13 +311,20 @@ function XpdrRow({ s, engine }: { s: SimSnapshot; engine: SimEngine }) {
           VFR
         </SmallBtn>
       </div>
-      <div className="flex w-full flex-wrap items-center gap-1 pl-12" role="group" aria-label="Transponder code keypad (digits 0–7)">
+      <div
+        className="flex w-full flex-wrap items-center gap-1 pl-12"
+        role="group"
+        aria-label="Transponder code keypad (digits 0–7)"
+      >
         {[0, 1, 2, 3, 4, 5, 6, 7].map((d) => (
           <SmallBtn key={d} onClick={() => digit(d)} className="w-7 px-0 text-[12px]">
             {d}
           </SmallBtn>
         ))}
-        <SmallBtn onClick={() => setPending((p) => (p && p.length > 1 ? p.slice(0, -1) : null))} title="Clear last digit">
+        <SmallBtn
+          onClick={() => setPending((p) => (p && p.length > 1 ? p.slice(0, -1) : null))}
+          title="Clear last digit"
+        >
           CLR
         </SmallBtn>
       </div>
@@ -225,12 +340,26 @@ function BaroRow({ s, engine }: { s: SimSnapshot; engine: SimEngine }) {
     <Row label="BARO">
       <Lcd label="ALTIMETER" className="flex-1">
         <span className="text-cyan">{inHg.toFixed(2)}</span>
-        <span className="ml-1 text-[10px] text-white/50">inHg · {Math.round(inHg * 33.8639)} hPa</span>
+        <span className="ml-1 text-[10px] text-white/50">
+          inHg · {Math.round(inHg * 33.8639)} hPa
+        </span>
       </Lcd>
-      <SmallBtn onClick={() => engine.setRadios({ altimeterInHg: 29.92 })} title="Standard pressure 29.92 inHg (flight levels)">
+      <SmallBtn
+        onClick={() => engine.setRadios({ altimeterInHg: 29.92 })}
+        title="Standard pressure 29.92 inHg (flight levels)"
+      >
         STD
       </SmallBtn>
-      <Knob size="sm" caption="" label="Altimeter setting" valueNow={inHg} valueMin={27.5} valueMax={31.5} valueText={`${inHg.toFixed(2)} inches`} onStep={(d, big) => stepBaro(engine, d, big)} />
+      <Knob
+        size="sm"
+        caption=""
+        label="Altimeter setting"
+        valueNow={inHg}
+        valueMin={27.5}
+        valueMax={31.5}
+        valueText={`${inHg.toFixed(2)} inches`}
+        onStep={(d, big) => stepBaro(engine, d, big)}
+      />
     </Row>
   );
 }
@@ -243,14 +372,24 @@ export interface RadiosPanelProps {
   sections?: ("com" | "nav" | "adf" | "xpdr" | "baro")[] | undefined;
 }
 
-export function RadiosPanel({ className, sections = ["com", "nav", "adf", "xpdr", "baro"] }: RadiosPanelProps) {
+export function RadiosPanel({
+  className,
+  sections = ["com", "nav", "adf", "xpdr", "baro"],
+}: RadiosPanelProps) {
   const s = useSimSnapshot();
   const engine = useSimEngine();
   const has = (k: (typeof sections)[number]) => sections.includes(k);
   return (
-    <div className={cn("relative space-y-1.5 rounded-xl border border-white/10 bg-bezel p-2.5", className)}>
+    <div
+      className={cn(
+        "relative space-y-1.5 rounded-xl border border-white/10 bg-bezel p-2.5",
+        className,
+      )}
+    >
       <div className="flex items-center justify-between px-0.5">
-        <span className="text-[10px] font-semibold tracking-[0.2em] text-white/45 uppercase">Radios</span>
+        <span className="text-[10px] font-semibold tracking-[0.2em] text-white/45 uppercase">
+          Radios
+        </span>
         <span className="flex gap-1">
           <ExplainButton id="radios" label="Radios" />
           <ExplainButton id="transponder" label="Transponder" />
@@ -271,7 +410,9 @@ export function RadiosPanel({ className, sections = ["com", "nav", "adf", "xpdr"
       {has("adf") ? <AdfRow s={s} engine={engine} /> : null}
       {has("xpdr") ? <XpdrRow s={s} engine={engine} /> : null}
       {has("baro") ? <BaroRow s={s} engine={engine} /> : null}
-      <p className="px-0.5 font-mono text-[9px] leading-snug text-white/35">Knobs: outer ring = MHz, inner = kHz (drag, scroll or arrow keys). Push inner = swap.</p>
+      <p className="px-0.5 font-mono text-[9px] leading-snug text-white/35">
+        Knobs: outer ring = MHz, inner = kHz (drag, scroll or arrow keys). Push inner = swap.
+      </p>
     </div>
   );
 }

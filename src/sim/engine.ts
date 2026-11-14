@@ -146,6 +146,9 @@ export class SimEngine {
   private gearHornNotified = false;
   /** Actual flap angle lags commanded */
   private apDisconnectTimer = 0;
+  private captureTimer = 0;
+  /** Seconds of pitot heat applied while the pitot tube is blocked by ice */
+  private pitotHeatT = 0;
 
   constructor(opts: SimOptions) {
     this.perf = getPerf(opts.perfId);
@@ -574,6 +577,14 @@ export class SimEngine {
     this.publish();
   }
 
+  /** Remove the loaded approach (and its waypoints) from the flight plan. */
+  clearApproach() {
+    if (!this.gps.approach) return;
+    const enroute = this.gps.flightPlan.filter((w) => w.kind !== "fix" && w.kind !== "runway");
+    this.gps = { ...this.gps, approach: null, flightPlan: enroute, activeLeg: Math.min(this.gps.activeLeg, Math.max(1, enroute.length - 1)) };
+    this.publish();
+  }
+
   getGps() {
     return this.gps;
   }
@@ -635,12 +646,29 @@ export class SimEngine {
     // ---- electrical
     this.electricalStep(dt);
 
+    // ---- pitot heat melts an iced/blocked pitot tube (~20 s)
+    if (this.failures.pitot && c.pitotHeat && a.busVolts > 20) {
+      this.pitotHeatT += dt;
+      if (this.pitotHeatT > 20) {
+        this.failures = { ...this.failures, pitot: false };
+        this.pitotHeatT = 0;
+        this.emit("info", "Pitot heat has cleared the blockage — airspeed indication restored.");
+      }
+    } else if (!this.failures.pitot) this.pitotHeatT = 0;
+
     // ---- autopilot
     const indicatedAltForAp = a.altMslFt + (this.radios.altimeterInHg - w.qnhInHg) * 1000;
     const apOut = autopilotStep(this.ap, this.apInt, a, indicatedAltForAp, this.radios, this.snapshot.nav, this.magVar, dt);
     this.ap = apOut.ap;
     this.apInt = apOut.int;
     if (this.ap.engaged && (a.stalled || a.onGround || !powered || this.failures.ahrs)) this.apDisconnect(a.stalled ? "AP disconnect — stall" : "AP disconnect");
+    if (this.ap.annunciation.endsWith("CAPTURE")) {
+      this.captureTimer += dt;
+      if (this.captureTimer > 3) {
+        this.ap = { ...this.ap, annunciation: this.ap.engaged ? "AP" : "" };
+        this.captureTimer = 0;
+      }
+    } else this.captureTimer = 0;
     if (this.apDisconnectTimer > 0) {
       this.apDisconnectTimer -= dt;
       if (this.apDisconnectTimer <= 0 && !this.ap.engaged) this.ap = { ...this.ap, annunciation: "" };

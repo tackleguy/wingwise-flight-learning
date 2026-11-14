@@ -6,7 +6,14 @@ import { useState } from "react";
 import { freqOf } from "@/lib/data/airports";
 import { norm360 } from "@/lib/geo";
 import { cn } from "@/lib/utils";
-import { fmtCom, fmtEte, legTable, nearestAirports, pad3, waypointFromAirport } from "@/sim/avionics-helpers";
+import {
+  fmtCom,
+  fmtEte,
+  legTable,
+  nearestAirports,
+  pad3,
+  waypointFromAirport,
+} from "@/sim/avionics-helpers";
 import { useSimEngine, useSimSnapshot } from "@/sim/react";
 import type { SimSnapshot } from "@/sim/types";
 import { DisplayBezel, SoftKey } from "./common";
@@ -35,34 +42,74 @@ export function Mfd({ className, initialPage = "MAP", hideEngineStrip }: MfdProp
   const softKeys = (
     <div className="grid grid-cols-5 gap-1 sm:grid-cols-10">
       {(["MAP", "NRST", "FPL", "SYS"] as const).map((p) => (
-        <SoftKey key={p} active={page === p} tone="cyan" onClick={() => setPage(p)} title={PAGE_HELP[p]}>
+        <SoftKey
+          key={p}
+          active={page === p}
+          tone="cyan"
+          onClick={() => setPage(p)}
+          title={PAGE_HELP[p]}
+        >
           {p}
         </SoftKey>
       ))}
-      <SoftKey active={layers.terrain} tone="ok" onClick={() => toggle("terrain")} title="Relative terrain: red within 100 ft, yellow within 1,000 ft of your altitude">
+      <SoftKey
+        active={layers.terrain}
+        tone="ok"
+        onClick={() => toggle("terrain")}
+        title="Relative terrain: red within 100 ft, yellow within 1,000 ft of your altitude"
+      >
         TER
       </SoftKey>
-      <SoftKey active={layers.weather} tone="ok" onClick={() => toggle("weather")} title="Simulated precipitation overlay (educational, only when the weather has precipitation)">
+      <SoftKey
+        active={layers.weather}
+        tone="ok"
+        onClick={() => toggle("weather")}
+        title="Simulated precipitation overlay (educational, only when the weather has precipitation)"
+      >
         WX
       </SoftKey>
-      <SoftKey active={layers.traffic} tone="ok" onClick={() => toggle("traffic")} title="Simulated TIS-style traffic targets">
+      <SoftKey
+        active={layers.traffic}
+        tone="ok"
+        onClick={() => toggle("traffic")}
+        title="Simulated TIS-style traffic targets"
+      >
         TFC
       </SoftKey>
-      <SoftKey onClick={() => setOrientation((o) => (o === "north" ? "track" : "north"))} title="Toggle north-up / track-up">
+      <SoftKey
+        onClick={() => setOrientation((o) => (o === "north" ? "track" : "north"))}
+        title="Toggle north-up / track-up"
+      >
         {orientation === "north" ? "N UP" : "TRK UP"}
       </SoftKey>
-      <SoftKey onClick={() => setRange((r) => nextRange(r, -1))} title="Zoom in (smaller range)" ariaLabel="Zoom in">
+      <SoftKey
+        onClick={() => setRange((r) => nextRange(r, -1))}
+        title="Zoom in (smaller range)"
+        ariaLabel="Zoom in"
+      >
         RNG −
       </SoftKey>
-      <SoftKey onClick={() => setRange((r) => nextRange(r, 1))} title="Zoom out (larger range)" ariaLabel="Zoom out">
+      <SoftKey
+        onClick={() => setRange((r) => nextRange(r, 1))}
+        title="Zoom out (larger range)"
+        ariaLabel="Zoom out"
+      >
         RNG +
       </SoftKey>
     </div>
   );
 
   return (
-    <DisplayBezel title="TeachX Flight Display · MFD" explainId="mfd" className={className} footer={softKeys}>
-      <div className="relative flex overflow-hidden rounded-md bg-black" style={{ aspectRatio: "4 / 3" }}>
+    <DisplayBezel
+      title="TeachX Flight Display · MFD"
+      explainId="mfd"
+      className={className}
+      footer={softKeys}
+    >
+      <div
+        className="relative flex overflow-hidden rounded-md bg-black"
+        style={{ aspectRatio: "4 / 3" }}
+      >
         {!powered ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-1 font-mono text-[#3a4048]">
             <span className="text-lg font-bold">DISPLAY UNPOWERED</span>
@@ -79,7 +126,15 @@ export function Mfd({ className, initialPage = "MAP", hideEngineStrip }: MfdProp
               <NavDataBar s={s} />
               <div className="relative min-h-0 flex-1">
                 {page === "MAP" ? (
-                  <MovingMap rangeNm={range} orientation={orientation} layers={layers} fill width={800} height={560} onZoom={(d) => setRange((r) => nextRange(r, d))} />
+                  <MovingMap
+                    rangeNm={range}
+                    orientation={orientation}
+                    layers={layers}
+                    fill
+                    width={800}
+                    height={560}
+                    onZoom={(d) => setRange((r) => nextRange(r, d))}
+                  />
                 ) : page === "NRST" ? (
                   <NearestPage s={s} />
                 ) : page === "FPL" ? (
@@ -111,7 +166,11 @@ function NavDataBar({ s }: { s: SimSnapshot }) {
   const item = (label: string, value: string, magenta = false) => (
     <span className="flex items-baseline gap-1">
       <span className="text-[9px] text-white/55">{label}</span>
-      <span className={cn("text-[12px] font-semibold tabular", magenta ? "text-magenta" : "text-white")}>{value}</span>
+      <span
+        className={cn("text-[12px] font-semibold tabular", magenta ? "text-magenta" : "text-white")}
+      >
+        {value}
+      </span>
     </span>
   );
   return (
@@ -154,16 +213,27 @@ function NearestPage({ s }: { s: SimSnapshot }) {
                 <td className="px-1 py-1 text-right text-white tabular">{pad3(brgMag)}°</td>
                 <td className="px-1 py-1 text-right text-white tabular">{distNm.toFixed(1)}</td>
                 <td className="px-1 py-1 text-right text-white/80 tabular">{longestFt}</td>
-                <td className="px-1 py-1 text-right text-ok tabular">{tw ? fmtCom(tw.mhz) : "—"}</td>
+                <td className="px-1 py-1 text-right text-ok tabular">
+                  {tw ? fmtCom(tw.mhz) : "—"}
+                </td>
                 <td className="px-2 py-1 text-right whitespace-nowrap">
-                  <button type="button" className="mr-1 rounded border border-magenta/40 px-1 text-magenta hover:bg-magenta/15" onClick={() => engine.directTo(waypointFromAirport(ap))} title={`Direct-to ${ap.icao}`}>
+                  <button
+                    type="button"
+                    className="mr-1 rounded border border-magenta/40 px-1 text-magenta hover:bg-magenta/15"
+                    onClick={() => engine.directTo(waypointFromAirport(ap))}
+                    title={`Direct-to ${ap.icao}`}
+                  >
                     D→
                   </button>
                   {tw ? (
                     <button
                       type="button"
                       className="rounded border border-white/20 px-1 text-white/80 hover:bg-white/10"
-                      onClick={() => engine.setRadios({ com1: { ...engine.getSnapshot().radios.com1, standby: tw.mhz } })}
+                      onClick={() =>
+                        engine.setRadios({
+                          com1: { ...engine.getSnapshot().radios.com1, standby: tw.mhz },
+                        })
+                      }
                       title={`Load ${tw.name} ${fmtCom(tw.mhz)} into COM1 standby`}
                     >
                       COM
@@ -191,7 +261,9 @@ function FlightPlanPage({ s }: { s: SimSnapshot }) {
         <span className="text-white/40">Edit on the TX-750 Navigator</span>
       </div>
       {fp.length === 0 ? (
-        <p className="p-3 text-white/45">No flight plan. Build one on the GPS (FPL page) or use Direct-to.</p>
+        <p className="p-3 text-white/45">
+          No flight plan. Build one on the GPS (FPL page) or use Direct-to.
+        </p>
       ) : (
         <table className="w-full">
           <thead className="text-[9px] text-white/50">
@@ -211,19 +283,35 @@ function FlightPlanPage({ s }: { s: SimSnapshot }) {
               return (
                 <tr
                   key={`${l.wp.id}-${i}`}
-                  className={cn("cursor-pointer border-t border-white/5 hover:bg-white/5", isActive && "text-magenta")}
+                  className={cn(
+                    "cursor-pointer border-t border-white/5 hover:bg-white/5",
+                    isActive && "text-magenta",
+                  )}
                   onClick={() => i > 0 && engine.setActiveLeg(i)}
                   title={i > 0 ? `Activate leg to ${l.wp.id}` : undefined}
                 >
                   <td className="w-4 px-2 py-1">{isActive ? "➔" : ""}</td>
-                  <td className={cn("px-1 py-1 font-semibold", isActive ? "text-magenta" : "text-white")}>
+                  <td
+                    className={cn(
+                      "px-1 py-1 font-semibold",
+                      isActive ? "text-magenta" : "text-white",
+                    )}
+                  >
                     {l.wp.id}
-                    {l.wp.label && l.wp.kind === "fix" ? <span className="ml-1 text-[9px] text-white/40">{l.wp.label}</span> : null}
+                    {l.wp.label && l.wp.kind === "fix" ? (
+                      <span className="ml-1 text-[9px] text-white/40">{l.wp.label}</span>
+                    ) : null}
                   </td>
                   <td className="px-1 py-1 text-right tabular">{i > 0 ? `${pad3(l.dtk)}°` : ""}</td>
-                  <td className="px-1 py-1 text-right tabular">{i > 0 ? l.distNm.toFixed(1) : ""}</td>
-                  <td className="px-1 py-1 text-right text-white/60 tabular">{i > 0 ? cum.toFixed(1) : ""}</td>
-                  <td className="px-1 py-1 text-right text-cyan tabular">{l.wp.altFt !== undefined ? l.wp.altFt : ""}</td>
+                  <td className="px-1 py-1 text-right tabular">
+                    {i > 0 ? l.distNm.toFixed(1) : ""}
+                  </td>
+                  <td className="px-1 py-1 text-right text-white/60 tabular">
+                    {i > 0 ? cum.toFixed(1) : ""}
+                  </td>
+                  <td className="px-1 py-1 text-right text-cyan tabular">
+                    {l.wp.altFt !== undefined ? l.wp.altFt : ""}
+                  </td>
                 </tr>
               );
             })}

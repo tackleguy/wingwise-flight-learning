@@ -51,17 +51,22 @@ export interface AtcControllerInput {
 }
 
 const PERSONALITY_STYLE: Record<AtcControllerInput["personality"], string> = {
-  instructor: "Patient and clear, slightly slower; occasionally adds 'good day' or brief courtesy. Still standard phraseology.",
+  instructor:
+    "Patient and clear, slightly slower; occasionally adds 'good day' or brief courtesy. Still standard phraseology.",
   professional: "Standard, by-the-book FAA phraseology at normal pace.",
   busy: "Terse and fast like a busy tower/approach. Minimal words. May say 'standby' when appropriate.",
-  examiner: "Precise and formal. Corrects every readback error immediately with 'negative' and the correct instruction.",
+  examiner:
+    "Precise and formal. Corrects every readback error immediately with 'negative' and the correct instruction.",
 };
 
 const DIFFICULTY_STYLE: Record<AtcControllerInput["difficulty"], string> = {
-  beginner: "Keep instructions simple (one or two items per transmission). Always provide a helpful 'hint' with the exact phraseology the pilot should use next.",
+  beginner:
+    "Keep instructions simple (one or two items per transmission). Always provide a helpful 'hint' with the exact phraseology the pilot should use next.",
   intermediate: "Realistic instructions. Provide a short 'hint' only if the pilot made an error.",
-  advanced: "Realistic and occasionally add an unexpected but plausible change (runway change, amended altitude, traffic advisory, frequency change, weather update). Hints only after errors.",
-  checkride: "Realistic. Set 'hint' to an empty string always. Still evaluate every pilot transmission.",
+  advanced:
+    "Realistic and occasionally add an unexpected but plausible change (runway change, amended altitude, traffic advisory, frequency change, weather update). Hints only after errors.",
+  checkride:
+    "Realistic. Set 'hint' to an empty string always. Still evaluate every pilot transmission.",
 };
 
 export function atcControllerSystem(i: Omit<AtcControllerInput, "history">): string {
@@ -87,7 +92,13 @@ Only include stateUpdates fields that changed. evaluation.score is 0-100 for the
 }
 
 export function atcController(i: AtcControllerInput): Promise<AiChatResult> {
-  return aiChat({ service: "atc", system: atcControllerSystem(i), messages: i.history, temperature: 0.3, json: true });
+  return aiChat({
+    service: "atc",
+    system: atcControllerSystem(i),
+    messages: i.history,
+    temperature: 0.3,
+    json: true,
+  });
 }
 
 // ---------------- flight instructor ----------------
@@ -107,7 +118,12 @@ Student context (use it to personalise, don't repeat it back verbatim):
 ${i.context || "No training data yet."}
 Format: Markdown with short paragraphs, **bold** key terms, and bullet or numbered lists where helpful. Keep it under ~350 words unless asked for more.
 Always end with exactly this line on its own: "_Educational explanation only — consult current FAA publications, the POH/AFM and a CFI for real-world operations._"`;
-  return aiChat({ service: "instructor", system, messages: [...i.history.slice(-12), { role: "user", content: i.question }], temperature: 0.4 });
+  return aiChat({
+    service: "instructor",
+    system,
+    messages: [...i.history.slice(-12), { role: "user", content: i.question }],
+    temperature: 0.4,
+  });
 }
 
 // ---------------- oral examiner ----------------
@@ -126,7 +142,12 @@ Difficulty: ${i.level}. ${i.focus ? `Focus area: ${i.focus}.` : "Cover a represe
 Ask ONE question at a time. When the applicant answers, briefly grade it (satisfactory / needs work, with the key missing points) and then ask the next question — scenario-based follow-ups are encouraged.
 ${i.level === "checkride" ? "Do not teach during the exam; give feedback only when asked for the debrief." : "Give concise teaching points after each answer."}
 This is practice only, not an official FAA evaluation.`;
-  return aiChat({ service: "oral", system, messages: i.history.length ? i.history : [{ role: "user", content: "I'm ready to begin." }], temperature: 0.5 });
+  return aiChat({
+    service: "oral",
+    system,
+    messages: i.history.length ? i.history : [{ role: "user", content: "I'm ready to begin." }],
+    temperature: 0.5,
+  });
 }
 
 // ---------------- scenario generator ----------------
@@ -138,15 +159,38 @@ export interface GeneratedScenario {
   teachingPoints: string[];
 }
 
-export async function scenarioGenerator(i: { topic: string; level: string; certificate?: string }): Promise<{ ok: true; scenario: GeneratedScenario; provider: string } | { ok: false; reason: string }> {
+export async function scenarioGenerator(i: {
+  topic: string;
+  level: string;
+  certificate?: string;
+}): Promise<
+  { ok: true; scenario: GeneratedScenario; provider: string } | { ok: false; reason: string }
+> {
   const system = `Create ONE realistic, SIMULATED training scenario for a ${i.certificate ?? "pilot in training"} at ${i.level} level about: ${i.topic}.
 Return JSON: {"title":"","situation":"<4-6 sentences, concrete numbers (weather, altitudes, fuel) where relevant>","questions":["<3-4 decision questions>"],"teachingPoints":["<3-5 key points with FAA references>"]}`;
-  const r = await aiChat({ service: "scenario", system, messages: [{ role: "user", content: `Scenario topic: ${i.topic}` }], temperature: 0.8, json: true });
+  const r = await aiChat({
+    service: "scenario",
+    system,
+    messages: [{ role: "user", content: `Scenario topic: ${i.topic}` }],
+    temperature: 0.8,
+    json: true,
+  });
   if (!r.ok) return r;
   const j = parseJsonObject<Partial<GeneratedScenario>>(r.text);
-  if (!j || typeof j.title !== "string" || typeof j.situation !== "string") return { ok: false, reason: "The AI returned an unexpected format." };
-  const arr = (v: unknown) => (Array.isArray(v) ? v.filter((x): x is string => typeof x === "string").slice(0, 6) : []);
-  return { ok: true, provider: r.provider, scenario: { title: j.title.slice(0, 120), situation: j.situation.slice(0, 1200), questions: arr(j.questions), teachingPoints: arr(j.teachingPoints) } };
+  if (!j || typeof j.title !== "string" || typeof j.situation !== "string")
+    return { ok: false, reason: "The AI returned an unexpected format." };
+  const arr = (v: unknown) =>
+    Array.isArray(v) ? v.filter((x): x is string => typeof x === "string").slice(0, 6) : [];
+  return {
+    ok: true,
+    provider: r.provider,
+    scenario: {
+      title: j.title.slice(0, 120),
+      situation: j.situation.slice(0, 1200),
+      questions: arr(j.questions),
+      teachingPoints: arr(j.teachingPoints),
+    },
+  };
 }
 
 // ---------------- answer evaluator ----------------
@@ -158,23 +202,39 @@ export interface AnswerEvaluation {
   missing: string[];
 }
 
-export async function answerEvaluator(i: { question: string; reference: string; answer: string; rubric?: string }): Promise<{ ok: true; evaluation: AnswerEvaluation; provider: string } | { ok: false; reason: string }> {
+export async function answerEvaluator(i: {
+  question: string;
+  reference: string;
+  answer: string;
+  rubric?: string;
+}): Promise<
+  { ok: true; evaluation: AnswerEvaluation; provider: string } | { ok: false; reason: string }
+> {
   const system = `Grade the student's answer to an aviation knowledge question.
 Question: ${i.question}
 Reference answer: ${i.reference}
 ${i.rubric ? `Rubric: ${i.rubric}` : "Rubric: accuracy and completeness of the key points in the reference answer; penalise incorrect statements."}
 Return JSON: {"score":<0-100>,"feedback":"<2-3 sentences, specific>","missing":["<key point missing or wrong>"]}`;
-  const r = await aiChat({ service: "evaluate", system, messages: [{ role: "user", content: `Student answer: ${i.answer.slice(0, 4000)}` }], temperature: 0.1, json: true });
+  const r = await aiChat({
+    service: "evaluate",
+    system,
+    messages: [{ role: "user", content: `Student answer: ${i.answer.slice(0, 4000)}` }],
+    temperature: 0.1,
+    json: true,
+  });
   if (!r.ok) return r;
   const j = parseJsonObject<{ score?: unknown; feedback?: unknown; missing?: unknown }>(r.text);
-  if (!j || typeof j.score !== "number") return { ok: false, reason: "The AI returned an unexpected format." };
+  if (!j || typeof j.score !== "number")
+    return { ok: false, reason: "The AI returned an unexpected format." };
   return {
     ok: true,
     provider: r.provider,
     evaluation: {
       score: Math.max(0, Math.min(100, Math.round(j.score))),
       feedback: typeof j.feedback === "string" ? j.feedback.slice(0, 800) : "",
-      missing: Array.isArray(j.missing) ? j.missing.filter((x): x is string => typeof x === "string").slice(0, 8) : [],
+      missing: Array.isArray(j.missing)
+        ? j.missing.filter((x): x is string => typeof x === "string").slice(0, 8)
+        : [],
     },
   };
 }

@@ -9,7 +9,10 @@ import { InstrumentExplainContext } from "@/components/avionics/common";
 import { EngineGauges } from "@/components/avionics/EngineGauges";
 import { GpsUnit } from "@/components/avionics/GpsUnit";
 import type { InstrumentId } from "@/components/avionics/instrument-info";
-import { FlightControls, useKeyboardFlightControls } from "@/components/avionics/lab/FlightControls";
+import {
+  FlightControls,
+  useKeyboardFlightControls,
+} from "@/components/avionics/lab/FlightControls";
 import { InstrumentInfoSheet } from "@/components/avionics/lab/InstrumentInfoSheet";
 import { LabControlStrip } from "@/components/avionics/lab/LabControlStrip";
 import { CurrentTaskCard, TaskList } from "@/components/avionics/lab/TaskPanel";
@@ -21,15 +24,25 @@ import { RadiosPanel } from "@/components/avionics/RadiosPanel";
 import { SixPack } from "@/components/avionics/SixPack";
 import { SwitchPanel } from "@/components/avionics/SwitchPanel";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LAB_AIRCRAFT, LAB_WEATHER, labSimOptions, type LabAircraftId } from "@/lib/avionics/scenarios";
-import { AVIONICS_TASKS, type LabDisplay } from "@/lib/avionics/tasks";
+import {
+  LAB_AIRCRAFT,
+  LAB_WEATHER,
+  labSimOptions,
+  type LabAircraftId,
+} from "@/lib/avionics/scenarios";
+import { AVIONICS_TASKS, type AvionicsTask, type LabDisplay } from "@/lib/avionics/tasks";
 import { useStore } from "@/lib/store";
 import { WEATHER_PRESETS } from "@/sim/environment";
 import type { SimEngine } from "@/sim/engine";
-import { SimProvider } from "@/sim/react";
-import { useCreateSim } from "@/sim/react";
+import { SimProvider, useCreateSim } from "@/sim/react";
 
 export const Route = createFileRoute("/avionics")({
   head: () => ({
@@ -55,7 +68,9 @@ const DISPLAYS: { id: LabDisplay; label: string; short: string }[] = [
 
 function AvionicsLab() {
   const preferred = useStore((s) => s.settings.preferredAircraft);
-  const [perfId, setPerfId] = useState<LabAircraftId>(() => (LAB_AIRCRAFT.some((a) => a.id === preferred) ? (preferred as LabAircraftId) : "c172"));
+  const [perfId, setPerfId] = useState<LabAircraftId>(() =>
+    LAB_AIRCRAFT.some((a) => a.id === preferred) ? (preferred as LabAircraftId) : "c172",
+  );
   const [wx, setWx] = useState<string>("scattered");
   const engine = useCreateSim(() => labSimOptions(perfId, wx), [perfId, wx]);
 
@@ -74,7 +89,7 @@ function AvionicsLab() {
         actions={
           <>
             <Select value={perfId} onValueChange={(v) => setPerfId(v as LabAircraftId)}>
-              <SelectTrigger className="h-9 w-[230px]" aria-label="Aircraft and panel">
+              <SelectTrigger className="h-9 w-full sm:w-[300px]" aria-label="Aircraft and panel">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -86,7 +101,7 @@ function AvionicsLab() {
               </SelectContent>
             </Select>
             <Select value={wx} onValueChange={setWx}>
-              <SelectTrigger className="h-9 w-[190px]" aria-label="Weather">
+              <SelectTrigger className="h-9 w-full sm:w-[200px]" aria-label="Weather">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -101,15 +116,20 @@ function AvionicsLab() {
         }
       />
       <Notice tone="caution" title="Educational simulation." className="mb-4">
-        Avionics here are Garmin-inspired training representations (TeachX Flight Display, TX-750 Navigator), simplified for learning. Approaches are simulator-generated training procedures, not published IAPs. Not a substitute for aircraft-specific
-        training, the AFM/POH, or the manufacturer's pilot guide.
+        Avionics here are Garmin-inspired training representations (TeachX Flight Display, TX-750
+        Navigator), simplified for learning. Approaches are simulator-generated training procedures,
+        not published IAPs. Not a substitute for aircraft-specific training, the AFM/POH, or the
+        manufacturer's pilot guide.
       </Notice>
       {engine ? (
         <SimProvider engine={engine}>
           <LabBody key={`${perfId}-${wx}`} engine={engine} />
         </SimProvider>
       ) : (
-        <div className="flex min-h-[420px] flex-col items-center justify-center gap-3 rounded-xl border border-dashed text-muted-foreground" role="status">
+        <div
+          className="flex min-h-[420px] flex-col items-center justify-center gap-3 rounded-xl border border-dashed text-muted-foreground"
+          role="status"
+        >
           <Loader2 className="size-6 animate-spin text-primary" />
           <p className="text-sm">Starting the simulation…</p>
         </div>
@@ -122,9 +142,10 @@ function LabBody({ engine }: { engine: SimEngine }) {
   const glass = engine.perf.avionics !== "steam";
   const [display, setDisplay] = useState<LabDisplay>(glass ? "glass" : "sixpack");
   const done = useStore((s) => s.avionicsTasks);
-  const [taskId, setTaskId] = useState<string>(() => AVIONICS_TASKS.find((t) => !done[t.id])?.id ?? AVIONICS_TASKS[0]!.id);
+  const [taskId, setTaskId] = useState<string>(
+    () => AVIONICS_TASKS.find((t) => !done[t.id])?.id ?? AVIONICS_TASKS[0]!.id,
+  );
   const task = AVIONICS_TASKS.find((t) => t.id === taskId) ?? AVIONICS_TASKS[0]!;
-  const runner = useTaskRunner(engine, taskId);
   const [infoId, setInfoId] = useState<InstrumentId>("pfd");
   const [infoOpen, setInfoOpen] = useState(false);
   const explain = useCallback((id: InstrumentId) => {
@@ -138,7 +159,10 @@ function LabBody({ engine }: { engine: SimEngine }) {
       <LabControlStrip className="mb-4" />
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px] xl:grid-cols-[300px_minmax(0,1fr)_380px]">
         {/* centre: displays */}
-        <section className="min-w-0 space-y-4 lg:col-start-1 xl:col-start-2 xl:row-start-1" aria-label="Displays">
+        <section
+          className="min-w-0 space-y-4 lg:col-start-1 xl:col-start-2 xl:row-start-1"
+          aria-label="Displays"
+        >
           <Tabs value={display} onValueChange={(v) => setDisplay(v as LabDisplay)}>
             <div className="flex flex-wrap items-center justify-between gap-2">
               <TabsList className="h-auto max-w-full flex-wrap justify-start">
@@ -149,12 +173,28 @@ function LabBody({ engine }: { engine: SimEngine }) {
                   </TabsTrigger>
                 ))}
               </TabsList>
-              <Button size="sm" variant="ghost" onClick={() => explain(display === "glass" ? "pfd" : display === "sixpack" ? "ai" : display === "nav" ? "vor" : display === "gps" ? "gps" : "autopilot")}>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() =>
+                  explain(
+                    display === "glass"
+                      ? "pfd"
+                      : display === "sixpack"
+                        ? "ai"
+                        : display === "nav"
+                          ? "vor"
+                          : display === "gps"
+                            ? "gps"
+                            : "autopilot",
+                  )
+                }
+              >
                 <BookOpen /> Explain this display
               </Button>
             </div>
             <TabsContent value="glass" className="space-y-3">
-              <div className="grid gap-3 2xl:grid-cols-2">
+              <div className="grid gap-3 min-[1880px]:grid-cols-2">
                 <Pfd />
                 <Mfd />
               </div>
@@ -162,7 +202,12 @@ function LabBody({ engine }: { engine: SimEngine }) {
             <TabsContent value="sixpack">
               <div className="mx-auto max-w-3xl space-y-3">
                 <SixPack />
-                {glass ? <p className="text-center text-xs text-muted-foreground">In this glass-cockpit aircraft, the six-pack represents the standby instruments — the standby attitude indicator keeps working after an AHRS failure.</p> : null}
+                {glass ? (
+                  <p className="text-center text-xs text-muted-foreground">
+                    In this glass-cockpit aircraft, the six-pack represents the standby instruments
+                    — the standby attitude indicator keeps working after an AHRS failure.
+                  </p>
+                ) : null}
               </div>
             </TabsContent>
             <TabsContent value="nav">
@@ -174,7 +219,7 @@ function LabBody({ engine }: { engine: SimEngine }) {
               </div>
             </TabsContent>
             <TabsContent value="autopilot" className="space-y-3">
-              <div className="grid gap-3 2xl:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
+              <div className="grid gap-3 min-[1880px]:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
                 <Pfd hideSoftKeys />
                 <div className="space-y-3">
                   <AutopilotPanel />
@@ -187,20 +232,33 @@ function LabBody({ engine }: { engine: SimEngine }) {
         </section>
 
         {/* left: tasks */}
-        <aside className="min-w-0 space-y-4 lg:col-start-1 lg:row-start-2 xl:col-start-1 xl:row-start-1" aria-label="Training tasks">
-          <CurrentTaskCard task={task} runner={runner} engine={engine} onShowDisplay={setDisplay} />
+        <aside
+          className="min-w-0 space-y-4 lg:col-start-1 lg:row-start-2 xl:col-start-1 xl:row-start-1"
+          aria-label="Training tasks"
+        >
+          <TaskCardHost task={task} engine={engine} onShowDisplay={setDisplay} />
           <TaskList currentId={taskId} onSelect={setTaskId} />
           <div className="panel p-3">
             <p className="label-caps mb-1.5">Explain an instrument</p>
-            <p className="mb-2 text-xs text-muted-foreground">Click the ⓘ on any instrument, or open the guide.</p>
-            <Button size="sm" variant="outline" className="w-full" onClick={() => setInfoOpen(true)}>
+            <p className="mb-2 text-xs text-muted-foreground">
+              Click the ⓘ on any instrument, or open the guide.
+            </p>
+            <Button
+              size="sm"
+              variant="outline"
+              className="w-full"
+              onClick={() => setInfoOpen(true)}
+            >
               <BookOpen /> Instrument guide
             </Button>
           </div>
         </aside>
 
         {/* right: controls */}
-        <aside className="min-w-0 space-y-4 lg:col-start-2 lg:row-span-2 lg:row-start-1 xl:col-start-3" aria-label="Panels">
+        <aside
+          className="min-w-0 space-y-4 lg:col-start-2 lg:row-span-2 lg:row-start-1 xl:col-start-3"
+          aria-label="Panels"
+        >
           {display !== "autopilot" ? <AutopilotPanel /> : null}
           <RadiosPanel />
           <Annunciators />
@@ -208,8 +266,30 @@ function LabBody({ engine }: { engine: SimEngine }) {
           {display !== "glass" ? <EngineGauges /> : null}
         </aside>
       </div>
-      <InstrumentInfoSheet id={infoId} open={infoOpen} onOpenChange={setInfoOpen} onSelect={setInfoId} />
+      <InstrumentInfoSheet
+        id={infoId}
+        open={infoOpen}
+        onOpenChange={setInfoOpen}
+        onSelect={setInfoId}
+      />
     </InstrumentExplainContext.Provider>
+  );
+}
+
+/** Runs the live task evaluator (all tasks) and shows the selected task. Kept separate so its
+ *  5 Hz status updates don't re-render the whole lab. */
+function TaskCardHost({
+  task,
+  engine,
+  onShowDisplay,
+}: {
+  task: AvionicsTask;
+  engine: SimEngine;
+  onShowDisplay: (d: LabDisplay) => void;
+}) {
+  const runner = useTaskRunner(engine, task.id);
+  return (
+    <CurrentTaskCard task={task} runner={runner} engine={engine} onShowDisplay={onShowDisplay} />
   );
 }
 
@@ -226,7 +306,9 @@ function ModeGuide() {
     <div className="panel p-3">
       <p className="label-caps mb-2">Mode guide</p>
       <p className="mb-2 text-xs text-muted-foreground">
-        <span className="font-semibold text-ok">Green</span> = active · <span className="font-semibold text-foreground">White</span> = armed (waits to capture). Always confirm the PFD annunciation after pressing a button.
+        <span className="font-semibold text-ok">Green</span> = active ·{" "}
+        <span className="font-semibold text-foreground">White</span> = armed (waits to capture).
+        Always confirm the PFD annunciation after pressing a button.
       </p>
       <dl className="space-y-1.5 text-xs">
         {rows.map(([k, v]) => (

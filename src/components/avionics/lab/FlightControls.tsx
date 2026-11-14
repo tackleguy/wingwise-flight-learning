@@ -113,8 +113,12 @@ function YokePad() {
     >
       <div className="absolute inset-x-0 top-1/2 h-px bg-white/10" />
       <div className="absolute inset-y-0 left-1/2 w-px bg-white/10" />
-      <span className="absolute top-1 left-1/2 -translate-x-1/2 font-mono text-[8px] text-white/35">PUSH</span>
-      <span className="absolute bottom-1 left-1/2 -translate-x-1/2 font-mono text-[8px] text-white/35">PULL</span>
+      <span className="absolute top-1 left-1/2 -translate-x-1/2 font-mono text-[8px] text-white/35">
+        PUSH
+      </span>
+      <span className="absolute bottom-1 left-1/2 -translate-x-1/2 font-mono text-[8px] text-white/35">
+        PULL
+      </span>
       <div
         className="absolute size-6 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-primary bg-primary/30 shadow-[0_0_10px_var(--primary)]"
         style={{ left: `${(pos.x + 1) * 50}%`, top: `${(pos.y + 1) * 50}%` }}
@@ -123,7 +127,17 @@ function YokePad() {
   );
 }
 
-function HoldBtn({ children, onDown, onUp, label }: { children: React.ReactNode; onDown: () => void; onUp: () => void; label: string }) {
+function HoldBtn({
+  children,
+  onDown,
+  onUp,
+  label,
+}: {
+  children: React.ReactNode;
+  onDown: () => void;
+  onUp: () => void;
+  label: string;
+}) {
   return (
     <button
       type="button"
@@ -148,16 +162,26 @@ export function FlightControls({ className }: { className?: string | undefined }
     <div className={cn("rounded-xl border border-white/10 bg-card p-3", className)}>
       <div className="mb-2 flex items-center justify-between">
         <span className="label-caps">Flight controls</span>
-        {apOn ? <span className="font-mono text-[10px] text-ok">AP ENGAGED — input disconnects it</span> : null}
+        {apOn ? (
+          <span className="font-mono text-[10px] text-ok">AP ENGAGED — input disconnects it</span>
+        ) : null}
       </div>
       <div className="grid gap-3 sm:grid-cols-[150px_1fr]">
         <div className="flex flex-col items-center gap-2">
           <YokePad />
           <div className="flex w-full max-w-[150px] gap-1">
-            <HoldBtn label="Left rudder" onDown={() => engine.setControls({ rudder: -0.6 })} onUp={() => engine.setControls({ rudder: 0 })}>
+            <HoldBtn
+              label="Left rudder"
+              onDown={() => engine.setControls({ rudder: -0.6 })}
+              onUp={() => engine.setControls({ rudder: 0 })}
+            >
               ◀ RUD
             </HoldBtn>
-            <HoldBtn label="Right rudder" onDown={() => engine.setControls({ rudder: 0.6 })} onUp={() => engine.setControls({ rudder: 0 })}>
+            <HoldBtn
+              label="Right rudder"
+              onDown={() => engine.setControls({ rudder: 0.6 })}
+              onUp={() => engine.setControls({ rudder: 0 })}
+            >
               RUD ▶
             </HoldBtn>
           </div>
@@ -165,18 +189,41 @@ export function FlightControls({ className }: { className?: string | undefined }
         <div className="space-y-2.5">
           <label className="flex items-center gap-2">
             <span className="w-16 font-mono text-[10px] font-bold text-white/60">THROTTLE</span>
-            <input type="range" min={0} max={100} value={Math.round(c.throttle * 100)} onChange={(e) => engine.setControls({ throttle: Number(e.target.value) / 100 })} className="flex-1 accent-white" aria-label="Throttle" />
-            <span className="w-10 text-right font-mono text-[11px] tabular">{Math.round(c.throttle * 100)}%</span>
+            <input
+              type="range"
+              min={0}
+              max={100}
+              value={Math.round(c.throttle * 100)}
+              onChange={(e) => engine.setControls({ throttle: Number(e.target.value) / 100 })}
+              className="flex-1 accent-white"
+              aria-label="Throttle"
+            />
+            <span className="w-10 text-right font-mono text-[11px] tabular">
+              {Math.round(c.throttle * 100)}%
+            </span>
           </label>
           <div className="flex items-center gap-2">
             <span className="w-16 font-mono text-[10px] font-bold text-white/60">TRIM</span>
-            <button type="button" className="rounded border border-white/10 px-2 py-1 font-mono text-[10px] hover:bg-white/5" onClick={() => engine.setControls({ trim: clamp(c.trim - 0.02, -1, 1) })} aria-label="Trim nose down">
+            <button
+              type="button"
+              className="rounded border border-white/10 px-2 py-1 font-mono text-[10px] hover:bg-white/5"
+              onClick={() => engine.setControls({ trim: clamp(c.trim - 0.02, -1, 1) })}
+              aria-label="Trim nose down"
+            >
               NOSE DN
             </button>
             <div className="relative h-2 flex-1 rounded-full bg-black/60">
-              <div className="absolute top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan" style={{ left: `${(c.trim + 1) * 50}%` }} />
+              <div
+                className="absolute top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan"
+                style={{ left: `${(c.trim + 1) * 50}%` }}
+              />
             </div>
-            <button type="button" className="rounded border border-white/10 px-2 py-1 font-mono text-[10px] hover:bg-white/5" onClick={() => engine.setControls({ trim: clamp(c.trim + 0.02, -1, 1) })} aria-label="Trim nose up">
+            <button
+              type="button"
+              className="rounded border border-white/10 px-2 py-1 font-mono text-[10px] hover:bg-white/5"
+              onClick={() => engine.setControls({ trim: clamp(c.trim + 0.02, -1, 1) })}
+              aria-label="Trim nose up"
+            >
               NOSE UP
             </button>
           </div>
@@ -189,7 +236,12 @@ export function FlightControls({ className }: { className?: string | undefined }
                   type="button"
                   onClick={() => engine.setControls({ flapIndex: i })}
                   aria-pressed={c.flapIndex === i}
-                  className={cn("flex-1 rounded border px-1 py-1 font-mono text-[10px]", c.flapIndex === i ? "border-primary bg-primary/15 text-primary" : "border-white/10 text-white/60 hover:text-white")}
+                  className={cn(
+                    "flex-1 rounded border px-1 py-1 font-mono text-[10px]",
+                    c.flapIndex === i
+                      ? "border-primary bg-primary/15 text-primary"
+                      : "border-white/10 text-white/60 hover:text-white",
+                  )}
                 >
                   {deg}°
                 </button>
@@ -199,7 +251,11 @@ export function FlightControls({ className }: { className?: string | undefined }
           <div className="flex items-start gap-2 rounded-md bg-muted/40 px-2 py-1.5 text-[11px] leading-relaxed text-muted-foreground">
             <Keyboard className="mt-0.5 size-3.5 shrink-0" />
             <span>
-              <b className="text-foreground">W/S</b> pitch (S = pull) · <b className="text-foreground">A/D</b> roll · <b className="text-foreground">Q/E</b> rudder · <b className="text-foreground">+/−</b> throttle · <b className="text-foreground">[ ]</b> trim · <b className="text-foreground">P</b> pause
+              <b className="text-foreground">W/S</b> pitch (S = pull) ·{" "}
+              <b className="text-foreground">A/D</b> roll · <b className="text-foreground">Q/E</b>{" "}
+              rudder · <b className="text-foreground">+/−</b> throttle ·{" "}
+              <b className="text-foreground">[ ]</b> trim · <b className="text-foreground">P</b>{" "}
+              pause
             </span>
           </div>
         </div>

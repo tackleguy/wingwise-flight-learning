@@ -30,7 +30,12 @@ function sfo28r() {
 /** Simulated training NDBs (not real-world stations). */
 export function trainingNdbs(): TrainingNdb[] {
   const { end } = sfo28r();
-  const lom = destinationPoint(end.threshold.lat, end.threshold.lon, norm360(end.trueHeading + 180), 5);
+  const lom = destinationPoint(
+    end.threshold.lat,
+    end.threshold.lon,
+    norm360(end.trueHeading + 180),
+    5,
+  );
   const oak = getNavaid("OAK")!;
   const east = destinationPoint(oak.lat, oak.lon, 95, 14);
   return [
@@ -39,8 +44,12 @@ export function trainingNdbs(): TrainingNdb[] {
   ];
 }
 
-export const cruiseIas = (perfId: string) => Math.round(getPerf(perfId).v.no * 0.8);
-export const approachIas = (perfId: string) => Math.round(clamp(getPerf(perfId).v.ref * 1.35, 80, 120));
+/** IAS that the flight model holds level at 65% throttle (trimmed) around 4,000 ft. */
+const LEVEL_IAS_65: Record<string, number> = { c172: 86, pa28: 82, sr22: 121 };
+export const cruiseIas = (perfId: string) =>
+  LEVEL_IAS_65[perfId] ?? Math.round(getPerf(perfId).v.no * 0.7);
+export const approachIas = (perfId: string) =>
+  Math.round(clamp(getPerf(perfId).v.ref * 1.35, 80, 120));
 
 export interface LabPresetBuild {
   start: StartState;
@@ -60,12 +69,23 @@ export const LAB_PRESETS: LabPreset[] = [
   {
     id: "start",
     label: "10 nm SE of OAK · 4,000 ft",
-    description: "Cruising at 4,000 ft on the OAK 150° radial, heading for the Oakland VOR. Altimeter still on 29.92.",
+    description:
+      "Cruising at 4,000 ft on the OAK 150° radial, heading for the Oakland VOR. Altimeter still on 29.92.",
     build: (perfId) => {
       const oak = getNavaid("OAK")!;
       const pos = destinationPoint(oak.lat, oak.lon, norm360(150 + oak.magVar), 10);
       return {
-        start: { lat: pos.lat, lon: pos.lon, altMslFt: 4000, heading: bearingDeg(pos.lat, pos.lon, oak.lat, oak.lon), iasKt: cruiseIas(perfId), onGround: false, groundElevFt: 0, engineRunning: true, throttle: 0.65 },
+        start: {
+          lat: pos.lat,
+          lon: pos.lon,
+          altMslFt: 4000,
+          heading: bearingDeg(pos.lat, pos.lon, oak.lat, oak.lon),
+          iasKt: cruiseIas(perfId),
+          onGround: false,
+          groundElevFt: 0,
+          engineRunning: true,
+          throttle: 0.65,
+        },
         altimeterStd: true,
       };
     },
@@ -73,38 +93,85 @@ export const LAB_PRESETS: LabPreset[] = [
   {
     id: "ils28r",
     label: "10 nm final ILS 28R KSFO",
-    description: "Established on a 10 nm final for ILS 28R at San Francisco, 3,000 ft, NAV1 tuned 109.55 and CDI on NAV1.",
+    description:
+      "Established on a 10 nm final for ILS 28R at San Francisco, 3,000 ft, NAV1 tuned to the localizer and CDI on NAV1.",
     build: (perfId) => {
       const { ap, end } = sfo28r();
-      const pos = destinationPoint(end.threshold.lat, end.threshold.lon, norm360(end.trueHeading + 180), 10);
+      const pos = destinationPoint(
+        end.threshold.lat,
+        end.threshold.lon,
+        norm360(end.trueHeading + 180),
+        10,
+      );
       const crs = Math.round(magneticHeading(ap, end.trueHeading));
       return {
-        start: { lat: pos.lat, lon: pos.lon, altMslFt: 3000, heading: end.trueHeading, iasKt: approachIas(perfId), onGround: false, groundElevFt: 0, engineRunning: true, throttle: 0.48 },
-        radios: (r) => ({ nav1: { active: end.ils!.freq, standby: r.nav1.active, obs: crs }, cdiSource: "NAV1", hdgBug: crs, altBug: 3000 }),
+        start: {
+          lat: pos.lat,
+          lon: pos.lon,
+          altMslFt: 3000,
+          heading: end.trueHeading,
+          iasKt: approachIas(perfId),
+          onGround: false,
+          groundElevFt: 0,
+          engineRunning: true,
+          throttle: 0.48,
+        },
+        radios: (r) => ({
+          nav1: { active: end.ils!.freq, standby: r.nav1.active, obs: crs },
+          cdiSource: "NAV1",
+          hdgBug: crs,
+          altBug: 3000,
+        }),
       };
     },
   },
   {
     id: "oak",
     label: "Over OAK VOR · 4,000 ft",
-    description: "Directly over the Oakland VORTAC at 4,000 ft heading 270°. NAV1 tuned to OAK 116.80.",
+    description:
+      "Directly over the Oakland VORTAC at 4,000 ft heading 270°. NAV1 tuned to OAK 116.80.",
     build: (perfId) => {
       const oak = getNavaid("OAK")!;
       return {
-        start: { lat: oak.lat, lon: oak.lon, altMslFt: 4000, heading: norm360(270 + LAB_MAGVAR), iasKt: cruiseIas(perfId), onGround: false, groundElevFt: 0, engineRunning: true, throttle: 0.65 },
-        radios: (r) => ({ nav1: { ...r.nav1, active: 116.8, standby: r.nav1.active }, hdgBug: 270, altBug: 4000 }),
+        start: {
+          lat: oak.lat,
+          lon: oak.lon,
+          altMslFt: 4000,
+          heading: norm360(270 + LAB_MAGVAR),
+          iasKt: cruiseIas(perfId),
+          onGround: false,
+          groundElevFt: 0,
+          engineRunning: true,
+          throttle: 0.65,
+        },
+        radios: (r) => ({
+          nav1: { ...r.nav1, active: 116.8, standby: r.nav1.active },
+          hdgBug: 270,
+          altBug: 4000,
+        }),
       };
     },
   },
   {
     id: "coast",
     label: "Over the coast near KHAF · 3,500 ft",
-    description: "3,500 ft over the coastline 8 nm north of Half Moon Bay, heading 180° — good for GPS direct-to and RNAV practice.",
+    description:
+      "3,500 ft over the coastline 8 nm north of Half Moon Bay, heading 180° — good for GPS direct-to and RNAV practice.",
     build: (perfId) => {
       const haf = getAirport("KHAF")!;
       const pos = destinationPoint(haf.lat, haf.lon, 355, 8);
       return {
-        start: { lat: pos.lat, lon: pos.lon, altMslFt: 3500, heading: norm360(180 + LAB_MAGVAR), iasKt: cruiseIas(perfId), onGround: false, groundElevFt: 0, engineRunning: true, throttle: 0.65 },
+        start: {
+          lat: pos.lat,
+          lon: pos.lon,
+          altMslFt: 3500,
+          heading: norm360(180 + LAB_MAGVAR),
+          iasKt: cruiseIas(perfId),
+          onGround: false,
+          groundElevFt: 0,
+          engineRunning: true,
+          throttle: 0.65,
+        },
       };
     },
   },
@@ -118,7 +185,13 @@ export function getPreset(id: string): LabPreset {
 export function labSimOptions(perfId: string, weatherKey: string): SimOptions {
   const w = WEATHER_PRESETS[weatherKey] ?? WEATHER_PRESETS["scattered"]!;
   const b = getPreset("start").build(perfId);
-  return { perfId, magVar: LAB_MAGVAR, start: b.start, weather: { ...w.weather, timeOfDay: 14 }, ndbs: trainingNdbs() };
+  return {
+    perfId,
+    magVar: LAB_MAGVAR,
+    start: b.start,
+    weather: { ...w.weather, timeOfDay: 14 },
+    ndbs: trainingNdbs(),
+  };
 }
 
 /** Move the aircraft to a preset and apply its radio set-up. */

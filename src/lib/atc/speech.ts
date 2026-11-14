@@ -43,7 +43,10 @@ type SpeechRecognitionCtor = new () => SpeechRecognitionLike;
 
 function recognitionCtor(): SpeechRecognitionCtor | null {
   if (typeof window === "undefined") return null;
-  const w = window as unknown as { SpeechRecognition?: SpeechRecognitionCtor; webkitSpeechRecognition?: SpeechRecognitionCtor };
+  const w = window as unknown as {
+    SpeechRecognition?: SpeechRecognitionCtor;
+    webkitSpeechRecognition?: SpeechRecognitionCtor;
+  };
   return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
 }
 
@@ -54,7 +57,10 @@ export interface SpeechSupport {
 
 export function speechSupport(): SpeechSupport {
   if (typeof window === "undefined") return { tts: false, stt: false };
-  return { tts: "speechSynthesis" in window && typeof SpeechSynthesisUtterance !== "undefined", stt: !!recognitionCtor() };
+  return {
+    tts: "speechSynthesis" in window && typeof SpeechSynthesisUtterance !== "undefined",
+    stt: !!recognitionCtor(),
+  };
 }
 
 /** React hook — false during SSR, real values after mount. */
@@ -68,7 +74,10 @@ export function useVoices(): SpeechSynthesisVoice[] {
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   useEffect(() => {
     if (!speechSupport().tts) return;
-    const load = () => setVoices(window.speechSynthesis.getVoices().filter((v) => v.lang.toLowerCase().startsWith("en")));
+    const load = () =>
+      setVoices(
+        window.speechSynthesis.getVoices().filter((v) => v.lang.toLowerCase().startsWith("en")),
+      );
     load();
     window.speechSynthesis.addEventListener("voiceschanged", load);
     return () => window.speechSynthesis.removeEventListener("voiceschanged", load);
@@ -83,7 +92,9 @@ let audioCtx: AudioContext | null = null;
 export function playSquelch(volume = 0.5, ms = 90) {
   if (typeof window === "undefined" || volume <= 0) return;
   try {
-    const Ctor = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    const Ctor =
+      window.AudioContext ??
+      (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
     if (!Ctor) return;
     audioCtx = audioCtx ?? new Ctor();
     const ctx = audioCtx;
@@ -135,7 +146,10 @@ function pickVoice(name?: string): SpeechSynthesisVoice | undefined {
     const v = voices.find((x) => x.name === name);
     if (v) return v;
   }
-  return voices.find((v) => /en-US/i.test(v.lang)) ?? voices.find((v) => v.lang.toLowerCase().startsWith("en"));
+  return (
+    voices.find((v) => /en-US/i.test(v.lang)) ??
+    voices.find((v) => v.lang.toLowerCase().startsWith("en"))
+  );
 }
 
 /**

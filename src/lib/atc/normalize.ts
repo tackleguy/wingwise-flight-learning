@@ -14,21 +14,76 @@ import type { CallsignInfo } from "./types";
 import { usRunway } from "./phrase";
 
 const PHONETIC_TO_LETTER: Record<string, string> = {
-  alpha: "a", alfa: "a", bravo: "b", charlie: "c", delta: "d", echo: "e", foxtrot: "f", golf: "g",
-  hotel: "h", india: "i", juliet: "j", juliett: "j", kilo: "k", lima: "l", mike: "m", november: "n",
-  oscar: "o", papa: "p", quebec: "q", romeo: "r", sierra: "s", tango: "t", uniform: "u", victor: "v",
-  whiskey: "w", whisky: "w", xray: "x", yankee: "y", zulu: "z",
+  alpha: "a",
+  alfa: "a",
+  bravo: "b",
+  charlie: "c",
+  delta: "d",
+  echo: "e",
+  foxtrot: "f",
+  golf: "g",
+  hotel: "h",
+  india: "i",
+  juliet: "j",
+  juliett: "j",
+  kilo: "k",
+  lima: "l",
+  mike: "m",
+  november: "n",
+  oscar: "o",
+  papa: "p",
+  quebec: "q",
+  romeo: "r",
+  sierra: "s",
+  tango: "t",
+  uniform: "u",
+  victor: "v",
+  whiskey: "w",
+  whisky: "w",
+  xray: "x",
+  yankee: "y",
+  zulu: "z",
 };
 
 const DIGIT_WORDS: Record<string, string> = {
-  zero: "0", one: "1", two: "2", three: "3", tree: "3", four: "4", fower: "4", five: "5", fife: "5",
-  six: "6", seven: "7", eight: "8", ait: "8", nine: "9", niner: "9",
+  zero: "0",
+  one: "1",
+  two: "2",
+  three: "3",
+  tree: "3",
+  four: "4",
+  fower: "4",
+  five: "5",
+  fife: "5",
+  six: "6",
+  seven: "7",
+  eight: "8",
+  ait: "8",
+  nine: "9",
+  niner: "9",
 };
 const TEENS: Record<string, string> = {
-  ten: "10", eleven: "11", twelve: "12", thirteen: "13", fourteen: "14", fifteen: "15", sixteen: "16",
-  seventeen: "17", eighteen: "18", nineteen: "19",
+  ten: "10",
+  eleven: "11",
+  twelve: "12",
+  thirteen: "13",
+  fourteen: "14",
+  fifteen: "15",
+  sixteen: "16",
+  seventeen: "17",
+  eighteen: "18",
+  nineteen: "19",
 };
-const TENS: Record<string, number> = { twenty: 20, thirty: 30, forty: 40, fifty: 50, sixty: 60, seventy: 70, eighty: 80, ninety: 90 };
+const TENS: Record<string, number> = {
+  twenty: 20,
+  thirty: 30,
+  forty: 40,
+  fifty: 50,
+  sixty: 60,
+  seventy: 70,
+  eighty: 80,
+  ninety: 90,
+};
 
 export interface ParsedTransmission {
   raw: string;
@@ -133,7 +188,13 @@ export function canonicalTokens(raw: string): string[] {
 export function parseTransmission(raw: string): ParsedTransmission {
   const tokens = canonicalTokens(raw);
   const canon = tokens.join(" ");
-  return { raw, tokens, canon, squashed: canon.replace(/[^a-z0-9]/g, ""), wordCount: raw.trim().split(/\s+/).filter(Boolean).length };
+  return {
+    raw,
+    tokens,
+    canon,
+    squashed: canon.replace(/[^a-z0-9]/g, ""),
+    wordCount: raw.trim().split(/\s+/).filter(Boolean).length,
+  };
 }
 
 /** Normalize a phrase pattern the same way pilot text is normalized. */
@@ -165,7 +226,15 @@ export function countPhrase(p: ParsedTransmission, phrase: string): number {
 
 // ---------- readers ----------
 
-const NOT_ALT_PREV = new Set(["squawk", "code", "altimeter", "squawking", "transponder", "frequency", "contact"]);
+const NOT_ALT_PREV = new Set([
+  "squawk",
+  "code",
+  "altimeter",
+  "squawking",
+  "transponder",
+  "frequency",
+  "contact",
+]);
 
 /** All altitudes mentioned, in feet. */
 export function readAltitudes(p: ParsedTransmission): number[] {
@@ -232,7 +301,22 @@ export function readHeadings(p: ParsedTransmission): HeadingRead[] {
 
 const SIDE: Record<string, string> = { left: "L", l: "L", right: "R", r: "R", center: "C", c: "C" };
 /** Words that mean "left/right" belongs to a turn or pattern, not to the runway designator. */
-const NOT_SIDE_NEXT = new Set(["downwind", "base", "traffic", "turn", "heading", "crosswind", "pattern", "closed", "departure", "hand", "side", "break", "180", "360"]);
+const NOT_SIDE_NEXT = new Set([
+  "downwind",
+  "base",
+  "traffic",
+  "turn",
+  "heading",
+  "crosswind",
+  "pattern",
+  "closed",
+  "departure",
+  "hand",
+  "side",
+  "break",
+  "180",
+  "360",
+]);
 function sideAt(t: string[], i: number): string {
   const s = SIDE[t[i] ?? ""] ?? "";
   if (!s) return "";
@@ -268,7 +352,21 @@ export function mentionsRunwayNumber(p: ParsedTransmission, id: string): boolean
   return false;
 }
 
-const FREQ_PREV = new Set(["contact", "frequency", "on", "to", "departure", "approach", "ground", "tower", "center", "radio", "clearance", "monitor", "at"]);
+const FREQ_PREV = new Set([
+  "contact",
+  "frequency",
+  "on",
+  "to",
+  "departure",
+  "approach",
+  "ground",
+  "tower",
+  "center",
+  "radio",
+  "clearance",
+  "monitor",
+  "at",
+]);
 
 export function readFrequencies(p: ParsedTransmission): number[] {
   const t = p.tokens;
@@ -281,11 +379,17 @@ export function readFrequencies(p: ParsedTransmission): number[] {
       if (v >= 108 && v < 137) out.push(v);
       continue;
     }
-    if (n.length >= 4 && n.length <= 6 && n.startsWith("1") && (FREQ_PREV.has(t[i - 1] ?? "") || i === t.length - 1 || /^[a-z]{3,}$/.test(t[i + 1] ?? ""))) {
+    if (
+      n.length >= 4 &&
+      n.length <= 6 &&
+      n.startsWith("1") &&
+      (FREQ_PREV.has(t[i - 1] ?? "") || i === t.length - 1 || /^[a-z]{3,}$/.test(t[i + 1] ?? ""))
+    ) {
       const v = Number(`${n.slice(0, 3)}.${n.slice(3)}`);
       if (v >= 118 && v < 137) out.push(v);
     }
-    if (n.length === 3 && Number(n) >= 118 && Number(n) <= 136 && FREQ_PREV.has(t[i - 1] ?? "")) out.push(Number(n));
+    if (n.length === 3 && Number(n) >= 118 && Number(n) <= 136 && FREQ_PREV.has(t[i - 1] ?? ""))
+      out.push(Number(n));
   }
   return out;
 }
@@ -314,7 +418,11 @@ export function readAltimeters(p: ParsedTransmission): number[] {
     const n = t[i];
     if (!isNum(n)) continue;
     if (/^(2[89]|3[01])\.\d{2}$/.test(n)) out.push(Number(n));
-    else if (/^(2[89]|3[01])\d{2}$/.test(n) && (t[i - 1] === "altimeter" || t[i - 2] === "altimeter")) out.push(Number(n) / 100);
+    else if (
+      /^(2[89]|3[01])\d{2}$/.test(n) &&
+      (t[i - 1] === "altimeter" || t[i - 2] === "altimeter")
+    )
+      out.push(Number(n) / 100);
   }
   return out;
 }
@@ -366,7 +474,8 @@ export function readCallsign(p: ParsedTransmission, cs: CallsignInfo): CallsignU
   // also accept callsign repeated at the end
   if (position !== "end") {
     const tail = sq.slice(Math.max(0, len - best.len - 3));
-    if (tail.includes(sq.slice(best.idx, end)) && position === "middle") return { form: best.form, position: "end" };
+    if (tail.includes(sq.slice(best.idx, end)) && position === "middle")
+      return { form: best.form, position: "end" };
   }
   return { form: best.form, position };
 }

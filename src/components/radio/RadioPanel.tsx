@@ -20,7 +20,17 @@
  * browser speech recognition while held) and an always-available typed transmission field.
  */
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { ArrowLeftRight, Keyboard, Mic, MicOff, Minus, Plus, Radio, Send, Volume2 } from "lucide-react";
+import {
+  ArrowLeftRight,
+  Keyboard,
+  Mic,
+  MicOff,
+  Minus,
+  Plus,
+  Radio,
+  Send,
+  Volume2,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   formatCom,
@@ -103,8 +113,17 @@ export const DEFAULT_RADIO_STATE: RadioState = {
   spacing: 25,
 };
 
-export function makeRadioState(active: number, standby: number, patch: Partial<RadioState> = {}): RadioState {
-  return { ...DEFAULT_RADIO_STATE, com1: { active, standby }, com2: { active: 121.5, standby: 118.0 }, ...patch };
+export function makeRadioState(
+  active: number,
+  standby: number,
+  patch: Partial<RadioState> = {},
+): RadioState {
+  return {
+    ...DEFAULT_RADIO_STATE,
+    com1: { active, standby },
+    com2: { active: 121.5, standby: 118.0 },
+    ...patch,
+  };
 }
 
 /** Frequency the pilot is transmitting on. */
@@ -134,7 +153,15 @@ function lookup(directory: RadioDirectoryEntry[] | undefined, mhz: number) {
 }
 
 /** Concentric dual knob: outer ring = MHz, inner = kHz. */
-function DualKnob({ label, onStep, disabled }: { label: string; onStep: (ring: "outer" | "inner", dir: number) => void; disabled?: boolean | undefined }) {
+function DualKnob({
+  label,
+  onStep,
+  disabled,
+}: {
+  label: string;
+  onStep: (ring: "outer" | "inner", dir: number) => void;
+  disabled?: boolean | undefined;
+}) {
   const ref = useRef<HTMLDivElement>(null);
   const [angles, setAngles] = useState({ outer: 0, inner: 0 });
   const drag = useRef<{ ring: "outer" | "inner"; y: number; acc: number } | null>(null);
@@ -181,7 +208,12 @@ function DualKnob({ label, onStep, disabled }: { label: string; onStep: (ring: "
           disabled && "pointer-events-none opacity-40",
         )}
         onKeyDown={(e) => {
-          const dir = e.key === "ArrowUp" || e.key === "ArrowRight" || e.key === "PageUp" ? 1 : e.key === "ArrowDown" || e.key === "ArrowLeft" || e.key === "PageDown" ? -1 : 0;
+          const dir =
+            e.key === "ArrowUp" || e.key === "ArrowRight" || e.key === "PageUp"
+              ? 1
+              : e.key === "ArrowDown" || e.key === "ArrowLeft" || e.key === "PageDown"
+                ? -1
+                : 0;
           if (!dir) return;
           e.preventDefault();
           step(e.shiftKey || e.key.startsWith("Page") ? "outer" : "inner", dir);
@@ -218,12 +250,29 @@ function DualKnob({ label, onStep, disabled }: { label: string; onStep: (ring: "
           <g transform={`rotate(${angles.outer} 28 28)`}>
             <circle cx="28" cy="28" r="27" fill="url(#knob-o)" stroke="oklch(0.1 0 0)" />
             {Array.from({ length: 24 }, (_, i) => (
-              <line key={i} x1="28" y1="2.5" x2="28" y2="6.5" stroke="oklch(0.55 0.01 258)" strokeWidth="1.2" transform={`rotate(${i * 15} 28 28)`} />
+              <line
+                key={i}
+                x1="28"
+                y1="2.5"
+                x2="28"
+                y2="6.5"
+                stroke="oklch(0.55 0.01 258)"
+                strokeWidth="1.2"
+                transform={`rotate(${i * 15} 28 28)`}
+              />
             ))}
           </g>
           <g transform={`rotate(${angles.inner} 28 28)`}>
             <circle cx="28" cy="28" r="15" fill="url(#knob-i)" stroke="oklch(0.1 0 0)" />
-            <line x1="28" y1="15" x2="28" y2="21" stroke="var(--cyan)" strokeWidth="2" strokeLinecap="round" />
+            <line
+              x1="28"
+              y1="15"
+              x2="28"
+              y2="21"
+              stroke="var(--cyan)"
+              strokeWidth="2"
+              strokeLinecap="round"
+            />
           </g>
         </svg>
       </div>
@@ -231,19 +280,49 @@ function DualKnob({ label, onStep, disabled }: { label: string; onStep: (ring: "
         <span className="text-center">MHz</span>
         <span className="text-center">kHz</span>
         <div className="flex gap-0.5">
-          <KnobBtn label={`${label} MHz down`} onClick={() => step("outer", -1)} disabled={disabled} icon={Minus} />
-          <KnobBtn label={`${label} MHz up`} onClick={() => step("outer", 1)} disabled={disabled} icon={Plus} />
+          <KnobBtn
+            label={`${label} MHz down`}
+            onClick={() => step("outer", -1)}
+            disabled={disabled}
+            icon={Minus}
+          />
+          <KnobBtn
+            label={`${label} MHz up`}
+            onClick={() => step("outer", 1)}
+            disabled={disabled}
+            icon={Plus}
+          />
         </div>
         <div className="flex gap-0.5">
-          <KnobBtn label={`${label} kHz down`} onClick={() => step("inner", -1)} disabled={disabled} icon={Minus} />
-          <KnobBtn label={`${label} kHz up`} onClick={() => step("inner", 1)} disabled={disabled} icon={Plus} />
+          <KnobBtn
+            label={`${label} kHz down`}
+            onClick={() => step("inner", -1)}
+            disabled={disabled}
+            icon={Minus}
+          />
+          <KnobBtn
+            label={`${label} kHz up`}
+            onClick={() => step("inner", 1)}
+            disabled={disabled}
+            icon={Plus}
+          />
         </div>
       </div>
     </div>
   );
 }
 
-function KnobBtn({ label, onClick, disabled, icon: Icon }: { label: string; onClick: () => void; disabled?: boolean | undefined; icon: typeof Plus }) {
+function KnobBtn({
+  label,
+  onClick,
+  disabled,
+  icon: Icon,
+}: {
+  label: string;
+  onClick: () => void;
+  disabled?: boolean | undefined;
+  icon: typeof Plus;
+}) {
   return (
     <button
       type="button"
@@ -260,7 +339,10 @@ function KnobBtn({ label, onClick, disabled, icon: Icon }: { label: string; onCl
 function VolumeKnob({ value, onChange }: { value: number; onChange: (v: number) => void }) {
   const ref = useRef<HTMLDivElement>(null);
   const drag = useRef<{ y: number } | null>(null);
-  const set = useCallback((v: number) => onChange(Math.max(0, Math.min(1, Math.round(v * 20) / 20))), [onChange]);
+  const set = useCallback(
+    (v: number) => onChange(Math.max(0, Math.min(1, Math.round(v * 20) / 20))),
+    [onChange],
+  );
   const valRef = useRef(value);
   valRef.current = value;
   useEffect(() => {
@@ -286,8 +368,15 @@ function VolumeKnob({ value, onChange }: { value: number; onChange: (v: number) 
         aria-valuenow={Math.round(value * 100)}
         className="size-9 cursor-ns-resize touch-none rounded-full outline-none focus-visible:ring-2 focus-visible:ring-cyan"
         onKeyDown={(e) => {
-          if (e.key === "ArrowUp" || e.key === "ArrowRight") (e.preventDefault(), set(value + 0.05));
-          if (e.key === "ArrowDown" || e.key === "ArrowLeft") (e.preventDefault(), set(value - 0.05));
+          const dir =
+            e.key === "ArrowUp" || e.key === "ArrowRight"
+              ? 1
+              : e.key === "ArrowDown" || e.key === "ArrowLeft"
+                ? -1
+                : 0;
+          if (!dir) return;
+          e.preventDefault();
+          set(value + dir * 0.05);
         }}
         onPointerDown={(e) => {
           (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
@@ -306,7 +395,16 @@ function VolumeKnob({ value, onChange }: { value: number; onChange: (v: number) 
       >
         <svg viewBox="0 0 36 36" className="size-full">
           <circle cx="18" cy="18" r="17" fill="oklch(0.22 0.01 258)" stroke="oklch(0.1 0 0)" />
-          <line x1="18" y1="5" x2="18" y2="11" stroke="var(--ok)" strokeWidth="2.2" strokeLinecap="round" transform={`rotate(${angle} 18 18)`} />
+          <line
+            x1="18"
+            y1="5"
+            x2="18"
+            y2="11"
+            stroke="var(--ok)"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            transform={`rotate(${angle} 18 18)`}
+          />
         </svg>
       </div>
       <div className="leading-tight">
@@ -317,7 +415,17 @@ function VolumeKnob({ value, onChange }: { value: number; onChange: (v: number) 
   );
 }
 
-function FreqEntry({ value, spacing, onCommit, onCancel }: { value: number; spacing: ChannelSpacing; onCommit: (mhz: number) => void; onCancel: () => void }) {
+function FreqEntry({
+  value,
+  spacing,
+  onCommit,
+  onCancel,
+}: {
+  value: number;
+  spacing: ChannelSpacing;
+  onCommit: (mhz: number) => void;
+  onCancel: () => void;
+}) {
   const [text, setText] = useState(formatCom(value));
   const [err, setErr] = useState<string | null>(null);
   const commit = () => {
@@ -341,7 +449,11 @@ function FreqEntry({ value, spacing, onCommit, onCancel }: { value: number; spac
         onBlur={commit}
         className="w-[7.2rem] rounded border border-cyan/60 bg-black/60 px-1.5 py-0.5 font-mono text-lg text-cyan outline-none"
       />
-      {err ? <div className="absolute top-full left-0 z-10 mt-1 w-56 rounded border border-warning/40 bg-panel px-2 py-1 text-[11px] text-warning">{err}</div> : null}
+      {err ? (
+        <div className="absolute top-full left-0 z-10 mt-1 w-56 rounded border border-warning/40 bg-panel px-2 py-1 text-[11px] text-warning">
+          {err}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -370,18 +482,42 @@ function ComRow({
   const stbyName = lookup(directory, com.standby)?.name;
   const selected = radio.tx === n;
   return (
-    <div className={cn("rounded-md border px-2.5 py-2 transition-colors sm:px-3", selected ? "border-ok/30 bg-ok/[0.03]" : "border-border/60")}>
+    <div
+      className={cn(
+        "rounded-md border px-2.5 py-2 transition-colors sm:px-3",
+        selected ? "border-ok/30 bg-ok/[0.03]" : "border-border/60",
+      )}
+    >
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
         <div className="flex w-12 flex-col items-start gap-1">
           <span className="font-mono text-xs font-bold text-foreground">COM{n}</span>
           <div className="flex gap-1">
-            <span className={cn("rounded px-1 text-[9px] font-bold", txActive && selected ? "bg-warning text-white" : "bg-muted text-muted-foreground/60")}>TX</span>
-            <span className={cn("rounded px-1 text-[9px] font-bold", receiving ? "bg-ok text-black" : "bg-muted text-muted-foreground/60")}>RX</span>
+            <span
+              className={cn(
+                "rounded px-1 text-[9px] font-bold",
+                txActive && selected
+                  ? "bg-warning text-white"
+                  : "bg-muted text-muted-foreground/60",
+              )}
+            >
+              TX
+            </span>
+            <span
+              className={cn(
+                "rounded px-1 text-[9px] font-bold",
+                receiving ? "bg-ok text-black" : "bg-muted text-muted-foreground/60",
+              )}
+            >
+              RX
+            </span>
           </div>
         </div>
         <div className="min-w-[7.5rem]">
           <div className="label-caps !text-[9px]">Active</div>
-          <div className="font-mono text-xl font-semibold tracking-tight text-ok tabular sm:text-2xl" aria-label={`COM${n} active ${formatCom(com.active)}`}>
+          <div
+            className="font-mono text-xl font-semibold tracking-tight text-ok tabular sm:text-2xl"
+            aria-label={`COM${n} active ${formatCom(com.active)}`}
+          >
             {formatCom(com.active)}
           </div>
           <div className="h-4 truncate text-[10px] text-muted-foreground" title={activeName}>
@@ -429,7 +565,15 @@ function ComRow({
           <DualKnob
             label={`COM${n}`}
             disabled={disabled}
-            onStep={(ring, dir) => onChange({ ...com, standby: ring === "outer" ? stepCoarse(com.standby, dir) : stepFine(com.standby, dir, radio.spacing) })}
+            onStep={(ring, dir) =>
+              onChange({
+                ...com,
+                standby:
+                  ring === "outer"
+                    ? stepCoarse(com.standby, dir)
+                    : stepFine(com.standby, dir, radio.spacing),
+              })
+            }
           />
         </div>
       </div>
@@ -457,7 +601,10 @@ export function RadioPanel({
   const support = useSpeechSupport();
   const [innerDraft, setInnerDraft] = useState("");
   const draft = draftProp ?? innerDraft;
-  const setDraft = useCallback((v: string) => (onDraftChange ? onDraftChange(v) : setInnerDraft(v)), [onDraftChange]);
+  const setDraft = useCallback(
+    (v: string) => (onDraftChange ? onDraftChange(v) : setInnerDraft(v)),
+    [onDraftChange],
+  );
   const [txActive, setTxActive] = useState(false);
   const [partial, setPartial] = useState("");
   const [notice, setNotice] = useState<string | null>(null);
@@ -479,6 +626,9 @@ export function RadioPanel({
     [onTransmit],
   );
 
+  const emitRef = useRef(emit);
+  emitRef.current = emit;
+
   const pttDown = useCallback(() => {
     if (disabled || txActive) return;
     const at = Date.now();
@@ -493,7 +643,7 @@ export function RadioPanel({
           onFinal: (t) => {
             listening.current = false;
             setPartial("");
-            if (t.trim()) emit(t.trim(), "voice", pttAt.current);
+            if (t.trim()) emitRef.current(t.trim(), "voice", pttAt.current);
             else setNotice("Didn't catch that — hold PTT while you speak, or type the call.");
           },
           onError: (m) => {
@@ -506,7 +656,7 @@ export function RadioPanel({
       setPartial("");
       recognizer.current?.start();
     }
-  }, [disabled, txActive, onPttStart, useVoice, emit]);
+  }, [disabled, txActive, onPttStart, useVoice]);
 
   const pttUp = useCallback(() => {
     if (!txActive) return;
@@ -520,7 +670,11 @@ export function RadioPanel({
       emit(text, "text", pttAt.current);
       setDraft("");
     } else if (!useVoice) {
-      setNotice(micEnabled && !support.stt ? "Voice input isn't available in this browser — type your call, then press PTT or Enter." : "Type your transmission first, then press PTT or Enter.");
+      setNotice(
+        micEnabled && !support.stt
+          ? "Voice input isn't available in this browser — type your call, then press PTT or Enter."
+          : "Type your transmission first, then press PTT or Enter.",
+      );
     }
   }, [txActive, emit, setDraft, useVoice, micEnabled, support.stt]);
 
@@ -571,9 +725,15 @@ export function RadioPanel({
         <div className="flex items-center gap-2">
           <Radio className="size-4 text-ok" />
           <span className="label-caps !text-foreground/80">COM radio</span>
-          <span className="rounded border border-caution/30 bg-caution/10 px-1.5 py-0.5 text-[9px] font-bold tracking-wide text-caution uppercase">Simulated</span>
+          <span className="rounded border border-caution/30 bg-caution/10 px-1.5 py-0.5 text-[9px] font-bold tracking-wide text-caution uppercase">
+            Simulated
+          </span>
         </div>
-        <div className="flex items-center gap-1 rounded-md border border-border p-0.5" role="radiogroup" aria-label="Channel spacing">
+        <div
+          className="flex items-center gap-1 rounded-md border border-border p-0.5"
+          role="radiogroup"
+          aria-label="Channel spacing"
+        >
           {([25, 8.33] as ChannelSpacing[]).map((sp) => (
             <button
               key={sp}
@@ -581,7 +741,12 @@ export function RadioPanel({
               role="radio"
               aria-checked={value.spacing === sp}
               onClick={() => onChange({ ...value, spacing: sp })}
-              className={cn("rounded px-2 py-0.5 text-[10px] font-semibold", value.spacing === sp ? "bg-primary/20 text-primary" : "text-muted-foreground hover:text-foreground")}
+              className={cn(
+                "rounded px-2 py-0.5 text-[10px] font-semibold",
+                value.spacing === sp
+                  ? "bg-primary/20 text-primary"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
             >
               {sp === 25 ? "25 kHz (US)" : "8.33 kHz"}
             </button>
@@ -590,8 +755,26 @@ export function RadioPanel({
       </div>
 
       <div className="space-y-2">
-        <ComRow n={1} com={value.com1} radio={value} directory={directory} receiving={rxOn(1)} txActive={txActive} disabled={disabled} onChange={(c) => onChange({ ...value, com1: c })} />
-        <ComRow n={2} com={value.com2} radio={value} directory={directory} receiving={rxOn(2)} txActive={txActive} disabled={disabled} onChange={(c) => onChange({ ...value, com2: c })} />
+        <ComRow
+          n={1}
+          com={value.com1}
+          radio={value}
+          directory={directory}
+          receiving={rxOn(1)}
+          txActive={txActive}
+          disabled={disabled}
+          onChange={(c) => onChange({ ...value, com1: c })}
+        />
+        <ComRow
+          n={2}
+          com={value.com2}
+          radio={value}
+          directory={directory}
+          receiving={rxOn(2)}
+          txActive={txActive}
+          disabled={disabled}
+          onChange={(c) => onChange({ ...value, com2: c })}
+        />
       </div>
 
       <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-border/60 pt-3">
@@ -603,7 +786,12 @@ export function RadioPanel({
               role="radio"
               aria-checked={value.tx === n}
               onClick={() => onChange({ ...value, tx: n })}
-              className={cn("rounded border px-2 py-1 font-mono text-[10px] font-bold", value.tx === n ? "border-ok/50 bg-ok/15 text-ok" : "border-border text-muted-foreground hover:text-foreground")}
+              className={cn(
+                "rounded border px-2 py-1 font-mono text-[10px] font-bold",
+                value.tx === n
+                  ? "border-ok/50 bg-ok/15 text-ok"
+                  : "border-border text-muted-foreground hover:text-foreground",
+              )}
             >
               MIC {n}
             </button>
@@ -612,7 +800,12 @@ export function RadioPanel({
             type="button"
             aria-pressed={value.monitor2}
             onClick={() => onChange({ ...value, monitor2: !value.monitor2 })}
-            className={cn("ml-1 rounded border px-2 py-1 font-mono text-[10px] font-bold", value.monitor2 ? "border-cyan/50 bg-cyan/15 text-cyan" : "border-border text-muted-foreground hover:text-foreground")}
+            className={cn(
+              "ml-1 rounded border px-2 py-1 font-mono text-[10px] font-bold",
+              value.monitor2
+                ? "border-cyan/50 bg-cyan/15 text-cyan"
+                : "border-border text-muted-foreground hover:text-foreground",
+            )}
             title="Monitor COM2 while transmitting on COM1"
           >
             MON 2
@@ -624,7 +817,9 @@ export function RadioPanel({
             <div className="label-caps !text-[9px]">Current controller</div>
             <div className="truncate text-xs font-semibold">
               {expected.name}{" "}
-              <span className={cn("font-mono", onExpected ? "text-ok" : "text-caution")}>{formatCom(expected.mhz)}</span>
+              <span className={cn("font-mono", onExpected ? "text-ok" : "text-caution")}>
+                {formatCom(expected.mhz)}
+              </span>
             </div>
           </div>
         ) : null}
@@ -632,18 +827,27 @@ export function RadioPanel({
 
       {directorySorted.length ? (
         <div className="mt-3">
-          <div className="label-caps mb-1.5 !text-[9px]">Frequency list — tap to load COM{value.tx} standby</div>
+          <div className="label-caps mb-1.5 !text-[9px]">
+            Frequency list — tap to load COM{value.tx} standby
+          </div>
           <div className="flex flex-wrap gap-1.5">
             {directorySorted.map((d) => (
               <button
                 key={`${d.name}-${d.mhz}`}
                 type="button"
                 disabled={disabled}
-                onClick={() => onChange(value.tx === 1 ? { ...value, com1: { ...value.com1, standby: d.mhz } } : { ...value, com2: { ...value.com2, standby: d.mhz } })}
+                onClick={() =>
+                  onChange(
+                    value.tx === 1
+                      ? { ...value, com1: { ...value.com1, standby: d.mhz } }
+                      : { ...value, com2: { ...value.com2, standby: d.mhz } },
+                  )
+                }
                 className="rounded border border-border bg-muted/40 px-2 py-1 text-left text-[11px] leading-tight hover:border-cyan/50 hover:bg-cyan/5"
                 title={d.simulated ? "Simulated training frequency" : "Load into standby"}
               >
-                <span className="text-muted-foreground">{d.name}</span> <span className="font-mono text-cyan">{formatCom(d.mhz)}</span>
+                <span className="text-muted-foreground">{d.name}</span>{" "}
+                <span className="font-mono text-cyan">{formatCom(d.mhz)}</span>
                 {d.simulated ? <span className="ml-1 text-[9px] text-caution">SIM</span> : null}
               </button>
             ))}
@@ -665,15 +869,23 @@ export function RadioPanel({
               onPointerUp={() => pttUp()}
               onPointerCancel={() => pttUp()}
               onContextMenu={(e) => e.preventDefault()}
-              aria-label={useVoice ? "Push to talk — hold while speaking" : "Push to talk — sends the typed transmission"}
+              aria-label={
+                useVoice
+                  ? "Push to talk — hold while speaking"
+                  : "Push to talk — sends the typed transmission"
+              }
               className={cn(
                 "flex min-h-12 shrink-0 touch-none items-center justify-center gap-2 rounded-md border px-4 font-semibold tracking-wide uppercase select-none sm:w-40",
-                txActive ? "border-warning bg-warning text-white shadow-[0_0_18px_-2px] shadow-warning/60" : "border-warning/50 bg-warning/10 text-warning hover:bg-warning/20",
+                txActive
+                  ? "border-warning bg-warning text-white shadow-[0_0_18px_-2px] shadow-warning/60"
+                  : "border-warning/50 bg-warning/10 text-warning hover:bg-warning/20",
                 disabled && "opacity-40",
               )}
             >
               {useVoice ? <Mic className="size-4" /> : <Keyboard className="size-4" />}
-              <span className="text-xs">{txActive ? (useVoice ? "Transmitting…" : "Release to send") : "PTT"}</span>
+              <span className="text-xs">
+                {txActive ? (useVoice ? "Transmitting…" : "Release to send") : "PTT"}
+              </span>
             </button>
             <div className="flex min-w-0 flex-1 gap-2">
               <input
@@ -686,7 +898,12 @@ export function RadioPanel({
                   }
                 }}
                 disabled={disabled}
-                placeholder={composerPlaceholder ?? (useVoice ? "Hold SPACE / PTT to speak — or type your call and press Enter" : "Type your radio call and press Enter")}
+                placeholder={
+                  composerPlaceholder ??
+                  (useVoice
+                    ? "Hold SPACE / PTT to speak — or type your call and press Enter"
+                    : "Type your radio call and press Enter")
+                }
                 aria-label="Transmission text"
                 className="h-12 min-w-0 flex-1 rounded-md border border-input bg-black/40 px-3 font-mono text-sm outline-none placeholder:font-sans placeholder:text-muted-foreground/70 focus:border-primary"
               />
@@ -703,7 +920,15 @@ export function RadioPanel({
           </div>
           <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted-foreground">
             <span className="flex items-center gap-1.5">
-              {micEnabled ? support.stt ? <Mic className="size-3 text-ok" /> : <MicOff className="size-3 text-caution" /> : <MicOff className="size-3" />}
+              {micEnabled ? (
+                support.stt ? (
+                  <Mic className="size-3 text-ok" />
+                ) : (
+                  <MicOff className="size-3 text-caution" />
+                )
+              ) : (
+                <MicOff className="size-3" />
+              )}
               {micEnabled
                 ? support.stt
                   ? "Voice: hold SPACE or the PTT button while speaking."
@@ -715,7 +940,11 @@ export function RadioPanel({
             </span>
             {composerActions}
           </div>
-          {notice ? <div className="mt-2 rounded border border-caution/30 bg-caution/5 px-2 py-1 text-[11px] text-caution">{notice}</div> : null}
+          {notice ? (
+            <div className="mt-2 rounded border border-caution/30 bg-caution/5 px-2 py-1 text-[11px] text-caution">
+              {notice}
+            </div>
+          ) : null}
         </div>
       ) : null}
     </div>

@@ -9,16 +9,40 @@
  * coaching and curveballs; personality controls pace, verbosity and background chatter.
  */
 import { buildContext, facilityOf, makeRng, pick, type Rng } from "./context";
-import { blockedItem, buildReport, correctFrequencyItem, evaluateTransmission, scoreItems, summarize, timingItem, wrongFrequencyItem, type Expect } from "./evaluate";
+import {
+  blockedItem,
+  buildReport,
+  correctFrequencyItem,
+  evaluateTransmission,
+  scoreItems,
+  summarize,
+  timingItem,
+  wrongFrequencyItem,
+  type Expect,
+} from "./evaluate";
 import { freqEquals, formatFreqShort } from "./frequency";
 import { alt, csPhrase, freq, hdg, letter, ph, PHONETIC, rwy, speakify } from "./phrase";
 import { getScenario, SCENARIOS, type ScenarioDef, type Step } from "./scenarios";
-import type { Difficulty, EvalItem, Facility, Personality, Phrase, ScenarioContext, SessionReport, TransmissionEval } from "./types";
+import type {
+  Difficulty,
+  EvalItem,
+  Facility,
+  Personality,
+  Phrase,
+  ScenarioContext,
+  SessionReport,
+  TransmissionEval,
+} from "./types";
 
 export type EngineEvent =
   | { type: "atc"; facility: Facility; phrase: Phrase; delayMs: number }
   | { type: "traffic"; label: string; phrase: Phrase; delayMs: number; pitch: number }
-  | { type: "system"; text: string; tone: "info" | "ok" | "caution" | "warning"; coaching?: boolean }
+  | {
+      type: "system";
+      text: string;
+      tone: "info" | "ok" | "caution" | "warning";
+      coaching?: boolean;
+    }
   | { type: "complete" };
 
 export interface EngineSession {
@@ -56,7 +80,12 @@ function rngFor(s: EngineSession): Rng {
   return makeRng(s.seed + s.tick * 7919);
 }
 
-export const HINT_LIMIT: Record<Difficulty, number> = { beginner: Infinity, intermediate: 3, advanced: 1, checkride: 0 };
+export const HINT_LIMIT: Record<Difficulty, number> = {
+  beginner: Infinity,
+  intermediate: 3,
+  advanced: 1,
+  checkride: 0,
+};
 
 function responseDelay(personality: Personality, rng: Rng): number {
   const base = { instructor: 1500, professional: 1100, busy: 650, examiner: 1250 }[personality];
@@ -80,34 +109,97 @@ const AIRLINES = [
 function chatter(s: EngineSession, f: Facility, rng: Rng): EngineEvent[] {
   const ctx = s.ctx;
   const otherCs = pick(rng, OTHER_CALLSIGNS);
-  const o = { text: otherCs, spoken: otherCs.split("").map((c) => (/\d/.test(c) ? ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "niner"][Number(c)] : PHONETIC[c] ?? c)).join(" ") };
+  const o = {
+    text: otherCs,
+    spoken: otherCs
+      .split("")
+      .map((c) =>
+        /\d/.test(c)
+          ? ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "niner"][
+              Number(c)
+            ]
+          : (PHONETIC[c] ?? c),
+      )
+      .join(" "),
+  };
   const al = pick(rng, AIRLINES);
   const airline = { text: al.t, spoken: al.s };
-  const ev = (label: string, phrase: Phrase, delayMs: number, pitch: number): EngineEvent => ({ type: "traffic", label, phrase: { text: phrase.text, spoken: speakify(phrase.spoken) }, delayMs, pitch });
+  const ev = (label: string, phrase: Phrase, delayMs: number, pitch: number): EngineEvent => ({
+    type: "traffic",
+    label,
+    phrase: { text: phrase.text, spoken: speakify(phrase.spoken) },
+    delayMs,
+    pitch,
+  });
   switch (f.key) {
     case "ground":
     case "clearance":
       return [
-        ev(f.name, ph`${o}, ${f.name}, runway ${rwy(ctx.runway.id)}, taxi via ${letter(ctx.taxiRoute[0] ?? "A")}.`, 500, 1),
-        ev("Other aircraft", ph`Runway ${rwy(ctx.runway.id)}, taxi via ${letter(ctx.taxiRoute[0] ?? "A")}, ${o}.`, 600, 1.25),
+        ev(
+          f.name,
+          ph`${o}, ${f.name}, runway ${rwy(ctx.runway.id)}, taxi via ${letter(ctx.taxiRoute[0] ?? "A")}.`,
+          500,
+          1,
+        ),
+        ev(
+          "Other aircraft",
+          ph`Runway ${rwy(ctx.runway.id)}, taxi via ${letter(ctx.taxiRoute[0] ?? "A")}, ${o}.`,
+          600,
+          1.25,
+        ),
       ];
     case "tower":
     case "ctaf":
       return pick(rng, [
-        [ev(f.name, ph`${o}, runway ${rwy(ctx.runway.id)}, cleared to land.`, 500, 1), ev("Other aircraft", ph`Cleared to land runway ${rwy(ctx.runway.id)}, ${o}.`, 600, 0.85)],
-        [ev(f.name, ph`${airline}, runway ${rwy(ctx.runway.id)}, cleared for takeoff.`, 500, 1), ev("Other aircraft", ph`Cleared for takeoff runway ${rwy(ctx.runway.id)}, ${airline}.`, 600, 0.8)],
+        [
+          ev(f.name, ph`${o}, runway ${rwy(ctx.runway.id)}, cleared to land.`, 500, 1),
+          ev("Other aircraft", ph`Cleared to land runway ${rwy(ctx.runway.id)}, ${o}.`, 600, 0.85),
+        ],
+        [
+          ev(f.name, ph`${airline}, runway ${rwy(ctx.runway.id)}, cleared for takeoff.`, 500, 1),
+          ev(
+            "Other aircraft",
+            ph`Cleared for takeoff runway ${rwy(ctx.runway.id)}, ${airline}.`,
+            600,
+            0.8,
+          ),
+        ],
       ]);
     default:
       return pick(rng, [
-        [ev(f.name, ph`${airline}, contact ${facilityOf(ctx, "center").name} ${freq(facilityOf(ctx, "center").mhz)}.`, 500, 1), ev("Other aircraft", ph`Over to Center, ${airline}.`, 600, 0.8)],
-        [ev(f.name, ph`${o}, traffic ten o'clock, 3 miles, northbound, altitude indicates ${alt(5500)}.`, 500, 1), ev("Other aircraft", ph`Looking, ${o}.`, 600, 1.2)],
-        [ev(f.name, ph`${airline}, descend and maintain ${alt(7000)}.`, 500, 1), ev("Other aircraft", ph`Down to ${alt(7000)}, ${airline}.`, 600, 0.85)],
+        [
+          ev(
+            f.name,
+            ph`${airline}, contact ${facilityOf(ctx, "center").name} ${freq(facilityOf(ctx, "center").mhz)}.`,
+            500,
+            1,
+          ),
+          ev("Other aircraft", ph`Over to Center, ${airline}.`, 600, 0.8),
+        ],
+        [
+          ev(
+            f.name,
+            ph`${o}, traffic ten o'clock, 3 miles, northbound, altitude indicates ${alt(5500)}.`,
+            500,
+            1,
+          ),
+          ev("Other aircraft", ph`Looking, ${o}.`, 600, 1.2),
+        ],
+        [
+          ev(f.name, ph`${airline}, descend and maintain ${alt(7000)}.`, 500, 1),
+          ev("Other aircraft", ph`Down to ${alt(7000)}, ${airline}.`, 600, 0.85),
+        ],
       ]);
   }
 }
 
 function atcEvent(s: EngineSession, f: Facility, phrase: Phrase, delayMs: number): EngineEvent {
-  return { type: "atc", facility: f, phrase: capFirst({ text: phrase.text, spoken: speakify(phrase.spoken) }), delayMs };
+  return {
+    type: "atc",
+    facility: f,
+    phrase: capFirst({ text: phrase.text, spoken: speakify(phrase.spoken) }),
+    delayMs,
+  };
 }
 
 /** Emit the opening of the current step (situation, chatter, ATC prompt). */
@@ -123,15 +215,23 @@ function openStep(s: EngineSession, events: EngineEvent[], firstDelay: number) {
     events.push(atcEvent(s, f, phrase, firstDelay));
     s.ctx = { ...s.ctx, abbrevBy: { ...s.ctx.abbrevBy, [step.facility]: true } };
   } else if (s.difficulty === "beginner") {
-    events.push({ type: "system", text: `Your call: ${step.title}. Transmit on ${f.name} ${formatFreqShort(f.mhz)}.`, tone: "info", coaching: true });
+    events.push({
+      type: "system",
+      text: `Your call: ${step.title}. Transmit on ${f.name} ${formatFreqShort(f.mhz)}.`,
+      tone: "info",
+      coaching: true,
+    });
   } else if (s.index > 0) {
     events.push({ type: "system", text: `Your call: ${step.title}.`, tone: "info" });
   }
 }
 
-export function createSession(o: SessionOptions): { session: EngineSession; events: EngineEvent[] } {
+export function createSession(o: SessionOptions): {
+  session: EngineSession;
+  events: EngineEvent[];
+} {
   const def = getScenario(o.scenarioId) ?? (SCENARIOS[0] as ScenarioDef);
-  const seed = o.seed ?? (Date.now() % 2147483647);
+  const seed = o.seed ?? Date.now() % 2147483647;
   const base = buildContext({
     airportIcao: o.airportIcao,
     aircraftId: o.aircraftId,
@@ -157,13 +257,17 @@ export function createSession(o: SessionOptions): { session: EngineSession; even
     hintsUsed: 0,
   };
   const events: EngineEvent[] = [];
-  events.push({ type: "system", text: `SIMULATED ATC — ${def.title} at ${ctx.airport.icao}. Training only, not real air traffic control.`, tone: "caution" });
+  events.push({
+    type: "system",
+    text: `SIMULATED ATC — ${def.title} at ${ctx.airport.icao}. Training only, not real air traffic control.`,
+    tone: "caution",
+  });
   openStep(session, events, 900);
   return { session, events };
 }
 
 export function currentStep(s: EngineSession): Step | null {
-  return s.done ? null : s.steps[s.index] ?? null;
+  return s.done ? null : (s.steps[s.index] ?? null);
 }
 
 export function expectedFacility(s: EngineSession): Facility | null {
@@ -204,10 +308,19 @@ export function stepChecklist(s: EngineSession, withValues: boolean): string[] {
         out.push(v("Read back hold short", `hold short runway ${rwy(e.runway).text}`));
         break;
       case "altitude":
-        out.push(v(e.label ?? (e.readback ? "Read back the altitude" : "Altitude"), alt(e.ft).text));
+        out.push(
+          v(e.label ?? (e.readback ? "Read back the altitude" : "Altitude"), alt(e.ft).text),
+        );
         break;
       case "heading":
-        out.push(v(e.readback ? "Read back the heading" : "Heading", e.deg === "runway" ? "runway heading" : `${e.turn ? `${e.turn} ` : ""}heading ${hdg(e.deg).text}`));
+        out.push(
+          v(
+            e.readback ? "Read back the heading" : "Heading",
+            e.deg === "runway"
+              ? "runway heading"
+              : `${e.turn ? `${e.turn} ` : ""}heading ${hdg(e.deg).text}`,
+          ),
+        );
         break;
       case "frequency":
         out.push(v(e.readback ? "Read back the frequency" : "Frequency", formatFreqShort(e.mhz)));
@@ -229,7 +342,12 @@ export function stepChecklist(s: EngineSession, withValues: boolean): string[] {
         break;
     }
   }
-  out.push(v("Your callsign", allowed && ctx.cs.canAbbreviate ? `${ctx.cs.abbrev} (ATC abbreviated it)` : ctx.cs.full));
+  out.push(
+    v(
+      "Your callsign",
+      allowed && ctx.cs.canAbbreviate ? `${ctx.cs.abbrev} (ATC abbreviated it)` : ctx.cs.full,
+    ),
+  );
   return out;
 }
 
@@ -250,7 +368,14 @@ export interface TransmitInput {
   at?: number;
 }
 
-function makeEval(s: EngineSession, step: Step, text: string, items: EvalItem[], delaySec: number | null, at: number): TransmissionEval {
+function makeEval(
+  s: EngineSession,
+  step: Step,
+  text: string,
+  items: EvalItem[],
+  delaySec: number | null,
+  at: number,
+): TransmissionEval {
   const f = facilityOf(s.ctx, step.facility);
   return {
     id: `${step.id}-${s.evals.length + 1}`,
@@ -275,7 +400,10 @@ function coachingText(ev: TransmissionEval, accepted: boolean): string {
   return `${accepted ? "Accepted, with notes:" : "Not quite:"}\n${lines.join("\n")}\nCorrect: “${ev.example}”`;
 }
 
-export function submitTransmission(s0: EngineSession, input: TransmitInput): { session: EngineSession; events: EngineEvent[]; evaluation: TransmissionEval | null } {
+export function submitTransmission(
+  s0: EngineSession,
+  input: TransmitInput,
+): { session: EngineSession; events: EngineEvent[]; evaluation: TransmissionEval | null } {
   const s: EngineSession = { ...s0, tick: s0.tick + 1, evals: [...s0.evals] };
   const events: EngineEvent[] = [];
   const step = currentStep(s);
@@ -312,14 +440,23 @@ export function submitTransmission(s0: EngineSession, input: TransmitInput): { s
     events.push({
       type: "system",
       tone: "warning",
-      text: explain ? "Blocked — you keyed the mic while another station was transmitting. Wait for a break, then call again." : "Your transmission was blocked (frequency busy).",
+      text: explain
+        ? "Blocked — you keyed the mic while another station was transmitting. Wait for a break, then call again."
+        : "Your transmission was blocked (frequency busy).",
     });
     return { session: s, events, evaluation: ev };
   }
 
   // 3. Evaluate content.
   const allowed = !!s.ctx.abbrevBy[step.facility];
-  const { items } = evaluateTransmission({ text, expects: step.expects(s.ctx), cs: s.ctx.cs, abbreviatedAllowed: allowed, kind: step.kind, personality: s.personality });
+  const { items } = evaluateTransmission({
+    text,
+    expects: step.expects(s.ctx),
+    cs: s.ctx.cs,
+    abbreviatedAllowed: allowed,
+    kind: step.kind,
+    personality: s.personality,
+  });
   items.push(correctFrequencyItem(f));
   const useDelay = !!step.prompt || s.attempts > 0;
   const t = timingItem(useDelay ? input.delaySec : null, s.difficulty, !!step.urgent);
@@ -327,7 +464,9 @@ export function submitTransmission(s0: EngineSession, input: TransmitInput): { s
   const ev = makeEval(s, step, text, items, useDelay ? input.delaySec : null, at);
   s.evals.push(ev);
 
-  const failedCritical = items.filter((i) => !i.ok && i.severity === "critical" && !i.categories.includes("timing"));
+  const failedCritical = items.filter(
+    (i) => !i.ok && i.severity === "critical" && !i.categories.includes("timing"),
+  );
   const delay = responseDelay(s.personality, rng);
   const cs = csPhrase(s.ctx.cs, allowed);
 
@@ -337,27 +476,55 @@ export function submitTransmission(s0: EngineSession, input: TransmitInput): { s
     const custom = step.retryPrompt?.(s.ctx, failedCritical) ?? null;
     let correction: Phrase;
     if (custom) correction = custom;
-    else if (failedCritical.some((i) => i.label === "Callsign")) correction = step.prompt ? ph`Station reading back, say callsign.` : ph`Aircraft calling ${f.name}, say again callsign.`;
+    else if (failedCritical.some((i) => i.label === "Callsign"))
+      correction = step.prompt
+        ? ph`Station reading back, say callsign.`
+        : ph`Aircraft calling ${f.name}, say again callsign.`;
     else if (step.prompt) {
       const frags = failedCritical.map((i) => i.correct).filter((x): x is string => !!x);
       correction = ph`${cs}, negative, ${frags.join(", ") || "I say again"}.`;
       if (!frags.length && step.prompt) correction = ph`${cs}, I say again: ${step.prompt(s.ctx)}`;
     } else correction = ph`${cs}, say again.`;
     events.push(atcEvent(s, f, correction, delay));
-    if (coach) events.push({ type: "system", tone: "caution", text: coachingText(ev, false), coaching: true });
-    else if (s.difficulty === "intermediate") events.push({ type: "system", tone: "caution", text: `Critical: ${failedCritical[0]?.message ?? ""}`, coaching: true });
+    if (coach)
+      events.push({
+        type: "system",
+        tone: "caution",
+        text: coachingText(ev, false),
+        coaching: true,
+      });
+    else if (s.difficulty === "intermediate")
+      events.push({
+        type: "system",
+        tone: "caution",
+        text: `Critical: ${failedCritical[0]?.message ?? ""}`,
+        coaching: true,
+      });
     return { session: s, events, evaluation: ev };
   }
 
   // Accepted (or retries exhausted).
   if (failedCritical.length) {
-    events.push({ type: "system", tone: "info", text: explain ? `Moving on — this exchange will be reviewed in your report.${coach ? ` Correct: “${ev.example}”` : ""}` : "Moving on." });
+    events.push({
+      type: "system",
+      tone: "info",
+      text: explain
+        ? `Moving on — this exchange will be reviewed in your report.${coach ? ` Correct: “${ev.example}”` : ""}`
+        : "Moving on.",
+    });
   } else if (coach) {
-    events.push({ type: "system", tone: ev.items.some((i) => !i.ok) ? "caution" : "ok", text: coachingText(ev, true), coaching: true });
+    events.push({
+      type: "system",
+      tone: ev.items.some((i) => !i.ok) ? "caution" : "ok",
+      text: coachingText(ev, true),
+      coaching: true,
+    });
   }
 
   // Follow-ups for missing items (e.g. ATIS not reported).
-  const notes = (step.missingNotes ?? []).filter((n) => items.some((i) => i.label === n.label && !i.ok));
+  const notes = (step.missingNotes ?? []).filter((n) =>
+    items.some((i) => i.label === n.label && !i.ok),
+  );
   for (const n of notes) events.push(atcEvent(s, f, n.atc(s.ctx), delay));
 
   s.ctx = step.apply ? step.apply(s.ctx, ev) : s.ctx;
@@ -370,7 +537,11 @@ export function submitTransmission(s0: EngineSession, input: TransmitInput): { s
   s.attempts = 0;
   if (s.index >= s.steps.length) {
     s.done = true;
-    events.push({ type: "system", tone: "ok", text: "Scenario complete. Generating your communication report…" });
+    events.push({
+      type: "system",
+      tone: "ok",
+      text: "Scenario complete. Generating your communication report…",
+    });
     events.push({ type: "complete" });
   } else {
     openStep(s, events, closing || notes.length ? 1400 : delay);
@@ -383,6 +554,13 @@ export function sessionReport(s: EngineSession): SessionReport {
 }
 
 /** Facilities in the order they appear in the scenario (for the progress rail). */
-export function stepFacilities(s: EngineSession): { id: string; title: string; facility: Facility; atcFirst: boolean }[] {
-  return s.steps.map((st) => ({ id: st.id, title: st.title, facility: facilityOf(s.ctx, st.facility), atcFirst: !!st.prompt }));
+export function stepFacilities(
+  s: EngineSession,
+): { id: string; title: string; facility: Facility; atcFirst: boolean }[] {
+  return s.steps.map((st) => ({
+    id: st.id,
+    title: st.title,
+    facility: facilityOf(s.ctx, st.facility),
+    atcFirst: !!st.prompt,
+  }));
 }

@@ -15,7 +15,8 @@ export type Station =
   | "CTAF";
 
 /** Facility keys used by scenario steps (resolved to real airport frequencies where available). */
-export type FacilityKey = "clearance" | "ground" | "tower" | "departure" | "approach" | "center" | "fss" | "ctaf";
+export type FacilityKey =
+  "clearance" | "ground" | "tower" | "departure" | "approach" | "center" | "fss" | "ctaf";
 
 export interface Facility {
   key: FacilityKey;
@@ -33,17 +34,52 @@ export type Difficulty = "beginner" | "intermediate" | "advanced" | "checkride";
 export type Personality = "instructor" | "professional" | "busy" | "examiner";
 
 export const DIFFICULTIES: { id: Difficulty; label: string; description: string }[] = [
-  { id: "beginner", label: "Beginner", description: "Slow controller, hints, 'say it for me' examples, mistakes explained immediately." },
-  { id: "intermediate", label: "Intermediate", description: "Realistic pace, limited hints, only critical errors flagged during the session." },
-  { id: "advanced", label: "Advanced", description: "Unexpected changes: runway changes, amended altitudes, traffic, frequency changes, weather." },
-  { id: "checkride", label: "Checkride", description: "No hints and no explanations until the final report — like a practical test." },
+  {
+    id: "beginner",
+    label: "Beginner",
+    description:
+      "Slow controller, hints, 'say it for me' examples, mistakes explained immediately.",
+  },
+  {
+    id: "intermediate",
+    label: "Intermediate",
+    description: "Realistic pace, limited hints, only critical errors flagged during the session.",
+  },
+  {
+    id: "advanced",
+    label: "Advanced",
+    description:
+      "Unexpected changes: runway changes, amended altitudes, traffic, frequency changes, weather.",
+  },
+  {
+    id: "checkride",
+    label: "Checkride",
+    description: "No hints and no explanations until the final report — like a practical test.",
+  },
 ];
 
 export const PERSONALITIES: { id: Personality; label: string; description: string }[] = [
-  { id: "instructor", label: "Friendly instructor", description: "Patient, slower delivery, a little extra courtesy." },
-  { id: "professional", label: "Standard professional", description: "By-the-book FAA phraseology at a normal pace." },
-  { id: "busy", label: "Busy tower", description: "Terse and fast, with other traffic on frequency — watch for blocked transmissions." },
-  { id: "examiner", label: "Strict examiner", description: "Precise, unforgiving scoring of phraseology and readbacks." },
+  {
+    id: "instructor",
+    label: "Friendly instructor",
+    description: "Patient, slower delivery, a little extra courtesy.",
+  },
+  {
+    id: "professional",
+    label: "Standard professional",
+    description: "By-the-book FAA phraseology at a normal pace.",
+  },
+  {
+    id: "busy",
+    label: "Busy tower",
+    description:
+      "Terse and fast, with other traffic on frequency — watch for blocked transmissions.",
+  },
+  {
+    id: "examiner",
+    label: "Strict examiner",
+    description: "Precise, unforgiving scoring of phraseology and readbacks.",
+  },
 ];
 
 export type ScenarioPhase = "ground" | "departure" | "enroute" | "arrival" | "ifr" | "emergency";

@@ -1,13 +1,40 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Bot, FileText, Headphones, Lightbulb, ListChecks, Loader2, MessageSquareText, Play, Radio, RefreshCw, RotateCcw, Settings2, Square, Volume2 } from "lucide-react";
+import {
+  Bot,
+  FileText,
+  Headphones,
+  Lightbulb,
+  ListChecks,
+  Loader2,
+  MessageSquareText,
+  Play,
+  Radio,
+  RefreshCw,
+  RotateCcw,
+  Settings2,
+  Square,
+  Volume2,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Page, PageHeader, Panel, Notice, Pill, formatDateTime } from "@/components/app/page";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { RadioPanel, makeRadioState, isListening, type RadioState, type TransmitMeta } from "@/components/radio/RadioPanel";
+import {
+  RadioPanel,
+  makeRadioState,
+  isListening,
+  type RadioState,
+  type TransmitMeta,
+} from "@/components/radio/RadioPanel";
 import { AtcTranscript } from "@/components/radio/AtcTranscript";
 import { AtcReport } from "@/components/radio/AtcReport";
 import { AiStatusPill, useAiStatus } from "@/components/ai/AiStatusPill";
@@ -33,7 +60,14 @@ import {
 } from "@/lib/atc/freeform";
 import { atcController, parseJsonObject } from "@/lib/ai/services";
 import type { AiMessage } from "@/lib/ai/client";
-import { DIFFICULTIES, PERSONALITIES, type Difficulty, type Personality, type RadioLine, type SessionReport } from "@/lib/atc/types";
+import {
+  DIFFICULTIES,
+  PERSONALITIES,
+  type Difficulty,
+  type Personality,
+  type RadioLine,
+  type SessionReport,
+} from "@/lib/atc/types";
 import { useRadioQueue, type QueueItem } from "@/lib/atc/useRadioQueue";
 import { formatFreqShort } from "@/lib/atc/frequency";
 import { alt, hdg, PHONETIC } from "@/lib/atc/phrase";
@@ -48,20 +82,40 @@ export const Route = createFileRoute("/ai-atc")({
   head: () => ({
     meta: [
       { title: "AI ATC Practice — TeachX" },
-      { name: "description", content: "Free-form radio practice with a simulated AI air traffic controller that tracks your position, altitude, runway, frequency and clearance — with a full scripted fallback when no AI is configured." },
+      {
+        name: "description",
+        content:
+          "Free-form radio practice with a simulated AI air traffic controller that tracks your position, altitude, runway, frequency and clearance — with a full scripted fallback when no AI is configured.",
+      },
       { property: "og:title", content: "AI ATC Practice — TeachX" },
-      { property: "og:description", content: "Talk to a simulated controller in your own words and get scored on phraseology and readbacks." },
+      {
+        property: "og:description",
+        content:
+          "Talk to a simulated controller in your own words and get scored on phraseology and readbacks.",
+      },
     ],
   }),
   component: AiAtcPage,
 });
 
-const HINTS: Record<Difficulty, number> = { beginner: Infinity, intermediate: 3, advanced: 1, checkride: 0 };
+const HINTS: Record<Difficulty, number> = {
+  beginner: Infinity,
+  intermediate: 3,
+  advanced: 1,
+  checkride: 0,
+};
 
 function toQueue(replies: FreeReply[]): QueueItem[] {
   return replies.map((r): QueueItem =>
     r.kind === "atc" && r.facility
-      ? { kind: "atc", station: r.facility.name, text: r.phrase.text, spoken: r.phrase.spoken, delayMs: r.delayMs, mhz: r.facility.mhz }
+      ? {
+          kind: "atc",
+          station: r.facility.name,
+          text: r.phrase.text,
+          spoken: r.phrase.spoken,
+          delayMs: r.delayMs,
+          mhz: r.facility.mhz,
+        }
       : { kind: "system", text: r.phrase.text, ...(r.tone ? { tone: r.tone } : {}) },
   );
 }
@@ -89,14 +143,18 @@ function AiAtcPage() {
   const [personality, setPersonality] = useState<Personality>("professional");
   const defaultsApplied = useRef(false);
 
-  const plan: SavedFlightPlan | null = useMemo(() => plans.find((p) => p.id === planId) ?? null, [plans, planId]);
+  const plan: SavedFlightPlan | null = useMemo(
+    () => plans.find((p) => p.id === planId) ?? null,
+    [plans, planId],
+  );
 
   const applyPlan = useCallback(
     (p: SavedFlightPlan | null) => {
       if (!p) return;
       setRules(p.rules);
       setGoalId(p.rules === "IFR" ? "ifr-departure" : "vfr-departure-ff");
-      if (towered.some((a) => a.icao === p.departure.toUpperCase())) setAirport(p.departure.toUpperCase());
+      if (towered.some((a) => a.icao === p.departure.toUpperCase()))
+        setAirport(p.departure.toUpperCase());
       if (aircraftOptions.some((a) => a.id === p.aircraftId)) setAircraftId(p.aircraftId);
     },
     [towered, aircraftOptions],
@@ -106,8 +164,10 @@ function AiAtcPage() {
     if (!hydrated || defaultsApplied.current) return;
     defaultsApplied.current = true;
     if (profile?.callsign) setCallsign(profile.callsign.toUpperCase());
-    if (profile?.homeAirport && towered.some((a) => a.icao === profile.homeAirport.toUpperCase())) setAirport(profile.homeAirport.toUpperCase());
-    if (aircraftOptions.some((a) => a.id === settings.preferredAircraft)) setAircraftId(settings.preferredAircraft);
+    if (profile?.homeAirport && towered.some((a) => a.icao === profile.homeAirport.toUpperCase()))
+      setAirport(profile.homeAirport.toUpperCase());
+    if (aircraftOptions.some((a) => a.id === settings.preferredAircraft))
+      setAircraftId(settings.preferredAircraft);
     setDifficulty(settings.training.difficulty);
     if (search.plan) {
       const p = plans.find((x) => x.id === search.plan);
@@ -116,7 +176,17 @@ function AiAtcPage() {
         applyPlan(p);
       } else toast.error("That flight plan wasn't found on this device.");
     }
-  }, [hydrated, profile, settings.preferredAircraft, settings.training.difficulty, search.plan, plans, towered, aircraftOptions, applyPlan]);
+  }, [
+    hydrated,
+    profile,
+    settings.preferredAircraft,
+    settings.training.difficulty,
+    search.plan,
+    plans,
+    towered,
+    aircraftOptions,
+    applyPlan,
+  ]);
 
   const [phase, setPhase] = useState<"setup" | "live" | "report">("setup");
   const [state, setState] = useState<FreeState | null>(null);
@@ -137,7 +207,15 @@ function AiAtcPage() {
 
   const queue = useRadioQueue({
     speech: settings.voice.atcSpeech,
-    rate: Math.max(0.6, Math.min(1.8, settings.voice.rate * (difficulty === "beginner" ? 0.9 : difficulty === "intermediate" ? 1 : 1.08) * (personality === "busy" ? 1.15 : personality === "instructor" ? 0.95 : 1))),
+    rate: Math.max(
+      0.6,
+      Math.min(
+        1.8,
+        settings.voice.rate *
+          (difficulty === "beginner" ? 0.9 : difficulty === "intermediate" ? 1 : 1.08) *
+          (personality === "busy" ? 1.15 : personality === "instructor" ? 0.95 : 1),
+      ),
+    ),
     volume: Math.max(0, Math.min(1, radio.volume * settings.voice.volume)),
     voiceName: settings.voice.voiceName,
   });
@@ -162,10 +240,26 @@ function AiAtcPage() {
     saved.current = false;
     aiTurns.current = 0;
     historyRef.current = [];
-    const { state: s, replies } = createFreeState({ airportIcao: airport, aircraftId, callsign, rules, goalId, customGoal, difficulty, personality, plan });
+    const { state: s, replies } = createFreeState({
+      airportIcao: airport,
+      aircraftId,
+      callsign,
+      rules,
+      goalId,
+      customGoal,
+      difficulty,
+      personality,
+      plan,
+    });
     commit(s);
     const startFac = facilityOf(s.ctx, s.currentStation);
-    setRadio((prev) => makeRadioState(s.ctx.atisFreq ?? startFac.mhz, difficulty === "beginner" ? startFac.mhz : 118.0, { volume: prev.volume, spacing: prev.spacing }));
+    setRadio((prev) =>
+      makeRadioState(
+        s.ctx.atisFreq ?? startFac.mhz,
+        difficulty === "beginner" ? startFac.mhz : 118.0,
+        { volume: prev.volume, spacing: prev.spacing },
+      ),
+    );
     setUseAi(aiAvailable);
     setLastEngine(aiAvailable ? "ai" : "scripted");
     setAiHint("");
@@ -197,9 +291,16 @@ function AiAtcPage() {
         score: r.score,
         breakdown: r.breakdown,
         feedback: r.feedback,
-        transcript: lines.map((l) => ({ from: l.from === "traffic" ? "atc" : l.from, ...(l.station ? { station: l.station } : {}), text: l.text, t: l.t })),
+        transcript: lines.map((l) => ({
+          from: l.from === "traffic" ? "atc" : l.from,
+          ...(l.station ? { station: l.station } : {}),
+          text: l.text,
+          t: l.t,
+        })),
       });
-      toast.success("Session saved to your training record", { description: `${r.score}% — ${r.grade}` });
+      toast.success("Session saved to your training record", {
+        description: `${r.score}% — ${r.grade}`,
+      });
     }
   };
 
@@ -229,34 +330,91 @@ function AiAtcPage() {
       setHintOpen(false);
       if (useAi) {
         setThinking(true);
-        const userMsg: AiMessage = { role: "user", content: `[Pilot on ${f.name} ${formatFreqShort(f.mhz)}] ${text}` };
-        const res = await atcController({ state: aiStateSnapshot(s), difficulty: s.difficulty, personality: s.personality, goal: s.goal, history: [...historyRef.current, userMsg] });
+        const userMsg: AiMessage = {
+          role: "user",
+          content: `[Pilot on ${f.name} ${formatFreqShort(f.mhz)}] ${text}`,
+        };
+        const res = await atcController({
+          state: aiStateSnapshot(s),
+          difficulty: s.difficulty,
+          personality: s.personality,
+          goal: s.goal,
+          history: [...historyRef.current, userMsg],
+        });
         setThinking(false);
         const cur = stateRef.current ?? s;
         if (res.ok) {
           const json = parseJsonObject<AiAtcJson>(res.text);
-          const applied = json ? applyAiTurn(cur, json, text, f) : ({ ok: false, reason: "not JSON" } as const);
+          const applied = json
+            ? applyAiTurn(cur, json, text, f)
+            : ({ ok: false, reason: "not JSON" } as const);
           if (applied.ok) {
             aiTurns.current += 1;
             const reply = applied.replies.find((r) => r.kind === "atc");
-            historyRef.current = [...historyRef.current, userMsg, { role: "assistant" as const, content: JSON.stringify({ station: reply?.facility?.name ?? f.name, transmission: reply?.phrase.text ?? "" }) }].slice(-24);
+            historyRef.current = [
+              ...historyRef.current,
+              userMsg,
+              {
+                role: "assistant" as const,
+                content: JSON.stringify({
+                  station: reply?.facility?.name ?? f.name,
+                  transmission: reply?.phrase.text ?? "",
+                }),
+              },
+            ].slice(-24);
             commit(applied.state);
             setAiHint(applied.hint);
             setLastEngine("ai");
             const extra: FreeReply[] = [];
-            if (s.difficulty === "beginner" && applied.issues.length) extra.push({ kind: "system", phrase: { text: `Tips:\n${applied.issues.map((i) => `• ${i}`).join("\n")}`, spoken: "" }, delayMs: 0, tone: "caution" });
-            if (!reply) extra.push({ kind: "system", phrase: { text: "No response.", spoken: "" }, delayMs: 600, tone: "info" });
+            if (s.difficulty === "beginner" && applied.issues.length)
+              extra.push({
+                kind: "system",
+                phrase: {
+                  text: `Tips:\n${applied.issues.map((i) => `• ${i}`).join("\n")}`,
+                  spoken: "",
+                },
+                delayMs: 0,
+                tone: "caution",
+              });
+            if (!reply)
+              extra.push({
+                kind: "system",
+                phrase: { text: "No response.", spoken: "" },
+                delayMs: 600,
+                tone: "info",
+              });
             queue.push(toQueue([...applied.replies, ...extra]));
             return;
           }
-          if (s.difficulty !== "checkride") queue.addSystem("AI reply didn't pass the scenario guardrails — the scripted controller answered this turn.", "info");
+          if (s.difficulty !== "checkride")
+            queue.addSystem(
+              "AI reply didn't pass the scenario guardrails — the scripted controller answered this turn.",
+              "info",
+            );
         } else if (s.difficulty !== "checkride") {
           queue.addSystem(`${res.reason} The scripted controller answered this turn.`, "info");
         }
       }
       const r = scriptedTurn(stateRef.current ?? s, text, f);
       const reply = r.replies.find((x) => x.kind === "atc");
-      historyRef.current = [...historyRef.current, { role: "user" as const, content: `[Pilot on ${f.name} ${formatFreqShort(f.mhz)}] ${text}` }, ...(reply ? [{ role: "assistant" as const, content: JSON.stringify({ station: reply.facility?.name ?? f.name, transmission: reply.phrase.text }) }] : [])].slice(-24);
+      historyRef.current = [
+        ...historyRef.current,
+        {
+          role: "user" as const,
+          content: `[Pilot on ${f.name} ${formatFreqShort(f.mhz)}] ${text}`,
+        },
+        ...(reply
+          ? [
+              {
+                role: "assistant" as const,
+                content: JSON.stringify({
+                  station: reply.facility?.name ?? f.name,
+                  transmission: reply.phrase.text,
+                }),
+              },
+            ]
+          : []),
+      ].slice(-24);
       commit(r.state);
       setAiHint("");
       setLastEngine("scripted");
@@ -269,20 +427,38 @@ function AiAtcPage() {
   const tunedAtis = phase === "live" && atisFreq !== null && isListening(radio, atisFreq);
   const playAtis = () => {
     const s = stateRef.current;
-    if (s) queue.push([{ kind: "traffic", station: `${s.ctx.airportName} ATIS`, text: s.ctx.atis.phrase.text, spoken: s.ctx.atis.phrase.spoken, delayMs: 200, pitch: 0.9 }]);
+    if (s)
+      queue.push([
+        {
+          kind: "traffic",
+          station: `${s.ctx.airportName} ATIS`,
+          text: s.ctx.atis.phrase.text,
+          spoken: s.ctx.atis.phrase.spoken,
+          delayMs: 200,
+          pitch: 0.9,
+        },
+      ]);
   };
 
   // ---------------- report ----------------
   if (phase === "report" && report && state) {
     return (
       <Page>
-        <PageHeader eyebrow="Radio · AI ATC Practice" title="Session report" icon={MessageSquareText} />
+        <PageHeader
+          eyebrow="Radio · AI ATC Practice"
+          title="Session report"
+          icon={MessageSquareText}
+        />
         <AtcReport
           report={report}
           title={state.goal}
           subtitle={
             <>
-              {state.ctx.airport.icao} · {state.ctx.aircraft.shortName} {state.ctx.cs.full} · {state.rules} · {DIFFICULTIES.find((d) => d.id === state.difficulty)?.label} · {aiTurns.current > 0 ? `AI controller (${aiTurns.current} AI turn${aiTurns.current > 1 ? "s" : ""})` : "Scripted controller"}
+              {state.ctx.airport.icao} · {state.ctx.aircraft.shortName} {state.ctx.cs.full} ·{" "}
+              {state.rules} · {DIFFICULTIES.find((d) => d.id === state.difficulty)?.label} ·{" "}
+              {aiTurns.current > 0
+                ? `AI controller (${aiTurns.current} AI turn${aiTurns.current > 1 ? "s" : ""})`
+                : "Scripted controller"}
             </>
           }
           lines={reportLines}
@@ -319,7 +495,10 @@ function AiAtcPage() {
     const cur = facilityOf(ctx, state.currentStation);
     const hintsLeft = HINTS[state.difficulty] - hintsUsed;
     const lastEval = state.evals[state.evals.length - 1];
-    const hintAllowed = state.difficulty === "beginner" || (state.difficulty === "intermediate" && hintsLeft > 0) || (state.difficulty === "advanced" && hintsLeft > 0 && !!lastEval && lastEval.score < 85);
+    const hintAllowed =
+      state.difficulty === "beginner" ||
+      (state.difficulty === "intermediate" && hintsLeft > 0) ||
+      (state.difficulty === "advanced" && hintsLeft > 0 && !!lastEval && lastEval.score < 85);
     const hintText = aiHint || freeHint(state);
     const showHint = state.difficulty === "beginner" || hintOpen;
 
@@ -333,8 +512,14 @@ function AiAtcPage() {
             </h1>
             <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
               <Pill tone="caution">Simulated</Pill>
-              <AiStatusPill status={status} loading={false} using={useAi ? lastEngine : "scripted"} />
-              <Pill tone="primary">{DIFFICULTIES.find((d) => d.id === state.difficulty)?.label}</Pill>
+              <AiStatusPill
+                status={status}
+                loading={false}
+                using={useAi ? lastEngine : "scripted"}
+              />
+              <Pill tone="primary">
+                {DIFFICULTIES.find((d) => d.id === state.difficulty)?.label}
+              </Pill>
               <Pill>{PERSONALITIES.find((p) => p.id === state.personality)?.label}</Pill>
               <Pill tone={state.rules === "IFR" ? "magenta" : "ok"}>{state.rules}</Pill>
               {state.goalReached ? <Pill tone="ok">Goal reached</Pill> : null}
@@ -349,8 +534,14 @@ function AiAtcPage() {
             </Button>
           </div>
         </div>
-        <Notice tone="caution" title="Simulated ATC for training — not real air traffic control." className="mb-4">
-          {useAi ? "An AI plays the controller inside strict scenario guardrails; replies that break them are replaced by the scripted controller." : "No AI provider is active, so the built-in scripted controller is answering — every feature still works."}
+        <Notice
+          tone="caution"
+          title="Simulated ATC for training — not real air traffic control."
+          className="mb-4"
+        >
+          {useAi
+            ? "An AI plays the controller inside strict scenario guardrails; replies that break them are replaced by the scripted controller."
+            : "No AI provider is active, so the built-in scripted controller is answering — every feature still works."}
         </Notice>
 
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)]">
@@ -368,7 +559,12 @@ function AiAtcPage() {
               {...(thinking ? { composerPlaceholder: "Controller is responding…" } : {})}
             />
             <div className="relative">
-              <AtcTranscript lines={queue.lines} receiving={queue.receiving} pilotLabel={ctx.cs.full} className="h-[320px] lg:h-[400px]" />
+              <AtcTranscript
+                lines={queue.lines}
+                receiving={queue.receiving}
+                pilotLabel={ctx.cs.full}
+                className="h-[320px] lg:h-[400px]"
+              />
               {thinking ? (
                 <div className="absolute right-3 bottom-3 flex items-center gap-1.5 rounded-full border bg-card px-2.5 py-1 text-[11px] text-muted-foreground">
                   <Loader2 className="size-3 animate-spin" /> Controller is responding…
@@ -381,13 +577,25 @@ function AiAtcPage() {
             <Panel title="Scenario state">
               <dl className="grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
                 {[
-                  ["Station", state.difficulty === "checkride" ? "—" : `${cur.name} ${formatFreqShort(cur.mhz)}`],
+                  [
+                    "Station",
+                    state.difficulty === "checkride"
+                      ? "—"
+                      : `${cur.name} ${formatFreqShort(cur.mhz)}`,
+                  ],
                   ["Phase", state.phase.replace("-", " ")],
                   ["Position", ctx.position],
                   ["Altitude", `${alt(ctx.altitude).text} ft`],
                   ["Heading", hdg(ctx.heading).text],
                   ["Runway", `${ctx.runway.id} (${ctx.runway.pattern} traffic)`],
-                  ["Squawk", state.emergency ? "7700" : state.ffActive || state.clearance ? ctx.squawk : "1200"],
+                  [
+                    "Squawk",
+                    state.emergency
+                      ? "7700"
+                      : state.ffActive || state.clearance
+                        ? ctx.squawk
+                        : "1200",
+                  ],
                   ["ATIS", `${PHONETIC[ctx.atis.letter]} · ${ctx.atis.altimeter.toFixed(2)}`],
                 ].map(([k, v]) => (
                   <div key={k} className="min-w-0">
@@ -404,13 +612,16 @@ function AiAtcPage() {
               <div className="avionics-screen p-3">
                 <div className="mb-1 flex items-center justify-between gap-2">
                   <span className="flex items-center gap-1.5 text-[11px] font-semibold text-cyan">
-                    <Headphones className="size-3.5" /> Receiving ATIS {atisFreq ? formatFreqShort(atisFreq) : ""}
+                    <Headphones className="size-3.5" /> Receiving ATIS{" "}
+                    {atisFreq ? formatFreqShort(atisFreq) : ""}
                   </span>
                   <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={playAtis}>
                     <Volume2 /> Listen
                   </Button>
                 </div>
-                <p className="font-mono text-xs leading-relaxed text-cyan/90">{ctx.atis.phrase.text}</p>
+                <p className="font-mono text-xs leading-relaxed text-cyan/90">
+                  {ctx.atis.phrase.text}
+                </p>
               </div>
             ) : null}
 
@@ -428,7 +639,9 @@ function AiAtcPage() {
                     </div>
                     <div>
                       <span className="text-muted-foreground">A </span>
-                      {alt(state.clearance.altitude).text}, expect {alt(state.clearance.expectAltitude).text} {state.clearance.expectMinutes} min after departure
+                      {alt(state.clearance.altitude).text}, expect{" "}
+                      {alt(state.clearance.expectAltitude).text} {state.clearance.expectMinutes} min
+                      after departure
                     </div>
                     <div>
                       <span className="text-muted-foreground">F </span>
@@ -441,8 +654,16 @@ function AiAtcPage() {
                   </dl>
                 ) : null}
                 {state.flightPlan ? (
-                  <p className={cn("text-xs text-muted-foreground", state.clearance && "mt-3 border-t pt-2")}>
-                    Filed: {state.flightPlan.rules} {state.flightPlan.departure} → {state.flightPlan.destination} via {state.flightPlan.route.join(" ") || "direct"} at {alt(state.flightPlan.cruiseAltFt).text} ft
+                  <p
+                    className={cn(
+                      "text-xs text-muted-foreground",
+                      state.clearance && "mt-3 border-t pt-2",
+                    )}
+                  >
+                    Filed: {state.flightPlan.rules} {state.flightPlan.departure} →{" "}
+                    {state.flightPlan.destination} via{" "}
+                    {state.flightPlan.route.join(" ") || "direct"} at{" "}
+                    {alt(state.flightPlan.cruiseAltFt).text} ft
                   </p>
                 ) : null}
               </Panel>
@@ -450,7 +671,9 @@ function AiAtcPage() {
 
             <Panel title="Hints">
               {state.difficulty === "checkride" ? (
-                <p className="text-sm text-muted-foreground">Checkride mode: no hints until your final report.</p>
+                <p className="text-sm text-muted-foreground">
+                  Checkride mode: no hints until your final report.
+                </p>
               ) : showHint ? (
                 <p className="text-sm">
                   <Lightbulb className="mr-1.5 inline size-4 text-caution" />
@@ -459,7 +682,9 @@ function AiAtcPage() {
               ) : (
                 <div className="space-y-2">
                   <p className="text-xs text-muted-foreground">
-                    {state.difficulty === "advanced" ? "Advanced: one hint, available after a weak transmission." : `Hints remaining: ${Math.max(0, hintsLeft)}.`}
+                    {state.difficulty === "advanced"
+                      ? "Advanced: one hint, available after a weak transmission."
+                      : `Hints remaining: ${Math.max(0, hintsLeft)}.`}
                   </p>
                   <Button
                     size="sm"
@@ -480,10 +705,27 @@ function AiAtcPage() {
                 <ul className="max-h-56 space-y-1.5 overflow-y-auto">
                   {state.evals.map((e) => (
                     <li key={e.id} className="flex gap-2 text-[11px]">
-                      <span className={cn("w-7 shrink-0 font-mono", state.difficulty === "checkride" ? "text-muted-foreground" : e.score >= 85 ? "text-ok" : e.score >= 65 ? "text-caution" : "text-warning")}>{state.difficulty === "checkride" ? "—" : e.score}</span>
+                      <span
+                        className={cn(
+                          "w-7 shrink-0 font-mono",
+                          state.difficulty === "checkride"
+                            ? "text-muted-foreground"
+                            : e.score >= 85
+                              ? "text-ok"
+                              : e.score >= 65
+                                ? "text-caution"
+                                : "text-warning",
+                        )}
+                      >
+                        {state.difficulty === "checkride" ? "—" : e.score}
+                      </span>
                       <span className="min-w-0">
                         <span className="block truncate font-mono">“{e.text}”</span>
-                        {state.difficulty !== "checkride" && e.items.some((i) => !i.ok) ? <span className="block truncate text-muted-foreground">{e.items.find((i) => !i.ok)?.message}</span> : null}
+                        {state.difficulty !== "checkride" && e.items.some((i) => !i.ok) ? (
+                          <span className="block truncate text-muted-foreground">
+                            {e.items.find((i) => !i.ok)?.message}
+                          </span>
+                        ) : null}
                       </span>
                     </li>
                   ))}
@@ -514,8 +756,13 @@ function AiAtcPage() {
           </Button>
         }
       />
-      <Notice tone="caution" title="Simulated ATC for training — not real air traffic control." className="mb-6">
-        The AI controller is constrained to the selected airport's runways and frequencies. Never use it for real-world operations.
+      <Notice
+        tone="caution"
+        title="Simulated ATC for training — not real air traffic control."
+        className="mb-6"
+      >
+        The AI controller is constrained to the selected airport's runways and frequencies. Never
+        use it for real-world operations.
       </Notice>
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
@@ -523,7 +770,12 @@ function AiAtcPage() {
           <Panel
             title="Controller engine"
             actions={
-              <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => void refresh()}>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 text-xs"
+                onClick={() => void refresh()}
+              >
                 <RefreshCw /> Re-check
               </Button>
             }
@@ -562,15 +814,23 @@ function AiAtcPage() {
                     <SelectItem value="none">No flight plan</SelectItem>
                     {plans.map((p) => (
                       <SelectItem key={p.id} value={p.id}>
-                        {p.rules} {p.departure} → {p.destination} · {p.name || formatDateTime(p.date)}
+                        {p.rules} {p.departure} → {p.destination} ·{" "}
+                        {p.name || formatDateTime(p.date)}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
                 {plan ? (
                   <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
-                    <FileText className="mt-0.5 size-3.5 shrink-0" /> {plan.rules} {plan.departure} → {plan.destination} via {plan.route.join(" ") || "direct"}, {alt(plan.cruiseAltFt).text} ft. {plan.rules === "IFR" ? "Request your simulated IFR clearance from Clearance Delivery/Ground." : "Request flight following after departure."}
-                    {!towered.some((a) => a.icao === plan.departure.toUpperCase()) ? " (Departure airport isn't towered in the dataset — choose a towered airport below.)" : ""}
+                    <FileText className="mt-0.5 size-3.5 shrink-0" /> {plan.rules} {plan.departure}{" "}
+                    → {plan.destination} via {plan.route.join(" ") || "direct"},{" "}
+                    {alt(plan.cruiseAltFt).text} ft.{" "}
+                    {plan.rules === "IFR"
+                      ? "Request your simulated IFR clearance from Clearance Delivery/Ground."
+                      : "Request flight following after departure."}
+                    {!towered.some((a) => a.icao === plan.departure.toUpperCase())
+                      ? " (Departure airport isn't towered in the dataset — choose a towered airport below.)"
+                      : ""}
                   </p>
                 ) : null}
               </div>
@@ -597,7 +857,12 @@ function AiAtcPage() {
                     setGoalId(g.id);
                     if (g.rules !== "any") setRules(g.rules);
                   }}
-                  className={cn("rounded-md border px-3 py-2.5 text-left text-sm", goalId === g.id ? "border-primary bg-primary/10" : "border-border hover:border-primary/40")}
+                  className={cn(
+                    "rounded-md border px-3 py-2.5 text-left text-sm",
+                    goalId === g.id
+                      ? "border-primary bg-primary/10"
+                      : "border-border hover:border-primary/40",
+                  )}
                 >
                   <span className="font-semibold">{g.label}</span>
                   {g.rules !== "any" ? (
@@ -609,9 +874,16 @@ function AiAtcPage() {
               ))}
             </div>
             {goalId === "custom" ? (
-              <Textarea value={customGoal} onChange={(e) => setCustomGoal(e.target.value.slice(0, 200))} placeholder='e.g. "VFR departure with flight following to KMRY, then a frequency change to get weather"' className="mt-3 min-h-20 text-sm" />
+              <Textarea
+                value={customGoal}
+                onChange={(e) => setCustomGoal(e.target.value.slice(0, 200))}
+                placeholder='e.g. "VFR departure with flight following to KMRY, then a frequency change to get weather"'
+                className="mt-3 min-h-20 text-sm"
+              />
             ) : goalDef ? (
-              <p className="mt-3 text-xs text-muted-foreground">You'll practise: {goalDef.describe("your destination")}.</p>
+              <p className="mt-3 text-xs text-muted-foreground">
+                You'll practise: {goalDef.describe("your destination")}.
+              </p>
             ) : null}
           </Panel>
 
@@ -623,10 +895,18 @@ function AiAtcPage() {
                     <span className="min-w-0">
                       <span className="block truncate font-medium">{s.title}</span>
                       <span className="text-muted-foreground">
-                        {s.airport} · {s.engine === "ai" ? "AI" : "scripted"} · {formatDateTime(s.date)}
+                        {s.airport} · {s.engine === "ai" ? "AI" : "scripted"} ·{" "}
+                        {formatDateTime(s.date)}
                       </span>
                     </span>
-                    <span className={cn("font-mono font-semibold", s.score >= 80 ? "text-ok" : s.score >= 60 ? "text-caution" : "text-warning")}>{Math.round(s.score)}%</span>
+                    <span
+                      className={cn(
+                        "font-mono font-semibold",
+                        s.score >= 80 ? "text-ok" : s.score >= 60 ? "text-caution" : "text-warning",
+                      )}
+                    >
+                      {Math.round(s.score)}%
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -669,13 +949,41 @@ function AiAtcPage() {
               </label>
               <label className="block space-y-1">
                 <span className="label-caps">Callsign</span>
-                <Input value={callsign} onChange={(e) => setCallsign(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 7))} className={cn("font-mono", !callsignValid && "border-warning")} aria-invalid={!callsignValid} />
+                <Input
+                  value={callsign}
+                  onChange={(e) =>
+                    setCallsign(
+                      e.target.value
+                        .toUpperCase()
+                        .replace(/[^A-Z0-9]/g, "")
+                        .slice(0, 7),
+                    )
+                  }
+                  className={cn("font-mono", !callsignValid && "border-warning")}
+                  aria-invalid={!callsignValid}
+                />
               </label>
               <div>
                 <span className="label-caps">Flight rules</span>
-                <div className="mt-1 grid grid-cols-2 gap-1.5" role="radiogroup" aria-label="Flight rules">
+                <div
+                  className="mt-1 grid grid-cols-2 gap-1.5"
+                  role="radiogroup"
+                  aria-label="Flight rules"
+                >
                   {(["VFR", "IFR"] as const).map((r) => (
-                    <button key={r} type="button" role="radio" aria-checked={rules === r} onClick={() => setRules(r)} className={cn("rounded-md border px-2 py-1.5 text-xs font-semibold", rules === r ? "border-primary bg-primary/15 text-primary" : "border-border text-muted-foreground hover:text-foreground")}>
+                    <button
+                      key={r}
+                      type="button"
+                      role="radio"
+                      aria-checked={rules === r}
+                      onClick={() => setRules(r)}
+                      className={cn(
+                        "rounded-md border px-2 py-1.5 text-xs font-semibold",
+                        rules === r
+                          ? "border-primary bg-primary/15 text-primary"
+                          : "border-border text-muted-foreground hover:text-foreground",
+                      )}
+                    >
                       {r}
                     </button>
                   ))}
@@ -685,28 +993,65 @@ function AiAtcPage() {
                 <span className="label-caps">Mode</span>
                 <div className="mt-1 grid grid-cols-2 gap-1.5" role="radiogroup" aria-label="Mode">
                   {DIFFICULTIES.map((d) => (
-                    <button key={d.id} type="button" role="radio" aria-checked={difficulty === d.id} onClick={() => setDifficulty(d.id)} className={cn("rounded-md border px-2 py-1.5 text-xs font-semibold", difficulty === d.id ? "border-primary bg-primary/15 text-primary" : "border-border text-muted-foreground hover:text-foreground")}>
+                    <button
+                      key={d.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={difficulty === d.id}
+                      onClick={() => setDifficulty(d.id)}
+                      className={cn(
+                        "rounded-md border px-2 py-1.5 text-xs font-semibold",
+                        difficulty === d.id
+                          ? "border-primary bg-primary/15 text-primary"
+                          : "border-border text-muted-foreground hover:text-foreground",
+                      )}
+                    >
                       {d.label}
                     </button>
                   ))}
                 </div>
-                <p className="mt-1 text-[11px] text-muted-foreground">{DIFFICULTIES.find((d) => d.id === difficulty)?.description}</p>
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  {DIFFICULTIES.find((d) => d.id === difficulty)?.description}
+                </p>
               </div>
               <div>
                 <span className="label-caps">Controller</span>
-                <div className="mt-1 grid grid-cols-2 gap-1.5" role="radiogroup" aria-label="Controller personality">
+                <div
+                  className="mt-1 grid grid-cols-2 gap-1.5"
+                  role="radiogroup"
+                  aria-label="Controller personality"
+                >
                   {PERSONALITIES.map((p) => (
-                    <button key={p.id} type="button" role="radio" aria-checked={personality === p.id} onClick={() => setPersonality(p.id)} className={cn("rounded-md border px-2 py-1.5 text-xs font-semibold", personality === p.id ? "border-primary bg-primary/15 text-primary" : "border-border text-muted-foreground hover:text-foreground")}>
+                    <button
+                      key={p.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={personality === p.id}
+                      onClick={() => setPersonality(p.id)}
+                      className={cn(
+                        "rounded-md border px-2 py-1.5 text-xs font-semibold",
+                        personality === p.id
+                          ? "border-primary bg-primary/15 text-primary"
+                          : "border-border text-muted-foreground hover:text-foreground",
+                      )}
+                    >
                       {p.label}
                     </button>
                   ))}
                 </div>
               </div>
-              <Button className="w-full" size="lg" onClick={start} disabled={!callsignValid || loading}>
-                {loading ? <Loader2 className="animate-spin" /> : aiAvailable ? <Bot /> : <Play />} Start practice
+              <Button
+                className="w-full"
+                size="lg"
+                onClick={start}
+                disabled={!callsignValid || loading}
+              >
+                {loading ? <Loader2 className="animate-spin" /> : aiAvailable ? <Bot /> : <Play />}{" "}
+                Start practice
               </Button>
               <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                <ListChecks className="size-3.5" /> Scored on phraseology, readbacks, callsign use, frequency management and timing.
+                <ListChecks className="size-3.5" /> Scored on phraseology, readbacks, callsign use,
+                frequency management and timing.
               </p>
             </div>
           </Panel>

@@ -16,7 +16,10 @@ export interface CurrentTaskState {
   heldMs: number;
 }
 
-export function useTaskRunner(engine: SimEngine | null, currentId: string | null): CurrentTaskState {
+export function useTaskRunner(
+  engine: SimEngine | null,
+  currentId: string | null,
+): CurrentTaskState {
   const done = useStore((s) => s.avionicsTasks);
   const doneRef = useRef(done);
   doneRef.current = done;
@@ -51,7 +54,9 @@ export function useTaskRunner(engine: SimEngine | null, currentId: string | null
           if (now - t0 >= HOLD_MS) {
             since.delete(t.id);
             actions.completeAvionicsTask(t.id, t.title);
-            toast.success(`Task complete: ${t.title}`, { description: "Great work — progress saved to your training record." });
+            toast.success(`Task complete: ${t.title}`, {
+              description: "Great work — progress saved to your training record.",
+            });
           }
         } else since.delete(t.id);
       }

@@ -11,15 +11,47 @@ import { AtcTranscript } from "./AtcTranscript";
 function ScoreRing({ score }: { score: number }) {
   const r = 42;
   const c = 2 * Math.PI * r;
-  const tone = score >= 90 ? "var(--ok)" : score >= 75 ? "var(--primary)" : score >= 60 ? "var(--caution)" : "var(--warning)";
+  const tone =
+    score >= 90
+      ? "var(--ok)"
+      : score >= 75
+        ? "var(--primary)"
+        : score >= 60
+          ? "var(--caution)"
+          : "var(--warning)";
   return (
-    <svg viewBox="0 0 100 100" className="size-28 shrink-0" role="img" aria-label={`Score ${score} percent`}>
+    <svg
+      viewBox="0 0 100 100"
+      className="size-28 shrink-0"
+      role="img"
+      aria-label={`Score ${score} percent`}
+    >
       <circle cx="50" cy="50" r={r} fill="none" stroke="var(--muted)" strokeWidth="8" />
-      <circle cx="50" cy="50" r={r} fill="none" stroke={tone} strokeWidth="8" strokeDasharray={`${(score / 100) * c} ${c}`} strokeLinecap="round" transform="rotate(-90 50 50)" />
-      <text x="50" y="54" textAnchor="middle" className="fill-foreground font-mono text-[22px] font-bold">
+      <circle
+        cx="50"
+        cy="50"
+        r={r}
+        fill="none"
+        stroke={tone}
+        strokeWidth="8"
+        strokeDasharray={`${(score / 100) * c} ${c}`}
+        strokeLinecap="round"
+        transform="rotate(-90 50 50)"
+      />
+      <text
+        x="50"
+        y="54"
+        textAnchor="middle"
+        className="fill-foreground font-mono text-[22px] font-bold"
+      >
         {score}
       </text>
-      <text x="50" y="68" textAnchor="middle" className="fill-muted-foreground text-[8px] tracking-widest uppercase">
+      <text
+        x="50"
+        y="68"
+        textAnchor="middle"
+        className="fill-muted-foreground text-[8px] tracking-widest uppercase"
+      >
         percent
       </text>
     </svg>
@@ -43,8 +75,17 @@ export function AtcReport({
   actions?: ReactNode;
   note?: ReactNode;
 }) {
-  const [open, setOpen] = useState<string | null>(report.transmissions.find((t) => t.score < 100)?.id ?? null);
-  const gradeTone = report.grade === "Excellent" ? "ok" : report.grade === "Proficient" ? "primary" : report.grade === "Needs practice" ? "caution" : "warning";
+  const [open, setOpen] = useState<string | null>(
+    report.transmissions.find((t) => t.score < 100)?.id ?? null,
+  );
+  const gradeTone =
+    report.grade === "Excellent"
+      ? "ok"
+      : report.grade === "Proficient"
+        ? "primary"
+        : report.grade === "Needs practice"
+          ? "caution"
+          : "warning";
   return (
     <div className="space-y-5 animate-fade-up">
       <div className="panel flex flex-col gap-5 p-5 sm:flex-row sm:items-center">
@@ -69,7 +110,11 @@ export function AtcReport({
           {report.categories.length ? (
             <div className="space-y-3">
               {report.categories.map((c) => (
-                <Meter key={c.key} label={`${c.label} · ${c.checks} check${c.checks === 1 ? "" : "s"}`} value={c.score} />
+                <Meter
+                  key={c.key}
+                  label={`${c.label} · ${c.checks} check${c.checks === 1 ? "" : "s"}`}
+                  value={c.score}
+                />
               ))}
             </div>
           ) : (
@@ -118,17 +163,46 @@ export function AtcReport({
             const bad = t.items.filter((i) => !i.ok);
             return (
               <li key={t.id}>
-                <button type="button" onClick={() => setOpen(isOpen ? null : t.id)} className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-muted/30" aria-expanded={isOpen}>
-                  <span className={cn("w-10 shrink-0 font-mono text-sm font-bold tabular", t.score >= 90 ? "text-ok" : t.score >= 70 ? "text-primary" : t.score >= 50 ? "text-caution" : "text-warning")}>{t.score}</span>
+                <button
+                  type="button"
+                  onClick={() => setOpen(isOpen ? null : t.id)}
+                  className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-muted/30"
+                  aria-expanded={isOpen}
+                >
+                  <span
+                    className={cn(
+                      "w-10 shrink-0 font-mono text-sm font-bold tabular",
+                      t.score >= 90
+                        ? "text-ok"
+                        : t.score >= 70
+                          ? "text-primary"
+                          : t.score >= 50
+                            ? "text-caution"
+                            : "text-warning",
+                    )}
+                  >
+                    {t.score}
+                  </span>
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-medium">
                       {t.stepTitle}
-                      {t.attempt > 1 ? <span className="ml-1.5 text-xs text-muted-foreground">(attempt {t.attempt})</span> : null}
+                      {t.attempt > 1 ? (
+                        <span className="ml-1.5 text-xs text-muted-foreground">
+                          (attempt {t.attempt})
+                        </span>
+                      ) : null}
                     </span>
-                    <span className="block truncate font-mono text-xs text-muted-foreground">“{t.text}”</span>
+                    <span className="block truncate font-mono text-xs text-muted-foreground">
+                      “{t.text}”
+                    </span>
                   </span>
                   <span className="hidden text-xs text-muted-foreground sm:block">{t.summary}</span>
-                  <ChevronDown className={cn("size-4 shrink-0 text-muted-foreground transition-transform", isOpen && "rotate-180")} />
+                  <ChevronDown
+                    className={cn(
+                      "size-4 shrink-0 text-muted-foreground transition-transform",
+                      isOpen && "rotate-180",
+                    )}
+                  />
                 </button>
                 {isOpen ? (
                   <div className="space-y-3 bg-muted/20 px-4 pt-1 pb-4">
@@ -139,10 +213,27 @@ export function AtcReport({
                     <ul className="space-y-1.5">
                       {[...bad, ...t.items.filter((i) => i.ok)].map((it, i) => (
                         <li key={i} className="flex gap-2 text-xs">
-                          {it.ok ? <CheckCircle2 className="mt-0.5 size-3.5 shrink-0 text-ok" /> : <XCircle className={cn("mt-0.5 size-3.5 shrink-0", it.severity === "critical" ? "text-warning" : it.severity === "major" ? "text-caution" : "text-muted-foreground")} />}
+                          {it.ok ? (
+                            <CheckCircle2 className="mt-0.5 size-3.5 shrink-0 text-ok" />
+                          ) : (
+                            <XCircle
+                              className={cn(
+                                "mt-0.5 size-3.5 shrink-0",
+                                it.severity === "critical"
+                                  ? "text-warning"
+                                  : it.severity === "major"
+                                    ? "text-caution"
+                                    : "text-muted-foreground",
+                              )}
+                            />
+                          )}
                           <span>
                             <span className="font-semibold">{it.label}</span>
-                            {!it.ok ? <span className="ml-1 text-[10px] text-muted-foreground uppercase">{it.severity}</span> : null}
+                            {!it.ok ? (
+                              <span className="ml-1 text-[10px] text-muted-foreground uppercase">
+                                {it.severity}
+                              </span>
+                            ) : null}
                             <span className="text-foreground/80"> — {it.message}</span>
                           </span>
                         </li>
@@ -167,7 +258,12 @@ export function AtcReport({
           <ChevronDown className="size-4 text-muted-foreground transition-transform group-open:rotate-180" />
         </summary>
         <div className="px-4 pb-4">
-          <AtcTranscript lines={lines} {...(pilotLabel ? { pilotLabel } : {})} className="max-h-[420px]" autoScroll={false} />
+          <AtcTranscript
+            lines={lines}
+            {...(pilotLabel ? { pilotLabel } : {})}
+            className="max-h-[420px]"
+            autoScroll={false}
+          />
         </div>
       </details>
     </div>

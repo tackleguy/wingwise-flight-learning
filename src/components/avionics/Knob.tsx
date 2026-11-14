@@ -7,7 +7,13 @@
  * Input: drag (up/right = increase), mouse wheel, arrow keys (PageUp/PageDown = large step),
  * Enter/Space or a click without dragging = push. Each ring is an accessible role="slider".
  */
-import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent as ReactPointerEvent } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type PointerEvent as ReactPointerEvent,
+} from "react";
 import { cn } from "@/lib/utils";
 
 export interface KnobRing {
@@ -139,18 +145,36 @@ export function Knob(props: KnobProps) {
 
   return (
     <div className={cn("flex flex-col items-center gap-1 select-none", className)}>
-      {pushHint ? <span className="text-[8px] font-semibold tracking-widest text-white/40 uppercase">{pushHint}</span> : null}
+      {pushHint ? (
+        <span className="text-[8px] font-semibold tracking-widest text-white/40 uppercase">
+          {pushHint}
+        </span>
+      ) : null}
       <div
         ref={outer.ref}
         {...ariaFor(props)}
         {...outer.handlers}
         className="relative cursor-grab touch-none rounded-full shadow-[0_3px_8px_oklch(0_0_0/0.7),inset_0_1px_0_oklch(1_0_0/0.15)] outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-black active:cursor-grabbing"
-        style={{ width: px, height: px, background: "radial-gradient(circle at 50% 35%, oklch(0.34 0.006 258), oklch(0.16 0.005 258))" }}
+        style={{
+          width: px,
+          height: px,
+          background:
+            "radial-gradient(circle at 50% 35%, oklch(0.34 0.006 258), oklch(0.16 0.005 258))",
+        }}
       >
-        <div className="absolute inset-[3px] rounded-full opacity-90" style={{ background: KNURL, transform: `rotate(${outerAngle}deg)` }} />
+        <div
+          className="absolute inset-[3px] rounded-full opacity-90"
+          style={{ background: KNURL, transform: `rotate(${outerAngle}deg)` }}
+        />
         {!inner ? (
           <div className="absolute inset-[22%] rounded-full bg-[radial-gradient(circle_at_50%_30%,oklch(0.3_0.006_258),oklch(0.15_0.005_258))]">
-            <div className="absolute top-[8%] left-1/2 h-[30%] w-[3px] -translate-x-1/2 rounded bg-white/70" style={{ transformOrigin: "50% 140%", transform: `translateX(-50%) rotate(${outerAngle}deg)` }} />
+            <div
+              className="absolute top-[8%] left-1/2 h-[30%] w-[3px] -translate-x-1/2 rounded bg-white/70"
+              style={{
+                transformOrigin: "50% 140%",
+                transform: `translateX(-50%) rotate(${outerAngle}deg)`,
+              }}
+            />
           </div>
         ) : (
           <div
@@ -158,14 +182,26 @@ export function Knob(props: KnobProps) {
             {...ariaFor(inner)}
             {...innerRing.handlers}
             className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 cursor-grab touch-none rounded-full shadow-[0_2px_6px_oklch(0_0_0/0.8)] outline-none focus-visible:ring-2 focus-visible:ring-cyan"
-            style={{ width: innerPx, height: innerPx, background: "radial-gradient(circle at 50% 30%, oklch(0.38 0.006 258), oklch(0.18 0.005 258))" }}
+            style={{
+              width: innerPx,
+              height: innerPx,
+              background:
+                "radial-gradient(circle at 50% 30%, oklch(0.38 0.006 258), oklch(0.18 0.005 258))",
+            }}
           >
-            <div className="absolute inset-[2px] rounded-full opacity-80" style={{ background: KNURL, transform: `rotate(${innerAngle}deg)` }} />
+            <div
+              className="absolute inset-[2px] rounded-full opacity-80"
+              style={{ background: KNURL, transform: `rotate(${innerAngle}deg)` }}
+            />
             <div className="absolute inset-[26%] rounded-full bg-[oklch(0.22_0.005_258)]" />
           </div>
         )}
       </div>
-      {caption !== "" ? <span className="max-w-[6rem] truncate text-center font-mono text-[9px] font-semibold tracking-wider text-white/55 uppercase">{caption ?? props.label}</span> : null}
+      {caption !== "" ? (
+        <span className="max-w-[6rem] truncate text-center font-mono text-[9px] font-semibold tracking-wider text-white/55 uppercase">
+          {caption ?? props.label}
+        </span>
+      ) : null}
     </div>
   );
 }

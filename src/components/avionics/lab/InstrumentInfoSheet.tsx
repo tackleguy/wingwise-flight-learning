@@ -2,8 +2,20 @@
  * "Explain this instrument" side drawer: what it shows, how it works, common errors.
  */
 import { AlertTriangle, BookOpen, Cog, Eye } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { INSTRUMENT_INFO, type InstrumentId } from "../instrument-info";
 
 export function InstrumentInfoBody({ id }: { id: InstrumentId }) {
@@ -42,7 +54,17 @@ export function InstrumentInfoBody({ id }: { id: InstrumentId }) {
   );
 }
 
-export function InstrumentInfoSheet({ id, open, onOpenChange, onSelect }: { id: InstrumentId; open: boolean; onOpenChange: (o: boolean) => void; onSelect: (id: InstrumentId) => void }) {
+export function InstrumentInfoSheet({
+  id,
+  open,
+  onOpenChange,
+  onSelect,
+}: {
+  id: InstrumentId;
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  onSelect: (id: InstrumentId) => void;
+}) {
   const info = INSTRUMENT_INFO[id];
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -51,7 +73,10 @@ export function InstrumentInfoSheet({ id, open, onOpenChange, onSelect }: { id: 
           <SheetTitle className="flex items-center gap-2">
             <BookOpen className="size-4 text-primary" /> {info.title}
           </SheetTitle>
-          <SheetDescription>Explain this instrument — educational overview. Always use the AFM/POH for your aircraft.</SheetDescription>
+          <SheetDescription>
+            Explain this instrument — educational overview. Always use the AFM/POH for your
+            aircraft.
+          </SheetDescription>
         </SheetHeader>
         <div className="mt-4 space-y-4 px-1">
           <Select value={id} onValueChange={(v) => onSelect(v as InstrumentId)}>

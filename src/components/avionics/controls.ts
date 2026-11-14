@@ -54,7 +54,9 @@ export function syncHeadingBug(engine: SimEngine) {
 
 /** ALT select: outer = 1000 ft, inner = 100 ft. */
 export function stepAltBug(engine: SimEngine, dir: number, thousands: boolean) {
-  engine.setRadios({ altBug: Math.max(0, engine.getSnapshot().radios.altBug + dir * (thousands ? 1000 : 100)) });
+  engine.setRadios({
+    altBug: Math.max(0, engine.getSnapshot().radios.altBug + dir * (thousands ? 1000 : 100)),
+  });
 }
 
 /** Baro (Kollsman) setting in inHg. */

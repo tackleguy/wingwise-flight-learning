@@ -35,7 +35,8 @@ export interface AiChatRequest {
   json?: boolean;
 }
 
-export type AiChatResult = { ok: true; text: string; provider: string } | { ok: false; reason: string };
+export type AiChatResult =
+  { ok: true; text: string; provider: string } | { ok: false; reason: string };
 
 export interface AiStatus {
   cloud: boolean;
@@ -111,25 +112,46 @@ async function probeBrowser(url: string): Promise<boolean> {
 }
 
 async function browserChat(req: AiChatRequest, url: string, model: string): Promise<AiChatResult> {
-  if (typeof window === "undefined") return { ok: false, reason: "The local browser model is only available in the browser." };
-  if (!/^https?:\/\//i.test(url.trim())) return { ok: false, reason: "Set a valid local model URL in Settings (e.g. http://localhost:11434/v1)." };
+  if (typeof window === "undefined")
+    return { ok: false, reason: "The local browser model is only available in the browser." };
+  if (!/^https?:\/\//i.test(url.trim()))
+    return {
+      ok: false,
+      reason: "Set a valid local model URL in Settings (e.g. http://localhost:11434/v1).",
+    };
   const base = browserBase(url);
   const body: Record<string, unknown> = {
     model: model || "llama3.1",
-    messages: [{ role: "system", content: guardedSystem(req.service, req.system, req.json) }, ...trimMessages(req.messages)],
+    messages: [
+      { role: "system", content: guardedSystem(req.service, req.system, req.json) },
+      ...trimMessages(req.messages),
+    ],
     temperature: req.temperature ?? 0.4,
     stream: false,
   };
   if (req.json) body["response_format"] = { type: "json_object" };
   try {
     const post = (payload: Record<string, unknown>) =>
-      withTimeout((signal) => fetch(`${base}/chat/completions`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload), signal }), CLIENT_TIMEOUT_MS);
+      withTimeout(
+        (signal) =>
+          fetch(`${base}/chat/completions`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+            signal,
+          }),
+        CLIENT_TIMEOUT_MS,
+      );
     let res = await post(body);
     if (res.status === 400 && req.json) {
       const { response_format: _rf, ...rest } = body;
       res = await post(rest);
     }
-    if (!res.ok) return { ok: false, reason: `Local model returned HTTP ${res.status}. Check the model name in Settings.` };
+    if (!res.ok)
+      return {
+        ok: false,
+        reason: `Local model returned HTTP ${res.status}. Check the model name in Settings.`,
+      };
     const data = (await res.json()) as { choices?: { message?: { content?: unknown } }[] };
     const content = data.choices?.[0]?.message?.content;
     const text = typeof content === "string" ? stripReasoning(content) : "";
@@ -150,7 +172,10 @@ async function browserChat(req: AiChatRequest, url: string, model: string): Prom
 
 // ---------- server provider ----------
 
-async function serverChat(req: AiChatRequest, provider: "auto" | "cloud" | "local-server"): Promise<AiChatResult> {
+async function serverChat(
+  req: AiChatRequest,
+  provider: "auto" | "cloud" | "local-server",
+): Promise<AiChatResult> {
   try {
     const r = await withTimeout(
       (signal) =>
@@ -159,7 +184,9 @@ async function serverChat(req: AiChatRequest, provider: "auto" | "cloud" | "loca
             service: req.service,
             system: req.system.slice(0, 24000),
             messages: trimMessages(req.messages),
-            ...(req.temperature !== undefined ? { temperature: Math.max(0, Math.min(1.5, req.temperature)) } : {}),
+            ...(req.temperature !== undefined
+              ? { temperature: Math.max(0, Math.min(1.5, req.temperature)) }
+              : {}),
             ...(req.json !== undefined ? { json: req.json } : {}),
             provider,
           },
@@ -168,11 +195,17 @@ async function serverChat(req: AiChatRequest, provider: "auto" | "cloud" | "loca
       CLIENT_TIMEOUT_MS,
     );
     if (r.ok) return { ok: true, text: r.text, provider: r.provider };
-    if (r.code === "not-configured" && serverStatus) serverStatus = { ...serverStatus, at: Date.now(), cloud: false, localServer: false };
+    if (r.code === "not-configured" && serverStatus)
+      serverStatus = { ...serverStatus, at: Date.now(), cloud: false, localServer: false };
     return { ok: false, reason: r.reason };
   } catch (e) {
     const aborted = e instanceof Error && e.name === "AbortError";
-    return { ok: false, reason: aborted ? "The AI service timed out — continuing in scripted mode." : "The AI service is unreachable — continuing in scripted mode." };
+    return {
+      ok: false,
+      reason: aborted
+        ? "The AI service timed out — continuing in scripted mode."
+        : "The AI service is unreachable — continuing in scripted mode.",
+    };
   }
 }
 
@@ -199,7 +232,12 @@ export async function aiChat(req: AiChatRequest): Promise<AiChatResult> {
         const b = await browserChat(req, ai.localBrowserUrl, ai.localBrowserModel);
         if (b.ok) return b;
       }
-      return serverResult ?? { ok: false, reason: "No AI provider is configured — using scripted training mode." };
+      return (
+        serverResult ?? {
+          ok: false,
+          reason: "No AI provider is configured — using scripted training mode.",
+        }
+      );
     }
   }
 }
@@ -207,7 +245,10 @@ export async function aiChat(req: AiChatRequest): Promise<AiChatResult> {
 export async function getAiStatus(): Promise<AiStatus> {
   const ai = aiSettings();
   const s = await fetchServerStatus();
-  const localBrowser = ai.provider === "local-browser" || ai.provider === "auto" ? await probeBrowser(ai.localBrowserUrl) : false;
+  const localBrowser =
+    ai.provider === "local-browser" || ai.provider === "auto"
+      ? await probeBrowser(ai.localBrowserUrl)
+      : false;
   let active: AiStatus["active"] = "scripted";
   switch (ai.provider) {
     case "cloud":
@@ -220,7 +261,13 @@ export async function getAiStatus(): Promise<AiStatus> {
       active = localBrowser ? "local-browser" : "scripted";
       break;
     case "auto":
-      active = s.cloud ? "cloud" : s.localServer ? "local-server" : localBrowser ? "local-browser" : "scripted";
+      active = s.cloud
+        ? "cloud"
+        : s.localServer
+          ? "local-server"
+          : localBrowser
+            ? "local-browser"
+            : "scripted";
       break;
     default:
       active = "scripted";

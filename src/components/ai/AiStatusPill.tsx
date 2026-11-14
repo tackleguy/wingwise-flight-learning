@@ -26,7 +26,11 @@ export function useAiStatus() {
     setLoading(true);
     getAiStatus()
       .then((s) => alive && setStatus(s))
-      .catch(() => alive && setStatus({ cloud: false, localServer: false, localBrowser: false, active: "scripted" }))
+      .catch(
+        () =>
+          alive &&
+          setStatus({ cloud: false, localServer: false, localBrowser: false, active: "scripted" }),
+      )
       .finally(() => alive && setLoading(false));
     return () => {
       alive = false;
@@ -35,7 +39,15 @@ export function useAiStatus() {
   return { status, loading, refresh, aiAvailable: !!status && status.active !== "scripted" };
 }
 
-export function AiStatusPill({ status, loading, using }: { status: AiStatus | null; loading: boolean; using?: "ai" | "scripted" | null }) {
+export function AiStatusPill({
+  status,
+  loading,
+  using,
+}: {
+  status: AiStatus | null;
+  loading: boolean;
+  using?: "ai" | "scripted" | null;
+}) {
   if (loading)
     return (
       <Pill>
@@ -46,12 +58,14 @@ export function AiStatusPill({ status, loading, using }: { status: AiStatus | nu
   if (active === "scripted" || using === "scripted")
     return (
       <Pill tone="caution">
-        <ScrollText className="size-3" /> {using === "scripted" && active !== "scripted" ? "Scripted fallback" : "Scripted mode"}
+        <ScrollText className="size-3" />{" "}
+        {using === "scripted" && active !== "scripted" ? "Scripted fallback" : "Scripted mode"}
       </Pill>
     );
   return (
     <Pill tone="ok">
-      {active === "cloud" ? <Bot className="size-3" /> : <Cpu className="size-3" />} {AI_PROVIDER_LABEL[active] ?? active}
+      {active === "cloud" ? <Bot className="size-3" /> : <Cpu className="size-3" />}{" "}
+      {AI_PROVIDER_LABEL[active] ?? active}
     </Pill>
   );
 }

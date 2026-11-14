@@ -8,7 +8,15 @@ import type { RadioLine } from "./types";
 import { estimateSpeechMs, speak, stopSpeaking } from "./speech";
 
 export type QueueItem =
-  | { kind: "atc" | "traffic"; station: string; text: string; spoken?: string; delayMs?: number; pitch?: number; mhz?: number }
+  | {
+      kind: "atc" | "traffic";
+      station: string;
+      text: string;
+      spoken?: string;
+      delayMs?: number;
+      pitch?: number;
+      mhz?: number;
+    }
   | { kind: "system"; text: string; tone?: RadioLine["tone"] }
   | { kind: "call"; fn: () => void };
 
@@ -35,7 +43,9 @@ const lineId = () => `l${Date.now().toString(36)}${(lineSeq++).toString(36)}`;
 export function useRadioQueue(opts: RadioQueueOptions) {
   const [lines, setLines] = useState<RadioLine[]>([]);
   const linesRef = useRef<RadioLine[]>([]);
-  const [receiving, setReceiving] = useState<{ station: string; from: "atc" | "traffic" } | null>(null);
+  const [receiving, setReceiving] = useState<{ station: string; from: "atc" | "traffic" } | null>(
+    null,
+  );
   const [active, setActive] = useState(false);
   const queue = useRef<QueueItem[]>([]);
   const running = useRef(false);
@@ -75,7 +85,12 @@ export function useRadioQueue(opts: RadioQueueOptions) {
       if (g !== gen.current) break;
       transmitting.current = true;
       setReceiving({ station: it.station, from: it.kind });
-      append({ from: it.kind, station: it.station, text: it.text, ...(it.mhz ? { mhz: it.mhz } : {}) });
+      append({
+        from: it.kind,
+        station: it.station,
+        text: it.text,
+        ...(it.mhz ? { mhz: it.mhz } : {}),
+      });
       const o = optsRef.current;
       if (o.speech && o.volume > 0) {
         await speak(it.spoken ?? it.text, {
@@ -106,8 +121,16 @@ export function useRadioQueue(opts: RadioQueueOptions) {
     [run],
   );
 
-  const addPilot = useCallback((text: string, station?: string, mhz?: number) => append({ from: "pilot", text, ...(station ? { station } : {}), ...(mhz ? { mhz } : {}) }), [append]);
-  const addSystem = useCallback((text: string, tone?: RadioLine["tone"]) => append({ from: "system", text, ...(tone ? { tone } : {}) }), [append]);
+  const addPilot = useCallback(
+    (text: string, station?: string, mhz?: number) =>
+      append({ from: "pilot", text, ...(station ? { station } : {}), ...(mhz ? { mhz } : {}) }),
+    [append],
+  );
+  const addSystem = useCallback(
+    (text: string, tone?: RadioLine["tone"]) =>
+      append({ from: "system", text, ...(tone ? { tone } : {}) }),
+    [append],
+  );
 
   const reset = useCallback(() => {
     gen.current += 1;
