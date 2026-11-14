@@ -1,0 +1,442 @@
+import { destinationPoint, norm360, FT_PER_NM } from "@/lib/geo";
+import type { Airport, Frequency, FrequencyType, Navaid, Runway, RunwayEnd } from "./types";
+
+/**
+ * EDUCATIONAL AIRPORT DATASET
+ *
+ * Source: compiled for training from publicly published airport information (FAA Chart
+ * Supplement / airport diagrams) as remembered at the time of writing; runway geometry is
+ * simplified (runways are placed from the airport reference point using their magnetic
+ * heading, length and an approximate offset). Frequencies and ILS data may be outdated.
+ *
+ * NOT FOR NAVIGATION. Always use current FAA charts and the Chart Supplement.
+ */
+export const AIRPORT_DATA_NOTICE = {
+  source: "TeachX educational dataset — compiled from public FAA publications, simplified for simulation",
+  currency: "Static snapshot (not updated from live sources). Frequencies, runways and procedures may have changed.",
+  disclaimer: "Not for navigation. Verify with current FAA charts, the Chart Supplement and NOTAMs.",
+};
+
+type RwySpec = {
+  name: string;
+  /** Magnetic heading of the FIRST runway end listed in the name. */
+  mag: number;
+  len: number;
+  wid?: number;
+  /** Offset of runway centre from the airport reference point (feet, true north/east). */
+  east?: number;
+  north?: number;
+  surface?: Runway["surface"];
+  pattern?: [RunwayEnd["pattern"], RunwayEnd["pattern"]];
+  ils?: Record<string, { freq: number; ident: string; gs?: number }>;
+};
+
+function buildRunway(lat: number, lon: number, magVar: number, s: RwySpec): Runway {
+  const [aId, bId] = s.name.split("/") as [string, string];
+  const hdgA = norm360(s.mag + magVar);
+  const hdgB = norm360(hdgA + 180);
+  let c = { lat, lon };
+  if (s.east) c = destinationPoint(c.lat, c.lon, s.east > 0 ? 90 : 270, Math.abs(s.east) / FT_PER_NM);
+  if (s.north) c = destinationPoint(c.lat, c.lon, s.north > 0 ? 0 : 180, Math.abs(s.north) / FT_PER_NM);
+  const half = s.len / 2 / FT_PER_NM;
+  const thA = destinationPoint(c.lat, c.lon, hdgB, half);
+  const thB = destinationPoint(c.lat, c.lon, hdgA, half);
+  const pat = s.pattern ?? ["left", "left"];
+  const mk = (id: string, hdg: number, th: { lat: number; lon: number }, p: RunwayEnd["pattern"]): RunwayEnd => {
+    const i = s.ils?.[id];
+    const end: RunwayEnd = { id, trueHeading: hdg, threshold: th, pattern: p };
+    if (i) end.ils = { freq: i.freq, ident: i.ident, glideslopeDeg: i.gs ?? 3 };
+    return end;
+  };
+  return {
+    name: s.name,
+    lengthFt: s.len,
+    widthFt: s.wid ?? 150,
+    surface: s.surface ?? "asphalt",
+    ends: [mk(aId, hdgA, thA, pat[0]), mk(bId, hdgB, thB, pat[1])],
+  };
+}
+
+const f = (type: FrequencyType, mhz: number, name?: string): Frequency => ({ type, mhz, name: name ?? type });
+
+type AirportSpec = Omit<Airport, "runways"> & { rwys: RwySpec[] };
+
+function ap(spec: AirportSpec): Airport {
+  const { rwys, ...rest } = spec;
+  return { ...rest, runways: rwys.map((r) => buildRunway(spec.lat, spec.lon, spec.magVar, r)) };
+}
+
+export const AIRPORTS: Airport[] = [
+  ap({
+    icao: "KPAO", iata: "PAO", name: "Palo Alto Airport", city: "Palo Alto", region: "CA", country: "US",
+    lat: 37.4611, lon: -122.115, elevationFt: 7, magVar: 13, airspace: "D", towered: true,
+    frequencies: [f("ATIS", 135.275), f("GND", 125.0, "Palo Alto Ground"), f("TWR", 118.6, "Palo Alto Tower"), f("APP", 120.1, "NorCal Approach")],
+    rwys: [{ name: "13/31", mag: 133, len: 2443, wid: 70, pattern: ["left", "right"] }],
+    taxiways: ["Z", "Y"], nearbyNavaids: ["OSI", "SJC", "SFO"],
+    procedures: ["RNAV (GPS)-A (training representation)", "VFR departures via Dumbarton Bridge / Stanford Stadium"],
+    notes: ["Short runway: precise speed control required.", "Underlies the SFO Class B shelf — stay below.", "Busy training environment."],
+    training: ["vfr", "pattern", "short-field"],
+  }),
+  ap({
+    icao: "KSQL", iata: "SQL", name: "San Carlos Airport", city: "San Carlos", region: "CA", country: "US",
+    lat: 37.5119, lon: -122.2495, elevationFt: 5, magVar: 13, airspace: "D", towered: true,
+    frequencies: [f("ATIS", 125.9), f("GND", 121.6, "San Carlos Ground"), f("TWR", 119.0, "San Carlos Tower"), f("APP", 135.65, "NorCal Approach")],
+    rwys: [{ name: "12/30", mag: 122, len: 2621, wid: 75, pattern: ["left", "right"] }],
+    taxiways: ["A", "B"], nearbyNavaids: ["OSI", "SFO"],
+    procedures: ["RNAV (GPS) RWY 30 (training representation)"],
+    notes: ["Class D lies beneath the SFO Class B — low pattern altitude.", "Bay on the east side."],
+    training: ["vfr", "pattern"],
+  }),
+  ap({
+    icao: "KSFO", iata: "SFO", name: "San Francisco International Airport", city: "San Francisco", region: "CA", country: "US",
+    lat: 37.6189, lon: -122.3750, elevationFt: 13, magVar: 13, airspace: "B", towered: true,
+    frequencies: [f("ATIS", 118.85), f("CLNC", 118.2, "SFO Clearance"), f("GND", 121.8, "SFO Ground"), f("TWR", 120.5, "SFO Tower"), f("APP", 135.65, "NorCal Approach"), f("DEP", 135.1, "NorCal Departure")],
+    rwys: [
+      { name: "10L/28R", mag: 104, len: 11870, wid: 200, north: 380, ils: { "28R": { freq: 111.7, ident: "IGWQ" } } },
+      { name: "10R/28L", mag: 104, len: 11381, wid: 200, north: -380, east: 300, ils: { "28L": { freq: 109.55, ident: "ISFO" } } },
+      { name: "01R/19L", mag: 14, len: 8650, wid: 200, east: 1200, north: -600 },
+      { name: "01L/19R", mag: 14, len: 7650, wid: 200, east: 450, north: -900 },
+    ],
+    taxiways: ["A", "B", "C", "F", "M", "Z"], nearbyNavaids: ["SFO", "OSI", "OAK", "SAU"],
+    procedures: ["ILS RWY 28L", "ILS RWY 28R", "RNAV (GPS) RWY 28L/R", "SSTIK departure (representative)"],
+    notes: ["Class B primary airport.", "Simultaneous parallel approaches in VMC."],
+    training: ["ifr", "ils", "class-b"],
+  }),
+  ap({
+    icao: "KOAK", iata: "OAK", name: "Oakland International Airport", city: "Oakland", region: "CA", country: "US",
+    lat: 37.7213, lon: -122.2207, elevationFt: 9, magVar: 13, airspace: "C", towered: true,
+    frequencies: [f("ATIS", 133.775), f("CLNC", 127.4), f("GND", 121.75, "Oakland Ground"), f("TWR", 118.3, "Oakland Tower"), f("APP", 135.4, "NorCal Approach")],
+    rwys: [
+      { name: "12/30", mag: 117, len: 10520, wid: 150, north: -3500, east: 1500, ils: { "30": { freq: 108.7, ident: "IINB" } } },
+      { name: "10R/28L", mag: 97, len: 6213, wid: 150, north: 2200 },
+      { name: "10L/28R", mag: 97, len: 5458, wid: 150, north: 2800, ils: { "28R": { freq: 111.9, ident: "IOAK" } } },
+    ],
+    taxiways: ["W", "C", "B", "D"], nearbyNavaids: ["OAK", "SFO", "CCR"],
+    procedures: ["ILS RWY 30", "ILS RWY 28R", "RNAV (GPS) RWY 30"],
+    notes: ["North Field used mainly by general aviation; South Field (RWY 12/30) by airlines."],
+    training: ["ifr", "class-c", "ils"],
+  }),
+  ap({
+    icao: "KSJC", iata: "SJC", name: "Norman Y. Mineta San José International Airport", city: "San Jose", region: "CA", country: "US",
+    lat: 37.3626, lon: -121.9290, elevationFt: 62, magVar: 13, airspace: "C", towered: true,
+    frequencies: [f("ATIS", 126.95), f("CLNC", 118.0), f("GND", 121.7, "San Jose Ground"), f("TWR", 124.0, "San Jose Tower"), f("APP", 120.1, "NorCal Approach")],
+    rwys: [
+      { name: "12R/30L", mag: 118, len: 11000, wid: 150, east: 350, north: 350, ils: { "30L": { freq: 111.1, ident: "ISJC" } } },
+      { name: "12L/30R", mag: 118, len: 11000, wid: 150, east: -350, north: -350 },
+    ],
+    taxiways: ["A", "B", "C", "K"], nearbyNavaids: ["SJC", "OSI"],
+    procedures: ["ILS RWY 30L", "RNAV (GPS) RWY 30L/R"],
+    notes: ["Class C airport close to downtown San Jose."],
+    training: ["ifr", "class-c", "ils"],
+  }),
+  ap({
+    icao: "KHWD", iata: "HWD", name: "Hayward Executive Airport", city: "Hayward", region: "CA", country: "US",
+    lat: 37.6592, lon: -122.1217, elevationFt: 52, magVar: 13, airspace: "D", towered: true,
+    frequencies: [f("ATIS", 126.7), f("GND", 121.4, "Hayward Ground"), f("TWR", 120.2, "Hayward Tower")],
+    rwys: [
+      { name: "10R/28L", mag: 98, len: 5694, wid: 150, north: -250 },
+      { name: "10L/28R", mag: 98, len: 3107, wid: 75, north: 250 },
+    ],
+    taxiways: ["A", "B", "Z"], nearbyNavaids: ["OAK", "SFO"],
+    procedures: ["LOC RWY 28L (representative)"],
+    notes: ["Parallel runways — confirm assigned runway in readbacks."],
+    training: ["vfr", "pattern"],
+  }),
+  ap({
+    icao: "KLVK", iata: "LVK", name: "Livermore Municipal Airport", city: "Livermore", region: "CA", country: "US",
+    lat: 37.6934, lon: -121.8203, elevationFt: 400, magVar: 13, airspace: "D", towered: true,
+    frequencies: [f("ATIS", 119.65), f("GND", 121.6, "Livermore Ground"), f("TWR", 118.1, "Livermore Tower")],
+    rwys: [
+      { name: "07L/25R", mag: 70, len: 5253, wid: 100, north: 200, pattern: ["left", "right"] },
+      { name: "07R/25L", mag: 70, len: 2699, wid: 75, north: -200, pattern: ["right", "left"] },
+    ],
+    taxiways: ["A", "B"], nearbyNavaids: ["ECA", "OAK"],
+    procedures: ["RNAV (GPS) RWY 25R (representative)"],
+    notes: ["Valley terrain to the south and west."],
+    training: ["vfr", "cross-country"],
+  }),
+  ap({
+    icao: "KCCR", iata: "CCR", name: "Buchanan Field", city: "Concord", region: "CA", country: "US",
+    lat: 37.9897, lon: -122.0569, elevationFt: 26, magVar: 13, airspace: "D", towered: true,
+    frequencies: [f("ATIS", 124.7), f("GND", 121.9, "Concord Ground"), f("TWR", 119.7, "Concord Tower")],
+    rwys: [
+      { name: "01L/19R", mag: 11, len: 5001, wid: 150 },
+      { name: "14L/32R", mag: 138, len: 4602, wid: 150, east: 600 },
+    ],
+    taxiways: ["A", "B", "C"], nearbyNavaids: ["CCR", "OAK"],
+    procedures: ["ILS RWY 19R (representative)", "VOR RWY 19R (representative)"],
+    notes: ["Mount Diablo (3,849 ft) lies to the southeast."],
+    training: ["vfr", "ifr"],
+  }),
+  ap({
+    icao: "KHAF", iata: "HAF", name: "Half Moon Bay Airport", city: "Half Moon Bay", region: "CA", country: "US",
+    lat: 37.5134, lon: -122.5011, elevationFt: 66, magVar: 13, airspace: "G", towered: false,
+    frequencies: [f("CTAF", 122.725, "Half Moon Bay Traffic"), f("AWOS", 118.375)],
+    rwys: [{ name: "12/30", mag: 122, len: 5000, wid: 150 }],
+    taxiways: ["A"], nearbyNavaids: ["OSI", "SFO", "SAU"],
+    procedures: ["RNAV (GPS) RWY 12 (representative)"],
+    notes: ["Non-towered: self-announce on CTAF.", "Coastal fog common in summer."],
+    training: ["vfr", "non-towered"],
+  }),
+  ap({
+    icao: "KMRY", iata: "MRY", name: "Monterey Regional Airport", city: "Monterey", region: "CA", country: "US",
+    lat: 36.587, lon: -121.8429, elevationFt: 257, magVar: 13, airspace: "D", towered: true,
+    frequencies: [f("ATIS", 119.25), f("GND", 121.9, "Monterey Ground"), f("TWR", 118.4, "Monterey Tower"), f("APP", 133.0, "Monterey Approach")],
+    rwys: [{ name: "10R/28L", mag: 100, len: 7175, wid: 150, ils: { "10R": { freq: 110.7, ident: "IMRY" } } }],
+    taxiways: ["A", "B"], nearbyNavaids: ["SNS"],
+    procedures: ["ILS RWY 10R", "RNAV (GPS) RWY 28L"],
+    notes: ["Rising terrain east of the field."],
+    training: ["ifr", "cross-country"],
+  }),
+  ap({
+    icao: "KSNS", iata: "SNS", name: "Salinas Municipal Airport", city: "Salinas", region: "CA", country: "US",
+    lat: 36.6628, lon: -121.6064, elevationFt: 85, magVar: 13, airspace: "D", towered: true,
+    frequencies: [f("ATIS", 124.85), f("GND", 121.7, "Salinas Ground"), f("TWR", 119.4, "Salinas Tower")],
+    rwys: [
+      { name: "08/26", mag: 80, len: 6004, wid: 150 },
+      { name: "13/31", mag: 130, len: 4825, wid: 150, east: 800 },
+    ],
+    taxiways: ["A", "B"], nearbyNavaids: ["SNS"],
+    procedures: ["ILS RWY 31 (representative)", "VOR RWY 08 (representative)"],
+    notes: ["Popular IFR training airport."],
+    training: ["ifr", "vor"],
+  }),
+  ap({
+    icao: "KLAX", iata: "LAX", name: "Los Angeles International Airport", city: "Los Angeles", region: "CA", country: "US",
+    lat: 33.9425, lon: -118.4081, elevationFt: 128, magVar: 12, airspace: "B", towered: true,
+    frequencies: [f("ATIS", 133.8), f("CLNC", 120.35), f("GND", 121.65, "LA Ground"), f("TWR", 133.9, "LA Tower"), f("APP", 124.5, "SoCal Approach")],
+    rwys: [
+      { name: "06L/24R", mag: 69, len: 8926, wid: 150, north: 2200, ils: { "24R": { freq: 108.5, ident: "ILAX" } } },
+      { name: "06R/24L", mag: 69, len: 10885, wid: 150, north: 1500, ils: { "24L": { freq: 111.1, ident: "IOSS" } } },
+      { name: "07L/25R", mag: 69, len: 12923, wid: 150, north: -1500, ils: { "25R": { freq: 111.7, ident: "IGPE" } } },
+      { name: "07R/25L", mag: 69, len: 11095, wid: 200, north: -2200, ils: { "25L": { freq: 109.9, ident: "IHQB" } } },
+    ],
+    taxiways: ["A", "B", "C", "E"], nearbyNavaids: ["LAX", "SMO"],
+    procedures: ["ILS RWY 24R/24L/25R/25L"],
+    notes: ["Class B primary airport.", "Westerly operations predominate."],
+    training: ["ifr", "class-b"],
+  }),
+  ap({
+    icao: "KVNY", iata: "VNY", name: "Van Nuys Airport", city: "Los Angeles", region: "CA", country: "US",
+    lat: 34.2098, lon: -118.4898, elevationFt: 802, magVar: 12, airspace: "D", towered: true,
+    frequencies: [f("ATIS", 118.45), f("GND", 121.7, "Van Nuys Ground"), f("TWR", 119.3, "Van Nuys Tower")],
+    rwys: [
+      { name: "16R/34L", mag: 162, len: 8001, wid: 150, east: -250, ils: { "16R": { freq: 111.3, ident: "IVNY" } } },
+      { name: "16L/34R", mag: 162, len: 4011, wid: 75, east: 250 },
+    ],
+    taxiways: ["A", "B", "C"], nearbyNavaids: ["VNY", "LAX"],
+    procedures: ["ILS RWY 16R"],
+    notes: ["One of the busiest general aviation airports."],
+    training: ["vfr", "ifr"],
+  }),
+  ap({
+    icao: "KSEA", iata: "SEA", name: "Seattle–Tacoma International Airport", city: "Seattle", region: "WA", country: "US",
+    lat: 47.449, lon: -122.3093, elevationFt: 433, magVar: 15, airspace: "B", towered: true,
+    frequencies: [f("ATIS", 118.0), f("CLNC", 128.0), f("GND", 121.7, "Seattle Ground"), f("TWR", 119.9, "Seattle Tower"), f("APP", 119.2, "Seattle Approach")],
+    rwys: [
+      { name: "16L/34R", mag: 163, len: 11901, wid: 150, east: -400, ils: { "16L": { freq: 110.3, ident: "ISNQ" } } },
+      { name: "16C/34C", mag: 163, len: 9426, wid: 150, east: 0, ils: { "34C": { freq: 111.7, ident: "ISZI" } } },
+      { name: "16R/34L", mag: 163, len: 8500, wid: 150, east: 400 },
+    ],
+    taxiways: ["A", "B", "J", "K"], nearbyNavaids: ["SEA"],
+    procedures: ["ILS RWY 16L", "ILS RWY 34C"],
+    notes: ["Frequent low ceilings — good IFR practice."],
+    training: ["ifr", "class-b"],
+  }),
+  ap({
+    icao: "KBFI", iata: "BFI", name: "King County International (Boeing Field)", city: "Seattle", region: "WA", country: "US",
+    lat: 47.53, lon: -122.302, elevationFt: 21, magVar: 15, airspace: "D", towered: true,
+    frequencies: [f("ATIS", 127.75), f("GND", 121.9, "Boeing Ground"), f("TWR", 120.6, "Boeing Tower")],
+    rwys: [
+      { name: "14R/32L", mag: 134, len: 10007, wid: 200, east: 250, ils: { "14R": { freq: 110.9, ident: "IBFI" } } },
+      { name: "14L/32R", mag: 134, len: 3709, wid: 100, east: -250 },
+    ],
+    taxiways: ["A", "B"], nearbyNavaids: ["SEA"],
+    procedures: ["ILS RWY 14R"],
+    notes: ["Underlies SEA Class B."],
+    training: ["ifr"],
+  }),
+  ap({
+    icao: "KJFK", iata: "JFK", name: "John F. Kennedy International Airport", city: "New York", region: "NY", country: "US",
+    lat: 40.6398, lon: -73.7789, elevationFt: 13, magVar: -13, airspace: "B", towered: true,
+    frequencies: [f("ATIS", 128.725), f("CLNC", 135.05), f("GND", 121.9, "Kennedy Ground"), f("TWR", 119.1, "Kennedy Tower"), f("APP", 132.4, "New York Approach")],
+    rwys: [
+      { name: "04L/22R", mag: 44, len: 12079, wid: 200, east: -2500, ils: { "04L": { freq: 110.9, ident: "IJOC" } } },
+      { name: "04R/22L", mag: 44, len: 8400, wid: 200, east: 1200, ils: { "22L": { freq: 109.5, ident: "IIWY" } } },
+      { name: "13L/31R", mag: 134, len: 10000, wid: 200, north: 1500, ils: { "31R": { freq: 111.5, ident: "IRTH" } } },
+      { name: "13R/31L", mag: 134, len: 14511, wid: 200, north: -1800, ils: { "13R": { freq: 109.1, ident: "IJFK" } } },
+    ],
+    taxiways: ["A", "B", "K", "Q"], nearbyNavaids: ["JFK"],
+    procedures: ["ILS RWY 4L/22L/31R/13R"],
+    notes: ["Class B primary airport."],
+    training: ["ifr", "class-b"],
+  }),
+  ap({
+    icao: "KBOS", iata: "BOS", name: "Boston Logan International Airport", city: "Boston", region: "MA", country: "US",
+    lat: 42.3656, lon: -71.0096, elevationFt: 20, magVar: -14, airspace: "B", towered: true,
+    frequencies: [f("ATIS", 135.0), f("CLNC", 121.65), f("GND", 121.9, "Boston Ground"), f("TWR", 128.8, "Boston Tower"), f("APP", 120.6, "Boston Approach")],
+    rwys: [
+      { name: "04R/22L", mag: 35, len: 10005, wid: 150, ils: { "04R": { freq: 109.9, ident: "IBOS" } } },
+      { name: "15R/33L", mag: 150, len: 10083, wid: 150, east: 1000, ils: { "33L": { freq: 110.3, ident: "ILIQ" } } },
+      { name: "09/27", mag: 92, len: 7000, wid: 150, north: -1500 },
+    ],
+    taxiways: ["A", "B", "C", "N"], nearbyNavaids: ["BOS"],
+    procedures: ["ILS RWY 4R", "ILS RWY 33L"],
+    notes: ["Surrounded by water on three sides."],
+    training: ["ifr", "class-b"],
+  }),
+  ap({
+    icao: "KORD", iata: "ORD", name: "Chicago O'Hare International Airport", city: "Chicago", region: "IL", country: "US",
+    lat: 41.9786, lon: -87.9048, elevationFt: 680, magVar: -3, airspace: "B", towered: true,
+    frequencies: [f("ATIS", 135.4), f("CLNC", 121.6), f("GND", 121.75, "O'Hare Ground"), f("TWR", 120.75, "O'Hare Tower"), f("APP", 119.0, "Chicago Approach")],
+    rwys: [
+      { name: "10L/28R", mag: 93, len: 13000, wid: 150, north: 3500, ils: { "28R": { freq: 110.1, ident: "IORD" } } },
+      { name: "09C/27C", mag: 93, len: 11245, wid: 200, north: 0, ils: { "27C": { freq: 110.55, ident: "IUBW" } } },
+      { name: "10C/28C", mag: 93, len: 10801, wid: 200, north: -3000 },
+    ],
+    taxiways: ["A", "B", "M"], nearbyNavaids: ["ORD"],
+    procedures: ["ILS RWY 28R", "ILS RWY 27C"],
+    notes: ["Parallel east-west runway complex."],
+    training: ["ifr", "class-b"],
+  }),
+  ap({
+    icao: "KDEN", iata: "DEN", name: "Denver International Airport", city: "Denver", region: "CO", country: "US",
+    lat: 39.8617, lon: -104.6732, elevationFt: 5434, magVar: 8, airspace: "B", towered: true,
+    frequencies: [f("ATIS", 125.6), f("CLNC", 118.75), f("GND", 121.85, "Denver Ground"), f("TWR", 133.3, "Denver Tower"), f("APP", 119.3, "Denver Approach")],
+    rwys: [
+      { name: "16R/34L", mag: 172, len: 16000, wid: 200, east: -5000, ils: { "34L": { freq: 109.3, ident: "IOUF" } } },
+      { name: "16L/34R", mag: 172, len: 12000, wid: 150, east: -3500 },
+      { name: "17R/35L", mag: 172, len: 12000, wid: 150, east: 3500, ils: { "35L": { freq: 111.55, ident: "IJOY" } } },
+      { name: "08/26", mag: 82, len: 12000, wid: 150, north: 3000 },
+    ],
+    taxiways: ["A", "B", "M"], nearbyNavaids: ["DEN"],
+    procedures: ["ILS RWY 34L", "ILS RWY 35L"],
+    notes: ["High elevation: density altitude affects performance.", "Longest public-use runway in the US (16R/34L)."],
+    training: ["ifr", "density-altitude"],
+  }),
+  ap({
+    icao: "KATL", iata: "ATL", name: "Hartsfield–Jackson Atlanta International Airport", city: "Atlanta", region: "GA", country: "US",
+    lat: 33.6367, lon: -84.4281, elevationFt: 1026, magVar: -5, airspace: "B", towered: true,
+    frequencies: [f("ATIS", 119.65), f("CLNC", 118.1), f("GND", 121.9, "Atlanta Ground"), f("TWR", 119.1, "Atlanta Tower"), f("APP", 127.25, "Atlanta Approach")],
+    rwys: [
+      { name: "08L/26R", mag: 89, len: 9000, wid: 150, north: 3200, ils: { "26R": { freq: 109.1, ident: "IATL" } } },
+      { name: "09L/27R", mag: 89, len: 12390, wid: 150, north: -500, ils: { "27R": { freq: 109.3, ident: "IFUN" } } },
+      { name: "10/28", mag: 89, len: 9000, wid: 150, north: -4000, ils: { "28": { freq: 109.9, ident: "ITUQ" } } },
+    ],
+    taxiways: ["A", "B", "D", "E"], nearbyNavaids: ["ATL"],
+    procedures: ["ILS RWY 26R", "ILS RWY 27R", "ILS RWY 28"],
+    notes: ["One of the world's busiest airports."],
+    training: ["ifr", "class-b"],
+  }),
+  ap({
+    icao: "KPHX", iata: "PHX", name: "Phoenix Sky Harbor International Airport", city: "Phoenix", region: "AZ", country: "US",
+    lat: 33.4343, lon: -112.0116, elevationFt: 1135, magVar: 10, airspace: "B", towered: true,
+    frequencies: [f("ATIS", 127.575), f("CLNC", 118.1), f("GND", 119.75, "Phoenix Ground"), f("TWR", 118.7, "Phoenix Tower"), f("APP", 124.9, "Phoenix Approach")],
+    rwys: [
+      { name: "08/26", mag: 77, len: 11489, wid: 150, north: 2000, ils: { "26": { freq: 111.75, ident: "IPHX" } } },
+      { name: "07L/25R", mag: 77, len: 10300, wid: 150, north: -500, ils: { "25R": { freq: 109.1, ident: "IAHA" } } },
+      { name: "07R/25L", mag: 77, len: 7800, wid: 150, north: -1200 },
+    ],
+    taxiways: ["A", "B", "C"], nearbyNavaids: ["PXR"],
+    procedures: ["ILS RWY 26", "ILS RWY 25R"],
+    notes: ["High summer temperatures raise density altitude."],
+    training: ["ifr", "density-altitude"],
+  }),
+  ap({
+    icao: "KDAB", iata: "DAB", name: "Daytona Beach International Airport", city: "Daytona Beach", region: "FL", country: "US",
+    lat: 29.1799, lon: -81.0581, elevationFt: 34, magVar: -6, airspace: "C", towered: true,
+    frequencies: [f("ATIS", 120.05), f("GND", 121.9, "Daytona Ground"), f("TWR", 120.7, "Daytona Tower"), f("APP", 125.35, "Daytona Approach")],
+    rwys: [
+      { name: "07L/25R", mag: 74, len: 10500, wid: 150, ils: { "07L": { freq: 110.9, ident: "IDAB" } } },
+      { name: "07R/25L", mag: 74, len: 3197, wid: 100, north: -800 },
+      { name: "16/34", mag: 164, len: 6001, wid: 150, east: 1500 },
+    ],
+    taxiways: ["A", "B", "N", "S"], nearbyNavaids: ["DAB"],
+    procedures: ["ILS RWY 7L"],
+    notes: ["Very busy flight training environment."],
+    training: ["vfr", "ifr", "class-c"],
+  }),
+  ap({
+    icao: "KPRC", iata: "PRC", name: "Prescott Regional Airport", city: "Prescott", region: "AZ", country: "US",
+    lat: 34.6545, lon: -112.4196, elevationFt: 5045, magVar: 10, airspace: "D", towered: true,
+    frequencies: [f("ATIS", 127.2), f("GND", 121.7, "Prescott Ground"), f("TWR", 125.3, "Prescott Tower")],
+    rwys: [
+      { name: "03R/21L", mag: 30, len: 7619, wid: 150, east: 300, ils: { "21L": { freq: 108.5, ident: "IPRC" } } },
+      { name: "03L/21R", mag: 30, len: 4846, wid: 75, east: -300 },
+      { name: "12/30", mag: 120, len: 4408, wid: 75, north: -1500 },
+    ],
+    taxiways: ["A", "B", "C"], nearbyNavaids: ["PRC"],
+    procedures: ["ILS RWY 21L"],
+    notes: ["High-elevation training airport with mountainous terrain nearby."],
+    training: ["vfr", "density-altitude", "mountain"],
+  }),
+];
+
+export const NAVAIDS: Navaid[] = [
+  { id: "SFO", name: "San Francisco", type: "VOR-DME", freq: 115.8, lat: 37.6194, lon: -122.3739, magVar: 17 },
+  { id: "OAK", name: "Oakland", type: "VORTAC", freq: 116.8, lat: 37.7259, lon: -122.2236, magVar: 17 },
+  { id: "SJC", name: "San Jose", type: "VOR-DME", freq: 114.1, lat: 37.3746, lon: -121.9447, magVar: 17 },
+  { id: "OSI", name: "Woodside", type: "VORTAC", freq: 113.9, lat: 37.3925, lon: -122.2813, magVar: 17 },
+  { id: "SAU", name: "Sausalito", type: "VORTAC", freq: 116.2, lat: 37.8553, lon: -122.5225, magVar: 17 },
+  { id: "PYE", name: "Point Reyes", type: "VORTAC", freq: 113.7, lat: 38.0797, lon: -122.8678, magVar: 17 },
+  { id: "CCR", name: "Concord", type: "VOR-DME", freq: 117.0, lat: 38.0436, lon: -122.0453, magVar: 17 },
+  { id: "ECA", name: "Manteca", type: "VORTAC", freq: 116.0, lat: 37.8358, lon: -121.1716, magVar: 17 },
+  { id: "SNS", name: "Salinas", type: "VORTAC", freq: 117.3, lat: 36.6638, lon: -121.6033, magVar: 16 },
+  { id: "LAX", name: "Los Angeles", type: "VORTAC", freq: 113.6, lat: 33.9331, lon: -118.4319, magVar: 15 },
+  { id: "SMO", name: "Santa Monica", type: "VOR-DME", freq: 110.8, lat: 34.0103, lon: -118.4567, magVar: 15 },
+  { id: "VNY", name: "Van Nuys", type: "VOR-DME", freq: 113.1, lat: 34.2236, lon: -118.4917, magVar: 15 },
+  { id: "SEA", name: "Seattle", type: "VORTAC", freq: 116.8, lat: 47.4354, lon: -122.3097, magVar: 20 },
+  { id: "JFK", name: "Kennedy", type: "VOR-DME", freq: 115.9, lat: 40.6328, lon: -73.7714, magVar: -12 },
+  { id: "BOS", name: "Boston", type: "VOR-DME", freq: 112.7, lat: 42.3574, lon: -70.9897, magVar: -16 },
+  { id: "ORD", name: "Chicago O'Hare", type: "VOR-DME", freq: 113.9, lat: 41.9881, lon: -87.9054, magVar: -1 },
+  { id: "DEN", name: "Denver", type: "VOR-DME", freq: 117.9, lat: 39.8122, lon: -104.6611, magVar: 11 },
+  { id: "ATL", name: "Atlanta", type: "VORTAC", freq: 116.9, lat: 33.6292, lon: -84.435, magVar: -2 },
+  { id: "PXR", name: "Phoenix", type: "VORTAC", freq: 115.6, lat: 33.4333, lon: -111.9703, magVar: 12 },
+  { id: "DAB", name: "Daytona Beach", type: "VORTAC", freq: 112.6, lat: 29.1823, lon: -81.0476, magVar: -3 },
+  { id: "PRC", name: "Prescott", type: "VORTAC", freq: 114.1, lat: 34.7025, lon: -112.4803, magVar: 13 },
+];
+
+export function getAirport(icao: string): Airport | undefined {
+  const k = icao.trim().toUpperCase();
+  return AIRPORTS.find((a) => a.icao === k || a.iata === k);
+}
+
+export function getNavaid(id: string): Navaid | undefined {
+  const k = id.trim().toUpperCase();
+  return NAVAIDS.find((n) => n.id === k);
+}
+
+export function getRunwayEnd(airport: Airport, endId: string) {
+  for (const r of airport.runways) {
+    for (const e of r.ends) if (e.id === endId) return { runway: r, end: e };
+  }
+  return undefined;
+}
+
+export function allRunwayEnds(airport: Airport) {
+  return airport.runways.flatMap((r) => r.ends.map((e) => ({ runway: r, end: e })));
+}
+
+export function freqOf(airport: Airport, type: FrequencyType): Frequency | undefined {
+  return airport.frequencies.find((x) => x.type === type);
+}
+
+/** Pick the runway end most aligned with the wind (into the wind). */
+export function bestRunwayForWind(airport: Airport, windFromTrue: number) {
+  let best = allRunwayEnds(airport)[0];
+  let bestScore = -Infinity;
+  for (const re of allRunwayEnds(airport)) {
+    const head = Math.cos(((windFromTrue - re.end.trueHeading) * Math.PI) / 180);
+    const score = head * 10 + re.runway.lengthFt / 10000;
+    if (score > bestScore) {
+      bestScore = score;
+      best = re;
+    }
+  }
+  return best;
+}
+
+/** Magnetic runway heading for display. */
+export function magneticHeading(airport: Airport, trueHeading: number) {
+  return norm360(trueHeading - airport.magVar);
+}

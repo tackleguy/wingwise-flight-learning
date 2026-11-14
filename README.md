@@ -1,24 +1,40 @@
-# Wingwise Flight Learning
+# TeachX — Flight Simulator & Pilot Training Platform
 
-Make a Student pIlot traching site called TeachX
+A complete simulated aviation training environment in the browser:
 
-This project was built with [Lovable](https://lovable.dev).
+- **3D flight simulator** with a physics-based flight model, 12 aircraft, real-world-inspired airports,
+  weather, day/night, and 24 scored training scenarios (VFR, IFR, emergencies, checkride flights).
+- **Avionics Lab** — functional PFD/MFD, steam gauges, HSI/VOR/ILS, a GPS navigator and an autopilot,
+  all driven by the same simulation engine.
+- **ATC Simulator & AI ATC Practice** — radio panel, 15 phraseology scenarios with readback scoring,
+  voice input/output where the browser supports it, and an optional AI controller.
+- **VFR and IFR academies** — lessons, interactive diagrams and exercises, flashcards and module quizzes.
+- **Practice Test Center & Written Exams**, **Oral Exam simulator**, **Mock Checkrides**.
+- **Aircraft Library, Airport Database, Weather Lab, Navigation & Charts, Flight Planner, Logbook,
+  Progress statistics and Achievements.**
 
-## Build with Lovable
+> Educational simulation only. Not for real-world navigation. Simulated time is not loggable flight time,
+> and nothing on this platform grants an FAA certificate, rating or endorsement.
 
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/e1f8669a-347d-476b-bcfa-d1fb6db80dbd).
+This project is connected to [Lovable](https://lovable.dev/projects/e1f8669a-347d-476b-bcfa-d1fb6db80dbd).
 
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
+## Optional AI configuration
+
+Everything works without AI (scripted training mode). To enable the AI controller/instructor/examiner:
+
+- **Cloud AI** — enable Lovable AI for the project (provides `LOVABLE_API_KEY` on the server).
+- **Local model on a server** — set server environment variables `LOCAL_AI_BASE_URL` (OpenAI-compatible,
+  e.g. `http://localhost:11434/v1`) and `LOCAL_AI_MODEL`.
+- **Local model on your own computer** — in **Settings → AI provider**, choose "Local model in this
+  browser" and enter your Ollama/LM Studio URL (allow the site origin, e.g. `OLLAMA_ORIGINS`).
 
 ## Development
 
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
-
 ```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
-npm run dev
+bun install
+bun run dev        # start the dev server
+bun run test       # run unit tests (includes headless flight-model tests)
+bun run build      # production build
 ```
+
+See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for how the pieces fit together.

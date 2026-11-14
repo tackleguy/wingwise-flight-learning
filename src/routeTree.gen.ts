@@ -10,43 +10,388 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as LessonIdRouteImport } from './routes/lesson.$id'
+import { Route as AchievementsRouteImport } from './routes/achievements'
+import { Route as AiAtcRouteImport } from './routes/ai-atc'
+import { Route as AtcRouteImport } from './routes/atc'
+import { Route as AvionicsRouteImport } from './routes/avionics'
+import { Route as CheckridesRouteImport } from './routes/checkrides'
+import { Route as IfrRouteImport } from './routes/ifr'
+import { Route as InstructorRouteImport } from './routes/instructor'
+import { Route as LogbookRouteImport } from './routes/logbook'
+import { Route as NavigationRouteImport } from './routes/navigation'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as OralExamRouteImport } from './routes/oral-exam'
+import { Route as PlannerRouteImport } from './routes/planner'
+import { Route as PracticeTestsRouteImport } from './routes/practice-tests'
+import { Route as ProgressRouteImport } from './routes/progress'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as SimulatorRouteImport } from './routes/simulator'
+import { Route as VfrRouteImport } from './routes/vfr'
+import { Route as WeatherRouteImport } from './routes/weather'
+import { Route as WrittenExamsRouteImport } from './routes/written-exams'
+import { Route as AircraftIndexRouteImport } from './routes/aircraft.index'
+import { Route as AircraftIdRouteImport } from './routes/aircraft.$id'
+import { Route as AirportsIndexRouteImport } from './routes/airports.index'
+import { Route as AirportsIcaoRouteImport } from './routes/airports.$icao'
+import { Route as ExamExamIdRouteImport } from './routes/exam.$examId'
+import { Route as TrainingIndexRouteImport } from './routes/training.index'
+import { Route as TrainingTrackRouteImport } from './routes/training.$track'
+import { Route as AcademyCourseModuleRouteImport } from './routes/academy.$course.$module'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LessonIdRoute = LessonIdRouteImport.update({
-  id: '/lesson/$id',
-  path: '/lesson/$id',
+const AchievementsRoute = AchievementsRouteImport.update({
+  id: '/achievements',
+  path: '/achievements',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AiAtcRoute = AiAtcRouteImport.update({
+  id: '/ai-atc',
+  path: '/ai-atc',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AtcRoute = AtcRouteImport.update({
+  id: '/atc',
+  path: '/atc',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AvionicsRoute = AvionicsRouteImport.update({
+  id: '/avionics',
+  path: '/avionics',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CheckridesRoute = CheckridesRouteImport.update({
+  id: '/checkrides',
+  path: '/checkrides',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IfrRoute = IfrRouteImport.update({
+  id: '/ifr',
+  path: '/ifr',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InstructorRoute = InstructorRouteImport.update({
+  id: '/instructor',
+  path: '/instructor',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LogbookRoute = LogbookRouteImport.update({
+  id: '/logbook',
+  path: '/logbook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NavigationRoute = NavigationRouteImport.update({
+  id: '/navigation',
+  path: '/navigation',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OralExamRoute = OralExamRouteImport.update({
+  id: '/oral-exam',
+  path: '/oral-exam',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PlannerRoute = PlannerRouteImport.update({
+  id: '/planner',
+  path: '/planner',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PracticeTestsRoute = PracticeTestsRouteImport.update({
+  id: '/practice-tests',
+  path: '/practice-tests',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProgressRoute = ProgressRouteImport.update({
+  id: '/progress',
+  path: '/progress',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SimulatorRoute = SimulatorRouteImport.update({
+  id: '/simulator',
+  path: '/simulator',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VfrRoute = VfrRouteImport.update({
+  id: '/vfr',
+  path: '/vfr',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WeatherRoute = WeatherRouteImport.update({
+  id: '/weather',
+  path: '/weather',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WrittenExamsRoute = WrittenExamsRouteImport.update({
+  id: '/written-exams',
+  path: '/written-exams',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AircraftIndexRoute = AircraftIndexRouteImport.update({
+  id: '/aircraft/',
+  path: '/aircraft/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AircraftIdRoute = AircraftIdRouteImport.update({
+  id: '/aircraft/$id',
+  path: '/aircraft/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AirportsIndexRoute = AirportsIndexRouteImport.update({
+  id: '/airports/',
+  path: '/airports/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AirportsIcaoRoute = AirportsIcaoRouteImport.update({
+  id: '/airports/$icao',
+  path: '/airports/$icao',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExamExamIdRoute = ExamExamIdRouteImport.update({
+  id: '/exam/$examId',
+  path: '/exam/$examId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TrainingIndexRoute = TrainingIndexRouteImport.update({
+  id: '/training/',
+  path: '/training/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TrainingTrackRoute = TrainingTrackRouteImport.update({
+  id: '/training/$track',
+  path: '/training/$track',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AcademyCourseModuleRoute = AcademyCourseModuleRouteImport.update({
+  id: '/academy/$course/$module',
+  path: '/academy/$course/$module',
   getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/lesson/$id': typeof LessonIdRoute
+  '/achievements': typeof AchievementsRoute
+  '/ai-atc': typeof AiAtcRoute
+  '/atc': typeof AtcRoute
+  '/avionics': typeof AvionicsRoute
+  '/checkrides': typeof CheckridesRoute
+  '/ifr': typeof IfrRoute
+  '/instructor': typeof InstructorRoute
+  '/logbook': typeof LogbookRoute
+  '/navigation': typeof NavigationRoute
+  '/onboarding': typeof OnboardingRoute
+  '/oral-exam': typeof OralExamRoute
+  '/planner': typeof PlannerRoute
+  '/practice-tests': typeof PracticeTestsRoute
+  '/progress': typeof ProgressRoute
+  '/settings': typeof SettingsRoute
+  '/simulator': typeof SimulatorRoute
+  '/vfr': typeof VfrRoute
+  '/weather': typeof WeatherRoute
+  '/written-exams': typeof WrittenExamsRoute
+  '/aircraft/$id': typeof AircraftIdRoute
+  '/airports/$icao': typeof AirportsIcaoRoute
+  '/exam/$examId': typeof ExamExamIdRoute
+  '/training/$track': typeof TrainingTrackRoute
+  '/aircraft/': typeof AircraftIndexRoute
+  '/airports/': typeof AirportsIndexRoute
+  '/training/': typeof TrainingIndexRoute
+  '/academy/$course/$module': typeof AcademyCourseModuleRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/lesson/$id': typeof LessonIdRoute
+  '/achievements': typeof AchievementsRoute
+  '/ai-atc': typeof AiAtcRoute
+  '/atc': typeof AtcRoute
+  '/avionics': typeof AvionicsRoute
+  '/checkrides': typeof CheckridesRoute
+  '/ifr': typeof IfrRoute
+  '/instructor': typeof InstructorRoute
+  '/logbook': typeof LogbookRoute
+  '/navigation': typeof NavigationRoute
+  '/onboarding': typeof OnboardingRoute
+  '/oral-exam': typeof OralExamRoute
+  '/planner': typeof PlannerRoute
+  '/practice-tests': typeof PracticeTestsRoute
+  '/progress': typeof ProgressRoute
+  '/settings': typeof SettingsRoute
+  '/simulator': typeof SimulatorRoute
+  '/vfr': typeof VfrRoute
+  '/weather': typeof WeatherRoute
+  '/written-exams': typeof WrittenExamsRoute
+  '/aircraft/$id': typeof AircraftIdRoute
+  '/airports/$icao': typeof AirportsIcaoRoute
+  '/exam/$examId': typeof ExamExamIdRoute
+  '/training/$track': typeof TrainingTrackRoute
+  '/aircraft': typeof AircraftIndexRoute
+  '/airports': typeof AirportsIndexRoute
+  '/training': typeof TrainingIndexRoute
+  '/academy/$course/$module': typeof AcademyCourseModuleRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/lesson/$id': typeof LessonIdRoute
+  '/achievements': typeof AchievementsRoute
+  '/ai-atc': typeof AiAtcRoute
+  '/atc': typeof AtcRoute
+  '/avionics': typeof AvionicsRoute
+  '/checkrides': typeof CheckridesRoute
+  '/ifr': typeof IfrRoute
+  '/instructor': typeof InstructorRoute
+  '/logbook': typeof LogbookRoute
+  '/navigation': typeof NavigationRoute
+  '/onboarding': typeof OnboardingRoute
+  '/oral-exam': typeof OralExamRoute
+  '/planner': typeof PlannerRoute
+  '/practice-tests': typeof PracticeTestsRoute
+  '/progress': typeof ProgressRoute
+  '/settings': typeof SettingsRoute
+  '/simulator': typeof SimulatorRoute
+  '/vfr': typeof VfrRoute
+  '/weather': typeof WeatherRoute
+  '/written-exams': typeof WrittenExamsRoute
+  '/aircraft/$id': typeof AircraftIdRoute
+  '/airports/$icao': typeof AirportsIcaoRoute
+  '/exam/$examId': typeof ExamExamIdRoute
+  '/training/$track': typeof TrainingTrackRoute
+  '/aircraft/': typeof AircraftIndexRoute
+  '/airports/': typeof AirportsIndexRoute
+  '/training/': typeof TrainingIndexRoute
+  '/academy/$course/$module': typeof AcademyCourseModuleRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/lesson/$id'
+  fullPaths:
+    | '/'
+    | '/achievements'
+    | '/ai-atc'
+    | '/atc'
+    | '/avionics'
+    | '/checkrides'
+    | '/ifr'
+    | '/instructor'
+    | '/logbook'
+    | '/navigation'
+    | '/onboarding'
+    | '/oral-exam'
+    | '/planner'
+    | '/practice-tests'
+    | '/progress'
+    | '/settings'
+    | '/simulator'
+    | '/vfr'
+    | '/weather'
+    | '/written-exams'
+    | '/aircraft/$id'
+    | '/airports/$icao'
+    | '/exam/$examId'
+    | '/training/$track'
+    | '/aircraft/'
+    | '/airports/'
+    | '/training/'
+    | '/academy/$course/$module'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/lesson/$id'
-  id: '__root__' | '/' | '/lesson/$id'
+  to:
+    | '/'
+    | '/achievements'
+    | '/ai-atc'
+    | '/atc'
+    | '/avionics'
+    | '/checkrides'
+    | '/ifr'
+    | '/instructor'
+    | '/logbook'
+    | '/navigation'
+    | '/onboarding'
+    | '/oral-exam'
+    | '/planner'
+    | '/practice-tests'
+    | '/progress'
+    | '/settings'
+    | '/simulator'
+    | '/vfr'
+    | '/weather'
+    | '/written-exams'
+    | '/aircraft/$id'
+    | '/airports/$icao'
+    | '/exam/$examId'
+    | '/training/$track'
+    | '/aircraft'
+    | '/airports'
+    | '/training'
+    | '/academy/$course/$module'
+  id:
+    | '__root__'
+    | '/'
+    | '/achievements'
+    | '/ai-atc'
+    | '/atc'
+    | '/avionics'
+    | '/checkrides'
+    | '/ifr'
+    | '/instructor'
+    | '/logbook'
+    | '/navigation'
+    | '/onboarding'
+    | '/oral-exam'
+    | '/planner'
+    | '/practice-tests'
+    | '/progress'
+    | '/settings'
+    | '/simulator'
+    | '/vfr'
+    | '/weather'
+    | '/written-exams'
+    | '/aircraft/$id'
+    | '/airports/$icao'
+    | '/exam/$examId'
+    | '/training/$track'
+    | '/aircraft/'
+    | '/airports/'
+    | '/training/'
+    | '/academy/$course/$module'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  LessonIdRoute: typeof LessonIdRoute
+  AchievementsRoute: typeof AchievementsRoute
+  AiAtcRoute: typeof AiAtcRoute
+  AtcRoute: typeof AtcRoute
+  AvionicsRoute: typeof AvionicsRoute
+  CheckridesRoute: typeof CheckridesRoute
+  IfrRoute: typeof IfrRoute
+  InstructorRoute: typeof InstructorRoute
+  LogbookRoute: typeof LogbookRoute
+  NavigationRoute: typeof NavigationRoute
+  OnboardingRoute: typeof OnboardingRoute
+  OralExamRoute: typeof OralExamRoute
+  PlannerRoute: typeof PlannerRoute
+  PracticeTestsRoute: typeof PracticeTestsRoute
+  ProgressRoute: typeof ProgressRoute
+  SettingsRoute: typeof SettingsRoute
+  SimulatorRoute: typeof SimulatorRoute
+  VfrRoute: typeof VfrRoute
+  WeatherRoute: typeof WeatherRoute
+  WrittenExamsRoute: typeof WrittenExamsRoute
+  AircraftIdRoute: typeof AircraftIdRoute
+  AirportsIcaoRoute: typeof AirportsIcaoRoute
+  ExamExamIdRoute: typeof ExamExamIdRoute
+  TrainingTrackRoute: typeof TrainingTrackRoute
+  AircraftIndexRoute: typeof AircraftIndexRoute
+  AirportsIndexRoute: typeof AirportsIndexRoute
+  TrainingIndexRoute: typeof TrainingIndexRoute
+  AcademyCourseModuleRoute: typeof AcademyCourseModuleRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -58,11 +403,193 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/lesson/$id': {
-      id: '/lesson/$id'
-      path: '/lesson/$id'
-      fullPath: '/lesson/$id'
-      preLoaderRoute: typeof LessonIdRouteImport
+    '/achievements': {
+      id: '/achievements'
+      path: '/achievements'
+      fullPath: '/achievements'
+      preLoaderRoute: typeof AchievementsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ai-atc': {
+      id: '/ai-atc'
+      path: '/ai-atc'
+      fullPath: '/ai-atc'
+      preLoaderRoute: typeof AiAtcRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/atc': {
+      id: '/atc'
+      path: '/atc'
+      fullPath: '/atc'
+      preLoaderRoute: typeof AtcRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/avionics': {
+      id: '/avionics'
+      path: '/avionics'
+      fullPath: '/avionics'
+      preLoaderRoute: typeof AvionicsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/checkrides': {
+      id: '/checkrides'
+      path: '/checkrides'
+      fullPath: '/checkrides'
+      preLoaderRoute: typeof CheckridesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ifr': {
+      id: '/ifr'
+      path: '/ifr'
+      fullPath: '/ifr'
+      preLoaderRoute: typeof IfrRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/instructor': {
+      id: '/instructor'
+      path: '/instructor'
+      fullPath: '/instructor'
+      preLoaderRoute: typeof InstructorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/logbook': {
+      id: '/logbook'
+      path: '/logbook'
+      fullPath: '/logbook'
+      preLoaderRoute: typeof LogbookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/navigation': {
+      id: '/navigation'
+      path: '/navigation'
+      fullPath: '/navigation'
+      preLoaderRoute: typeof NavigationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/oral-exam': {
+      id: '/oral-exam'
+      path: '/oral-exam'
+      fullPath: '/oral-exam'
+      preLoaderRoute: typeof OralExamRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/planner': {
+      id: '/planner'
+      path: '/planner'
+      fullPath: '/planner'
+      preLoaderRoute: typeof PlannerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/practice-tests': {
+      id: '/practice-tests'
+      path: '/practice-tests'
+      fullPath: '/practice-tests'
+      preLoaderRoute: typeof PracticeTestsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/progress': {
+      id: '/progress'
+      path: '/progress'
+      fullPath: '/progress'
+      preLoaderRoute: typeof ProgressRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/simulator': {
+      id: '/simulator'
+      path: '/simulator'
+      fullPath: '/simulator'
+      preLoaderRoute: typeof SimulatorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/vfr': {
+      id: '/vfr'
+      path: '/vfr'
+      fullPath: '/vfr'
+      preLoaderRoute: typeof VfrRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/weather': {
+      id: '/weather'
+      path: '/weather'
+      fullPath: '/weather'
+      preLoaderRoute: typeof WeatherRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/written-exams': {
+      id: '/written-exams'
+      path: '/written-exams'
+      fullPath: '/written-exams'
+      preLoaderRoute: typeof WrittenExamsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/aircraft/': {
+      id: '/aircraft/'
+      path: '/aircraft'
+      fullPath: '/aircraft/'
+      preLoaderRoute: typeof AircraftIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/aircraft/$id': {
+      id: '/aircraft/$id'
+      path: '/aircraft/$id'
+      fullPath: '/aircraft/$id'
+      preLoaderRoute: typeof AircraftIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/airports/': {
+      id: '/airports/'
+      path: '/airports'
+      fullPath: '/airports/'
+      preLoaderRoute: typeof AirportsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/airports/$icao': {
+      id: '/airports/$icao'
+      path: '/airports/$icao'
+      fullPath: '/airports/$icao'
+      preLoaderRoute: typeof AirportsIcaoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/exam/$examId': {
+      id: '/exam/$examId'
+      path: '/exam/$examId'
+      fullPath: '/exam/$examId'
+      preLoaderRoute: typeof ExamExamIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/training/': {
+      id: '/training/'
+      path: '/training'
+      fullPath: '/training/'
+      preLoaderRoute: typeof TrainingIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/training/$track': {
+      id: '/training/$track'
+      path: '/training/$track'
+      fullPath: '/training/$track'
+      preLoaderRoute: typeof TrainingTrackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/academy/$course/$module': {
+      id: '/academy/$course/$module'
+      path: '/academy/$course/$module'
+      fullPath: '/academy/$course/$module'
+      preLoaderRoute: typeof AcademyCourseModuleRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -70,7 +597,33 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  LessonIdRoute: LessonIdRoute,
+  AchievementsRoute: AchievementsRoute,
+  AiAtcRoute: AiAtcRoute,
+  AtcRoute: AtcRoute,
+  AvionicsRoute: AvionicsRoute,
+  CheckridesRoute: CheckridesRoute,
+  IfrRoute: IfrRoute,
+  InstructorRoute: InstructorRoute,
+  LogbookRoute: LogbookRoute,
+  NavigationRoute: NavigationRoute,
+  OnboardingRoute: OnboardingRoute,
+  OralExamRoute: OralExamRoute,
+  PlannerRoute: PlannerRoute,
+  PracticeTestsRoute: PracticeTestsRoute,
+  ProgressRoute: ProgressRoute,
+  SettingsRoute: SettingsRoute,
+  SimulatorRoute: SimulatorRoute,
+  VfrRoute: VfrRoute,
+  WeatherRoute: WeatherRoute,
+  WrittenExamsRoute: WrittenExamsRoute,
+  AircraftIdRoute: AircraftIdRoute,
+  AirportsIcaoRoute: AirportsIcaoRoute,
+  ExamExamIdRoute: ExamExamIdRoute,
+  TrainingTrackRoute: TrainingTrackRoute,
+  AircraftIndexRoute: AircraftIndexRoute,
+  AirportsIndexRoute: AirportsIndexRoute,
+  TrainingIndexRoute: TrainingIndexRoute,
+  AcademyCourseModuleRoute: AcademyCourseModuleRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
