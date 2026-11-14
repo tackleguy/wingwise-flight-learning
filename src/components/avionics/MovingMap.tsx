@@ -164,7 +164,7 @@ export function MovingMap({
     L.weather && s.weather.precipitation !== "none"
       ? precipitationCells(a.lat, a.lon, rangeNm, s.weather.turbulence)
       : [];
-  const ringR = (rangeNm / 2) * scale;
+  const ringR = Math.max(0, (rangeNm / 2) * scale);
   // Keep the TRAFFIC banner clear of the corner boxes on narrow maps.
   const taY = width < 560 ? 40 : 8;
 
@@ -196,7 +196,7 @@ export function MovingMap({
 
         {wx.map((c, i) => {
           const p = pr(c.lat, c.lon);
-          const r = c.radiusNm * scale;
+          const r = Math.max(0, c.radiusNm * scale);
           if (p.x < -r || p.x > width + r || p.y < -r || p.y > height + r) return null;
           const col = c.intensity === 3 ? "#e0332b" : c.intensity === 2 ? "#e6c419" : "#2fbf4a";
           return (

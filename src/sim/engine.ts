@@ -109,7 +109,7 @@ export function defaultRadios(): Radios {
     com2: { active: 121.5, standby: 122.75 },
     nav1: { active: 113.9, standby: 115.8, obs: 0 },
     nav2: { active: 115.8, standby: 116.8, obs: 0 },
-    adfKhz: 350,
+    adfKhz: 200,
     transponder: { code: "1200", mode: "ALT" },
     cdiSource: "GPS",
     altimeterInHg: 29.92,
