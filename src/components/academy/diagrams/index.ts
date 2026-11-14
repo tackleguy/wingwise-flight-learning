@@ -7,7 +7,13 @@ import { AirfoilAoaDiagram, FourForcesDiagram, LoadFactorDiagram, StallAoaDiagra
 import { AirspaceClassesDiagram } from "./airspace";
 import { LightGunDiagram, RunwayMarkingsDiagram, TrafficPatternDiagram } from "./airport";
 import { PitotStaticDiagram, SixPackDiagram } from "./instruments";
-import { HoldingPatternDiagram, HsiDiagram, IlsDiagram, VorCdiDiagram, WindTriangleDiagram } from "./navigation";
+import {
+  HoldingPatternDiagram,
+  HsiDiagram,
+  IlsDiagram,
+  VorCdiDiagram,
+  WindTriangleDiagram,
+} from "./navigation";
 import { DensityAltitudeDiagram } from "./performance";
 
 export const DIAGRAMS: Record<string, { title: string; component: ComponentType }> = {

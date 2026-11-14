@@ -21,9 +21,10 @@ const SIGNALS: { color: LightColor; mode: LightMode }[] = [
 
 const ALL_MEANINGS = Array.from(
   new Set(
-    SIGNALS.flatMap((s) => [lightSignalMeaning(s.color, s.mode, "ground"), lightSignalMeaning(s.color, s.mode, "air")]).filter(
-      (m): m is string => !!m && m !== "Not applicable",
-    ),
+    SIGNALS.flatMap((s) => [
+      lightSignalMeaning(s.color, s.mode, "ground"),
+      lightSignalMeaning(s.color, s.mode, "air"),
+    ]).filter((m): m is string => !!m && m !== "Not applicable"),
   ),
 );
 
@@ -45,7 +46,10 @@ export function LightGunSignalsExercise() {
   const [sel, setSel] = useState<number | null>(null);
   if (!item) return <Loading />;
   const hex = item.color === "red" ? "#ef4444" : item.color === "white" ? "#f8fafc" : "#22c55e";
-  const label = item.color === "alternating" ? "Alternating red and green" : `${item.mode === "steady" ? "Steady" : "Flashing"} ${item.color}`;
+  const label =
+    item.color === "alternating"
+      ? "Alternating red and green"
+      : `${item.mode === "steady" ? "Steady" : "Flashing"} ${item.color}`;
   return (
     <ExerciseFrame
       score={score}
@@ -59,13 +63,28 @@ export function LightGunSignalsExercise() {
       <div className="grid gap-4 sm:grid-cols-[180px_1fr]">
         <div className="avionics-screen flex flex-col items-center justify-center gap-2 p-4">
           <div className="relative size-20">
-            <div className={cn("absolute inset-0 rounded-full", item.mode === "flashing" && "animate-annunciator")} style={{ background: hex, boxShadow: `0 0 28px ${hex}` }} />
+            <div
+              className={cn(
+                "absolute inset-0 rounded-full",
+                item.mode === "flashing" && "animate-annunciator",
+              )}
+              style={{ background: hex, boxShadow: `0 0 28px ${hex}` }}
+            />
             {item.color === "alternating" ? (
-              <div className="animate-annunciator absolute inset-0 rounded-full" style={{ background: "#ef4444", boxShadow: "0 0 28px #ef4444", animationDelay: "0.5s" }} />
+              <div
+                className="animate-annunciator absolute inset-0 rounded-full"
+                style={{
+                  background: "#ef4444",
+                  boxShadow: "0 0 28px #ef4444",
+                  animationDelay: "0.5s",
+                }}
+              />
             ) : null}
           </div>
           <p className="text-center text-xs font-semibold">{label}</p>
-          <p className="text-center text-[11px] text-cyan">Aircraft {item.where === "air" ? "in flight" : "on the ground"}</p>
+          <p className="text-center text-[11px] text-cyan">
+            Aircraft {item.where === "air" ? "in flight" : "on the ground"}
+          </p>
         </div>
         <div className="space-y-2">
           <Choices
@@ -80,7 +99,9 @@ export function LightGunSignalsExercise() {
           />
           {sel !== null ? (
             <Feedback ok={sel === item.answer}>
-              {label} {item.where === "air" ? "to an aircraft in flight" : "to an aircraft on the ground"} means: <strong>{item.meaning}</strong>.
+              {label}{" "}
+              {item.where === "air" ? "to an aircraft in flight" : "to an aircraft on the ground"}{" "}
+              means: <strong>{item.meaning}</strong>.
             </Feedback>
           ) : null}
         </div>
@@ -112,33 +133,72 @@ type RadioTask = OrderTask | ReadbackTask;
 const ORDER_TASKS: OrderTask[] = [
   {
     kind: "order",
-    situation: "You are 10 miles north of Lincoln (towered, Class D) at 3,500 ft and want to land. You have ATIS information Bravo.",
-    parts: ["Lincoln Tower,", "Skyhawk 3-4-5-Tango-X-ray,", "one-zero miles north at three thousand five hundred,", "inbound for landing", "with information Bravo."],
-    explanation: "Initial call-up: who you are calling, who you are, where you are, what you want, and the ATIS code (AIM 4-2-3).",
+    situation:
+      "You are 10 miles north of Lincoln (towered, Class D) at 3,500 ft and want to land. You have ATIS information Bravo.",
+    parts: [
+      "Lincoln Tower,",
+      "Skyhawk 3-4-5-Tango-X-ray,",
+      "one-zero miles north at three thousand five hundred,",
+      "inbound for landing",
+      "with information Bravo.",
+    ],
+    explanation:
+      "Initial call-up: who you are calling, who you are, where you are, what you want, and the ATIS code (AIM 4-2-3).",
   },
   {
     kind: "order",
-    situation: "You are parked at the FBO at Lincoln, ready to taxi for a VFR departure to the south, with ATIS Charlie.",
-    parts: ["Lincoln Ground,", "Skyhawk 3-4-5-Tango-X-ray,", "at the FBO,", "ready to taxi, VFR southbound,", "with information Charlie."],
-    explanation: "Ground: facility, call sign, your location on the airport, your request with direction of flight, and the ATIS code.",
+    situation:
+      "You are parked at the FBO at Lincoln, ready to taxi for a VFR departure to the south, with ATIS Charlie.",
+    parts: [
+      "Lincoln Ground,",
+      "Skyhawk 3-4-5-Tango-X-ray,",
+      "at the FBO,",
+      "ready to taxi, VFR southbound,",
+      "with information Charlie.",
+    ],
+    explanation:
+      "Ground: facility, call sign, your location on the airport, your request with direction of flight, and the ATIS code.",
   },
   {
     kind: "order",
-    situation: "Departing a non-towered airport, Centerville. You are on runway 27, about to take off, remaining in the pattern.",
-    parts: ["Centerville traffic,", "Skyhawk 3-4-5-Tango-X-ray,", "departing runway two-seven,", "remaining in the pattern,", "Centerville."],
-    explanation: "CTAF calls start and end with the airport name so pilots on a shared frequency know which airport you mean (AC 90-66C).",
+    situation:
+      "Departing a non-towered airport, Centerville. You are on runway 27, about to take off, remaining in the pattern.",
+    parts: [
+      "Centerville traffic,",
+      "Skyhawk 3-4-5-Tango-X-ray,",
+      "departing runway two-seven,",
+      "remaining in the pattern,",
+      "Centerville.",
+    ],
+    explanation:
+      "CTAF calls start and end with the airport name so pilots on a shared frequency know which airport you mean (AC 90-66C).",
   },
   {
     kind: "order",
-    situation: "Cruising VFR 15 miles east of Denver at 9,500 ft, you want flight following to Pueblo.",
-    parts: ["Denver Approach,", "Skyhawk 3-4-5-Tango-X-ray,", "one-five miles east at niner thousand five hundred,", "request flight following", "to Pueblo."],
-    explanation: "Flight following request: facility, call sign, position and altitude, then the request and destination. Some pilots make a short initial call first and wait for \"go ahead\".",
+    situation:
+      "Cruising VFR 15 miles east of Denver at 9,500 ft, you want flight following to Pueblo.",
+    parts: [
+      "Denver Approach,",
+      "Skyhawk 3-4-5-Tango-X-ray,",
+      "one-five miles east at niner thousand five hundred,",
+      "request flight following",
+      "to Pueblo.",
+    ],
+    explanation:
+      'Flight following request: facility, call sign, position and altitude, then the request and destination. Some pilots make a short initial call first and wait for "go ahead".',
   },
   {
     kind: "order",
     situation: "Holding short of runway 27 at Lincoln, ready for departure to the west.",
-    parts: ["Lincoln Tower,", "Skyhawk 3-4-5-Tango-X-ray,", "holding short runway two-seven,", "ready for departure,", "westbound."],
-    explanation: "Tower departure call: who, who you are, where you are (runway), and what you want.",
+    parts: [
+      "Lincoln Tower,",
+      "Skyhawk 3-4-5-Tango-X-ray,",
+      "holding short runway two-seven,",
+      "ready for departure,",
+      "westbound.",
+    ],
+    explanation:
+      "Tower departure call: who, who you are, where you are (runway), and what you want.",
   },
 ];
 
@@ -154,13 +214,19 @@ const READBACK_TASKS: ReadbackTask[] = [
       "Runway 32, taxi via Alpha, hold short runway 27, Skyhawk 345TX.",
     ],
     answer: 0,
-    explanation: "Pilots must read back all runway hold-short instructions, plus the assigned runway and taxi route. \"Roger\" only acknowledges receipt — it is not a readback.",
+    explanation:
+      'Pilots must read back all runway hold-short instructions, plus the assigned runway and taxi route. "Roger" only acknowledges receipt — it is not a readback.',
   },
   {
     kind: "readback",
     situation: "Inbound to a Class C airport.",
     atc: "Skyhawk 345TX, squawk 4-5-2-1.",
-    choices: ["Squawk 4521, Skyhawk 345TX.", "Wilco, Skyhawk 345TX.", "Squawking 4251, Skyhawk 345TX.", "Roger, 345TX."],
+    choices: [
+      "Squawk 4521, Skyhawk 345TX.",
+      "Wilco, Skyhawk 345TX.",
+      "Squawking 4251, Skyhawk 345TX.",
+      "Roger, 345TX.",
+    ],
     answer: 0,
     explanation: "Read back transponder codes exactly so the controller can catch a mis-hearing.",
   },
@@ -168,25 +234,43 @@ const READBACK_TASKS: ReadbackTask[] = [
     kind: "readback",
     situation: "On departure.",
     atc: "Skyhawk 345TX, contact Lincoln Departure 124.6.",
-    choices: ["124.6, Skyhawk 345TX.", "Contact departure, Skyhawk 345TX.", "Roger, switching.", "124.6, good day."],
+    choices: [
+      "124.6, Skyhawk 345TX.",
+      "Contact departure, Skyhawk 345TX.",
+      "Roger, switching.",
+      "124.6, good day.",
+    ],
     answer: 0,
-    explanation: "Read back the frequency and end with your call sign. Adding \"good day\" is fine, but the call sign is required.",
+    explanation:
+      'Read back the frequency and end with your call sign. Adding "good day" is fine, but the call sign is required.',
   },
   {
     kind: "readback",
     situation: "On the downwind leg.",
     atc: "Skyhawk 345TX, runway 27, cleared to land.",
-    choices: ["Cleared to land runway 27, Skyhawk 345TX.", "Cleared to land, 345TX.", "Roger, landing.", "Runway 27, Skyhawk 345TX."],
+    choices: [
+      "Cleared to land runway 27, Skyhawk 345TX.",
+      "Cleared to land, 345TX.",
+      "Roger, landing.",
+      "Runway 27, Skyhawk 345TX.",
+    ],
     answer: 0,
-    explanation: "Landing and takeoff clearances are read back with the runway number (AIM 4-4-7). Omitting the runway can hide a wrong-runway error.",
+    explanation:
+      "Landing and takeoff clearances are read back with the runway number (AIM 4-4-7). Omitting the runway can hide a wrong-runway error.",
   },
   {
     kind: "readback",
     situation: "VFR flight following.",
     atc: "Skyhawk 345TX, climb and maintain 5,500, turn left heading 270.",
-    choices: ["Climb and maintain 5,500, left heading 270, Skyhawk 345TX.", "Left 270, Skyhawk 345TX.", "Wilco.", "Climb to 5,500, right 270, Skyhawk 345TX."],
+    choices: [
+      "Climb and maintain 5,500, left heading 270, Skyhawk 345TX.",
+      "Left 270, Skyhawk 345TX.",
+      "Wilco.",
+      "Climb to 5,500, right 270, Skyhawk 345TX.",
+    ],
     answer: 0,
-    explanation: "Read back altitude assignments and headings (with turn direction) so errors can be caught.",
+    explanation:
+      "Read back altitude assignments and headings (with turn direction) so errors can be caught.",
   },
   {
     kind: "readback",
@@ -199,7 +283,8 @@ const READBACK_TASKS: ReadbackTask[] = [
       "Roger, copied, Skyhawk 345TX.",
     ],
     answer: 0,
-    explanation: "Read back an IFR clearance in full (CRAFT: Clearance limit, Route, Altitude, Frequency, Transponder). The initial altitude is 5,000 — 9,000 is only expected.",
+    explanation:
+      "Read back an IFR clearance in full (CRAFT: Clearance limit, Route, Altitude, Frequency, Transponder). The initial altitude is 5,000 — 9,000 is only expected.",
   },
 ];
 
@@ -218,8 +303,17 @@ export function RadioPhraseologyExercise() {
   const { score, record } = useScore();
   if (!item) return <Loading />;
   return (
-    <ExerciseFrame score={score} onNext={next} nextLabel="Next call" instructions="Practise standard phraseology from the AIM Pilot/Controller Glossary and AIM chapter 4.">
-      {item.kind === "order" ? <OrderCall key={`o${round}`} task={item} onDone={record} /> : <Readback key={`r${round}`} task={item} onDone={record} />}
+    <ExerciseFrame
+      score={score}
+      onNext={next}
+      nextLabel="Next call"
+      instructions="Practise standard phraseology from the AIM Pilot/Controller Glossary and AIM chapter 4."
+    >
+      {item.kind === "order" ? (
+        <OrderCall key={`o${round}`} task={item} onDone={record} />
+      ) : (
+        <Readback key={`r${round}`} task={item} onDone={record} />
+      )}
     </ExerciseFrame>
   );
 }
@@ -235,9 +329,15 @@ function OrderCall({ task, onDone }: { task: OrderTask; onDone: (ok: boolean) =>
         <span className="label-caps mr-2 text-cyan">Situation</span>
         {task.situation}
       </div>
-      <p className="text-xs text-muted-foreground">Tap the phrases in the order you would say them.</p>
+      <p className="text-xs text-muted-foreground">
+        Tap the phrases in the order you would say them.
+      </p>
       <div className="min-h-12 rounded-md border bg-panel p-2.5 font-mono text-[13px] leading-relaxed">
-        {picked.length ? picked.map((i) => task.parts[i]).join(" ") : <span className="text-muted-foreground/60">Your transmission…</span>}
+        {picked.length ? (
+          picked.map((i) => task.parts[i]).join(" ")
+        ) : (
+          <span className="text-muted-foreground/60">Your transmission…</span>
+        )}
       </div>
       <div className="flex flex-wrap gap-1.5">
         {pool.map(({ p, i }) => (
@@ -253,7 +353,12 @@ function OrderCall({ task, onDone }: { task: OrderTask; onDone: (ok: boolean) =>
         ))}
       </div>
       <div className="flex gap-2">
-        <Button size="sm" variant="ghost" disabled={!picked.length || checked} onClick={() => setPicked((s) => s.slice(0, -1))}>
+        <Button
+          size="sm"
+          variant="ghost"
+          disabled={!picked.length || checked}
+          onClick={() => setPicked((s) => s.slice(0, -1))}
+        >
           <Undo2 className="size-3.5" />
           Undo
         </Button>
@@ -283,7 +388,9 @@ function Readback({ task, onDone }: { task: ReadbackTask; onDone: (ok: boolean) 
   return (
     <div className="space-y-3">
       <p className="text-xs text-muted-foreground">{task.situation} ATC transmits:</p>
-      <div className="avionics-screen p-3 font-mono text-[13px] leading-relaxed text-ok">"{task.atc}"</div>
+      <div className="avionics-screen p-3 font-mono text-[13px] leading-relaxed text-ok">
+        "{task.atc}"
+      </div>
       <p className="text-sm font-medium">Choose the correct readback.</p>
       <Choices
         choices={task.choices}

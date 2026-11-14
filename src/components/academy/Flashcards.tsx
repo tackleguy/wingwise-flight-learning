@@ -26,7 +26,10 @@ export function Flashcards({ cards }: { cards: Flashcard[] }) {
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="w-full max-w-xs">
-          <Meter value={(knownCount / cards.length) * 100} label={`${knownCount} of ${cards.length} marked known`} />
+          <Meter
+            value={(knownCount / cards.length) * 100}
+            label={`${knownCount} of ${cards.length} marked known`}
+          />
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Segmented
@@ -61,9 +64,15 @@ export function Flashcards({ cards }: { cards: Flashcard[] }) {
           </Button>
         </div>
       </div>
-      <p className="text-xs text-muted-foreground">Tap a card to flip it. Mark the ones you know — they are saved to your training record.</p>
+      <p className="text-xs text-muted-foreground">
+        Tap a card to flip it. Mark the ones you know — they are saved to your training record.
+      </p>
       {list.length === 0 ? (
-        <EmptyState icon={Check} title="All cards marked known" description="Switch to 'All' to review them again." />
+        <EmptyState
+          icon={Check}
+          title="All cards marked known"
+          description="Switch to 'All' to review them again."
+        />
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {list.map((c) => {
@@ -80,10 +89,16 @@ export function Flashcards({ cards }: { cards: Flashcard[] }) {
                 >
                   <div
                     className="grid transition-transform duration-500"
-                    style={{ transformStyle: "preserve-3d", transform: isFlipped ? "rotateY(180deg)" : "none" }}
+                    style={{
+                      transformStyle: "preserve-3d",
+                      transform: isFlipped ? "rotateY(180deg)" : "none",
+                    }}
                   >
                     <div
-                      className={cn("panel flex min-h-36 flex-col justify-between p-4 [grid-area:1/1] group-hover:border-primary/50", isKnown && "border-ok/40")}
+                      className={cn(
+                        "panel flex min-h-36 flex-col justify-between p-4 [grid-area:1/1] group-hover:border-primary/50",
+                        isKnown && "border-ok/40",
+                      )}
                       style={{ backfaceVisibility: "hidden" }}
                     >
                       <span className="label-caps">Question</span>
@@ -105,7 +120,9 @@ export function Flashcards({ cards }: { cards: Flashcard[] }) {
                   onClick={() => actions.toggleFlashcard(c.id)}
                   className={cn(
                     "mt-1.5 inline-flex items-center justify-center gap-1.5 rounded-md border px-2 py-1.5 text-xs font-medium transition-colors",
-                    isKnown ? "border-ok/40 bg-ok/10 text-ok" : "text-muted-foreground hover:text-foreground",
+                    isKnown
+                      ? "border-ok/40 bg-ok/10 text-ok"
+                      : "text-muted-foreground hover:text-foreground",
                   )}
                 >
                   <Check className="size-3.5" />

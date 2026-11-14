@@ -20,7 +20,8 @@ export function holdingEntry(heading: number, inbound: number, rightTurns: boole
 }
 
 export const HOLD_ENTRY_TEXT: Record<HoldEntry, string> = {
-  direct: "Direct entry — cross the fix and turn in the direction of the hold to fly the outbound leg.",
+  direct:
+    "Direct entry — cross the fix and turn in the direction of the hold to fly the outbound leg.",
   teardrop:
     "Teardrop entry — cross the fix, turn to a heading 30° or less from the outbound course toward the holding side, fly about one minute, then turn in the direction of the hold to intercept the inbound course.",
   parallel:
@@ -32,7 +33,10 @@ export const HOLD_ENTRY_TEXT: Record<HoldEntry, string> = {
  * Returns the TO/FROM flag and the CDI needle deflection in degrees (positive = needle right,
  * i.e. the course is to the right). Full-scale is ±10°.
  */
-export function vorIndication(radial: number, obs: number): { flag: "TO" | "FROM"; needleDeg: number; offCourseDeg: number } {
+export function vorIndication(
+  radial: number,
+  obs: number,
+): { flag: "TO" | "FROM"; needleDeg: number; offCourseDeg: number } {
   const diff = norm180(radial - obs);
   const from = Math.abs(diff) < 90;
   const ref = from ? obs : norm360(obs + 180);
@@ -42,7 +46,8 @@ export function vorIndication(radial: number, obs: number): { flag: "TO" | "FROM
   return { flag: from ? "FROM" : "TO", needleDeg, offCourseDeg: err };
 }
 
-export const pad3 = (n: number) => String(Math.round(norm360(n)) === 0 ? 360 : Math.round(norm360(n))).padStart(3, "0");
+export const pad3 = (n: number) =>
+  String(Math.round(norm360(n)) === 0 ? 360 : Math.round(norm360(n))).padStart(3, "0");
 
 /** Pressure altitude (ft) from field elevation and altimeter setting (inHg). */
 export function pressureAltitude(elevationFt: number, altimeterInHg: number): number {

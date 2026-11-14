@@ -17,9 +17,21 @@ export const Route = createFileRoute("/ifr")({
 });
 
 const RELATED = [
-  { to: "/avionics", label: "Avionics Lab", text: "Work the PFD, MFD, GPS flight plans and autopilot modes." },
-  { to: "/simulator?scenario=ifr-ils", label: "Fly an ILS approach", text: "Intercept the localizer, track the glideslope and fly to decision altitude." },
-  { to: "/ai-atc", label: "AI ATC practice", text: "Copy IFR clearances and handle approach control with an AI controller." },
+  {
+    to: "/avionics",
+    label: "Avionics Lab",
+    text: "Work the PFD, MFD, GPS flight plans and autopilot modes.",
+  },
+  {
+    to: "/simulator?scenario=ifr-ils",
+    label: "Fly an ILS approach",
+    text: "Intercept the localizer, track the glideslope and fly to decision altitude.",
+  },
+  {
+    to: "/ai-atc",
+    label: "AI ATC practice",
+    text: "Copy IFR clearances and handle approach control with an AI controller.",
+  },
 ];
 
 function IfrPage() {

@@ -11,5 +11,8 @@ export function useTrackState(): TrainingState {
   const exams = useStore((s) => s.exams);
   const flights = useStore((s) => s.flights);
   const atcSessions = useStore((s) => s.atcSessions);
-  return useMemo(() => ({ ...INITIAL_STATE, lessons, quizzes, exams, flights, atcSessions }), [lessons, quizzes, exams, flights, atcSessions]);
+  return useMemo(
+    () => ({ ...INITIAL_STATE, lessons, quizzes, exams, flights, atcSessions }),
+    [lessons, quizzes, exams, flights, atcSessions],
+  );
 }

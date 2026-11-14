@@ -163,7 +163,13 @@ export function parseWindGroup(tok: string): Wind | null {
   const speedKt = spdRaw.includes("/") ? 0 : Math.round(Number(spdRaw) * conv);
   const gustKt = m[3] ? Math.round(Number(m[3]) * conv) : null;
   const calm = dirRaw === "000" && speedKt === 0;
-  const direction: Wind["direction"] = calm ? null : dirRaw === "VRB" ? "VRB" : dirRaw.includes("/") ? null : Number(dirRaw);
+  const direction: Wind["direction"] = calm
+    ? null
+    : dirRaw === "VRB"
+      ? "VRB"
+      : dirRaw.includes("/")
+        ? null
+        : Number(dirRaw);
   return { direction, speedKt, gustKt, variableFrom: null, variableTo: null, calm, raw: tok };
 }
 
@@ -180,7 +186,10 @@ function parseFraction(s: string): number | null {
  * Visibility may span two tokens ("1 1/2SM"). Returns the parsed visibility and how many tokens
  * were consumed, or null.
  */
-export function parseVisibilityTokens(tokens: string[], i: number): { vis: Visibility; used: number } | null {
+export function parseVisibilityTokens(
+  tokens: string[],
+  i: number,
+): { vis: Visibility; used: number } | null {
   const t = tokens[i];
   if (!t) return null;
   // Whole number followed by a fraction: "1 1/2SM", "2 1/4SM"
@@ -188,7 +197,10 @@ export function parseVisibilityTokens(tokens: string[], i: number): { vis: Visib
   if (/^\d+$/.test(t) && next && /^\d+\/\d+SM$/.test(next)) {
     const frac = parseFraction(next.replace("SM", ""));
     if (frac !== null) {
-      return { vis: { sm: Number(t) + frac, lessThan: false, greaterThan: false, raw: `${t} ${next}` }, used: 2 };
+      return {
+        vis: { sm: Number(t) + frac, lessThan: false, greaterThan: false, raw: `${t} ${next}` },
+        used: 2,
+      };
     }
   }
   const sm = /^([PM])?(\d+(?:\/\d+)?)SM$/.exec(t);
@@ -201,14 +213,25 @@ export function parseVisibilityTokens(tokens: string[], i: number): { vis: Visib
   const meters = /^(\d{4})(?:NDV|[NSEW]{1,2})?$/.exec(t);
   if (meters) {
     const mtr = Number(meters[1]);
-    if (mtr === 9999) return { vis: { sm: 6.2, lessThan: false, greaterThan: true, raw: t }, used: 1 };
-    return { vis: { sm: Math.round((mtr / 1609.34) * 100) / 100, lessThan: false, greaterThan: false, raw: t }, used: 1 };
+    if (mtr === 9999)
+      return { vis: { sm: 6.2, lessThan: false, greaterThan: true, raw: t }, used: 1 };
+    return {
+      vis: {
+        sm: Math.round((mtr / 1609.34) * 100) / 100,
+        lessThan: false,
+        greaterThan: false,
+        raw: t,
+      },
+      used: 1,
+    };
   }
-  if (t === "CAVOK") return { vis: { sm: 6.2, lessThan: false, greaterThan: true, raw: t }, used: 1 };
+  if (t === "CAVOK")
+    return { vis: { sm: 6.2, lessThan: false, greaterThan: true, raw: t }, used: 1 };
   return null;
 }
 
-const WX_RE = /^(\+|-|VC)?(MI|PR|BC|DR|BL|SH|TS|FZ)?((?:DZ|RA|SN|SG|IC|PL|GR|GS|UP|BR|FG|FU|VA|DU|SA|HZ|PY|PO|SQ|FC|SS|DS)+)?$/;
+const WX_RE =
+  /^(\+|-|VC)?(MI|PR|BC|DR|BL|SH|TS|FZ)?((?:DZ|RA|SN|SG|IC|PL|GR|GS|UP|BR|FG|FU|VA|DU|SA|HZ|PY|PO|SQ|FC|SS|DS)+)?$/;
 
 export function parseWeatherGroup(tok: string): WeatherPhenomenon | null {
   if (tok === "" || tok === "+" || tok === "-") return null;
@@ -243,8 +266,10 @@ export function parseCloudGroup(tok: string): CloudLayer | null {
   if (!m) return null;
   const cover = m[1] as CloudCover;
   const hasHeight = m[2] && m[2] !== "///";
-  if ((cover === "SKC" || cover === "CLR" || cover === "NSC" || cover === "NCD") && m[2]) return null;
-  if (!(cover === "SKC" || cover === "CLR" || cover === "NSC" || cover === "NCD") && !m[2]) return null;
+  if ((cover === "SKC" || cover === "CLR" || cover === "NSC" || cover === "NCD") && m[2])
+    return null;
+  if (!(cover === "SKC" || cover === "CLR" || cover === "NSC" || cover === "NCD") && !m[2])
+    return null;
   const type = m[3] === "CB" || m[3] === "TCU" ? m[3] : null;
   return { cover, baseFt: hasHeight ? Number(m[2]) * 100 : null, type, raw: tok };
 }
@@ -289,7 +314,10 @@ export function parseAltimeterGroup(tok: string): Altimeter | null {
  *   VFR:  ceiling > 3,000 ft and visibility > 5 SM
  * Pass null for an unlimited ceiling / unknown visibility.
  */
-export function flightCategory(ceilingFt: number | null, visibilitySm: number | null): FlightCategory {
+export function flightCategory(
+  ceilingFt: number | null,
+  visibilitySm: number | null,
+): FlightCategory {
   const c = ceilingFt ?? Infinity;
   const v = visibilitySm ?? Infinity;
   if (c < 500 || v < 1) return "LIFR";
@@ -298,11 +326,26 @@ export function flightCategory(ceilingFt: number | null, visibilitySm: number | 
   return "VFR";
 }
 
-export const CATEGORY_INFO: Record<FlightCategory, { label: string; rule: string; tone: "ok" | "primary" | "warning" | "magenta" }> = {
+export const CATEGORY_INFO: Record<
+  FlightCategory,
+  { label: string; rule: string; tone: "ok" | "primary" | "warning" | "magenta" }
+> = {
   VFR: { label: "VFR", rule: "Ceiling > 3,000 ft AGL and visibility > 5 SM", tone: "ok" },
-  MVFR: { label: "Marginal VFR", rule: "Ceiling 1,000–3,000 ft and/or visibility 3–5 SM", tone: "primary" },
-  IFR: { label: "IFR", rule: "Ceiling 500 to below 1,000 ft and/or visibility 1 to below 3 SM", tone: "warning" },
-  LIFR: { label: "Low IFR", rule: "Ceiling below 500 ft and/or visibility below 1 SM", tone: "magenta" },
+  MVFR: {
+    label: "Marginal VFR",
+    rule: "Ceiling 1,000–3,000 ft and/or visibility 3–5 SM",
+    tone: "primary",
+  },
+  IFR: {
+    label: "IFR",
+    rule: "Ceiling 500 to below 1,000 ft and/or visibility 1 to below 3 SM",
+    tone: "warning",
+  },
+  LIFR: {
+    label: "Low IFR",
+    rule: "Ceiling below 500 ft and/or visibility below 1 SM",
+    tone: "magenta",
+  },
 };
 
 /* ------------------------------------------------------------------------------------------ */
@@ -424,7 +467,10 @@ export function parseMetar(raw: string): Metar {
 
   out.ceilingFt = ceilingOf(out.clouds);
   // CAVOK implies no ceiling below 5,000 ft and visibility ≥ 10 km.
-  out.flightCategory = out.visibility || out.clouds.length ? flightCategory(out.ceilingFt, out.visibility?.sm ?? null) : null;
+  out.flightCategory =
+    out.visibility || out.clouds.length
+      ? flightCategory(out.ceilingFt, out.visibility?.sm ?? null)
+      : null;
   return out;
 }
 
@@ -435,10 +481,16 @@ export function parseMetar(raw: string): Metar {
 export function describeWind(w: Wind | null): string {
   if (!w) return "Wind not reported";
   if (w.calm) return "Calm";
-  const dir = w.direction === "VRB" ? "Variable" : w.direction === null ? "Unknown direction" : `${String(w.direction).padStart(3, "0")}° true`;
+  const dir =
+    w.direction === "VRB"
+      ? "Variable"
+      : w.direction === null
+        ? "Unknown direction"
+        : `${String(w.direction).padStart(3, "0")}° true`;
   let s = `${dir} at ${w.speedKt} kt`;
   if (w.gustKt) s += `, gusting ${w.gustKt} kt`;
-  if (w.variableFrom !== null && w.variableTo !== null) s += ` (varying ${String(w.variableFrom).padStart(3, "0")}°–${String(w.variableTo).padStart(3, "0")}°)`;
+  if (w.variableFrom !== null && w.variableTo !== null)
+    s += ` (varying ${String(w.variableFrom).padStart(3, "0")}°–${String(w.variableTo).padStart(3, "0")}°)`;
   return s;
 }
 
@@ -484,8 +536,13 @@ export function summarizeMetar(m: Metar): string {
   parts.push(`Wind ${describeWind(m.wind).toLowerCase()}`);
   parts.push(`visibility ${formatVisibility(m.visibility)}`);
   if (m.weather.length) parts.push(m.weather.map((w) => w.text).join(", "));
-  parts.push(m.ceilingFt !== null ? `ceiling ${m.ceilingFt.toLocaleString("en-US")} ft` : "no ceiling");
-  if (m.tempC !== null) parts.push(`temperature ${m.tempC}°C${m.dewpointC !== null ? ` / dewpoint ${m.dewpointC}°C` : ""}`);
+  parts.push(
+    m.ceilingFt !== null ? `ceiling ${m.ceilingFt.toLocaleString("en-US")} ft` : "no ceiling",
+  );
+  if (m.tempC !== null)
+    parts.push(
+      `temperature ${m.tempC}°C${m.dewpointC !== null ? ` / dewpoint ${m.dewpointC}°C` : ""}`,
+    );
   if (m.altimeter) parts.push(`altimeter ${m.altimeter.inHg.toFixed(2)} inHg`);
   return parts.join("; ");
 }

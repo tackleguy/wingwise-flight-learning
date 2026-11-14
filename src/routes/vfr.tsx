@@ -17,9 +17,21 @@ export const Route = createFileRoute("/vfr")({
 });
 
 const RELATED = [
-  { to: "/simulator?scenario=vfr-pattern", label: "Fly the traffic pattern", text: "Practise pattern entry, legs, radio calls and landings in the simulator." },
-  { to: "/weather", label: "Weather Lab", text: "Decode live-style METARs and TAFs and make go/no-go decisions." },
-  { to: "/navigation", label: "Navigation & charts", text: "Sectional chart work, E6B calculations and VOR/GPS navigation." },
+  {
+    to: "/simulator?scenario=vfr-pattern",
+    label: "Fly the traffic pattern",
+    text: "Practise pattern entry, legs, radio calls and landings in the simulator.",
+  },
+  {
+    to: "/weather",
+    label: "Weather Lab",
+    text: "Decode live-style METARs and TAFs and make go/no-go decisions.",
+  },
+  {
+    to: "/navigation",
+    label: "Navigation & charts",
+    text: "Sectional chart work, E6B calculations and VOR/GPS navigation.",
+  },
 ];
 
 function VfrPage() {

@@ -1,6 +1,18 @@
 import { useEffect, useRef } from "react";
 import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, ArrowRight, BookOpen, CheckCircle2, ChevronLeft, ChevronRight, Circle, Clock, GraduationCap, Layers, Target } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  BookOpen,
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  Circle,
+  Clock,
+  GraduationCap,
+  Layers,
+  Target,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EmptyState, Notice, Page, PageHeader, Pill } from "@/components/app/page";
@@ -36,13 +48,25 @@ export const Route = createFileRoute("/academy/$course/$module")({
   },
   head: ({ loaderData }) => ({
     meta: [
-      { title: `${loaderData?.title ?? "Module"} — ${loaderData?.courseTitle ?? "Academy"} — TeachX` },
-      { name: "description", content: loaderData?.summary ?? "TeachX ground school module with lessons, flashcards and a graded module exam." },
+      {
+        title: `${loaderData?.title ?? "Module"} — ${loaderData?.courseTitle ?? "Academy"} — TeachX`,
+      },
+      {
+        name: "description",
+        content:
+          loaderData?.summary ??
+          "TeachX ground school module with lessons, flashcards and a graded module exam.",
+      },
     ],
   }),
   notFoundComponent: () => (
     <Page>
-      <EmptyState icon={BookOpen} title="Module not found" description="That ground school module does not exist. Choose a module from the course overview." action={{ to: "/vfr", label: "VFR ground school" }} />
+      <EmptyState
+        icon={BookOpen}
+        title="Module not found"
+        description="That ground school module does not exist. Choose a module from the course overview."
+        action={{ to: "/vfr", label: "VFR ground school" }}
+      />
     </Page>
   ),
   component: ModulePage,
@@ -74,7 +98,11 @@ function ModulePage() {
   if (!course || !mod) {
     return (
       <Page>
-        <EmptyState icon={BookOpen} title="Module not found" action={{ to: "/vfr", label: "VFR ground school" }} />
+        <EmptyState
+          icon={BookOpen}
+          title="Module not found"
+          action={{ to: "/vfr", label: "VFR ground school" }}
+        />
       </Page>
     );
   }
@@ -90,7 +118,8 @@ function ModulePage() {
 
   const go = (k: number, t: Tab = "lessons") => navigate({ search: { lesson: k, tab: t } });
   const setTab = (t: string) => {
-    if (t === "lessons" || t === "flashcards" || t === "quiz") navigate({ search: { lesson: n, tab: t } });
+    if (t === "lessons" || t === "flashcards" || t === "quiz")
+      navigate({ search: { lesson: n, tab: t } });
   };
 
   const isDone = lesson ? !!lessonsDone[lesson.id] : false;
@@ -109,7 +138,10 @@ function ModulePage() {
         title={mod.title}
         description={mod.summary}
         actions={
-          <Link to={coursePath} className="inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm hover:bg-accent">
+          <Link
+            to={coursePath}
+            className="inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm hover:bg-accent"
+          >
             <ArrowLeft className="size-4" />
             All modules
           </Link>
@@ -133,7 +165,16 @@ function ModulePage() {
             <TabsTrigger value="quiz" className="gap-1.5">
               <GraduationCap className="size-3.5" />
               Module exam
-              {best ? <span className={cn("font-mono text-[10px]", best.pct >= 70 ? "text-ok" : "text-caution")}>{best.pct}%</span> : null}
+              {best ? (
+                <span
+                  className={cn(
+                    "font-mono text-[10px]",
+                    best.pct >= 70 ? "text-ok" : "text-caution",
+                  )}
+                >
+                  {best.pct}%
+                </span>
+              ) : null}
             </TabsTrigger>
           </TabsList>
         </div>
@@ -158,14 +199,33 @@ function ModulePage() {
                         <button
                           type="button"
                           onClick={() => go(i + 1)}
-                          className={cn("flex w-full items-start gap-2.5 px-3 py-2.5 text-left text-sm transition-colors", active ? "bg-primary/10" : "hover:bg-accent/40")}
+                          className={cn(
+                            "flex w-full items-start gap-2.5 px-3 py-2.5 text-left text-sm transition-colors",
+                            active ? "bg-primary/10" : "hover:bg-accent/40",
+                          )}
                         >
-                          {done ? <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-ok" /> : <Circle className={cn("mt-0.5 size-4 shrink-0", active ? "text-primary" : "text-muted-foreground/50")} />}
+                          {done ? (
+                            <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-ok" />
+                          ) : (
+                            <Circle
+                              className={cn(
+                                "mt-0.5 size-4 shrink-0",
+                                active ? "text-primary" : "text-muted-foreground/50",
+                              )}
+                            />
+                          )}
                           <span className="min-w-0 flex-1">
-                            <span className={cn("block leading-snug", active && "font-semibold text-primary")}>
+                            <span
+                              className={cn(
+                                "block leading-snug",
+                                active && "font-semibold text-primary",
+                              )}
+                            >
                               {i + 1}. {l.title}
                             </span>
-                            <span className="text-[11px] text-muted-foreground">{l.minutes} min</span>
+                            <span className="text-[11px] text-muted-foreground">
+                              {l.minutes} min
+                            </span>
                           </span>
                         </button>
                       </li>
@@ -173,24 +233,46 @@ function ModulePage() {
                   })}
                 </ol>
                 <div className="grid grid-cols-2 gap-px border-t bg-border">
-                  <button type="button" onClick={() => setTab("flashcards")} className="flex items-center justify-center gap-1.5 bg-card px-2 py-2 text-xs hover:bg-accent/40">
+                  <button
+                    type="button"
+                    onClick={() => setTab("flashcards")}
+                    className="flex items-center justify-center gap-1.5 bg-card px-2 py-2 text-xs hover:bg-accent/40"
+                  >
                     <Layers className="size-3.5" /> Flashcards
                   </button>
-                  <button type="button" onClick={() => setTab("quiz")} className="flex items-center justify-center gap-1.5 bg-card px-2 py-2 text-xs hover:bg-accent/40">
+                  <button
+                    type="button"
+                    onClick={() => setTab("quiz")}
+                    className="flex items-center justify-center gap-1.5 bg-card px-2 py-2 text-xs hover:bg-accent/40"
+                  >
                     <GraduationCap className="size-3.5" /> Module exam
                   </button>
                 </div>
               </div>
               <div className="mt-3 hidden gap-2 lg:grid">
                 {prevMod ? (
-                  <Link to="/academy/$course/$module" params={{ course: course.id, module: prevMod.id }} search={{ lesson: 1 }} className="flex items-center gap-1.5 rounded-md border px-3 py-2 text-xs text-muted-foreground hover:text-foreground">
+                  <Link
+                    to="/academy/$course/$module"
+                    params={{ course: course.id, module: prevMod.id }}
+                    search={{ lesson: 1 }}
+                    className="flex items-center gap-1.5 rounded-md border px-3 py-2 text-xs text-muted-foreground hover:text-foreground"
+                  >
                     <ChevronLeft className="size-3.5" />
-                    <span className="truncate">Module {prevMod.number}: {prevMod.title}</span>
+                    <span className="truncate">
+                      Module {prevMod.number}: {prevMod.title}
+                    </span>
                   </Link>
                 ) : null}
                 {nextMod ? (
-                  <Link to="/academy/$course/$module" params={{ course: course.id, module: nextMod.id }} search={{ lesson: 1 }} className="flex items-center justify-between gap-1.5 rounded-md border px-3 py-2 text-xs text-muted-foreground hover:text-foreground">
-                    <span className="truncate">Module {nextMod.number}: {nextMod.title}</span>
+                  <Link
+                    to="/academy/$course/$module"
+                    params={{ course: course.id, module: nextMod.id }}
+                    search={{ lesson: 1 }}
+                    className="flex items-center justify-between gap-1.5 rounded-md border px-3 py-2 text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    <span className="truncate">
+                      Module {nextMod.number}: {nextMod.title}
+                    </span>
                     <ChevronRight className="size-3.5" />
                   </Link>
                 ) : null}
@@ -214,7 +296,9 @@ function ModulePage() {
                     </Pill>
                   ) : null}
                 </div>
-                <h2 className="mb-4 text-xl font-bold tracking-tight sm:text-2xl">{lesson.title}</h2>
+                <h2 className="mb-4 text-xl font-bold tracking-tight sm:text-2xl">
+                  {lesson.title}
+                </h2>
                 {lesson.objectives.length ? (
                   <div className="mb-6 rounded-md border border-cyan/25 bg-cyan/5 p-4">
                     <p className="label-caps mb-2 flex items-center gap-1.5 text-cyan">
@@ -246,7 +330,13 @@ function ModulePage() {
                       </Button>
                     ) : null}
                     <Button onClick={completeAndContinue}>
-                      {isDone ? (n < total ? "Next lesson" : "Take the module exam") : n < total ? "Mark complete & continue" : "Mark complete & take exam"}
+                      {isDone
+                        ? n < total
+                          ? "Next lesson"
+                          : "Take the module exam"
+                        : n < total
+                          ? "Mark complete & continue"
+                          : "Mark complete & take exam"}
                       <ArrowRight className="size-4" />
                     </Button>
                   </div>
@@ -275,15 +365,21 @@ function ModulePage() {
 
         <TabsContent value="quiz">
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
-            <ModuleQuiz key={mod.id} courseId={course.id} mod={mod} link={`/academy/${course.id}/${mod.id}?tab=quiz`} />
+            <ModuleQuiz
+              key={mod.id}
+              courseId={course.id}
+              mod={mod}
+              link={`/academy/${course.id}/${mod.id}?tab=quiz`}
+            />
             <aside className="space-y-3">
               <Notice title="Module exam.">
-                Pass with {70}% or better. Your best score counts toward course and certification-track progress. Every attempt is
-                saved to your training record.
+                Pass with {70}% or better. Your best score counts toward course and
+                certification-track progress. Every attempt is saved to your training record.
               </Notice>
               {comp.done < comp.total ? (
                 <Notice tone="caution">
-                  You have completed {comp.done} of {comp.total} lessons in this module. Finish the lessons first for the best result.
+                  You have completed {comp.done} of {comp.total} lessons in this module. Finish the
+                  lessons first for the best result.
                 </Notice>
               ) : null}
               {mod.practice.map((p) => (

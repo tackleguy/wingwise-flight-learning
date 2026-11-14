@@ -49,7 +49,7 @@ import {
   type EngineSession,
 } from "@/lib/atc/engine";
 import { getScenario, isScenarioId, SCENARIOS } from "@/lib/atc/scenarios";
-import { DIFFICULTIES, PERSONALITIES, PHASES, type Difficulty, type Personality, type ScenarioId, type SessionReport } from "@/lib/atc/types";
+import { DIFFICULTIES, PERSONALITIES, PHASES, type Difficulty, type Personality, type RadioLine, type ScenarioId, type SessionReport } from "@/lib/atc/types";
 import { useRadioQueue, type QueueItem } from "@/lib/atc/useRadioQueue";
 import { useSpeechSupport } from "@/lib/atc/speech";
 import { formatFreqShort } from "@/lib/atc/frequency";
@@ -105,6 +105,17 @@ function toQueue(events: EngineEvent[], onComplete: () => void): QueueItem[] {
   });
 }
 
+/** Transponder code currently set, as far as the scenario has progressed. */
+function displaySquawk(s: EngineSession): string {
+  const ctx = s.ctx;
+  if (ctx.squawk === "7700") return "7700";
+  if (ctx.clearance && s.def.id !== "ifr-clearance-request" && s.def.id !== "ifr-departure-clearance") return ctx.clearance.squawk;
+  if (["freq-change", "traffic-advisory", "emergency"].includes(s.def.id)) return ctx.squawk;
+  if (s.def.id === "flight-following" && s.steps.findIndex((st) => st.id === "ff-squawk") < s.index) return ctx.squawk;
+  if (s.def.rules === "IFR" && (s.def.id === "instrument-approach" || s.def.id === "established-final" || s.def.id === "freq-change-request")) return ctx.squawk;
+  return "1200";
+}
+
 const EMPTY_PAD = { c: "", r: "", a: "", f: "", t: "", notes: "" };
 
 function AtcPage() {
@@ -140,7 +151,7 @@ function AtcPage() {
   const sessionRef = useRef<EngineSession | null>(null);
   const [radio, setRadio] = useState<RadioState>(() => makeRadioState(121.5, 118.0));
   const [report, setReport] = useState<SessionReport | null>(null);
-  const [reportLines, setReportLines] = useState<ReturnType<typeof queue.getLines>>([]);
+  const [reportLines, setReportLines] = useState<RadioLine[]>([]);
   const [draft, setDraft] = useState("");
   const [revealed, setRevealed] = useState(false);
   const [pad, setPad] = useState(EMPTY_PAD);
@@ -399,7 +410,7 @@ function AtcPage() {
                 { l: "Runway", v: ctx.runway.id },
                 { l: "Wind", v: `${hdg(ctx.atis.windDirMag).text}@${ctx.atis.windKt}` },
                 { l: "ATIS", v: atisVisible ? PHONETIC[ctx.atis.letter] ?? ctx.atis.letter : "—" },
-                { l: "Squawk", v: ctx.squawk === "7700" ? "7700" : ctx.clearance ? ctx.clearance.squawk : session.index > 0 && session.def.id === "flight-following" ? ctx.squawk : "1200" },
+                { l: "Squawk", v: displaySquawk(session) },
                 { l: "Talking to", v: session.difficulty === "checkride" ? "—" : fac?.name ?? "—" },
               ].map((x) => (
                 <div key={x.l} className="bg-card px-3 py-2">

@@ -115,7 +115,8 @@ export function obsMinutes(t: ObsTime): number {
 function finish(p: TafPeriod, rawTokens: string[]) {
   p.raw = rawTokens.join(" ");
   p.ceilingFt = ceilingOf(p.clouds);
-  if (p.visibility || p.clouds.length) p.flightCategory = flightCategory(p.ceilingFt, p.visibility?.sm ?? null);
+  if (p.visibility || p.clouds.length)
+    p.flightCategory = flightCategory(p.ceilingFt, p.visibility?.sm ?? null);
 }
 
 export function parseTaf(raw: string): Taf {
@@ -226,7 +227,12 @@ export function parseTaf(raw: string): Taf {
     }
     const ws = /^WS(\d{3})\/(\d{3})(\d{2,3})KT$/.exec(t);
     if (ws) {
-      cur.windShear = { heightFt: Number(ws[1]) * 100, direction: Number(ws[2]), speedKt: Number(ws[3]), raw: t };
+      cur.windShear = {
+        heightFt: Number(ws[1]) * 100,
+        direction: Number(ws[2]),
+        speedKt: Number(ws[3]),
+        raw: t,
+      };
       i++;
       continue;
     }
@@ -273,15 +279,31 @@ export function parseTaf(raw: string): Taf {
 export function prevailingAt(
   taf: Taf,
   at: ObsTime,
-): { base: TafPeriod | null; becmg: TafPeriod[]; temporary: TafPeriod[]; category: FlightCategory | null } {
+): {
+  base: TafPeriod | null;
+  becmg: TafPeriod[];
+  temporary: TafPeriod[];
+  category: FlightCategory | null;
+} {
   const t = obsMinutes(at);
   let base: TafPeriod | null = null;
   for (const p of taf.periods) {
     if ((p.type === "BASE" || p.type === "FM") && p.from && obsMinutes(p.from) <= t) base = p;
   }
-  const becmg = taf.periods.filter((p) => p.type === "BECMG" && p.from && obsMinutes(p.from) <= t && (!base?.from || obsMinutes(p.from) >= obsMinutes(base.from)));
+  const becmg = taf.periods.filter(
+    (p) =>
+      p.type === "BECMG" &&
+      p.from &&
+      obsMinutes(p.from) <= t &&
+      (!base?.from || obsMinutes(p.from) >= obsMinutes(base.from)),
+  );
   const temporary = taf.periods.filter(
-    (p) => (p.type === "TEMPO" || p.type === "PROB") && p.from && p.to && obsMinutes(p.from) <= t && t < obsMinutes(p.to),
+    (p) =>
+      (p.type === "TEMPO" || p.type === "PROB") &&
+      p.from &&
+      p.to &&
+      obsMinutes(p.from) <= t &&
+      t < obsMinutes(p.to),
   );
   let vis = base?.visibility?.sm ?? null;
   let clouds = base?.clouds ?? [];
@@ -301,7 +323,8 @@ export function formatObsTime(t: ObsTime | null): string {
 export const CHANGE_TEXT: Record<TafChange, string> = {
   BASE: "Initial forecast",
   FM: "From — rapid change; new conditions replace all previous ones",
-  TEMPO: "Temporary fluctuations lasting less than an hour at a time and in total less than half the period",
+  TEMPO:
+    "Temporary fluctuations lasting less than an hour at a time and in total less than half the period",
   BECMG: "Becoming — gradual change during the period, then prevailing",
   PROB: "Probability (30 or 40 %) of the conditions occurring during the period",
 };

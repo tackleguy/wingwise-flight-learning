@@ -4,7 +4,16 @@
  * links into the rest of the platform.
  */
 import { useState } from "react";
-import { AlertOctagon, AlertTriangle, BookMarked, Info, Lightbulb, MousePointerClick, PenLine, RotateCcw } from "lucide-react";
+import {
+  AlertOctagon,
+  AlertTriangle,
+  BookMarked,
+  Info,
+  Lightbulb,
+  MousePointerClick,
+  PenLine,
+  RotateCcw,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { CalloutTone, LessonBlock, QuizQuestion } from "@/lib/content/types";
 import { cn } from "@/lib/utils";
@@ -16,11 +25,25 @@ import { PracticeCard } from "./PracticeLink";
 const CALLOUT: Record<CalloutTone, { cls: string; icon: typeof Info; label: string }> = {
   info: { cls: "border-primary/30 bg-primary/5 [&_.ct]:text-primary", icon: Info, label: "Note" },
   tip: { cls: "border-ok/30 bg-ok/5 [&_.ct]:text-ok", icon: Lightbulb, label: "Tip" },
-  caution: { cls: "border-caution/35 bg-caution/5 [&_.ct]:text-caution", icon: AlertTriangle, label: "Caution" },
-  warning: { cls: "border-warning/40 bg-warning/5 [&_.ct]:text-warning", icon: AlertOctagon, label: "Warning" },
+  caution: {
+    cls: "border-caution/35 bg-caution/5 [&_.ct]:text-caution",
+    icon: AlertTriangle,
+    label: "Caution",
+  },
+  warning: {
+    cls: "border-warning/40 bg-warning/5 [&_.ct]:text-warning",
+    icon: AlertOctagon,
+    label: "Warning",
+  },
 };
 
-export function LessonRenderer({ blocks, className }: { blocks: LessonBlock[]; className?: string }) {
+export function LessonRenderer({
+  blocks,
+  className,
+}: {
+  blocks: LessonBlock[];
+  className?: string;
+}) {
   return (
     <div className={cn("space-y-4", className)}>
       {blocks.map((b, i) => (
@@ -33,17 +56,28 @@ export function LessonRenderer({ blocks, className }: { blocks: LessonBlock[]; c
 function Block({ block }: { block: LessonBlock }) {
   switch (block.type) {
     case "h":
-      return <h3 className="flex items-center gap-2 pt-3 text-lg font-semibold tracking-tight first:pt-0">{block.text}</h3>;
+      return (
+        <h3 className="flex items-center gap-2 pt-3 text-lg font-semibold tracking-tight first:pt-0">
+          {block.text}
+        </h3>
+      );
     case "p":
       return <p className="text-[15px] leading-7 text-foreground/90">{block.text}</p>;
     case "list": {
       const Tag = block.ordered ? "ol" : "ul";
       return (
-        <Tag className={cn("space-y-1.5 pl-1 text-[15px] leading-7 text-foreground/90", block.ordered ? "list-none [counter-reset:li]" : "")}>
+        <Tag
+          className={cn(
+            "space-y-1.5 pl-1 text-[15px] leading-7 text-foreground/90",
+            block.ordered ? "list-none [counter-reset:li]" : "",
+          )}
+        >
           {block.items.map((it, i) => (
             <li key={i} className="flex gap-2.5">
               {block.ordered ? (
-                <span className="mt-1 flex size-5 shrink-0 items-center justify-center rounded bg-primary/15 font-mono text-[11px] font-semibold text-primary">{i + 1}</span>
+                <span className="mt-1 flex size-5 shrink-0 items-center justify-center rounded bg-primary/15 font-mono text-[11px] font-semibold text-primary">
+                  {i + 1}
+                </span>
               ) : (
                 <span className="mt-[11px] size-1.5 shrink-0 rounded-full bg-primary" />
               )}
@@ -73,7 +107,10 @@ function Block({ block }: { block: LessonBlock }) {
             <thead className="bg-muted/50">
               <tr>
                 {block.headers.map((hd) => (
-                  <th key={hd} className="px-3 py-2 text-left text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                  <th
+                    key={hd}
+                    className="px-3 py-2 text-left text-xs font-semibold tracking-wide text-muted-foreground uppercase"
+                  >
                     {hd}
                   </th>
                 ))}
@@ -83,7 +120,10 @@ function Block({ block }: { block: LessonBlock }) {
               {block.rows.map((r, i) => (
                 <tr key={i} className="align-top hover:bg-muted/20">
                   {r.map((c, j) => (
-                    <td key={j} className={cn("px-3 py-2 leading-relaxed", j === 0 && "font-medium")}>
+                    <td
+                      key={j}
+                      className={cn("px-3 py-2 leading-relaxed", j === 0 && "font-medium")}
+                    >
                       {c}
                     </td>
                   ))}
@@ -119,7 +159,9 @@ function DiagramBlock({ id, caption }: { id: string; caption: string }) {
       <div className="p-3 sm:p-4">
         <C />
       </div>
-      <figcaption className="border-t bg-muted/20 px-4 py-2 text-xs leading-relaxed text-muted-foreground">{caption}</figcaption>
+      <figcaption className="border-t bg-muted/20 px-4 py-2 text-xs leading-relaxed text-muted-foreground">
+        {caption}
+      </figcaption>
     </figure>
   );
 }
@@ -154,10 +196,16 @@ export function KnowledgeCheck({ question }: { question: QuizQuestion }) {
           <BookMarked className="size-3.5" />
           Knowledge check
         </span>
-        {question.reference ? <span className="text-[10px] text-muted-foreground">{question.reference}</span> : null}
+        {question.reference ? (
+          <span className="text-[10px] text-muted-foreground">{question.reference}</span>
+        ) : null}
       </div>
       <div className="space-y-3 p-4">
-        {question.context ? <pre className="avionics-screen overflow-x-auto p-2.5 font-mono text-xs whitespace-pre-wrap text-ok">{question.context}</pre> : null}
+        {question.context ? (
+          <pre className="avionics-screen overflow-x-auto p-2.5 font-mono text-xs whitespace-pre-wrap text-ok">
+            {question.context}
+          </pre>
+        ) : null}
         <p className="text-sm font-medium">{question.prompt}</p>
         <Choices
           choices={question.choices}
@@ -179,7 +227,9 @@ export function KnowledgeCheck({ question }: { question: QuizQuestion }) {
             <div className="space-y-2">
               <Feedback ok={false} title="Not quite — think it through and try again">
                 {question.choices[sel] ? <>You chose "{question.choices[sel]}". </> : null}
-                {tries >= 2 ? question.explanation : "Re-read the section above, then pick another answer."}
+                {tries >= 2
+                  ? question.explanation
+                  : "Re-read the section above, then pick another answer."}
               </Feedback>
               <Button size="sm" variant="outline" onClick={() => setSel(null)}>
                 <RotateCcw className="size-3.5" />

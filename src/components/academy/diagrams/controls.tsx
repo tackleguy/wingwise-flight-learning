@@ -26,7 +26,9 @@ export function SliderControl({
     <label className={cn("block", className)}>
       <div className="mb-1.5 flex items-baseline justify-between gap-2 text-xs">
         <span className="text-muted-foreground">{label}</span>
-        <span className="font-mono font-semibold text-cyan tabular">{format ? format(value) : value}</span>
+        <span className="font-mono font-semibold text-cyan tabular">
+          {format ? format(value) : value}
+        </span>
       </div>
       <Slider
         value={[value]}
@@ -57,7 +59,10 @@ export function Segmented<T extends string>({
   size?: "sm" | "xs";
 }) {
   return (
-    <div role="radiogroup" className={cn("inline-flex flex-wrap rounded-md border bg-muted/50 p-0.5", className)}>
+    <div
+      role="radiogroup"
+      className={cn("inline-flex flex-wrap rounded-md border bg-muted/50 p-0.5", className)}
+    >
       {options.map((o) => (
         <button
           key={o.value}
@@ -68,7 +73,9 @@ export function Segmented<T extends string>({
           className={cn(
             "rounded px-2.5 font-medium transition-colors",
             size === "sm" ? "py-1 text-xs" : "py-0.5 text-[11px]",
-            value === o.value ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
+            value === o.value
+              ? "bg-primary text-primary-foreground"
+              : "text-muted-foreground hover:text-foreground",
           )}
         >
           {o.label}
@@ -89,13 +96,20 @@ export function ToggleChip({
   children: ReactNode;
   tone?: "primary" | "warning" | "caution";
 }) {
-  const onCls = { primary: "border-primary bg-primary/15 text-primary", warning: "border-warning bg-warning/15 text-warning", caution: "border-caution bg-caution/15 text-caution" }[tone];
+  const onCls = {
+    primary: "border-primary bg-primary/15 text-primary",
+    warning: "border-warning bg-warning/15 text-warning",
+    caution: "border-caution bg-caution/15 text-caution",
+  }[tone];
   return (
     <button
       type="button"
       aria-pressed={on}
       onClick={onToggle}
-      className={cn("inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium transition-colors", on ? onCls : "text-muted-foreground hover:text-foreground")}
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium transition-colors",
+        on ? onCls : "text-muted-foreground hover:text-foreground",
+      )}
     >
       <span className={cn("size-2 rounded-full", on ? "bg-current" : "bg-muted-foreground/40")} />
       {children}
@@ -103,11 +117,30 @@ export function ToggleChip({
   );
 }
 
-export function Readout({ label, value, tone = "cyan", sub }: { label: string; value: ReactNode; tone?: "cyan" | "ok" | "caution" | "warning" | "magenta" | "default"; sub?: ReactNode }) {
-  const cls = { cyan: "text-cyan", ok: "text-ok", caution: "text-caution", warning: "text-warning", magenta: "text-magenta", default: "text-foreground" }[tone];
+export function Readout({
+  label,
+  value,
+  tone = "cyan",
+  sub,
+}: {
+  label: string;
+  value: ReactNode;
+  tone?: "cyan" | "ok" | "caution" | "warning" | "magenta" | "default";
+  sub?: ReactNode;
+}) {
+  const cls = {
+    cyan: "text-cyan",
+    ok: "text-ok",
+    caution: "text-caution",
+    warning: "text-warning",
+    magenta: "text-magenta",
+    default: "text-foreground",
+  }[tone];
   return (
     <div className="rounded-md border bg-panel px-2.5 py-1.5">
-      <div className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">{label}</div>
+      <div className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
+        {label}
+      </div>
       <div className={cn("font-mono text-sm font-semibold tabular", cls)}>{value}</div>
       {sub ? <div className="text-[10px] text-muted-foreground">{sub}</div> : null}
     </div>
@@ -115,13 +148,23 @@ export function Readout({ label, value, tone = "cyan", sub }: { label: string; v
 }
 
 /** Layout used by every diagram: SVG stage on top/left, controls & info on the side. */
-export function DiagramLayout({ stage, controls, info }: { stage: ReactNode; controls?: ReactNode; info?: ReactNode }) {
+export function DiagramLayout({
+  stage,
+  controls,
+  info,
+}: {
+  stage: ReactNode;
+  controls?: ReactNode;
+  info?: ReactNode;
+}) {
   return (
-    <div className="grid gap-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
-      <div className="avionics-screen overflow-hidden">{stage}</div>
-      <div className="flex min-w-0 flex-col gap-3">
-        {controls ? <div className="space-y-3">{controls}</div> : null}
-        {info}
+    <div className="@container">
+      <div className="grid gap-4 @2xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
+        <div className="avionics-screen self-start overflow-hidden">{stage}</div>
+        <div className="flex min-w-0 flex-col gap-3">
+          {controls ? <div className="space-y-3">{controls}</div> : null}
+          {info}
+        </div>
       </div>
     </div>
   );
@@ -142,7 +185,16 @@ export function ArrowDefs({ id = "ax" }: { id?: string }) {
   return (
     <defs>
       {Object.entries(colors).map(([k, c]) => (
-        <marker key={k} id={`${id}-${k}`} viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <marker
+          key={k}
+          id={`${id}-${k}`}
+          viewBox="0 0 10 10"
+          refX="8"
+          refY="5"
+          markerWidth="6"
+          markerHeight="6"
+          orient="auto-start-reverse"
+        >
           <path d="M0,0 L10,5 L0,10 z" fill={c} />
         </marker>
       ))}

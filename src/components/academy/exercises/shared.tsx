@@ -26,7 +26,10 @@ export function useGenerated<T>(generate: () => T) {
 
 export function useScore() {
   const [score, setScore] = useState({ correct: 0, total: 0 });
-  const record = useCallback((ok: boolean) => setScore((s) => ({ correct: s.correct + (ok ? 1 : 0), total: s.total + 1 })), []);
+  const record = useCallback(
+    (ok: boolean) => setScore((s) => ({ correct: s.correct + (ok ? 1 : 0), total: s.total + 1 })),
+    [],
+  );
   return { score, record };
 }
 
@@ -49,7 +52,13 @@ export function ExerciseFrame({
     <div className="space-y-3">
       {instructions || score ? (
         <div className="flex flex-wrap items-start justify-between gap-2">
-          {instructions ? <p className="max-w-2xl text-xs leading-relaxed text-muted-foreground">{instructions}</p> : <span />}
+          {instructions ? (
+            <p className="max-w-2xl text-xs leading-relaxed text-muted-foreground">
+              {instructions}
+            </p>
+          ) : (
+            <span />
+          )}
           {score && score.total > 0 ? (
             <span className="rounded border bg-muted px-2 py-0.5 font-mono text-[11px] tabular">
               Score {score.correct}/{score.total}
@@ -74,15 +83,36 @@ export function ExerciseFrame({
 }
 
 export function Loading() {
-  return <div className="h-40 animate-pulse rounded-md bg-muted/40" aria-label="Loading exercise" />;
+  return (
+    <div className="h-40 animate-pulse rounded-md bg-muted/40" aria-label="Loading exercise" />
+  );
 }
 
-export function Feedback({ ok, title, children }: { ok: boolean; title?: string; children?: ReactNode }) {
+export function Feedback({
+  ok,
+  title,
+  children,
+}: {
+  ok: boolean;
+  title?: string;
+  children?: ReactNode;
+}) {
   return (
-    <div className={cn("flex gap-2 rounded-md border p-3 text-xs leading-relaxed animate-fade-up", ok ? "border-ok/30 bg-ok/5" : "border-warning/30 bg-warning/5")}>
-      {ok ? <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-ok" /> : <XCircle className="mt-0.5 size-4 shrink-0 text-warning" />}
+    <div
+      className={cn(
+        "flex gap-2 rounded-md border p-3 text-xs leading-relaxed animate-fade-up",
+        ok ? "border-ok/30 bg-ok/5" : "border-warning/30 bg-warning/5",
+      )}
+    >
+      {ok ? (
+        <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-ok" />
+      ) : (
+        <XCircle className="mt-0.5 size-4 shrink-0 text-warning" />
+      )}
       <div className="min-w-0">
-        <p className={cn("font-semibold", ok ? "text-ok" : "text-warning")}>{title ?? (ok ? "Correct" : "Not quite")}</p>
+        <p className={cn("font-semibold", ok ? "text-ok" : "text-warning")}>
+          {title ?? (ok ? "Correct" : "Not quite")}
+        </p>
         {children ? <div className="mt-0.5 text-foreground/85">{children}</div> : null}
       </div>
     </div>
@@ -129,7 +159,11 @@ export function AnswerField({
           className="h-9 w-full min-w-0 bg-transparent px-2.5 font-mono text-sm tabular outline-none placeholder:text-muted-foreground/50"
         />
         {suffix ? <span className="pr-2.5 text-[11px] text-muted-foreground">{suffix}</span> : null}
-        {status === true ? <CheckCircle2 className="mr-2 size-4 shrink-0 text-ok" /> : status === false ? <XCircle className="mr-2 size-4 shrink-0 text-warning" /> : null}
+        {status === true ? (
+          <CheckCircle2 className="mr-2 size-4 shrink-0 text-ok" />
+        ) : status === false ? (
+          <XCircle className="mr-2 size-4 shrink-0 text-warning" />
+        ) : null}
       </div>
       {hint ? <span className="mt-1 block text-[10px] text-muted-foreground">{hint}</span> : null}
     </label>
@@ -172,10 +206,14 @@ export function Choices({
               revealed && !isAns && !isSel && "opacity-60",
             )}
           >
-            <span className="mt-px font-mono text-[11px] text-muted-foreground">{String.fromCharCode(65 + i)}</span>
+            <span className="mt-px font-mono text-[11px] text-muted-foreground">
+              {String.fromCharCode(65 + i)}
+            </span>
             <span className="min-w-0 flex-1">{c}</span>
             {revealed && isAns ? <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-ok" /> : null}
-            {revealed && isSel && !isAns ? <XCircle className="mt-0.5 size-4 shrink-0 text-warning" /> : null}
+            {revealed && isSel && !isAns ? (
+              <XCircle className="mt-0.5 size-4 shrink-0 text-warning" />
+            ) : null}
           </button>
         );
       })}
@@ -185,7 +223,13 @@ export function Choices({
 
 /** Parse "1 1/2", "1.5", "3/4", "M1/4" into a number (or null). */
 export function parseLooseNumber(raw: string): number | null {
-  const s = raw.trim().toUpperCase().replace(/SM$/, "").replace(/^[PM]/, "").replace(/,/g, "").trim();
+  const s = raw
+    .trim()
+    .toUpperCase()
+    .replace(/SM$/, "")
+    .replace(/^[PM]/, "")
+    .replace(/,/g, "")
+    .trim();
   if (!s) return null;
   const mixed = /^(\d+)\s+(\d+)\/(\d+)$/.exec(s);
   if (mixed) return Number(mixed[1]) + Number(mixed[2]) / Number(mixed[3]);
@@ -195,16 +239,21 @@ export function parseLooseNumber(raw: string): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-export const within = (v: number | null, target: number, tol: number) => v !== null && Math.abs(v - target) <= tol;
+export const within = (v: number | null, target: number, tol: number) =>
+  v !== null && Math.abs(v - target) <= tol;
 
 /** Heading comparison with wrap-around. */
 export const headingWithin = (v: number | null, target: number, tol: number) => {
   if (v === null) return false;
-  const d = Math.abs((((v - target) % 360) + 540) % 360 - 180);
+  const d = Math.abs(((((v - target) % 360) + 540) % 360) - 180);
   return d <= tol;
 };
 
 /** Small "educational chart" label required on all chart graphics. */
 export function ChartDisclaimer({ className }: { className?: string }) {
-  return <p className={cn("text-[10px] font-semibold tracking-wide text-caution uppercase", className)}>Educational chart — not for navigation</p>;
+  return (
+    <p className={cn("text-[10px] font-semibold tracking-wide text-caution uppercase", className)}>
+      Educational chart — not for navigation
+    </p>
+  );
 }
