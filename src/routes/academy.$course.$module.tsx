@@ -219,7 +219,7 @@ function ModulePage() {
         <TabsContent value="lessons">
           <div className="grid gap-8 lg:grid-cols-[240px_minmax(0,1fr)] xl:gap-12">
             {/* Lesson list: a quiet sidebar on desktop, collapsed on mobile. */}
-            <aside className="lg:sticky lg:top-4 lg:self-start">
+            <aside className="min-w-0 lg:sticky lg:top-4 lg:self-start">
               <details className="group rounded-md border lg:hidden">
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2.5 text-sm select-none [&::-webkit-details-marker]:hidden">
                   <span className="min-w-0 truncate">

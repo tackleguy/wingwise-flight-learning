@@ -248,7 +248,13 @@ export function Notice({
     );
   }
   return (
-    <div className={cn("flex gap-2 border-l-2 py-1 pl-3 text-xs leading-relaxed text-muted-foreground", tone === "caution" ? "border-caution/60" : "border-primary/50", className)}>
+    <div
+      className={cn(
+        "flex gap-2 border-l-2 py-1 pl-3 text-xs leading-relaxed text-muted-foreground",
+        tone === "caution" ? "border-caution/60" : "border-primary/50",
+        className,
+      )}
+    >
       <Icon className={cn("mt-0.5 size-3.5 shrink-0", iconCls)} />
       <div>
         {title ? <span className="font-medium text-foreground/85">{title} </span> : null}

@@ -63,7 +63,8 @@ function NavMenu() {
       /* ignore */
     }
   }, []);
-  const isOpen = (label: string) => state === "collapsed" || label === activeGroup || (manual[label] ?? label === "Overview");
+  const isOpen = (label: string) =>
+    state === "collapsed" || label === activeGroup || (manual[label] ?? label === "Overview");
   const toggle = (label: string) => {
     const next = { ...manual, [label]: !isOpen(label) };
     setManual(next);
@@ -87,7 +88,11 @@ function NavMenu() {
                 className="flex w-full items-center justify-between hover:text-sidebar-foreground"
               >
                 {group.label}
-                <ChevronDown className={open ? "size-3 transition-transform" : "size-3 -rotate-90 transition-transform"} />
+                <ChevronDown
+                  className={
+                    open ? "size-3 transition-transform" : "size-3 -rotate-90 transition-transform"
+                  }
+                />
               </button>
             </SidebarGroupLabel>
             {open ? (
