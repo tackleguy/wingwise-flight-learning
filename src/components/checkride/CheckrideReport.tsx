@@ -153,11 +153,11 @@ export function CheckrideReport({
             : `${unsat.length} area${unsat.length > 1 ? "s were" : " was"} not completed to a satisfactory standard: ${unsat.map((s) => s.name).join(", ")}. On an actual practical test, an unsatisfactory task results in a notice of disapproval and additional training before a retest. Focus your next training sessions on these areas.`}
         </p>
 
-        <div className="mt-4 grid gap-3">
+        <div className="mt-4 divide-y border-y">
           {attempt.stages.map((s, i) => {
             const link = studyLink(s.id as StageId, track.ifr);
             return (
-              <div key={s.id} className="avoid-break rounded-md border px-3 py-2.5">
+              <div key={s.id} className="avoid-break py-2.5">
                 <div className="flex flex-wrap items-center gap-2">
                   {s.status === "satisfactory" ? (
                     <CheckCircle2 className="size-4 text-ok" />

@@ -763,7 +763,10 @@ export function RadioPanel({
       </div>
 
       {directorySorted.length ? (
-        <div className="mt-2.5 flex flex-wrap gap-1.5" aria-label={`Frequency list — tap to load COM${value.tx} standby`}>
+        <div
+          className="mt-2.5 flex flex-wrap gap-1.5"
+          aria-label={`Frequency list — tap to load COM${value.tx} standby`}
+        >
           {directorySorted.map((d) => (
             <button
               key={`${d.name}-${d.mhz}`}
@@ -869,7 +872,11 @@ export function RadioPanel({
                 <MicOff className="size-3" />
               )}
               <span className="truncate">
-                {micEnabled ? (support.stt ? "Voice on" : "No voice input — type calls") : "Mic off — type calls"}
+                {micEnabled
+                  ? support.stt
+                    ? "Voice on"
+                    : "No voice input — type calls"
+                  : "Mic off — type calls"}
                 {" · "}TX COM{value.tx} <span className="font-mono">{formatCom(txMhz)}</span>
               </span>
             </span>

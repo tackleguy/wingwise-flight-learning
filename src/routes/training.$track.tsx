@@ -209,7 +209,11 @@ function TrackPage() {
         <Meter value={prog.pct} />
       </div>
 
-      <Notice tone="caution" title="Not an FAA certificate, rating or endorsement." className="mb-6">
+      <Notice
+        tone="caution"
+        title="Not an FAA certificate, rating or endorsement."
+        className="mb-6"
+      >
         Completing TeachX training does not grant any FAA certificate, rating, endorsement, or
         loggable flight time. Requirements are simplified study summaries of 14 CFR (references are
         to 14 CFR unless stated) and may omit exceptions — verify them in the current regulations

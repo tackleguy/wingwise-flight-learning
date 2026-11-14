@@ -1,16 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Award, ChevronRight, Crosshair, GraduationCap, Target } from "lucide-react";
-import { Meter, Notice, Page, PageHeader, Pill, Section } from "@/components/app/page";
+import { ArrowRight, ChevronRight, Crosshair, GraduationCap, Target } from "lucide-react";
+import { Meter, Notice, Page, PageHeader, Section } from "@/components/app/page";
 import {
   CERTIFICATE_PATH,
   getTrack,
   KIND_LABEL,
   trackProgress,
   TRACKS,
-  type Track,
 } from "@/lib/content/tracks";
 import { useTrackState } from "@/components/academy/useTrackState";
-import { actions, useStore, type TrackId, type TrainingState } from "@/lib/store";
+import { useStore, type TrackId } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/training/")({
@@ -27,20 +26,17 @@ export const Route = createFileRoute("/training/")({
   component: TrainingHub,
 });
 
-const GROUPS: { title: string; description: string; ids: TrackId[] }[] = [
+const GROUPS: { title: string; ids: TrackId[] }[] = [
   {
-    title: "Additional ratings & instructor certificates",
-    description: "Class ratings and flight instructor privileges added to your certificate.",
+    title: "Ratings & instructor",
     ids: ["multi-engine", "seaplane", "cfi", "cfii"],
   },
   {
     title: "Endorsements",
-    description: "One-time instructor endorsements required by 14 CFR 61.31.",
     ids: ["tailwheel", "high-performance", "complex", "high-altitude"],
   },
   {
     title: "Training pathways",
-    description: "Skill-focused programs that cut across certificates.",
     ids: ["night", "cross-country", "emergency", "mountain", "adm"],
   },
 ];
@@ -53,130 +49,107 @@ function TrainingHub() {
   const goalProg = goalTrack ? trackProgress(state, goalTrack) : null;
 
   return (
-    <Page>
+    <Page className="max-w-6xl">
       <PageHeader
         eyebrow="Certification pathway"
         title="Flight Training"
         icon={GraduationCap}
-        description="Follow the FAA certificate ladder from your first solo to the airline transport pilot certificate. Each track maps the real requirements onto TeachX ground school, exams, simulator scenarios and ATC practice."
+        description="The FAA certificate ladder from first solo to ATP — each track maps the requirements onto ground school, exams, simulator and ATC practice."
+        actions={
+          goalTrack ? (
+            <Link
+              to="/training/$track"
+              params={{ track: goalTrack.id }}
+              className="inline-flex items-center gap-2 rounded-md bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+            >
+              Open my goal track <ArrowRight className="size-4" />
+            </Link>
+          ) : !profile ? (
+            <Link
+              to="/onboarding"
+              className="inline-flex items-center gap-2 rounded-md bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+            >
+              Find my track <ArrowRight className="size-4" />
+            </Link>
+          ) : null
+        }
       />
 
-      <Notice tone="caution" title="Training aid only." className="mb-6">
-        Completing TeachX training does not grant any FAA certificate, rating, endorsement, or
-        loggable flight time. Simulator sessions here are not FAA-approved training devices. Train
-        with an authorized instructor and verify requirements in the current 14 CFR and ACS.
-      </Notice>
-
-      {/* Goal */}
+      {/* Goal: a single quiet line. */}
       {goalTrack && goalProg ? (
-        <div className="panel mb-8 overflow-hidden border-primary/40">
-          <div className="flex flex-col gap-4 p-5 md:flex-row md:items-center md:justify-between">
-            <div className="min-w-0">
-              <p className="label-caps flex items-center gap-1.5 text-primary">
-                <Target className="size-3.5" /> Your goal
-              </p>
-              <h2 className="mt-1 text-xl font-bold">{goalTrack.title}</h2>
-              <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{goalTrack.summary}</p>
-            </div>
-            <div className="w-full shrink-0 md:w-72">
-              <div className="mb-1 flex items-baseline justify-between">
-                <span className="label-caps">Track progress</span>
-                <span className="font-mono text-2xl font-semibold text-primary tabular">
-                  {goalProg.pct}%
-                </span>
-              </div>
-              <Meter value={goalProg.pct} />
+        <div className="mb-8">
+          <div className="mb-2 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 text-sm">
+            <span className="flex items-center gap-1.5">
+              <Target className="size-4 self-center text-primary" />
+              <span className="text-muted-foreground">Your goal:</span>
               <Link
                 to="/training/$track"
                 params={{ track: goalTrack.id }}
-                className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+                className="font-semibold hover:text-primary"
               >
-                Open track <ArrowRight className="size-4" />
+                {goalTrack.title}
               </Link>
-            </div>
+              <span className="font-mono font-semibold text-primary tabular">{goalProg.pct}%</span>
+            </span>
+            <span className="text-xs text-muted-foreground">
+              {(
+                [
+                  ["lessons", goalProg.parts.lessons],
+                  ["module exams", goalProg.parts.quizzes],
+                  ["tests", goalProg.parts.exams],
+                  ["sim", goalProg.parts.sims],
+                  ["ATC", goalProg.parts.atc],
+                ] as const
+              )
+                .filter(([, p]) => p.total > 0)
+                .map(([label, p]) => `${p.done}/${p.total} ${label}`)
+                .join(" · ")}
+            </span>
           </div>
-          <div className="grid grid-cols-2 border-t sm:grid-cols-5">
-            {(
-              [
-                ["Ground lessons", goalProg.parts.lessons],
-                ["Module exams", goalProg.parts.quizzes],
-                ["Tests passed", goalProg.parts.exams],
-                ["Sim scenarios", goalProg.parts.sims],
-                ["ATC scenarios", goalProg.parts.atc],
-              ] as const
-            ).map(([label, p]) => (
-              <div
-                key={label}
-                className="border-r border-b px-4 py-2.5 last:border-r-0 sm:border-b-0"
-              >
-                <div className="label-caps">{label}</div>
-                <div className="font-mono text-sm font-semibold tabular">
-                  {p.done}/{p.total}
-                </div>
-              </div>
-            ))}
-          </div>
+          <Meter value={goalProg.pct} />
         </div>
       ) : (
-        <Notice title="Set your training goal." className="mb-8">
+        <p className="mb-8 text-sm text-muted-foreground">
           {profile
-            ? "Choose a track below and select 'Set as my goal' on its page."
-            : "Create your pilot profile and take the knowledge assessment to get a recommended track."}{" "}
-          {!profile ? (
-            <Link
-              to="/onboarding"
-              className="font-semibold text-primary underline-offset-2 hover:underline"
-            >
-              Start onboarding
-            </Link>
-          ) : null}
-        </Notice>
+            ? "Open a track and choose “Set as my goal” to follow it here."
+            : "Create your pilot profile and take the short assessment to get a recommended track."}
+        </p>
       )}
 
       {/* Certificate ladder */}
-      <Section
-        title="Certificate pathway"
-        description="The core FAA progression for airplane pilots."
-      >
-        <ol className="grid gap-3 md:grid-cols-5">
+      <Section title="Certificate pathway">
+        <ol className="grid gap-px overflow-hidden rounded-lg border bg-border sm:grid-cols-5">
           {CERTIFICATE_PATH.map((id, i) => {
             const t = getTrack(id);
             if (!t) return null;
             const p = trackProgress(state, t);
             const isGoal = goal === id;
             return (
-              <li key={id} className="relative">
-                {i < CERTIFICATE_PATH.length - 1 ? (
-                  <ChevronRight className="absolute top-1/2 -right-3 z-10 hidden size-5 -translate-y-1/2 text-muted-foreground md:block" />
-                ) : null}
+              <li key={id} className="bg-background">
                 <Link
                   to="/training/$track"
                   params={{ track: id }}
                   className={cn(
-                    "panel flex h-full flex-col p-4 transition-colors hover:border-primary/60",
-                    isGoal && "border-primary bg-primary/5 ring-1 ring-primary/40",
+                    "group flex h-full flex-row items-center gap-3 p-3.5 transition-colors hover:bg-accent/30 sm:flex-col sm:items-stretch sm:gap-2 sm:p-4",
+                    isGoal && "bg-primary/5",
                   )}
                 >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="flex size-7 items-center justify-center rounded-full bg-primary/15 font-mono text-xs font-bold text-primary">
-                      {i + 1}
-                    </span>
+                  <span className="flex items-center gap-2 font-mono text-xs text-muted-foreground">
+                    <span className="text-primary">{i + 1}</span>
+                    {t.short}
                     {isGoal ? (
-                      <Pill tone="primary">
-                        <Crosshair className="size-3" /> Goal
-                      </Pill>
-                    ) : (
-                      <Pill>{KIND_LABEL[t.kind]}</Pill>
-                    )}
-                  </div>
-                  <p className="mt-3 font-mono text-xs text-muted-foreground">{t.short}</p>
-                  <p className="font-semibold leading-tight">{t.title}</p>
-                  <p className="mt-1.5 line-clamp-3 text-xs leading-relaxed text-muted-foreground">
-                    {t.summary}
-                  </p>
-                  <div className="mt-auto pt-3">
-                    <Meter value={p.pct} label="Progress" />
-                  </div>
+                      <Crosshair className="size-3.5 text-primary" aria-label="Your goal" />
+                    ) : null}
+                  </span>
+                  <span className="min-w-0 flex-1 font-semibold leading-tight group-hover:text-primary">
+                    {t.title}
+                  </span>
+                  <span className="flex w-24 shrink-0 items-center gap-2 sm:w-auto">
+                    <Meter value={p.pct} className="flex-1" />
+                    <span className="font-mono text-[11px] text-muted-foreground tabular">
+                      {p.pct}%
+                    </span>
+                  </span>
                 </Link>
               </li>
             );
@@ -184,27 +157,62 @@ function TrainingHub() {
         </ol>
       </Section>
 
-      {GROUPS.map((g) => (
-        <Section key={g.title} title={g.title} description={g.description}>
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            {g.ids.map((id) => {
-              const t = getTrack(id);
-              return t ? <TrackCard key={id} track={t} state={state} isGoal={goal === id} /> : null;
-            })}
-          </div>
-        </Section>
-      ))}
+      {/* Everything else: three plain lists side by side. */}
+      <Section title="More ratings, endorsements & pathways">
+        <div className="grid gap-x-10 gap-y-6 md:grid-cols-3">
+          {GROUPS.map((g) => (
+            <div key={g.title}>
+              <h3 className="mb-1 text-xs font-medium text-muted-foreground">{g.title}</h3>
+              <ul className="divide-y border-t">
+                {g.ids.map((id) => {
+                  const t = getTrack(id);
+                  if (!t) return null;
+                  const p = trackProgress(state, t);
+                  return (
+                    <li key={id}>
+                      <Link
+                        to="/training/$track"
+                        params={{ track: id }}
+                        title={t.summary}
+                        className="group flex items-center gap-3 py-2.5 text-sm"
+                      >
+                        <span className="min-w-0 flex-1 truncate group-hover:text-primary">
+                          {t.title}
+                          {goal === id ? (
+                            <Crosshair
+                              className="ml-1.5 inline size-3.5 text-primary"
+                              aria-label="Your goal"
+                            />
+                          ) : null}
+                        </span>
+                        <span className="font-mono text-[11px] text-muted-foreground tabular">
+                          {p.pct}%
+                        </span>
+                        <ChevronRight className="size-4 shrink-0 text-muted-foreground/60 group-hover:text-primary" />
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </Section>
 
-      <Section title="All tracks at a glance">
-        <div className="overflow-x-auto rounded-md border">
+      <details className="group mb-8">
+        <summary className="flex cursor-pointer list-none items-center gap-1.5 text-sm font-medium text-muted-foreground select-none hover:text-foreground [&::-webkit-details-marker]:hidden">
+          <ChevronRight className="size-4 transition-transform group-open:rotate-90" />
+          Compare all tracks
+        </summary>
+        <div className="mt-3 overflow-x-auto">
           <table className="w-full min-w-[640px] text-sm">
-            <thead className="bg-muted/40 text-left text-xs text-muted-foreground">
+            <thead className="border-b text-left text-xs text-muted-foreground">
               <tr>
-                <th className="px-3 py-2 font-medium">Track</th>
-                <th className="px-3 py-2 font-medium">Type</th>
-                <th className="px-3 py-2 font-medium">Normally after</th>
-                <th className="px-3 py-2 font-medium">Written test</th>
-                <th className="w-40 px-3 py-2 font-medium">Progress</th>
+                <th className="py-2 pr-3 font-medium">Track</th>
+                <th className="py-2 pr-3 font-medium">Type</th>
+                <th className="py-2 pr-3 font-medium">Normally after</th>
+                <th className="py-2 pr-3 font-medium">Written test</th>
+                <th className="w-40 py-2 font-medium">Progress</th>
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -214,11 +222,8 @@ function TrainingHub() {
                   ["par", "ira", "cax", "atm", "fia", "foi", "fii"].includes(e),
                 );
                 return (
-                  <tr
-                    key={t.id}
-                    className={cn("hover:bg-muted/20", goal === t.id && "bg-primary/5")}
-                  >
-                    <td className="px-3 py-2">
+                  <tr key={t.id} className={cn(goal === t.id && "bg-primary/5")}>
+                    <td className="py-2 pr-3">
                       <Link
                         to="/training/$track"
                         params={{ track: t.id }}
@@ -227,14 +232,14 @@ function TrainingHub() {
                         {t.title}
                       </Link>
                     </td>
-                    <td className="px-3 py-2 text-xs text-muted-foreground">
+                    <td className="py-2 pr-3 text-xs text-muted-foreground">
                       {KIND_LABEL[t.kind]}
                     </td>
-                    <td className="px-3 py-2 text-xs text-muted-foreground">
+                    <td className="py-2 pr-3 text-xs text-muted-foreground">
                       {t.prerequisites.map((p2) => getTrack(p2)?.short ?? p2).join(", ") || "—"}
                     </td>
-                    <td className="px-3 py-2 font-mono text-xs uppercase">{written ?? "—"}</td>
-                    <td className="px-3 py-2">
+                    <td className="py-2 pr-3 font-mono text-xs uppercase">{written ?? "—"}</td>
+                    <td className="py-2">
                       <Meter value={p.pct} />
                     </td>
                   </tr>
@@ -243,80 +248,13 @@ function TrainingHub() {
             </tbody>
           </table>
         </div>
-      </Section>
-    </Page>
-  );
-}
+      </details>
 
-function TrackCard({
-  track,
-  state,
-  isGoal,
-}: {
-  track: Track;
-  state: TrainingState;
-  isGoal: boolean;
-}) {
-  const p = trackProgress(state, track);
-  const profile = useStore((s) => s.profile);
-  return (
-    <div
-      className={cn("panel flex flex-col p-4", isGoal && "border-primary ring-1 ring-primary/40")}
-    >
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <Link
-            to="/training/$track"
-            params={{ track: track.id }}
-            className="font-semibold leading-tight hover:text-primary"
-          >
-            {track.title}
-          </Link>
-          <div className="mt-1 flex flex-wrap gap-1">
-            <Pill
-              tone={
-                track.kind === "endorsement"
-                  ? "cyan"
-                  : track.kind === "pathway"
-                    ? "magenta"
-                    : "primary"
-              }
-            >
-              {KIND_LABEL[track.kind]}
-            </Pill>
-            {isGoal ? (
-              <Pill tone="ok">
-                <Award className="size-3" /> Goal
-              </Pill>
-            ) : null}
-          </div>
-        </div>
-        <span className="font-mono text-xs text-muted-foreground">{track.short}</span>
-      </div>
-      <p className="mt-2 line-clamp-3 text-xs leading-relaxed text-muted-foreground">
-        {track.summary}
-      </p>
-      <div className="mt-auto space-y-2 pt-3">
-        <Meter value={p.pct} label="Progress" />
-        <div className="flex items-center justify-between gap-2">
-          <Link
-            to="/training/$track"
-            params={{ track: track.id }}
-            className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
-          >
-            View requirements <ArrowRight className="size-3.5" />
-          </Link>
-          {profile && !isGoal ? (
-            <button
-              type="button"
-              onClick={() => actions.updateProfile({ goal: track.id })}
-              className="text-[11px] text-muted-foreground hover:text-foreground"
-            >
-              Set as goal
-            </button>
-          ) : null}
-        </div>
-      </div>
-    </div>
+      <Notice tone="caution" title="Training aid only — no FAA certificate or loggable time.">
+        Completing TeachX training does not grant any FAA certificate, rating, endorsement, or
+        loggable flight time. Simulator sessions here are not FAA-approved training devices. Train
+        with an authorized instructor and verify requirements in the current 14 CFR and ACS.
+      </Notice>
+    </Page>
   );
 }

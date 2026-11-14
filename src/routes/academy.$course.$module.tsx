@@ -264,7 +264,10 @@ function ModulePage() {
 
             {/* Lesson content — a calm reading column (~70ch). */}
             {lesson ? (
-              <article className="min-w-0 w-full max-w-[70ch] animate-fade-up xl:mx-auto" key={lesson.id}>
+              <article
+                className="min-w-0 w-full max-w-[70ch] animate-fade-up xl:mx-auto"
+                key={lesson.id}
+              >
                 <p className="mb-2 flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
                   <span className="hidden lg:inline">
                     Lesson {n} of {total}

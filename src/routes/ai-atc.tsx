@@ -5,7 +5,6 @@ import {
   FileText,
   Headphones,
   Lightbulb,
-  ListChecks,
   Loader2,
   MessageSquareText,
   Play,
@@ -17,7 +16,7 @@ import {
   Volume2,
 } from "lucide-react";
 import { toast } from "sonner";
-import { Page, PageHeader, Panel, Notice, Pill, formatDateTime } from "@/components/app/page";
+import { Page, PageHeader, Notice, Pill, formatDateTime } from "@/components/app/page";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -502,31 +501,69 @@ function AiAtcPage() {
     const hintText = aiHint || freeHint(state);
     const showHint = state.difficulty === "beginner" || hintOpen;
 
+    const taskBlock = (
+      <div className="border-l-2 border-primary/60 pl-3">
+        <div className="label-caps">
+          {state.difficulty === "checkride"
+            ? "Checkride mode"
+            : `Now: ${cur.name} ${formatFreqShort(cur.mhz)}`}
+        </div>
+        {state.difficulty === "checkride" ? (
+          <p className="mt-0.5 text-xs text-muted-foreground">No hints until your final report.</p>
+        ) : showHint ? (
+          <p className="mt-0.5 text-sm">
+            <Lightbulb className="mr-1.5 inline size-3.5 text-caution" />
+            {hintText}
+          </p>
+        ) : (
+          <div className="mt-1 flex flex-wrap items-center gap-3">
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 text-xs"
+              disabled={!hintAllowed}
+              onClick={() => {
+                setHintsUsed((n) => n + 1);
+                setHintOpen(true);
+              }}
+            >
+              <Lightbulb /> Show hint
+            </Button>
+            <span className="text-[11px] text-muted-foreground">
+              {state.difficulty === "advanced"
+                ? "One hint, after a weak call."
+                : `${Math.max(0, hintsLeft)} left`}
+            </span>
+          </div>
+        )}
+      </div>
+    );
+
     return (
       <Page wide>
-        <div className="mb-4 flex flex-col gap-3 border-b pb-4 md:flex-row md:items-center md:justify-between">
+        <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div className="min-w-0">
             <p className="label-caps mb-1 text-primary">AI ATC Practice</p>
-            <h1 className="flex flex-wrap items-center gap-2 text-xl font-bold tracking-tight sm:text-2xl">
+            <h1 className="text-xl font-bold tracking-tight sm:text-2xl">
               <span className="min-w-0 break-words">{state.goal}</span>
             </h1>
-            <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-              <Pill tone="caution">Simulated</Pill>
+            <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1.5 text-xs text-muted-foreground">
               <AiStatusPill
                 status={status}
                 loading={false}
                 using={useAi ? lastEngine : "scripted"}
               />
-              <Pill tone="primary">
-                {DIFFICULTIES.find((d) => d.id === state.difficulty)?.label}
-              </Pill>
-              <Pill>{PERSONALITIES.find((p) => p.id === state.personality)?.label}</Pill>
-              <Pill tone={state.rules === "IFR" ? "magenta" : "ok"}>{state.rules}</Pill>
               {state.goalReached ? <Pill tone="ok">Goal reached</Pill> : null}
+              <span>
+                {ctx.airport.icao} · {ctx.aircraft.shortName}{" "}
+                <span className="font-mono">{ctx.cs.full}</span> · {state.rules} ·{" "}
+                {DIFFICULTIES.find((d) => d.id === state.difficulty)?.label} ·{" "}
+                {PERSONALITIES.find((p) => p.id === state.personality)?.label}
+              </span>
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" size="sm" onClick={start}>
+            <Button variant="ghost" size="sm" onClick={start}>
               <RotateCcw /> Restart
             </Button>
             <Button size="sm" onClick={finish} disabled={!state.evals.length}>
@@ -534,16 +571,14 @@ function AiAtcPage() {
             </Button>
           </div>
         </div>
-        <Notice
-          tone="caution"
-          title="Simulated ATC for training — not real air traffic control."
-          className="mb-4"
-        >
+        <Notice tone="caution" title="Simulated ATC — not real ATC." className="mb-3">
+          Training only.{" "}
           {useAi
             ? "An AI plays the controller inside strict scenario guardrails; replies that break them are replaced by the scripted controller."
             : "No AI provider is active, so the built-in scripted controller is answering — every feature still works."}
         </Notice>
 
+        <div className="mb-3 lg:hidden">{taskBlock}</div>
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)]">
           <div className="min-w-0 space-y-4">
             <RadioPanel
@@ -573,40 +608,34 @@ function AiAtcPage() {
             </div>
           </div>
 
-          <div className="min-w-0 space-y-4">
-            <Panel title="Scenario state">
-              <dl className="grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
-                {[
-                  [
-                    "Station",
-                    state.difficulty === "checkride"
-                      ? "—"
-                      : `${cur.name} ${formatFreqShort(cur.mhz)}`,
-                  ],
-                  ["Phase", state.phase.replace("-", " ")],
-                  ["Position", ctx.position],
-                  ["Altitude", `${alt(ctx.altitude).text} ft`],
-                  ["Heading", hdg(ctx.heading).text],
-                  ["Runway", `${ctx.runway.id} (${ctx.runway.pattern} traffic)`],
-                  [
-                    "Squawk",
-                    state.emergency
-                      ? "7700"
-                      : state.ffActive || state.clearance
-                        ? ctx.squawk
-                        : "1200",
-                  ],
-                  ["ATIS", `${PHONETIC[ctx.atis.letter]} · ${ctx.atis.altimeter.toFixed(2)}`],
-                ].map(([k, v]) => (
-                  <div key={k} className="min-w-0">
-                    <dt className="label-caps !text-[9px]">{k}</dt>
-                    <dd className="truncate font-medium" title={v}>
-                      {v}
-                    </dd>
-                  </div>
-                ))}
-              </dl>
-            </Panel>
+          <div className="min-w-0 space-y-5">
+            <div className="hidden lg:block">{taskBlock}</div>
+
+            <dl className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs">
+              {[
+                ["Phase", state.phase.replace("-", " ")],
+                ["Rwy", `${ctx.runway.id} (${ctx.runway.pattern})`],
+                [
+                  "Sqk",
+                  state.emergency
+                    ? "7700"
+                    : state.ffActive || state.clearance
+                      ? ctx.squawk
+                      : "1200",
+                ],
+                ["ATIS", `${PHONETIC[ctx.atis.letter]} · ${ctx.atis.altimeter.toFixed(2)}`],
+                ["Alt", `${alt(ctx.altitude).text} ft`],
+                ["Hdg", hdg(ctx.heading).text],
+                ["Pos", ctx.position],
+              ].map(([k, v]) => (
+                <div key={k} className="flex min-w-0 items-baseline gap-1">
+                  <dt className="text-[10px] text-muted-foreground uppercase">{k}</dt>
+                  <dd className="max-w-[12rem] truncate font-mono font-semibold" title={v}>
+                    {v}
+                  </dd>
+                </div>
+              ))}
+            </dl>
 
             {tunedAtis ? (
               <div className="avionics-screen p-3">
@@ -626,7 +655,10 @@ function AiAtcPage() {
             ) : null}
 
             {state.clearance || state.flightPlan ? (
-              <Panel title={state.clearance ? "Active clearance (CRAFT)" : "Flight plan"}>
+              <div>
+                <div className="label-caps mb-1.5">
+                  {state.clearance ? "Active clearance (CRAFT)" : "Flight plan"}
+                </div>
                 {state.clearance ? (
                   <dl className="space-y-1 font-mono text-xs">
                     <div>
@@ -654,55 +686,22 @@ function AiAtcPage() {
                   </dl>
                 ) : null}
                 {state.flightPlan ? (
-                  <p
-                    className={cn(
-                      "text-xs text-muted-foreground",
-                      state.clearance && "mt-3 border-t pt-2",
-                    )}
-                  >
+                  <p className={cn("text-xs text-muted-foreground", state.clearance && "mt-2")}>
                     Filed: {state.flightPlan.rules} {state.flightPlan.departure} →{" "}
                     {state.flightPlan.destination} via{" "}
                     {state.flightPlan.route.join(" ") || "direct"} at{" "}
                     {alt(state.flightPlan.cruiseAltFt).text} ft
                   </p>
                 ) : null}
-              </Panel>
+              </div>
             ) : null}
 
-            <Panel title="Hints">
-              {state.difficulty === "checkride" ? (
-                <p className="text-sm text-muted-foreground">
-                  Checkride mode: no hints until your final report.
-                </p>
-              ) : showHint ? (
-                <p className="text-sm">
-                  <Lightbulb className="mr-1.5 inline size-4 text-caution" />
-                  {hintText}
-                </p>
-              ) : (
-                <div className="space-y-2">
-                  <p className="text-xs text-muted-foreground">
-                    {state.difficulty === "advanced"
-                      ? "Advanced: one hint, available after a weak transmission."
-                      : `Hints remaining: ${Math.max(0, hintsLeft)}.`}
-                  </p>
-                  <Button
-                    size="sm"
-                    disabled={!hintAllowed}
-                    onClick={() => {
-                      setHintsUsed((n) => n + 1);
-                      setHintOpen(true);
-                    }}
-                  >
-                    <Lightbulb /> Show hint
-                  </Button>
-                </div>
-              )}
-            </Panel>
-
             {state.evals.length ? (
-              <Panel title="Communication history">
-                <ul className="max-h-56 space-y-1.5 overflow-y-auto">
+              <details className="text-xs">
+                <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
+                  Communication history ({state.evals.length})
+                </summary>
+                <ul className="mt-2 max-h-56 space-y-1.5 overflow-y-auto">
                   {state.evals.map((e) => (
                     <li key={e.id} className="flex gap-2 text-[11px]">
                       <span
@@ -730,7 +729,7 @@ function AiAtcPage() {
                     </li>
                   ))}
                 </ul>
-              </Panel>
+              </details>
             ) : null}
           </div>
         </div>
@@ -741,13 +740,20 @@ function AiAtcPage() {
   // ---------------- setup ----------------
   const goalDef = FREE_GOALS.find((g) => g.id === goalId);
   const aiSessions = sessions.filter((s) => s.scenarioId.startsWith("ai-")).slice(0, 5);
+  const optionBtn = (on: boolean) =>
+    cn(
+      "rounded-md border px-2 py-1.5 text-xs font-semibold",
+      on
+        ? "border-primary bg-primary/15 text-primary"
+        : "border-border text-muted-foreground hover:text-foreground",
+    );
   return (
     <Page>
       <PageHeader
         eyebrow="Radio"
         title="AI ATC Practice"
         icon={MessageSquareText}
-        description="Talk to a simulated controller in your own words. It keeps track of your position, altitude, heading, runway, frequency, clearance and flight plan — and scores every call."
+        description="Talk to a simulated controller in your own words — every call is scored."
         actions={
           <Button variant="outline" asChild>
             <Link to="/atc">
@@ -756,97 +762,47 @@ function AiAtcPage() {
           </Button>
         }
       />
-      <Notice
-        tone="caution"
-        title="Simulated ATC for training — not real air traffic control."
-        className="mb-6"
-      >
-        The AI controller is constrained to the selected airport's runways and frequencies. Never
-        use it for real-world operations.
-      </Notice>
-
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
-        <div className="space-y-5">
-          <Panel
-            title="Controller engine"
-            actions={
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 text-xs"
-                onClick={() => void refresh()}
-              >
-                <RefreshCw /> Re-check
-              </Button>
-            }
+      <div className="-mt-2 mb-5 flex flex-wrap items-center gap-x-4 gap-y-2">
+        <Notice tone="caution" title="Simulated ATC — not real ATC.">
+          Training only. The AI controller is constrained to the selected airport's runways and
+          frequencies. Never use it for real-world operations.
+        </Notice>
+        <span
+          className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground"
+          title={
+            loading
+              ? "Checking which AI providers are available…"
+              : aiAvailable
+                ? "An AI controller will answer your calls. If a reply fails validation, the scripted controller steps in for that turn."
+                : "No AI provider is active — the built-in scripted controller with intent matching runs the whole session."
+          }
+        >
+          <span>Controller:</span>
+          <AiStatusPill status={status} loading={loading} />
+          <button
+            type="button"
+            onClick={() => void refresh()}
+            className="rounded p-1 hover:bg-muted hover:text-foreground"
+            aria-label="Re-check AI availability"
+            title="Re-check AI availability"
           >
-            <div className="flex flex-wrap items-center gap-3">
-              <AiStatusPill status={status} loading={loading} />
-              <p className="min-w-0 flex-1 text-xs text-muted-foreground">
-                {loading
-                  ? "Checking which AI providers are available…"
-                  : aiAvailable
-                    ? "An AI controller will answer your calls. If a reply fails validation, the scripted controller steps in for that turn."
-                    : "No AI provider is active — the built-in scripted controller with intent matching will run the whole session. You can configure AI in Settings."}
-              </p>
-              <Button variant="outline" size="sm" asChild>
-                <Link to="/settings">
-                  <Settings2 /> AI settings
-                </Link>
-              </Button>
-            </div>
-          </Panel>
+            <RefreshCw className="size-3.5" />
+          </button>
+          <Link to="/settings" className="inline-flex items-center gap-1 hover:text-foreground">
+            <Settings2 className="size-3.5" /> AI settings
+          </Link>
+        </span>
+      </div>
 
-          <Panel title="Flight plan (optional)">
-            {hydrated && plans.length ? (
-              <div className="space-y-2">
-                <Select
-                  value={planId}
-                  onValueChange={(v) => {
-                    setPlanId(v);
-                    applyPlan(plans.find((p) => p.id === v) ?? null);
-                  }}
-                >
-                  <SelectTrigger aria-label="Saved flight plan">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">No flight plan</SelectItem>
-                    {plans.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>
-                        {p.rules} {p.departure} → {p.destination} ·{" "}
-                        {p.name || formatDateTime(p.date)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {plan ? (
-                  <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
-                    <FileText className="mt-0.5 size-3.5 shrink-0" /> {plan.rules} {plan.departure}{" "}
-                    → {plan.destination} via {plan.route.join(" ") || "direct"},{" "}
-                    {alt(plan.cruiseAltFt).text} ft.{" "}
-                    {plan.rules === "IFR"
-                      ? "Request your simulated IFR clearance from Clearance Delivery/Ground."
-                      : "Request flight following after departure."}
-                    {!towered.some((a) => a.icao === plan.departure.toUpperCase())
-                      ? " (Departure airport isn't towered in the dataset — choose a towered airport below.)"
-                      : ""}
-                  </p>
-                ) : null}
-              </div>
-            ) : (
-              <p className="text-xs text-muted-foreground">
-                No saved plans yet. Create one in the{" "}
-                <Link to="/planner" className="text-primary underline">
-                  Flight Planner
-                </Link>{" "}
-                to practise requesting a simulated IFR clearance for your own route.
-              </p>
-            )}
-          </Panel>
-
-          <Panel title="Scenario goal">
-            <div className="grid gap-2 sm:grid-cols-2" role="radiogroup" aria-label="Scenario goal">
+      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="space-y-8">
+          <section>
+            <h2 className="label-caps mb-2">Scenario goal</h2>
+            <div
+              className="grid gap-1.5 sm:grid-cols-2"
+              role="radiogroup"
+              aria-label="Scenario goal"
+            >
               {FREE_GOALS.map((g) => (
                 <button
                   key={g.id}
@@ -858,17 +814,15 @@ function AiAtcPage() {
                     if (g.rules !== "any") setRules(g.rules);
                   }}
                   className={cn(
-                    "rounded-md border px-3 py-2.5 text-left text-sm",
+                    "flex items-center justify-between gap-2 rounded-md border px-3 py-2.5 text-left text-sm",
                     goalId === g.id
-                      ? "border-primary bg-primary/10"
-                      : "border-border hover:border-primary/40",
+                      ? "border-primary/60 bg-primary/[0.07]"
+                      : "border-transparent hover:bg-muted/40",
                   )}
                 >
                   <span className="font-semibold">{g.label}</span>
                   {g.rules !== "any" ? (
-                    <Pill tone={g.rules === "IFR" ? "magenta" : "ok"} className="ml-2">
-                      {g.rules}
-                    </Pill>
+                    <Pill tone={g.rules === "IFR" ? "magenta" : "ok"}>{g.rules}</Pill>
                   ) : null}
                 </button>
               ))}
@@ -885,10 +839,61 @@ function AiAtcPage() {
                 You'll practise: {goalDef.describe("your destination")}.
               </p>
             ) : null}
-          </Panel>
+
+            <div className="mt-5">
+              {hydrated && plans.length ? (
+                <div className="space-y-2">
+                  <span className="label-caps">Flight plan (optional)</span>
+                  <Select
+                    value={planId}
+                    onValueChange={(v) => {
+                      setPlanId(v);
+                      applyPlan(plans.find((p) => p.id === v) ?? null);
+                    }}
+                  >
+                    <SelectTrigger aria-label="Saved flight plan" className="sm:max-w-md">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">No flight plan</SelectItem>
+                      {plans.map((p) => (
+                        <SelectItem key={p.id} value={p.id}>
+                          {p.rules} {p.departure} → {p.destination} ·{" "}
+                          {p.name || formatDateTime(p.date)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {plan ? (
+                    <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
+                      <FileText className="mt-0.5 size-3.5 shrink-0" /> {plan.rules}{" "}
+                      {plan.departure} → {plan.destination} via {plan.route.join(" ") || "direct"},{" "}
+                      {alt(plan.cruiseAltFt).text} ft.{" "}
+                      {plan.rules === "IFR"
+                        ? "Request your simulated IFR clearance from Clearance Delivery/Ground."
+                        : "Request flight following after departure."}
+                      {!towered.some((a) => a.icao === plan.departure.toUpperCase())
+                        ? " (Departure airport isn't towered in the dataset — choose a towered airport.)"
+                        : ""}
+                    </p>
+                  ) : null}
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  <FileText className="mr-1 inline size-3.5" />
+                  Optional: save a route in the{" "}
+                  <Link to="/planner" className="text-primary underline">
+                    Flight Planner
+                  </Link>{" "}
+                  to request a clearance for it here.
+                </p>
+              )}
+            </div>
+          </section>
 
           {aiSessions.length ? (
-            <Panel title="Recent AI ATC sessions">
+            <section>
+              <h2 className="label-caps mb-2">Recent AI ATC sessions</h2>
               <ul className="space-y-2">
                 {aiSessions.map((s) => (
                   <li key={s.id} className="flex items-center justify-between gap-2 text-xs">
@@ -910,151 +915,149 @@ function AiAtcPage() {
                   </li>
                 ))}
               </ul>
-            </Panel>
+            </section>
           ) : null}
         </div>
 
-        <div className="space-y-4 lg:sticky lg:top-4 lg:self-start">
-          <Panel title="Aircraft & mode">
-            <div className="space-y-3">
-              <label className="block space-y-1">
-                <span className="label-caps">Airport</span>
-                <Select value={airport} onValueChange={setAirport}>
-                  <SelectTrigger aria-label="Airport">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {towered.map((a) => (
-                      <SelectItem key={a.icao} value={a.icao}>
-                        {a.icao} — {a.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </label>
-              <label className="block space-y-1">
-                <span className="label-caps">Aircraft</span>
-                <Select value={aircraftId} onValueChange={setAircraftId}>
-                  <SelectTrigger aria-label="Aircraft">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {aircraftOptions.map((a) => (
-                      <SelectItem key={a.id} value={a.id}>
-                        {a.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </label>
-              <label className="block space-y-1">
-                <span className="label-caps">Callsign</span>
-                <Input
-                  value={callsign}
-                  onChange={(e) =>
-                    setCallsign(
-                      e.target.value
-                        .toUpperCase()
-                        .replace(/[^A-Z0-9]/g, "")
-                        .slice(0, 7),
-                    )
-                  }
-                  className={cn("font-mono", !callsignValid && "border-warning")}
-                  aria-invalid={!callsignValid}
-                />
-              </label>
-              <div>
-                <span className="label-caps">Flight rules</span>
-                <div
-                  className="mt-1 grid grid-cols-2 gap-1.5"
-                  role="radiogroup"
-                  aria-label="Flight rules"
-                >
-                  {(["VFR", "IFR"] as const).map((r) => (
-                    <button
-                      key={r}
-                      type="button"
-                      role="radio"
-                      aria-checked={rules === r}
-                      onClick={() => setRules(r)}
-                      className={cn(
-                        "rounded-md border px-2 py-1.5 text-xs font-semibold",
-                        rules === r
-                          ? "border-primary bg-primary/15 text-primary"
-                          : "border-border text-muted-foreground hover:text-foreground",
-                      )}
-                    >
-                      {r}
-                    </button>
+        <div className="lg:sticky lg:top-4 lg:self-start">
+          <section className="panel space-y-4 p-4">
+            <label className="block space-y-1">
+              <span className="label-caps">Airport</span>
+              <Select value={airport} onValueChange={setAirport}>
+                <SelectTrigger aria-label="Airport">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {towered.map((a) => (
+                    <SelectItem key={a.icao} value={a.icao}>
+                      {a.icao} — {a.name}
+                    </SelectItem>
                   ))}
-                </div>
-              </div>
-              <div>
-                <span className="label-caps">Mode</span>
-                <div className="mt-1 grid grid-cols-2 gap-1.5" role="radiogroup" aria-label="Mode">
-                  {DIFFICULTIES.map((d) => (
-                    <button
-                      key={d.id}
-                      type="button"
-                      role="radio"
-                      aria-checked={difficulty === d.id}
-                      onClick={() => setDifficulty(d.id)}
-                      className={cn(
-                        "rounded-md border px-2 py-1.5 text-xs font-semibold",
-                        difficulty === d.id
-                          ? "border-primary bg-primary/15 text-primary"
-                          : "border-border text-muted-foreground hover:text-foreground",
-                      )}
-                    >
-                      {d.label}
-                    </button>
-                  ))}
-                </div>
-                <p className="mt-1 text-[11px] text-muted-foreground">
-                  {DIFFICULTIES.find((d) => d.id === difficulty)?.description}
-                </p>
-              </div>
-              <div>
-                <span className="label-caps">Controller</span>
-                <div
-                  className="mt-1 grid grid-cols-2 gap-1.5"
-                  role="radiogroup"
-                  aria-label="Controller personality"
-                >
-                  {PERSONALITIES.map((p) => (
-                    <button
-                      key={p.id}
-                      type="button"
-                      role="radio"
-                      aria-checked={personality === p.id}
-                      onClick={() => setPersonality(p.id)}
-                      className={cn(
-                        "rounded-md border px-2 py-1.5 text-xs font-semibold",
-                        personality === p.id
-                          ? "border-primary bg-primary/15 text-primary"
-                          : "border-border text-muted-foreground hover:text-foreground",
-                      )}
-                    >
-                      {p.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <Button
-                className="w-full"
-                size="lg"
-                onClick={start}
-                disabled={!callsignValid || loading}
+                </SelectContent>
+              </Select>
+            </label>
+            <div>
+              <span className="label-caps">Flight rules</span>
+              <div
+                className="mt-1 grid grid-cols-2 gap-1.5"
+                role="radiogroup"
+                aria-label="Flight rules"
               >
-                {loading ? <Loader2 className="animate-spin" /> : aiAvailable ? <Bot /> : <Play />}{" "}
-                Start practice
-              </Button>
-              <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                <ListChecks className="size-3.5" /> Scored on phraseology, readbacks, callsign use,
-                frequency management and timing.
+                {(["VFR", "IFR"] as const).map((r) => (
+                  <button
+                    key={r}
+                    type="button"
+                    role="radio"
+                    aria-checked={rules === r}
+                    onClick={() => setRules(r)}
+                    className={optionBtn(rules === r)}
+                  >
+                    {r}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <span className="label-caps">Mode</span>
+              <div className="mt-1 grid grid-cols-2 gap-1.5" role="radiogroup" aria-label="Mode">
+                {DIFFICULTIES.map((d) => (
+                  <button
+                    key={d.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={difficulty === d.id}
+                    onClick={() => setDifficulty(d.id)}
+                    title={d.description}
+                    className={optionBtn(difficulty === d.id)}
+                  >
+                    {d.label}
+                  </button>
+                ))}
+              </div>
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                {DIFFICULTIES.find((d) => d.id === difficulty)?.description}
               </p>
             </div>
-          </Panel>
+
+            <details className="group">
+              <summary className="cursor-pointer list-none text-xs text-muted-foreground hover:text-foreground [&::-webkit-details-marker]:hidden">
+                <span className="group-open:hidden">
+                  More options — aircraft, callsign <span className="font-mono">{callsign}</span>,
+                  controller
+                </span>
+                <span className="hidden group-open:inline">Fewer options</span>
+              </summary>
+              <div className="mt-3 space-y-3">
+                <label className="block space-y-1">
+                  <span className="label-caps">Aircraft</span>
+                  <Select value={aircraftId} onValueChange={setAircraftId}>
+                    <SelectTrigger aria-label="Aircraft">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {aircraftOptions.map((a) => (
+                        <SelectItem key={a.id} value={a.id}>
+                          {a.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </label>
+                <label className="block space-y-1">
+                  <span className="label-caps">Callsign</span>
+                  <Input
+                    value={callsign}
+                    onChange={(e) =>
+                      setCallsign(
+                        e.target.value
+                          .toUpperCase()
+                          .replace(/[^A-Z0-9]/g, "")
+                          .slice(0, 7),
+                      )
+                    }
+                    className={cn("font-mono", !callsignValid && "border-warning")}
+                    aria-invalid={!callsignValid}
+                  />
+                </label>
+                <div>
+                  <span className="label-caps">Controller</span>
+                  <div
+                    className="mt-1 grid grid-cols-2 gap-1.5"
+                    role="radiogroup"
+                    aria-label="Controller personality"
+                  >
+                    {PERSONALITIES.map((p) => (
+                      <button
+                        key={p.id}
+                        type="button"
+                        role="radio"
+                        aria-checked={personality === p.id}
+                        onClick={() => setPersonality(p.id)}
+                        title={p.description}
+                        className={optionBtn(personality === p.id)}
+                      >
+                        {p.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </details>
+            {!callsignValid ? (
+              <p className="text-[11px] text-warning">Check the callsign under More options.</p>
+            ) : null}
+
+            <Button
+              className="w-full"
+              size="lg"
+              onClick={start}
+              disabled={!callsignValid || loading}
+              title="Scored on phraseology, readbacks, callsign use, frequency management and timing."
+            >
+              {loading ? <Loader2 className="animate-spin" /> : aiAvailable ? <Bot /> : <Play />}{" "}
+              Start practice
+            </Button>
+          </section>
         </div>
       </div>
     </Page>

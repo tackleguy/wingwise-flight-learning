@@ -8,10 +8,8 @@ import {
   ClipboardCheck,
   Gauge,
   GraduationCap,
-  HelpCircle,
   Lightbulb,
   Loader2,
-  MessageCircleQuestion,
   Plane,
   Send,
   Sparkles,
@@ -19,7 +17,7 @@ import {
   Trash2,
   XCircle,
 } from "lucide-react";
-import { Page, PageHeader, Panel, Notice, Pill } from "@/components/app/page";
+import { Page, PageHeader, Notice } from "@/components/app/page";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -580,11 +578,6 @@ function InstructorPage() {
     );
 
   const quick: { label: string; icon: typeof Sparkles; onClick: () => void }[] = [
-    {
-      label: "Ask a question",
-      icon: MessageCircleQuestion,
-      onClick: () => inputRef.current?.focus(),
-    },
     { label: "Explain this instrument", icon: Gauge, onClick: explainInstrument },
     { label: "Explain my mistake", icon: Target, onClick: explainMistakes },
     { label: "Give me a practice scenario", icon: Plane, onClick: () => void practiceScenario() },
@@ -593,12 +586,21 @@ function InstructorPage() {
   ];
 
   const contextPanel = (
-    <div className="space-y-4">
-      <Panel title="What I know about you">
+    <div className="space-y-6">
+      <section>
+        <h2 className="label-caps mb-2 flex items-center justify-between gap-2">
+          What I know about you
+          <span className="font-sans text-[10px] tracking-normal normal-case">
+            {activePieces.length}/{pieces.length} shared
+          </span>
+        </h2>
         {!hydrated ? (
           <p className="text-xs text-muted-foreground">Loading your training record…</p>
         ) : pieces.length ? (
-          <ul className="space-y-3">
+          <ul
+            className="space-y-3"
+            title="Only the switched-on items are shared with the instructor."
+          >
             {pieces.map((p) => (
               <li key={p.key} className="flex items-start gap-3">
                 <Switch
@@ -618,70 +620,71 @@ function InstructorPage() {
           </ul>
         ) : (
           <p className="text-xs text-muted-foreground">
-            No training data yet. Complete{" "}
+            Nothing yet — finish{" "}
             <Link to="/onboarding" className="text-primary underline">
               onboarding
             </Link>
-            , a practice test or a sim flight and I'll personalise my answers.
+            , a test or a sim flight to personalise answers.
           </p>
         )}
-        <p className="mt-3 text-[11px] text-muted-foreground">
-          Only the switched-on items are shared with the instructor.
-        </p>
-      </Panel>
-      <Panel title="Explanation level">
-        <div className="grid grid-cols-2 gap-1.5" role="radiogroup" aria-label="Explanation level">
-          {(["simple", "advanced"] as const).map((l) => (
-            <button
-              key={l}
-              type="button"
-              role="radio"
-              aria-checked={level === l}
-              onClick={() => setLevel(l)}
-              className={cn(
-                "rounded-md border px-2 py-1.5 text-xs font-semibold capitalize",
-                level === l
-                  ? "border-primary bg-primary/15 text-primary"
-                  : "border-border text-muted-foreground hover:text-foreground",
-              )}
-            >
-              {l}
-            </button>
-          ))}
-        </div>
-        <p className="mt-2 text-[11px] text-muted-foreground">
-          {level === "simple"
-            ? "Plain language and analogies."
-            : "Technical detail, numbers and regulation references."}
-        </p>
-      </Panel>
-      <Panel title="Tools">
-        <div className="space-y-3">
-          <label className="block space-y-1">
-            <span className="label-caps">Instrument</span>
-            <Select value={instrument} onValueChange={setInstrument}>
-              <SelectTrigger aria-label="Instrument to explain">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {INSTRUMENTS.map((i) => (
-                  <SelectItem key={i.id} value={i.id}>
-                    {i.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </label>
-          <label className="block space-y-1">
-            <span className="label-caps">Quiz / scenario topic</span>
-            <Input
-              value={quizTopic}
-              onChange={(e) => setQuizTopic(e.target.value.slice(0, 80))}
-              placeholder="e.g. airspace, holding, icing"
-            />
-          </label>
-        </div>
-      </Panel>
+      </section>
+      <section className="space-y-3">
+        <h2 className="label-caps">Tools</h2>
+        <label className="block space-y-1">
+          <span className="text-xs text-muted-foreground">Instrument to explain</span>
+          <Select value={instrument} onValueChange={setInstrument}>
+            <SelectTrigger aria-label="Instrument to explain">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {INSTRUMENTS.map((i) => (
+                <SelectItem key={i.id} value={i.id}>
+                  {i.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </label>
+        <label className="block space-y-1">
+          <span className="text-xs text-muted-foreground">Quiz / scenario topic</span>
+          <Input
+            value={quizTopic}
+            onChange={(e) => setQuizTopic(e.target.value.slice(0, 80))}
+            placeholder="e.g. airspace, holding, icing"
+          />
+        </label>
+      </section>
+    </div>
+  );
+
+  const levelToggle = (
+    <div
+      className="inline-flex rounded-md border p-0.5"
+      role="radiogroup"
+      aria-label="Explanation level"
+    >
+      {(["simple", "advanced"] as const).map((l) => (
+        <button
+          key={l}
+          type="button"
+          role="radio"
+          aria-checked={level === l}
+          onClick={() => setLevel(l)}
+          title={
+            l === "simple"
+              ? "Plain language and analogies."
+              : "Technical detail, numbers and regulation references."
+          }
+          className={cn(
+            "rounded px-2 py-0.5 text-[11px] font-medium capitalize",
+            level === l
+              ? "bg-primary/15 text-primary"
+              : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          {l}
+        </button>
+      ))}
     </div>
   );
 
@@ -691,10 +694,14 @@ function InstructorPage() {
         eyebrow="Ground school"
         title="AI Flight Instructor"
         icon={Sparkles}
-        description="Ask anything from regulations to aerodynamics. Get practice scenarios, quizzes, a review of your mistakes and a checkride plan."
+        description="Ask anything from regulations to aerodynamics, or get a scenario, quiz or checkride plan."
         actions={<AiStatusPill status={status} loading={loading} />}
       />
-      <Notice className="mb-5" title="Educational use only.">
+      <Notice
+        tone="caution"
+        className="-mt-2 mb-4"
+        title="Educational use only — not a substitute for a CFI."
+      >
         Answers are explanations for study — consult current FAA publications, the POH/AFM and a CFI
         for real-world operations.
         {!loading && !aiOn
@@ -702,16 +709,16 @@ function InstructorPage() {
           : ""}
       </Notice>
 
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
         <div className="min-w-0">
           <details
-            className="panel mb-4 lg:hidden"
+            className="mb-3 lg:hidden"
             open={ctxOpen}
             onToggle={(e) => setCtxOpen((e.target as HTMLDetailsElement).open)}
           >
-            <summary className="flex cursor-pointer items-center justify-between px-4 py-3 text-sm font-semibold">
+            <summary className="flex cursor-pointer list-none items-center justify-between py-1 text-xs font-medium text-muted-foreground [&::-webkit-details-marker]:hidden">
               <span className="flex items-center gap-2">
-                <Brain className="size-4 text-primary" /> Context, level & tools
+                <Brain className="size-3.5 text-primary" /> Personal context &amp; tools
               </span>
               <ChevronDown
                 className={cn(
@@ -720,7 +727,7 @@ function InstructorPage() {
                 )}
               />
             </summary>
-            <div className="border-t p-3">{contextPanel}</div>
+            <div className="pt-3 pb-2">{contextPanel}</div>
           </details>
 
           <div className="panel flex h-[calc(100dvh-15rem)] min-h-[480px] flex-col">
@@ -738,8 +745,7 @@ function InstructorPage() {
                     {name ? `Hi ${name}, ready to study?` : "Ready to study?"}
                   </h2>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    Ask a question or pick a quick action below. Try “What are the VFR weather
-                    minimums in Class E?” or “How do I enter a hold?”.
+                    Ask a question, or try one of these:
                   </p>
                   <div className="mt-4 flex flex-wrap justify-center gap-2">
                     {[
@@ -774,11 +780,12 @@ function InstructorPage() {
                     <div className="min-w-0 flex-1">
                       <div className="mb-1 flex items-center gap-1.5">
                         <span className="text-xs font-semibold">Instructor</span>
-                        <Pill tone={m.source === "ai" ? "ok" : "default"}>
+                        <span className="text-[10px] text-muted-foreground">
+                          ·{" "}
                           {m.source === "ai"
                             ? (AI_PROVIDER_LABEL[m.provider ?? ""] ?? "AI")
                             : "Knowledge base"}
-                        </Pill>
+                        </span>
                       </div>
                       <div className="rounded-lg rounded-tl-sm border bg-muted/30 px-3.5 py-3">
                         <Markdown text={m.content} />
@@ -828,7 +835,8 @@ function InstructorPage() {
                       send();
                     }
                   }}
-                  placeholder="Ask your instructor… (Enter to send, Shift+Enter for a new line)"
+                  placeholder="Ask your instructor…"
+                  title="Enter to send, Shift+Enter for a new line"
                   className="max-h-40 min-h-11 resize-none text-sm"
                   rows={1}
                   aria-label="Message"
@@ -844,10 +852,11 @@ function InstructorPage() {
                 </Button>
               </div>
               <div className="mt-2 flex items-center justify-between text-[11px] text-muted-foreground">
-                <span className="flex items-center gap-1">
-                  <HelpCircle className="size-3" /> {level === "simple" ? "Simple" : "Advanced"}{" "}
-                  explanations · {activePieces.length} context item
-                  {activePieces.length === 1 ? "" : "s"} shared
+                <span className="flex items-center gap-2">
+                  {levelToggle}
+                  <span className="hidden sm:inline">
+                    {activePieces.length} context item{activePieces.length === 1 ? "" : "s"} shared
+                  </span>
                 </span>
                 {messages.length ? (
                   <button

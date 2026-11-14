@@ -8,7 +8,6 @@ import {
   AlertTriangle,
   ArrowLeft,
   ArrowRight,
-  BookOpenCheck,
   CheckCircle2,
   ClipboardCheck,
   Clock,
@@ -16,13 +15,12 @@ import {
   Grid3x3,
   Keyboard,
   Play,
-  Timer,
 } from "lucide-react";
 import type { QuizQuestion } from "@/lib/content/types";
 import { actions } from "@/lib/store";
 import { buildExam, examPool, SECONDS_PER_QUESTION, type ExamDef } from "@/lib/exams/catalog";
 import { gradeExam, type GradeResult } from "@/lib/exams/analytics";
-import { Notice, Panel, Pill, formatDuration } from "@/components/app/page";
+import { Notice, formatDuration } from "@/components/app/page";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -260,86 +258,58 @@ export function ExamRunner({
   if (phase === "intro") {
     const introLimit = timeLimitFor(def, plannedCount);
     return (
-      <div className="mx-auto max-w-3xl animate-fade-up">
-        <Panel>
-          <div className="flex flex-wrap items-center gap-2">
-            <Pill tone="primary">{def.code}</Pill>
-            <Pill tone={timed ? "caution" : "cyan"}>{timed ? "Timed mode" : "Study mode"}</Pill>
-            {onlyIds ? <Pill tone="magenta">Missed-question review</Pill> : null}
-          </div>
-          <h2 className="mt-3 text-xl font-bold tracking-tight">{title}</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {onlyIds
-              ? "Questions you missed in recent attempts, in a new random order."
-              : def.description}
-          </p>
-          <div className="mt-5 grid grid-cols-3 gap-2">
-            <div className="rounded-md border bg-background/40 px-3 py-2.5">
-              <div className="label-caps">Questions</div>
-              <div className="mt-1 font-mono text-xl font-semibold tabular">{plannedCount}</div>
-            </div>
-            <div className="rounded-md border bg-background/40 px-3 py-2.5">
-              <div className="label-caps">Time</div>
-              <div className="mt-1 font-mono text-xl font-semibold tabular">
-                {timed ? `${Math.round(introLimit / 60)} min` : "Untimed"}
-              </div>
-            </div>
-            <div className="rounded-md border bg-background/40 px-3 py-2.5">
-              <div className="label-caps">To pass</div>
-              <div className="mt-1 font-mono text-xl font-semibold tabular">{def.passPct}%</div>
-            </div>
-          </div>
-          <ul className="mt-5 grid gap-2 text-sm text-foreground/85">
-            {timed ? (
-              <>
-                <li className="flex gap-2">
-                  <Timer className="mt-0.5 size-4 shrink-0 text-primary" /> The timer starts when
-                  you begin. The exam submits automatically when time runs out.
-                </li>
-                <li className="flex gap-2">
-                  <Flag className="mt-0.5 size-4 shrink-0 text-primary" /> Flag questions to
-                  revisit; you can change answers until you submit. Results and explanations appear
-                  at the end.
-                </li>
-              </>
-            ) : (
-              <li className="flex gap-2">
-                <BookOpenCheck className="mt-0.5 size-4 shrink-0 text-primary" /> Study mode is
-                untimed. After you answer, the correct answer and a full explanation are shown
-                immediately.
-              </li>
-            )}
-            <li className="flex gap-2">
-              <ClipboardCheck className="mt-0.5 size-4 shrink-0 text-primary" /> Questions and
-              answer choices are shuffled every attempt. Unanswered questions count as incorrect.
-            </li>
-            <li className="hidden gap-2 sm:flex">
-              <Keyboard className="mt-0.5 size-4 shrink-0 text-primary" /> Keyboard: 1–4 or A–D to
-              answer · ← → to move · F to flag.
-            </li>
-          </ul>
-          <Notice className="mt-5" title="Unofficial study material.">
-            These are original TeachX practice questions written from FAA publications — not actual
-            FAA knowledge test questions. Always verify against current regulations and handbooks.
-          </Notice>
-          <div className="mt-6 flex flex-wrap gap-2">
-            {plannedCount > 0 ? (
-              <Button size="lg" onClick={start}>
-                <Play /> Begin {timed ? "timed exam" : "study session"}
-              </Button>
-            ) : (
-              <p className="text-sm text-caution">
-                No questions match this selection. Go back and choose different subjects.
-              </p>
-            )}
-            <Link
-              to={backTo}
-              className="inline-flex h-10 items-center rounded-md px-4 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground"
-            >
-              {backLabel}
-            </Link>
-          </div>
-        </Panel>
+      <div className="mx-auto max-w-2xl animate-fade-up py-4">
+        <p className="text-xs text-muted-foreground">
+          <span className="font-mono text-primary">{def.code}</span> ·{" "}
+          {timed ? "Timed mode" : "Study mode"}
+          {onlyIds ? " · Missed-question review" : ""}
+        </p>
+        <h2 className="mt-2 text-2xl font-bold tracking-tight">{title}</h2>
+        <p className="mt-2 text-sm text-muted-foreground">
+          {onlyIds
+            ? "Questions you missed in recent attempts, in a new random order."
+            : def.description}
+        </p>
+        <p className="mt-5 font-mono text-sm tabular">
+          {plannedCount} questions · {timed ? `${Math.round(introLimit / 60)} min` : "untimed"} ·{" "}
+          {def.passPct}% to pass
+        </p>
+        <ul className="mt-4 list-disc space-y-1.5 pl-5 text-sm text-foreground/85 marker:text-muted-foreground">
+          {timed ? (
+            <>
+              <li>The timer starts when you begin and submits automatically at zero.</li>
+              <li>Flag questions to revisit; results and explanations appear at the end.</li>
+            </>
+          ) : (
+            <li>Untimed. The correct answer and explanation appear as soon as you answer.</li>
+          )}
+          <li>Questions and choices are shuffled. Unanswered questions count as incorrect.</li>
+        </ul>
+        <div className="mt-8 flex flex-wrap items-center gap-2">
+          {plannedCount > 0 ? (
+            <Button size="lg" onClick={start}>
+              <Play /> Begin {timed ? "timed exam" : "study session"}
+            </Button>
+          ) : (
+            <p className="text-sm text-caution">
+              No questions match this selection. Go back and choose different subjects.
+            </p>
+          )}
+          <Link
+            to={backTo}
+            className="inline-flex h-10 items-center rounded-md px-4 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground"
+          >
+            {backLabel}
+          </Link>
+        </div>
+        <Notice
+          className="mt-8"
+          tone="caution"
+          title="Unofficial study material — not an FAA test."
+        >
+          These are original TeachX practice questions written from FAA publications — not actual
+          FAA knowledge test questions. Always verify against current regulations and handbooks.
+        </Notice>
       </div>
     );
   }
@@ -376,18 +346,17 @@ export function ExamRunner({
           : "text-foreground";
 
   const header = (
-    <div className="sticky top-12 z-20 -mx-4 mb-4 border-b bg-background/95 px-4 py-2.5 backdrop-blur sm:-mx-6 sm:px-6">
-      <div className="flex items-center gap-3">
+    <div className="sticky top-12 z-20 -mx-4 mb-6 border-b bg-background/95 px-4 py-2 backdrop-blur sm:-mx-6 sm:px-6">
+      <div className="mx-auto flex max-w-3xl items-center gap-3">
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold">{title}</p>
+          <p className="truncate text-sm font-medium">{title}</p>
           <p className="font-mono text-xs text-muted-foreground tabular">
-            {phase === "review" ? "Review & submit" : `Question ${idx + 1} of ${questions.length}`}{" "}
-            · {answeredCount} answered
+            {answeredCount}/{questions.length} answered
           </p>
         </div>
         <div
           className={cn(
-            "flex items-center gap-1.5 rounded-md border bg-panel px-2.5 py-1.5 font-mono text-base font-semibold tabular",
+            "flex items-center gap-1.5 font-mono text-base font-semibold tabular",
             timeTone,
           )}
           aria-live="off"
@@ -406,7 +375,7 @@ export function ExamRunner({
           </Button>
         ) : null}
       </div>
-      <div className="mt-2 h-1 overflow-hidden rounded-full bg-muted">
+      <div className="mx-auto mt-2 h-0.5 max-w-3xl overflow-hidden rounded-full bg-muted">
         <div
           className="h-full rounded-full bg-primary transition-all"
           style={{ width: `${questions.length ? (answeredCount / questions.length) * 100 : 0}%` }}
@@ -417,7 +386,7 @@ export function ExamRunner({
 
   const navigator = (
     <div>
-      <div className="grid grid-cols-8 gap-1.5 sm:grid-cols-10 lg:grid-cols-6">
+      <div className="grid grid-cols-8 gap-1.5 sm:grid-cols-12">
         {questions.map((qq, i) => {
           const a = answers[i];
           const studyState = !timed && revealed[i] ? (a === qq.answer ? "ok" : "bad") : null;
@@ -466,6 +435,9 @@ export function ExamRunner({
             <span className="size-2.5 rounded-sm bg-warning/40" /> Incorrect
           </span>
         ) : null}
+        <span className="ml-auto hidden items-center gap-1 sm:flex">
+          <Keyboard className="size-3" /> 1–4 / A–D answer · ← → move · F flag
+        </span>
       </div>
     </div>
   );
@@ -477,98 +449,77 @@ export function ExamRunner({
         {leaveDialog}
         {header}
         <div className="mx-auto max-w-3xl animate-fade-up">
-          <Panel title="Review & submit">
-            <div className="grid grid-cols-3 gap-2">
-              <div className="rounded-md border px-3 py-2.5">
-                <div className="label-caps">Answered</div>
-                <div className="mt-1 font-mono text-xl font-semibold text-ok tabular">
-                  {answeredCount}
-                </div>
-              </div>
-              <div className="rounded-md border px-3 py-2.5">
-                <div className="label-caps">Unanswered</div>
-                <div
-                  className={cn(
-                    "mt-1 font-mono text-xl font-semibold tabular",
-                    unansweredIdx.length ? "text-caution" : "",
-                  )}
-                >
-                  {unansweredIdx.length}
-                </div>
-              </div>
-              <div className="rounded-md border px-3 py-2.5">
-                <div className="label-caps">Flagged</div>
-                <div
-                  className={cn(
-                    "mt-1 font-mono text-xl font-semibold tabular",
-                    flaggedIdx.length ? "text-caution" : "",
-                  )}
-                >
-                  {flaggedIdx.length}
-                </div>
-              </div>
-            </div>
-            {unansweredIdx.length > 0 ? (
-              <div className="mt-4">
-                <p className="mb-2 flex items-center gap-1.5 text-sm font-medium text-caution">
-                  <AlertTriangle className="size-4" /> Unanswered questions (count as incorrect)
-                </p>
-                <div className="flex flex-wrap gap-1.5">
-                  {unansweredIdx.map((i) => (
-                    <button
-                      key={i}
-                      type="button"
-                      onClick={() => {
-                        go(i);
-                        setPhase("active");
-                      }}
-                      className="rounded border border-caution/40 bg-caution/10 px-2 py-1 font-mono text-xs text-caution hover:bg-caution/20"
-                    >
-                      Q{i + 1}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <p className="mt-4 flex items-center gap-1.5 text-sm text-ok">
-                <CheckCircle2 className="size-4" /> All questions answered.
+          <h2 className="text-xl font-bold tracking-tight">Review &amp; submit</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            <span className="text-ok">{answeredCount} answered</span> ·{" "}
+            <span className={unansweredIdx.length ? "text-caution" : ""}>
+              {unansweredIdx.length} unanswered
+            </span>{" "}
+            ·{" "}
+            <span className={flaggedIdx.length ? "text-caution" : ""}>
+              {flaggedIdx.length} flagged
+            </span>
+          </p>
+          {unansweredIdx.length > 0 ? (
+            <div className="mt-4">
+              <p className="mb-2 flex items-center gap-1.5 text-sm font-medium text-caution">
+                <AlertTriangle className="size-4" /> Unanswered questions (count as incorrect)
               </p>
-            )}
-            {flaggedIdx.length > 0 ? (
-              <div className="mt-4">
-                <p className="mb-2 flex items-center gap-1.5 text-sm font-medium">
-                  <Flag className="size-4 text-caution" /> Flagged for review
-                </p>
-                <div className="flex flex-wrap gap-1.5">
-                  {flaggedIdx.map((i) => (
-                    <button
-                      key={i}
-                      type="button"
-                      onClick={() => {
-                        go(i);
-                        setPhase("active");
-                      }}
-                      className="rounded border px-2 py-1 font-mono text-xs hover:bg-accent"
-                    >
-                      Q{i + 1}
-                    </button>
-                  ))}
-                </div>
+              <div className="flex flex-wrap gap-1.5">
+                {unansweredIdx.map((i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => {
+                      go(i);
+                      setPhase("active");
+                    }}
+                    className="rounded border border-caution/40 bg-caution/10 px-2 py-1 font-mono text-xs text-caution hover:bg-caution/20"
+                  >
+                    Q{i + 1}
+                  </button>
+                ))}
               </div>
-            ) : null}
-            <div className="mt-5 border-t pt-4">
-              <p className="label-caps mb-2">All questions</p>
-              {navigator}
             </div>
-            <div className="mt-6 flex flex-wrap gap-2">
-              <Button variant="outline" onClick={() => setPhase("active")}>
-                <ArrowLeft /> Return to exam
-              </Button>
-              <Button onClick={() => setConfirmOpen(true)}>
-                <ClipboardCheck /> Submit exam
-              </Button>
+          ) : (
+            <p className="mt-4 flex items-center gap-1.5 text-sm text-ok">
+              <CheckCircle2 className="size-4" /> All questions answered.
+            </p>
+          )}
+          {flaggedIdx.length > 0 ? (
+            <div className="mt-4">
+              <p className="mb-2 flex items-center gap-1.5 text-sm font-medium">
+                <Flag className="size-4 text-caution" /> Flagged for review
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {flaggedIdx.map((i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => {
+                      go(i);
+                      setPhase("active");
+                    }}
+                    className="rounded border px-2 py-1 font-mono text-xs hover:bg-accent"
+                  >
+                    Q{i + 1}
+                  </button>
+                ))}
+              </div>
             </div>
-          </Panel>
+          ) : null}
+          <div className="mt-6 border-t pt-4">
+            <p className="mb-2 text-xs text-muted-foreground">All questions</p>
+            {navigator}
+          </div>
+          <div className="mt-6 flex flex-wrap gap-2">
+            <Button variant="outline" onClick={() => setPhase("active")}>
+              <ArrowLeft /> Return to exam
+            </Button>
+            <Button onClick={() => setConfirmOpen(true)}>
+              <ClipboardCheck /> Submit exam
+            </Button>
+          </div>
         </div>
         <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
           <AlertDialogContent>
@@ -603,89 +554,65 @@ export function ExamRunner({
     <div>
       {leaveDialog}
       {header}
-      <div className="grid gap-4 lg:grid-cols-[1fr_280px]">
-        <div className="min-w-0">
-          <QuestionCard
-            key={q.id + idx}
-            q={q}
-            number={idx + 1}
-            total={questions.length}
-            selected={answers[idx] ?? null}
-            onSelect={!timed && revealed[idx] ? undefined : select}
-            reveal={!timed && (revealed[idx] ?? false)}
-            flagged={flags[idx] ?? false}
-          />
-          {!timed && !revealed[idx] ? (
-            <p className="mt-2 text-xs text-muted-foreground">
-              Study mode: choose an answer to see the explanation.
-            </p>
-          ) : null}
+      <div className="mx-auto min-w-0 max-w-3xl">
+        <QuestionCard
+          key={q.id + idx}
+          q={q}
+          number={idx + 1}
+          total={questions.length}
+          selected={answers[idx] ?? null}
+          onSelect={!timed && revealed[idx] ? undefined : select}
+          reveal={!timed && (revealed[idx] ?? false)}
+          flagged={flags[idx] ?? false}
+        />
 
-          {/* Action bar — sticky on phones */}
-          <div className="sticky bottom-0 z-10 -mx-4 mt-4 border-t bg-background/95 px-4 py-3 backdrop-blur sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-none">
-            <div className="flex items-center gap-2">
+        {/* Action bar — sticky on phones */}
+        <div className="sticky bottom-0 z-10 -mx-4 mt-6 border-t bg-background/95 px-4 py-3 backdrop-blur sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-none">
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={() => go(idx - 1)}
+              disabled={idx === 0}
+              aria-label="Previous question"
+            >
+              <ArrowLeft /> <span className="hidden sm:inline">Previous</span>
+            </Button>
+            <Button
+              variant={flags[idx] ? "secondary" : "ghost"}
+              onClick={toggleFlag}
+              aria-pressed={flags[idx] ?? false}
+              className={cn(flags[idx] && "text-caution")}
+            >
+              <Flag /> <span className="hidden sm:inline">{flags[idx] ? "Flagged" : "Flag"}</span>
+            </Button>
+            <Button variant="ghost" onClick={() => setShowNav((s) => !s)} aria-expanded={showNav}>
+              <Grid3x3 /> <span className="hidden sm:inline">Questions</span>
+            </Button>
+            <div className="flex-1" />
+            {isLast ? (
+              <Button onClick={() => setPhase("review")}>
+                <ClipboardCheck /> Review & submit
+              </Button>
+            ) : (
+              <Button onClick={() => go(idx + 1)}>
+                Next <ArrowRight />
+              </Button>
+            )}
+          </div>
+          {showNav ? (
+            <div className="mt-3 rounded-md border bg-card p-3">
+              {navigator}
               <Button
                 variant="outline"
-                onClick={() => go(idx - 1)}
-                disabled={idx === 0}
-                aria-label="Previous question"
+                size="sm"
+                className="mt-3 w-full sm:hidden"
+                onClick={() => setPhase("review")}
               >
-                <ArrowLeft /> <span className="hidden sm:inline">Previous</span>
+                <ClipboardCheck /> Review & submit
               </Button>
-              <Button
-                variant={flags[idx] ? "secondary" : "ghost"}
-                onClick={toggleFlag}
-                aria-pressed={flags[idx] ?? false}
-                className={cn(flags[idx] && "text-caution")}
-              >
-                <Flag /> <span className="hidden sm:inline">{flags[idx] ? "Flagged" : "Flag"}</span>
-              </Button>
-              <Button
-                variant="ghost"
-                className="lg:hidden"
-                onClick={() => setShowNav((s) => !s)}
-                aria-expanded={showNav}
-              >
-                <Grid3x3 /> <span className="hidden sm:inline">Questions</span>
-              </Button>
-              <div className="flex-1" />
-              {isLast ? (
-                <Button onClick={() => setPhase("review")}>
-                  <ClipboardCheck /> Review & submit
-                </Button>
-              ) : (
-                <Button onClick={() => go(idx + 1)}>
-                  Next <ArrowRight />
-                </Button>
-              )}
             </div>
-            {showNav ? (
-              <div className="mt-3 rounded-md border bg-card p-3 lg:hidden">
-                {navigator}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="mt-3 w-full"
-                  onClick={() => setPhase("review")}
-                >
-                  <ClipboardCheck /> Review & submit
-                </Button>
-              </div>
-            ) : null}
-          </div>
+          ) : null}
         </div>
-        <aside className="hidden lg:block">
-          <div className="sticky top-32 grid gap-3">
-            <Panel title="Question navigator">{navigator}</Panel>
-            <Button variant="outline" onClick={() => setPhase("review")}>
-              <ClipboardCheck /> Review & submit
-            </Button>
-            <p className="px-1 text-[11px] leading-relaxed text-muted-foreground">
-              <Keyboard className="mr-1 inline size-3" />
-              1–4 / A–D answer · ← → move · F flag
-            </p>
-          </div>
-        </aside>
       </div>
     </div>
   );

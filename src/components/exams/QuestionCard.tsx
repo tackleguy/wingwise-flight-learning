@@ -3,15 +3,6 @@ import type { QuizQuestion } from "@/lib/content/types";
 import { Pill } from "@/components/app/page";
 import { cn } from "@/lib/utils";
 
-const KIND_LABEL: Record<NonNullable<QuizQuestion["kind"]>, string> = {
-  mc: "Multiple choice",
-  tf: "True / False",
-  scenario: "Scenario",
-  calc: "Calculation",
-  chart: "Chart",
-  weather: "Weather report",
-};
-
 export const LETTERS = ["A", "B", "C", "D", "E"];
 
 /** Monospace "figure" panel for METAR/TAF/chart/table context; prose panel for scenarios. */
@@ -73,31 +64,32 @@ export function QuestionCard({
 }) {
   const disabled = !onSelect;
   return (
-    <article className={cn("panel", compact ? "p-4" : "p-4 sm:p-6")}>
-      <div className="mb-3 flex flex-wrap items-center gap-2">
-        <span className="font-mono text-xs text-muted-foreground tabular">
-          Q{number}
-          <span className="text-muted-foreground/60">/{total}</span>
+    <article className={cn(compact && "rounded-lg border p-4")} data-question-id={q.id}>
+      <div className="mb-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+        <span className="font-mono tabular">
+          Question {number}
+          <span className="text-muted-foreground/60"> of {total}</span>
         </span>
-        <Pill>{q.subject}</Pill>
-        {q.kind ? <Pill tone="cyan">{KIND_LABEL[q.kind]}</Pill> : null}
+        <span aria-hidden>·</span>
+        <span>{q.subject}</span>
         {flagged ? (
-          <Pill tone="caution">
+          <span className="inline-flex items-center gap-1 text-caution">
             <Flag className="size-3" /> Flagged
-          </Pill>
+          </span>
         ) : null}
-        <span className="ml-auto font-mono text-[10px] text-muted-foreground/70">{q.id}</span>
+        <span className="ml-auto font-mono text-[10px] text-muted-foreground/50">{q.id}</span>
       </div>
       <QuestionContext q={q} />
       <h2
-        className={cn(
-          "font-semibold leading-snug",
-          compact ? "text-[15px]" : "text-base sm:text-lg",
-        )}
+        className={cn("font-semibold leading-snug", compact ? "text-[15px]" : "text-lg sm:text-xl")}
       >
         {q.prompt}
       </h2>
-      <div className="mt-4 grid gap-2" role="radiogroup" aria-label="Answer choices">
+      <div
+        className={cn("grid gap-2", compact ? "mt-4" : "mt-6")}
+        role="radiogroup"
+        aria-label="Answer choices"
+      >
         {q.choices.map((c, i) => {
           const isSel = selected === i;
           const isCorrect = i === q.answer;
@@ -125,7 +117,7 @@ export function QuestionCard({
                 state === "selected" && "border-primary bg-primary/10",
                 state === "correct" && "border-ok/60 bg-ok/10",
                 state === "wrong" && "border-warning/60 bg-warning/10",
-                state === "idle" && "border-border bg-background/40",
+                state === "idle" && "border-border",
               )}
             >
               <span
@@ -154,7 +146,7 @@ export function QuestionCard({
         })}
       </div>
       {reveal ? (
-        <div className="mt-4 rounded-md border border-border bg-muted/30 p-3 animate-fade-up">
+        <div className="mt-4 rounded-md bg-muted/30 p-3 animate-fade-up">
           <div className="mb-1.5 flex flex-wrap items-center gap-2">
             {selected === null ? (
               <Pill tone="caution">Not answered</Pill>

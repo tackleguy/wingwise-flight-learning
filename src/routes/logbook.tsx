@@ -10,6 +10,7 @@ import {
   PlaneTakeoff,
   RotateCcw,
   Search,
+  SlidersHorizontal,
   Trash2,
   XCircle,
 } from "lucide-react";
@@ -19,8 +20,6 @@ import {
   Notice,
   Page,
   PageHeader,
-  Pill,
-  Stat,
   formatDate,
   formatDateTime,
   formatDuration,
@@ -28,6 +27,12 @@ import {
 import { ConfirmAction, downloadFile } from "@/components/app/confirm";
 import { HrefLink, buildHref } from "@/components/app/xlink";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -82,6 +87,7 @@ function Logbook() {
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [open, setOpen] = useState<string | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
 
   const list = useMemo(() => {
     const k = q.trim().toLowerCase();
@@ -123,6 +129,9 @@ function Logbook() {
   );
 
   const filtered = q || kind !== "all" || rules !== "all" || aircraft !== "all" || from || to;
+  const activeFilters = [kind !== "all", rules !== "all", aircraft !== "all", !!from, !!to].filter(
+    Boolean,
+  ).length;
   const usedAircraft = useMemo(
     () => AIRCRAFT_PERF.filter((p) => flights.some((f) => f.aircraftId === p.id)),
     [flights],
@@ -196,15 +205,24 @@ function Logbook() {
         eyebrow="Overview"
         icon={Notebook}
         title="Flight Logbook"
-        description="Every simulator flight you complete is recorded here with its maneuvers, objectives, score and debrief."
+        description="Every simulator flight you complete, with its score and debrief."
         actions={
           <>
-            <Button variant="outline" size="sm" onClick={exportCsv} disabled={!list.length}>
-              <Download className="size-4" /> CSV
-            </Button>
-            <Button variant="outline" size="sm" onClick={exportJson} disabled={!list.length}>
-              <FileJson className="size-4" /> JSON
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" disabled={!list.length}>
+                  <Download className="size-4" /> Export
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onSelect={exportCsv}>
+                  <Download className="size-4" /> CSV
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={exportJson}>
+                  <FileJson className="size-4" /> JSON
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Button size="sm" asChild>
               <Link to="/simulator">
                 <PlaneTakeoff className="size-4" /> New flight
@@ -214,7 +232,11 @@ function Logbook() {
         }
       />
 
-      <Notice tone="caution" title="Simulated time is not loggable flight time." className="mb-6">
+      <Notice
+        tone="caution"
+        title="Simulated time is not loggable flight time."
+        className="-mt-2 mb-5"
+      >
         Under 14 CFR 61.51, time in a personal-computer simulator cannot be logged toward a
         certificate or rating. Training time may only be credited when it is received in an
         FAA-approved aviation training device (ATD), flight training device (FTD) or full flight
@@ -226,48 +248,82 @@ function Logbook() {
         <EmptyState
           icon={Notebook}
           title="Your logbook is empty"
-          description="Complete a simulator scenario — a traffic pattern, an ILS approach or an engine failure — and it will appear here with its score, objectives and instructor feedback."
+          description="Complete a simulator scenario and it will appear here with its score and debrief."
           action={{ to: "/simulator", label: "Open the flight simulator" }}
         />
       ) : (
         <>
-          <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
-            <Stat
-              label="Flights"
-              value={list.length}
-              sub={filtered ? `of ${flights.length} total` : "all time"}
-            />
-            <Stat
-              label="Sim time"
-              value={formatDuration(totals.sec)}
-              sub="h:mm:ss (not loggable)"
-            />
-            <Stat label="Landings" value={totals.landings} />
-            <Stat label="Approaches" value={totals.approaches} />
-            <Stat
-              label="IFR / night"
-              value={`${(totals.ifr / 3600).toFixed(1)} / ${(totals.night / 3600).toFixed(1)}`}
-              sub="hours"
-            />
-            <Stat
-              label="Avg score"
-              value={list.length ? Math.round(totals.avg) : "—"}
-              tone={totals.avg >= 80 ? "ok" : totals.avg >= 60 ? "primary" : "caution"}
-            />
-          </div>
+          <dl className="mb-5 grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-4">
+            {[
+              {
+                l: "Flights",
+                v: String(list.length),
+                sub: filtered ? `of ${flights.length} total` : "all time",
+              },
+              { l: "Sim time", v: formatDuration(totals.sec), sub: "not loggable" },
+              {
+                l: "Landings / app",
+                v: `${totals.landings} / ${totals.approaches}`,
+                sub: `IFR ${(totals.ifr / 3600).toFixed(1)} h · night ${(totals.night / 3600).toFixed(1)} h`,
+              },
+              {
+                l: "Avg score",
+                v: list.length ? String(Math.round(totals.avg)) : "—",
+                sub: "",
+                cls: scoreTone(totals.avg),
+              },
+            ].map((x) => (
+              <div key={x.l} className="min-w-0">
+                <dt className="label-caps">{x.l}</dt>
+                <dd className={cn("mt-1 font-mono text-xl font-semibold tabular", x.cls)}>{x.v}</dd>
+                {x.sub ? <dd className="text-xs text-muted-foreground">{x.sub}</dd> : null}
+              </div>
+            ))}
+          </dl>
 
-          <div className="mb-3 flex flex-col gap-2 lg:flex-row lg:flex-wrap lg:items-end">
-            <div className="relative lg:w-64">
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            <div className="relative w-full sm:w-64">
               <Search className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
-                placeholder="Scenario, airport, maneuver…"
+                placeholder="Search flights…"
                 className="pl-8"
                 aria-label="Search flights"
               />
             </div>
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-5 lg:flex">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowFilters((v) => !v)}
+              aria-expanded={showFilters || activeFilters > 0}
+            >
+              <SlidersHorizontal className="size-3.5" /> Filters
+              {activeFilters ? (
+                <span className="rounded-full bg-primary/20 px-1.5 text-[10px] text-primary">
+                  {activeFilters}
+                </span>
+              ) : null}
+            </Button>
+            {filtered ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setQ("");
+                  setKind("all");
+                  setRules("all");
+                  setAircraft("all");
+                  setFrom("");
+                  setTo("");
+                }}
+              >
+                <RotateCcw className="size-3.5" /> Clear
+              </Button>
+            ) : null}
+          </div>
+          {showFilters || activeFilters > 0 ? (
+            <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-5 lg:flex">
               <Select value={kind} onValueChange={(v) => setKind(v as FlightLog["kind"] | "all")}>
                 <SelectTrigger className="lg:w-40" aria-label="Kind">
                   <SelectValue />
@@ -319,23 +375,7 @@ function Logbook() {
                 className="lg:w-40"
               />
             </div>
-            {filtered ? (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setQ("");
-                  setKind("all");
-                  setRules("all");
-                  setAircraft("all");
-                  setFrom("");
-                  setTo("");
-                }}
-              >
-                <RotateCcw className="size-3.5" /> Clear
-              </Button>
-            ) : null}
-          </div>
+          ) : null}
 
           {list.length === 0 ? (
             <EmptyState
@@ -344,10 +384,10 @@ function Logbook() {
               description="Clear or adjust the filters to see more of your logbook."
             />
           ) : (
-            <div className="panel overflow-x-auto">
+            <div className="overflow-x-auto border-t">
               <table className="w-full min-w-[900px] text-sm">
                 <thead>
-                  <tr className="border-b bg-muted/40 text-left">
+                  <tr className="border-b text-left">
                     <th className="w-8" />
                     {[
                       "Date",
@@ -407,8 +447,17 @@ function Logbook() {
                           </td>
                           <td className="px-2 py-2 text-xs">{KIND_LABEL[f.kind]}</td>
                           <td className="px-2 py-2">
-                            <Pill tone={f.rules === "VFR" ? "ok" : "primary"}>{f.rules}</Pill>
-                            {f.night ? <Pill className="ml-1">Night</Pill> : null}
+                            <span
+                              className={cn(
+                                "text-xs font-semibold",
+                                f.rules === "VFR" ? "text-ok" : "text-primary",
+                              )}
+                            >
+                              {f.rules}
+                            </span>
+                            {f.night ? (
+                              <span className="ml-1 text-xs text-muted-foreground">· night</span>
+                            ) : null}
                           </td>
                           <td className="px-2 py-2 font-mono text-xs">{f.landings}</td>
                           <td className="px-2 py-2 font-mono text-xs">{f.approaches}</td>
@@ -433,7 +482,7 @@ function Logbook() {
                   })}
                 </tbody>
                 <tfoot>
-                  <tr className="border-t bg-muted/40 font-semibold">
+                  <tr className="font-semibold">
                     <td />
                     <td className="px-2 py-2 text-xs" colSpan={4}>
                       Totals ({list.length} flights)
@@ -476,9 +525,9 @@ function EntryDetail({ f, onDeleted }: { f: FlightLog; onDeleted: () => void }) 
             <p className="label-caps mt-3 mb-1.5">Maneuvers</p>
             <div className="flex flex-wrap gap-1">
               {f.maneuvers.map((m) => (
-                <Pill key={m} tone="cyan">
+                <span key={m} className="rounded bg-muted px-1.5 py-0.5 text-[11px]">
                   {m}
-                </Pill>
+                </span>
               ))}
             </div>
           </>

@@ -1,32 +1,9 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import {
-  ArrowRight,
-  BookOpenCheck,
-  ClipboardList,
-  FileCheck2,
-  GraduationCap,
-  History,
-  ListChecks,
-  Play,
-  Shuffle,
-  Target,
-  Timer,
-} from "lucide-react";
-import {
-  EmptyState,
-  Meter,
-  Notice,
-  Page,
-  PageHeader,
-  Panel,
-  Pill,
-  Section,
-  Stat,
-  formatDate,
-  formatDuration,
-} from "@/components/app/page";
+import { ArrowRight, BookOpenCheck, FileCheck2, History, Play, Timer } from "lucide-react";
+import { EmptyState, Meter, Notice, Page, PageHeader } from "@/components/app/page";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   EXAM_SUBJECTS,
@@ -91,24 +68,27 @@ const SUBJECT_GROUPS: { label: string; subjects: ExamSubject[] }[] = [
 
 const COUNT_OPTIONS = [10, 20, 30, 50];
 
+type PracticeTab = "topics" | "custom" | "history";
+
 function PracticeTests() {
   const hydrated = useHydrated();
   const exams = useStore((s) => s.exams);
   const missed = useMemo(() => recentMissedIds(exams), [exams]);
   const weak = useMemo(() => weakestSubjects(exams, 5), [exams]);
   const [showAll, setShowAll] = useState(false);
+  const [tab, setTab] = useState<PracticeTab>("topics");
 
   const avg = exams.length ? exams.reduce((a, e) => a + e.scorePct, 0) / exams.length : 0;
   const best = exams.reduce((a, e) => Math.max(a, e.scorePct), 0);
   const passes = exams.filter((e) => e.passed).length;
 
   return (
-    <Page>
+    <Page className="max-w-6xl">
       <PageHeader
         eyebrow="Test"
         title="Practice Test Center"
         icon={BookOpenCheck}
-        description="Sharpen one subject at a time, build your own quiz, review what you missed, and track your scores. Every question includes a full explanation and reference."
+        description="Practise one subject at a time or build your own quiz. Every question has an explanation and reference."
         actions={
           <Link
             to="/written-exams"
@@ -122,215 +102,195 @@ function PracticeTests() {
       <Notice
         tone="caution"
         title="Unofficial study material — not actual FAA knowledge test questions."
-        className="mb-6"
+        className="-mt-2 mb-4"
       >
         TeachX questions are original, written from 14 CFR, the AIM and FAA handbooks to teach the
         same knowledge areas. Regulations change — verify against current publications.
       </Notice>
 
-      <div className="mb-8 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Stat
-          label="Attempts"
-          value={hydrated ? exams.length : "—"}
-          sub={hydrated ? `${passes} at or above 70%` : "Loading…"}
-          icon={ClipboardList}
-        />
-        <Stat
-          label="Average score"
-          value={hydrated && exams.length ? `${Math.round(avg)}%` : "—"}
-          tone={exams.length ? (avg >= 70 ? "ok" : "caution") : "default"}
-          icon={Target}
-        />
-        <Stat
-          label="Best score"
-          value={hydrated && exams.length ? `${Math.round(best)}%` : "—"}
-          tone={best >= 70 ? "ok" : "default"}
-          icon={GraduationCap}
-        />
-        <Stat
-          label="Question bank"
-          value={QUESTION_BANK.length}
-          sub={`${EXAM_SUBJECTS.length} subjects · 7 certificate levels`}
-          icon={ListChecks}
-        />
+      {/* One quiet summary line instead of four stat cards. */}
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-x-6 gap-y-2 text-sm text-muted-foreground">
+        <p>
+          {hydrated && exams.length ? (
+            <>
+              <span className="font-mono text-foreground tabular">{exams.length}</span> attempts ·{" "}
+              {passes} passed · avg{" "}
+              <span className={cn("font-mono tabular", avg >= 70 ? "text-ok" : "text-caution")}>
+                {Math.round(avg)}%
+              </span>{" "}
+              · best <span className="font-mono text-foreground tabular">{Math.round(best)}%</span>
+            </>
+          ) : (
+            <>
+              {QUESTION_BANK.length} questions across {EXAM_SUBJECTS.length} subjects
+            </>
+          )}
+        </p>
+        {hydrated && missed.length > 0 ? (
+          <p className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <span>
+              <span className="font-mono text-caution tabular">{missed.length}</span> recently
+              missed:
+            </span>
+            <Link
+              to="/exam/$examId"
+              params={{ examId: "custom" }}
+              search={{ mode: "study", review: "missed" }}
+              className="font-medium text-primary hover:underline"
+            >
+              Study them
+            </Link>
+            <Link
+              to="/exam/$examId"
+              params={{ examId: "custom" }}
+              search={{ mode: "timed", review: "missed" }}
+              className="font-medium text-primary hover:underline"
+            >
+              Timed retest
+            </Link>
+          </p>
+        ) : null}
       </div>
 
-      <Section
-        title="Topic practice tests"
-        description="15–25 questions on one area. Take them timed for exam conditions or in study mode to learn as you go."
-      >
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          {TOPIC_EXAMS.map((e) => {
-            const mine = exams.filter((a) => a.examId === e.id);
-            const last = mine[0];
-            const bestPct = mine.reduce((a, x) => Math.max(a, x.scorePct), 0);
-            return (
-              <div key={e.id} className="panel flex flex-col p-4">
-                <div className="flex items-center justify-between gap-2">
-                  <Pill tone="primary">{e.code}</Pill>
-                  <span className="font-mono text-[11px] text-muted-foreground tabular">
-                    {e.questionCount} q · {e.timeLimitMin} min
-                  </span>
-                </div>
-                <h3 className="mt-2 font-semibold leading-snug">{e.title}</h3>
-                <p className="mt-1 flex-1 text-xs leading-relaxed text-muted-foreground">
-                  {e.description}
-                </p>
-                <div className="mt-3 min-h-9">
-                  {hydrated && last ? (
-                    <Meter
-                      value={bestPct}
-                      label={`Best ${Math.round(bestPct)}% · last ${Math.round(last.scorePct)}%`}
-                    />
-                  ) : (
-                    <p className="text-[11px] text-muted-foreground">Not attempted yet</p>
-                  )}
-                </div>
-                <div className="mt-3 grid grid-cols-2 gap-2">
-                  <Link
-                    to="/exam/$examId"
-                    params={{ examId: e.id }}
-                    search={{ mode: "timed" }}
-                    className="inline-flex h-8 items-center justify-center gap-1.5 rounded-md bg-primary px-3 text-xs font-semibold text-primary-foreground hover:bg-primary/90"
-                  >
-                    <Timer className="size-3.5" /> Timed
-                  </Link>
-                  <Link
-                    to="/exam/$examId"
-                    params={{ examId: e.id }}
-                    search={{ mode: "study" }}
-                    className="inline-flex h-8 items-center justify-center gap-1.5 rounded-md border border-input px-3 text-xs font-semibold hover:bg-accent"
-                  >
-                    <BookOpenCheck className="size-3.5" /> Study
-                  </Link>
-                </div>
-              </div>
-            );
-          })}
+      <Tabs value={tab} onValueChange={(v) => setTab(v as PracticeTab)}>
+        <div className="-mx-4 mb-5 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+          <TabsList>
+            <TabsTrigger value="topics">Topic tests</TabsTrigger>
+            <TabsTrigger value="custom">Custom quiz</TabsTrigger>
+            <TabsTrigger value="history">
+              History
+              {hydrated && exams.length ? (
+                <span className="ml-1 font-mono text-[10px] text-muted-foreground">
+                  {exams.length}
+                </span>
+              ) : null}
+            </TabsTrigger>
+          </TabsList>
         </div>
-      </Section>
 
-      <div className="mb-8 grid gap-4 lg:grid-cols-[1.6fr_1fr]">
-        <CustomQuizBuilder />
-        <div className="grid content-start gap-4">
-          <Panel title="Study mode vs timed mode">
-            <div className="grid gap-3 text-sm">
-              <div className="flex gap-2.5">
-                <BookOpenCheck className="mt-0.5 size-4 shrink-0 text-cyan" />
-                <p>
-                  <span className="font-semibold">Study mode</span> is untimed. As soon as you
-                  answer, you see whether you were right, the correct answer, and why the tempting
-                  wrong answer is wrong — with the regulation or handbook reference.
-                </p>
-              </div>
-              <div className="flex gap-2.5">
-                <Timer className="mt-0.5 size-4 shrink-0 text-caution" />
-                <p>
-                  <span className="font-semibold">Timed mode</span> simulates test conditions: a
-                  countdown, flagging, a review screen before submitting, and explanations only at
-                  the end. Use it to check readiness.
-                </p>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Both modes shuffle questions and answer choices on every attempt, and both are saved
-                to your history.
-              </p>
-            </div>
-          </Panel>
-          <Panel title="Review missed questions">
-            {!hydrated ? (
-              <p className="text-sm text-muted-foreground">Loading…</p>
-            ) : missed.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                Questions you miss in any practice test or written exam are collected here for
-                focused review.
-              </p>
-            ) : (
-              <>
-                <p className="text-sm">
-                  <span className="font-mono text-2xl font-semibold text-caution tabular">
-                    {missed.length}
-                  </span>{" "}
-                  <span className="text-muted-foreground">
-                    question{missed.length > 1 ? "s" : ""} missed in your last{" "}
-                    {Math.min(10, exams.length)} attempts.
-                  </span>
-                </p>
-                <div className="mt-3 grid grid-cols-2 gap-2">
-                  <Link
-                    to="/exam/$examId"
-                    params={{ examId: "custom" }}
-                    search={{ mode: "study", review: "missed" }}
-                    className="inline-flex h-8 items-center justify-center gap-1.5 rounded-md bg-primary px-3 text-xs font-semibold text-primary-foreground hover:bg-primary/90"
-                  >
-                    <BookOpenCheck className="size-3.5" /> Study them
-                  </Link>
-                  <Link
-                    to="/exam/$examId"
-                    params={{ examId: "custom" }}
-                    search={{ mode: "timed", review: "missed" }}
-                    className="inline-flex h-8 items-center justify-center gap-1.5 rounded-md border border-input px-3 text-xs font-semibold hover:bg-accent"
-                  >
-                    <Timer className="size-3.5" /> Timed retest
-                  </Link>
-                </div>
-              </>
-            )}
-          </Panel>
-          <Panel title="Weakest subjects">
-            {!hydrated ? (
-              <p className="text-sm text-muted-foreground">Loading…</p>
-            ) : weak.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                Complete a few tests (at least 3 questions per subject) to see where to focus.
-              </p>
-            ) : (
-              <ul className="grid gap-3">
-                {weak.map((s) => {
-                  const l = lessonFor(s.subject);
-                  return (
-                    <li key={s.subject}>
-                      <Meter value={s.pct} label={`${s.subject} · ${s.correct}/${s.total}`} />
-                      {l ? (
-                        <Link
-                          to={l.to}
-                          className="mt-1 inline-flex items-center gap-1 text-[11px] text-primary hover:underline"
+        <TabsContent value="topics">
+          <p className="mb-3 text-xs text-muted-foreground">
+            <span className="text-foreground/85">Study</span> is untimed with explanations after
+            each answer. <span className="text-foreground/85">Timed</span> simulates test
+            conditions; explanations come at the end.
+          </p>
+          <ul className="divide-y border-y">
+            {TOPIC_EXAMS.map((e) => {
+              const mine = exams.filter((a) => a.examId === e.id);
+              const last = mine[0];
+              const bestPct = mine.reduce((a, x) => Math.max(a, x.scorePct), 0);
+              return (
+                <li
+                  key={e.id}
+                  className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:gap-4"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="flex items-baseline gap-2">
+                      <span className="w-11 shrink-0 font-mono text-[11px] text-muted-foreground">
+                        {e.code}
+                      </span>
+                      <span className="font-medium">{e.title}</span>
+                    </p>
+                    <p
+                      className="truncate pl-13 text-xs text-muted-foreground"
+                      title={e.description}
+                    >
+                      {e.questionCount} questions · {e.timeLimitMin} min
+                      <span className="hidden md:inline"> · {e.description}</span>
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3 pl-13 sm:pl-0">
+                    <span className="w-24 text-xs sm:text-right">
+                      {hydrated && last ? (
+                        <span
+                          className={cn(
+                            "font-mono tabular",
+                            bestPct >= 70 ? "text-ok" : "text-caution",
+                          )}
+                          title={`Last ${Math.round(last.scorePct)}%`}
                         >
-                          {l.label} <ArrowRight className="size-3" />
-                        </Link>
-                      ) : null}
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </Panel>
-        </div>
-      </div>
+                          Best {Math.round(bestPct)}%
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground">Not taken</span>
+                      )}
+                    </span>
+                    <Link
+                      to="/exam/$examId"
+                      params={{ examId: e.id }}
+                      search={{ mode: "study" }}
+                      className="inline-flex h-8 items-center justify-center gap-1.5 rounded-md border border-input px-3 text-xs font-medium hover:bg-accent"
+                    >
+                      <BookOpenCheck className="size-3.5" /> Study
+                    </Link>
+                    <Link
+                      to="/exam/$examId"
+                      params={{ examId: e.id }}
+                      search={{ mode: "timed" }}
+                      className="inline-flex h-8 items-center justify-center gap-1.5 rounded-md px-3 text-xs font-medium text-primary hover:bg-primary/10"
+                    >
+                      <Timer className="size-3.5" /> Timed
+                    </Link>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </TabsContent>
 
-      <Section
-        title="Attempt history"
-        description="All practice tests and written exams, newest first."
-        actions={
-          exams.length > 10 ? (
-            <Button variant="ghost" size="sm" onClick={() => setShowAll((s) => !s)}>
-              {showAll ? "Show recent" : `Show all ${exams.length}`}
-            </Button>
-          ) : undefined
-        }
-      >
-        {!hydrated ? (
-          <p className="text-sm text-muted-foreground">Loading…</p>
-        ) : exams.length === 0 ? (
-          <EmptyState
-            icon={History}
-            title="No attempts yet"
-            description="Start with a topic test in study mode, then take it timed when you feel ready."
-          />
-        ) : (
-          <HistoryTable rows={showAll ? exams : exams.slice(0, 10)} />
-        )}
-      </Section>
+        <TabsContent value="custom">
+          <CustomQuizBuilder />
+        </TabsContent>
+
+        <TabsContent value="history">
+          {!hydrated ? (
+            <p className="text-sm text-muted-foreground">Loading…</p>
+          ) : exams.length === 0 ? (
+            <EmptyState
+              icon={History}
+              title="No attempts yet"
+              description="Start with a topic test in study mode, then take it timed when you feel ready."
+            />
+          ) : (
+            <div className="space-y-8">
+              {weak.length ? (
+                <section>
+                  <h3 className="mb-3 text-sm font-semibold">Weakest subjects</h3>
+                  <ul className="grid gap-x-8 gap-y-3 sm:grid-cols-2 lg:grid-cols-3">
+                    {weak.map((s) => {
+                      const l = lessonFor(s.subject);
+                      return (
+                        <li key={s.subject}>
+                          <Meter value={s.pct} label={`${s.subject} · ${s.correct}/${s.total}`} />
+                          {l ? (
+                            <Link
+                              to={l.to}
+                              className="mt-1 inline-flex items-center gap-1 text-[11px] text-primary hover:underline"
+                            >
+                              {l.label} <ArrowRight className="size-3" />
+                            </Link>
+                          ) : null}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </section>
+              ) : null}
+              <section>
+                <div className="mb-3 flex items-center justify-between gap-2">
+                  <h3 className="text-sm font-semibold">All attempts</h3>
+                  {exams.length > 10 ? (
+                    <Button variant="ghost" size="sm" onClick={() => setShowAll((v) => !v)}>
+                      {showAll ? "Show recent" : `Show all ${exams.length}`}
+                    </Button>
+                  ) : null}
+                </div>
+                <HistoryTable rows={showAll ? exams : exams.slice(0, 10)} />
+              </section>
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
     </Page>
   );
 }
@@ -364,13 +324,9 @@ function CustomQuizBuilder() {
   };
 
   return (
-    <Panel
-      title={
-        <span className="flex items-center gap-1.5">
-          <Shuffle className="size-3.5" /> Custom quiz builder
-        </span>
-      }
-      actions={
+    <div className="max-w-3xl">
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <p className="text-sm font-semibold">Subjects</p>
         <div className="flex gap-1">
           <button
             type="button"
@@ -387,10 +343,8 @@ function CustomQuizBuilder() {
             None
           </button>
         </div>
-      }
-    >
-      <p className="label-caps mb-2">1 · Subjects</p>
-      <div className="grid gap-4 sm:grid-cols-2">
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {SUBJECT_GROUPS.map((g) => (
           <fieldset key={g.label}>
             <legend className="mb-1.5 text-xs font-semibold text-muted-foreground">
@@ -418,9 +372,9 @@ function CustomQuizBuilder() {
         ))}
       </div>
 
-      <div className="mt-5 grid gap-4 sm:grid-cols-2">
+      <div className="mt-6 grid gap-4 sm:grid-cols-2">
         <div>
-          <p className="label-caps mb-2">2 · Number of questions</p>
+          <p className="mb-2 text-sm font-semibold">Questions</p>
           <div className="flex flex-wrap gap-1.5">
             {COUNT_OPTIONS.map((n) => (
               <button
@@ -444,7 +398,7 @@ function CustomQuizBuilder() {
           </p>
         </div>
         <div>
-          <p className="label-caps mb-2">3 · Mode</p>
+          <p className="mb-2 text-sm font-semibold">Mode</p>
           <div className="flex rounded-md border p-0.5">
             {(["study", "timed"] as const).map((m) => (
               <button
@@ -475,7 +429,7 @@ function CustomQuizBuilder() {
         </div>
       </div>
 
-      <div className="mt-5 flex items-center justify-between gap-3 border-t pt-4">
+      <div className="mt-6 flex items-center justify-between gap-3 border-t pt-4">
         <p className="text-xs text-muted-foreground">
           {selected.size} subject{selected.size === 1 ? "" : "s"} · {effective} question
           {effective === 1 ? "" : "s"}
@@ -484,6 +438,6 @@ function CustomQuizBuilder() {
           <Play /> Start quiz
         </Button>
       </div>
-    </Panel>
+    </div>
   );
 }

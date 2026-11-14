@@ -50,7 +50,7 @@ import {
   type RubricConcept,
   type Verdict,
 } from "@/lib/oral";
-import { Meter, Panel, Pill, Stat } from "@/components/app/page";
+import { Meter, Pill } from "@/components/app/page";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
@@ -410,11 +410,12 @@ export function OralExamSession({
     <div className="panel flex flex-col overflow-hidden">
       {/* Session bar */}
       <div className="flex flex-wrap items-center gap-2 border-b px-4 py-2.5">
-        <Pill tone="primary">{info.label} oral</Pill>
-        {q && step !== "done" ? <Pill tone="cyan">{q.topic}</Pill> : null}
         <span className="font-mono text-xs text-muted-foreground tabular">
           {Math.min(answered + (step === "done" ? 0 : 1), total)}/{total}
         </span>
+        {q && step !== "done" ? (
+          <span className="truncate text-xs text-muted-foreground">· {q.topic}</span>
+        ) : null}
         <div className="ml-auto flex items-center gap-3">
           <span className="hidden items-center gap-1 text-[11px] text-muted-foreground sm:flex">
             {aiUsed ? (
@@ -691,29 +692,30 @@ export function OralReport({
 
   return (
     <div className="animate-fade-up">
-      <div className={cn("panel mb-4 border-l-4 p-5", sat ? "border-l-ok" : "border-l-warning")}>
-        <div className="flex flex-wrap items-center gap-4">
-          <div>
-            <p className="label-caps">Examination report · {LEVELS[result.level].label} oral</p>
-            <p className={cn("mt-1 text-2xl font-bold", sat ? "text-ok" : "text-warning")}>
-              {result.score}/100 — {sat ? "Satisfactory" : "Needs more study"}
-            </p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              {satCount} of {result.items.length} questions answered satisfactorily ·{" "}
-              {result.aiAssisted ? "Rubric + AI-assisted grading" : "Rubric grading"} · Simulated,
-              unofficial evaluation
-            </p>
-          </div>
-          {onRestart ? (
-            <Button variant="outline" className="ml-auto" onClick={onRestart}>
-              <RotateCcw /> New oral session
-            </Button>
-          ) : null}
+      <div className="mb-6 flex flex-wrap items-end gap-4 border-b pb-5">
+        <div>
+          <p className="text-xs text-muted-foreground">
+            Examination report · {LEVELS[result.level].label} oral
+          </p>
+          <p className={cn("mt-1 text-2xl font-bold", sat ? "text-ok" : "text-warning")}>
+            {result.score}/100 — {sat ? "Satisfactory" : "Needs more study"}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {satCount} of {result.items.length} questions satisfactory ·{" "}
+            {result.aiAssisted ? "Rubric + AI-assisted grading" : "Rubric grading"} · Simulated,
+            unofficial evaluation
+          </p>
         </div>
+        {onRestart ? (
+          <Button variant="outline" className="ml-auto" onClick={onRestart}>
+            <RotateCcw /> New oral session
+          </Button>
+        ) : null}
       </div>
 
-      <div className={cn("mb-4 grid gap-4", compact ? "" : "lg:grid-cols-3")}>
-        <Panel title="Score by topic" className={compact ? "" : "lg:col-span-1"}>
+      <div className={cn("mb-8 grid gap-x-10 gap-y-6", compact ? "" : "md:grid-cols-2")}>
+        <section>
+          <h3 className="mb-3 text-sm font-semibold">Score by topic</h3>
           <div className="grid gap-3">
             {result.byTopic.map((t) => (
               <Meter
@@ -723,40 +725,19 @@ export function OralReport({
               />
             ))}
           </div>
-        </Panel>
-        <Panel
-          title={
-            <span className="flex items-center gap-1.5">
-              <TrendingUp className="size-3.5" /> Strengths
-            </span>
-          }
-        >
           {strengths.length ? (
-            <ul className="grid gap-1.5 text-sm">
-              {strengths.map((t) => (
-                <li key={t.topic} className="flex items-center justify-between gap-2">
-                  <span className="flex items-center gap-1.5">
-                    <CheckCircle2 className="size-3.5 text-ok" /> {t.topic}
-                  </span>
-                  <span className="font-mono text-xs tabular text-muted-foreground">{t.score}</span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              No topic reached 80 yet. Keep practicing — model answers are in the transcript.
+            <p className="mt-3 flex items-start gap-1.5 text-xs text-muted-foreground">
+              <TrendingUp className="mt-0.5 size-3.5 shrink-0 text-ok" />
+              Strengths: {strengths.map((t) => t.topic).join(", ")}
             </p>
-          )}
-        </Panel>
-        <Panel
-          title={
-            <span className="flex items-center gap-1.5">
-              <TrendingDown className="size-3.5" /> Areas to review
-            </span>
-          }
-        >
+          ) : null}
+        </section>
+        <section>
+          <h3 className="mb-2 flex items-center gap-1.5 text-sm font-semibold">
+            <TrendingDown className="size-4 text-caution" /> Areas to review
+          </h3>
           {review.length ? (
-            <ul className="grid gap-1.5">
+            <ul className="divide-y border-y">
               {review.map((t) => {
                 const l = lessonFor(t.topic);
                 return (
@@ -764,18 +745,18 @@ export function OralReport({
                     {l ? (
                       <Link
                         to={l.to}
-                        className="flex items-center justify-between gap-2 rounded-md border px-2.5 py-1.5 text-sm hover:border-primary/50 hover:bg-accent/40"
+                        className="group flex items-center justify-between gap-2 py-2 text-sm"
                       >
                         <span>
                           <span className="block text-[11px] text-muted-foreground">
                             {t.topic} · {t.score}
                           </span>
-                          {l.label}
+                          <span className="group-hover:text-primary">{l.label}</span>
                         </span>
-                        <ArrowRight className="size-4 shrink-0 text-primary" />
+                        <ArrowRight className="size-4 shrink-0 text-muted-foreground group-hover:text-primary" />
                       </Link>
                     ) : (
-                      <span className="text-sm">
+                      <span className="block py-2 text-sm">
                         {t.topic} · {t.score}
                       </span>
                     )}
@@ -786,25 +767,12 @@ export function OralReport({
           ) : (
             <p className="text-sm text-muted-foreground">Every topic scored 70 or above.</p>
           )}
-        </Panel>
+        </section>
       </div>
 
-      {!compact ? (
-        <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <Stat label="Questions" value={result.items.length} />
-          <Stat label="Satisfactory" value={satCount} tone="ok" />
-          <Stat
-            label="Needs review"
-            value={result.items.length - satCount}
-            tone={result.items.length - satCount ? "caution" : "default"}
-          />
-          <Stat label="Overall" value={`${result.score}`} tone={sat ? "ok" : "warning"} />
-        </div>
-      ) : null}
-
-      <Panel
-        title="Question-by-question"
-        actions={
+      <section>
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <h3 className="text-sm font-semibold">Question-by-question</h3>
           <button
             type="button"
             onClick={() => setShowTranscript((s) => !s)}
@@ -812,14 +780,13 @@ export function OralReport({
           >
             {showTranscript ? "Hide full transcript" : "Show full transcript"}
           </button>
-        }
-      >
-        <ol className="grid gap-3">
+        </div>
+        <ol className="divide-y border-y">
           {sortedItems.map((it, i) => (
-            <li key={i} className="rounded-md border px-3 py-2.5">
+            <li key={i} className="py-3">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="font-mono text-xs text-muted-foreground">Q{i + 1}</span>
-                <Pill>{it.topic}</Pill>
+                <span className="text-xs text-muted-foreground">· {it.topic}</span>
                 <span
                   className={cn(
                     "ml-auto font-mono text-sm font-semibold tabular",
@@ -863,7 +830,7 @@ export function OralReport({
             ))}
           </div>
         ) : null}
-      </Panel>
+      </section>
     </div>
   );
 }

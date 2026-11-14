@@ -4,6 +4,7 @@ import {
   Accessibility,
   Bell,
   Bot,
+  ChevronRight,
   Cpu,
   CheckCircle2,
   Database,
@@ -84,18 +85,31 @@ const TRACKS: { id: TrackId; label: string }[] = [
   { id: "adm", label: "Aeronautical Decision Making" },
 ];
 
-const SECTIONS = [
+const GROUPS = [
   { id: "profile", label: "Profile", icon: UserCircle2 },
   { id: "training", label: "Training", icon: SlidersHorizontal },
-  { id: "units", label: "Units & region", icon: Ruler },
-  { id: "voice", label: "Voice & microphone", icon: Volume2 },
-  { id: "graphics", label: "Simulator graphics", icon: Monitor },
-  { id: "controls", label: "Controls", icon: Gamepad2 },
-  { id: "accessibility", label: "Accessibility & theme", icon: Accessibility },
-  { id: "notifications", label: "Notifications", icon: Bell },
-  { id: "ai", label: "AI provider", icon: Bot },
+  { id: "units", label: "Units", icon: Ruler },
+  { id: "voice", label: "Voice", icon: Volume2 },
+  { id: "sim", label: "Simulator & controls", icon: Gamepad2 },
+  { id: "accessibility", label: "Accessibility", icon: Accessibility },
+  { id: "ai", label: "AI", icon: Bot },
   { id: "data", label: "Data", icon: Database },
 ] as const;
+type GroupId = (typeof GROUPS)[number]["id"];
+
+/** Older section anchors (#graphics, #controls, #notifications) still open the right tab. */
+const HASH_ALIAS: Record<string, GroupId> = {
+  graphics: "sim",
+  controls: "sim",
+  notifications: "training",
+};
+
+function groupFromHash(): GroupId {
+  if (typeof window === "undefined") return "profile";
+  const h = window.location.hash.replace(/^#/, "");
+  const g = GROUPS.find((x) => x.id === h);
+  return g ? g.id : (HASH_ALIAS[h] ?? "profile");
+}
 
 const CALLSIGN_N = /^N[1-9][0-9A-Z]{0,4}$/;
 const CALLSIGN_ICAO = /^[A-Z0-9]{1,2}-[A-Z0-9]{3,5}$/;
@@ -111,6 +125,21 @@ function SettingsPage() {
 
   // Apply accessibility classes while on this page (the app shell can also call useApplyAccessibility()).
   const night = useNightLighting();
+  const [active, setActive] = useState<GroupId>("profile");
+  useEffect(() => {
+    setActive(groupFromHash());
+    const onHash = () => setActive(groupFromHash());
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, []);
+  const select = (id: GroupId) => {
+    setActive(id);
+    try {
+      window.history.replaceState(window.history.state, "", `#${id}`);
+    } catch {
+      /* ignore */
+    }
+  };
   useEffect(() => {
     if (hydrated) applyAccessibility(settings.accessibility, night);
   }, [hydrated, settings.accessibility, night]);
@@ -121,41 +150,68 @@ function SettingsPage() {
         eyebrow="System"
         icon={SettingsIcon}
         title="Settings"
-        description="Preferences are saved automatically in this browser with your training record."
+        description="Saved automatically in this browser."
       />
       <div className="grid gap-6 lg:grid-cols-[200px_minmax(0,1fr)]">
-        <nav className="hidden lg:block" aria-label="Settings sections">
-          <ul className="sticky top-4 space-y-0.5 text-sm">
-            {SECTIONS.map((s) => (
-              <li key={s.id}>
-                <a
-                  href={`#${s.id}`}
-                  className="flex items-center gap-2 rounded-md px-2 py-1.5 text-muted-foreground hover:bg-accent hover:text-foreground"
+        <nav aria-label="Settings sections" className="min-w-0">
+          <ul
+            className="flex flex-wrap gap-1 text-sm lg:sticky lg:top-4 lg:flex-col lg:flex-nowrap lg:gap-0.5"
+            role="tablist"
+            aria-orientation="vertical"
+          >
+            {GROUPS.map((g) => (
+              <li key={g.id} className="shrink-0">
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={active === g.id}
+                  aria-controls={`settings-${g.id}`}
+                  onClick={() => select(g.id)}
+                  className={cn(
+                    "flex w-full items-center gap-1.5 rounded-md px-2 py-1 text-left whitespace-nowrap lg:gap-2 lg:px-2.5 lg:py-1.5",
+                    active === g.id
+                      ? "bg-accent font-medium text-foreground"
+                      : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
+                  )}
                 >
-                  <s.icon className="size-4" /> {s.label}
-                </a>
+                  <g.icon className="size-4" /> {g.label}
+                </button>
               </li>
             ))}
           </ul>
         </nav>
-        <div className="min-w-0 space-y-6">
+        <div
+          className="min-w-0 max-w-3xl space-y-8"
+          role="tabpanel"
+          id={`settings-${active}`}
+          aria-label={GROUPS.find((g) => g.id === active)?.label}
+        >
           {!hydrated ? (
-            <div className="panel flex items-center gap-2 p-6 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2 py-6 text-sm text-muted-foreground">
               <Loader2 className="size-4 animate-spin" /> Loading your settings…
             </div>
-          ) : (
+          ) : active === "profile" ? (
+            <ProfileSection />
+          ) : active === "training" ? (
             <>
-              <ProfileSection />
               <TrainingSection settings={settings} />
-              <UnitsSection settings={settings} />
-              <VoiceSection settings={settings} />
+              <NotificationsSection settings={settings} />
+            </>
+          ) : active === "units" ? (
+            <UnitsSection settings={settings} />
+          ) : active === "voice" ? (
+            <VoiceSection settings={settings} />
+          ) : active === "sim" ? (
+            <>
               <GraphicsSection settings={settings} />
               <ControlsSection settings={settings} />
-              <AccessibilitySection settings={settings} night={night} />
-              <NotificationsSection settings={settings} />
-              <AiSection settings={settings} />
-              <DataSection />
             </>
+          ) : active === "accessibility" ? (
+            <AccessibilitySection settings={settings} night={night} />
+          ) : active === "ai" ? (
+            <AiSection settings={settings} />
+          ) : (
+            <DataSection />
           )}
         </div>
       </div>
@@ -179,15 +235,25 @@ function Card({
   children: ReactNode;
 }) {
   return (
-    <section id={id} className="panel scroll-mt-4">
-      <div className="border-b px-5 py-3">
-        <h2 className="flex items-center gap-2 font-semibold">
-          <Icon className="size-4 text-primary" /> {title}
-        </h2>
-        {description ? <p className="mt-0.5 text-xs text-muted-foreground">{description}</p> : null}
-      </div>
-      <div className="divide-y">{children}</div>
+    <section id={id} className="scroll-mt-4">
+      <h2 className="flex items-center gap-2 font-semibold">
+        <Icon className="size-4 text-primary" /> {title}
+      </h2>
+      {description ? <p className="mt-0.5 text-xs text-muted-foreground">{description}</p> : null}
+      <div className="mt-3 divide-y border-y">{children}</div>
     </section>
+  );
+}
+
+/** Rarely used rows, one click away. */
+function Advanced({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <details className="group">
+      <summary className="flex cursor-pointer list-none items-center gap-1.5 py-3 text-xs text-muted-foreground hover:text-foreground [&::-webkit-details-marker]:hidden">
+        <ChevronRight className="size-3.5 transition-transform group-open:rotate-90" /> {label}
+      </summary>
+      <div className="divide-y border-t">{children}</div>
+    </details>
   );
 }
 
@@ -203,7 +269,7 @@ function Row({
   htmlFor?: string;
 }) {
   return (
-    <div className="flex flex-col gap-2 px-5 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+    <div className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
       <div className="min-w-0">
         <label htmlFor={htmlFor} className="text-sm font-medium">
           {label}
@@ -283,10 +349,9 @@ function ProfileSection() {
   if (!profile) {
     return (
       <Card id="profile" title="Pilot profile" icon={UserCircle2}>
-        <div className="px-5 py-4">
+        <div className="py-4">
           <p className="text-sm text-muted-foreground">
-            You haven't created a pilot profile yet. The onboarding takes about five minutes and
-            includes a short knowledge assessment that recommends a training track.
+            No pilot profile yet. Onboarding takes about five minutes.
           </p>
           <Button asChild size="sm" className="mt-3">
             <Link to="/onboarding">Create your pilot profile</Link>
@@ -309,13 +374,8 @@ function ProfileSection() {
   const valid = csValid && emailValid && nameValid;
 
   return (
-    <Card
-      id="profile"
-      title="Pilot profile"
-      icon={UserCircle2}
-      description="Used for your callsign on ATC frequencies, your home airport defaults and training recommendations."
-    >
-      <div className="grid gap-4 px-5 py-4 sm:grid-cols-2">
+    <Card id="profile" title="Pilot profile" icon={UserCircle2}>
+      <div className="grid gap-4 py-4 sm:grid-cols-2">
         <label className="text-xs">
           <span className="label-caps mb-1 block">Name</span>
           <Input value={name} onChange={(e) => setName(e.target.value)} aria-invalid={!nameValid} />
@@ -333,9 +393,7 @@ function ProfileSection() {
             <span className="mt-1 block text-warning">
               That doesn't look like an email address.
             </span>
-          ) : (
-            <span className="mt-1 block text-muted-foreground">Stored only in this browser.</span>
-          )}
+          ) : null}
         </label>
         <label className="text-xs">
           <span className="label-caps mb-1 block">Aircraft callsign (registration)</span>
@@ -346,11 +404,7 @@ function ProfileSection() {
             aria-invalid={!csValid}
             placeholder="N172TX"
           />
-          {csValid ? (
-            <span className="mt-1 block text-muted-foreground">
-              US N-number (e.g. N172TX) or ICAO-style registration (e.g. G-ABCD, C-FABC).
-            </span>
-          ) : (
+          {csValid ? null : (
             <span className="mt-1 block text-warning">
               Use an N-number like N172TX (N, then a digit 1–9, then up to 4 digits/letters) or a
               registration like G-ABCD.
@@ -390,7 +444,7 @@ function ProfileSection() {
           </Select>
         </label>
       </div>
-      <div className="flex items-center justify-end gap-3 px-5 py-3">
+      <div className="flex items-center justify-end gap-3 py-3">
         {saved && !changed ? (
           <span className="flex items-center gap-1 text-xs text-ok">
             <CheckCircle2 className="size-3.5" /> Profile saved
@@ -423,7 +477,7 @@ function TrainingSection({ settings }: { settings: Settings }) {
   const t = settings.training;
   return (
     <Card id="training" title="Training preferences" icon={SlidersHorizontal}>
-      <Row label="Daily study goal" hint="Target training minutes per day.">
+      <Row label="Daily study goal">
         <Select
           value={String(t.dailyGoalMin)}
           onValueChange={(v) =>
@@ -442,7 +496,7 @@ function TrainingSection({ settings }: { settings: Settings }) {
           </SelectContent>
         </Select>
       </Row>
-      <Row label="Default difficulty" hint="Starting difficulty for ATC and scenario practice.">
+      <Row label="Default difficulty" hint="For ATC and scenario practice.">
         <Seg
           label="Difficulty"
           value={t.difficulty}
@@ -454,11 +508,7 @@ function TrainingSection({ settings }: { settings: Settings }) {
           onChange={(v) => upd((s) => ({ ...s, training: { ...s.training, difficulty: v } }))}
         />
       </Row>
-      <Row
-        label="Show hints"
-        hint="Instructor hints and prompts during lessons and simulator scenarios."
-        htmlFor="hints"
-      >
+      <Row label="Show hints" htmlFor="hints">
         <Toggle
           id="hints"
           checked={t.showHints}
@@ -504,7 +554,7 @@ function UnitsSection({ settings }: { settings: Settings }) {
       id="units"
       title="Units & region"
       icon={Ruler}
-      description="Display preferences where TeachX supports conversion. Aviation-standard units (feet, knots, nautical miles, inHg) are used in FAA training content and radio phraseology."
+      description="FAA content and radio phraseology always use feet, knots, nm and inHg."
     >
       <Row label="Altitude">
         <Seg
@@ -552,7 +602,7 @@ function UnitsSection({ settings }: { settings: Settings }) {
       </Row>
       <Row
         label="Regulatory jurisdiction"
-        hint="TeachX content is based on FAA regulations (14 CFR), the AIM and FAA handbooks. Other jurisdictions are shown for reference only; their rules differ."
+        hint="Content is FAA-based; others are for reference only."
       >
         <Select
           value={settings.jurisdiction}
@@ -569,7 +619,7 @@ function UnitsSection({ settings }: { settings: Settings }) {
         </Select>
       </Row>
       {settings.jurisdiction !== "FAA" ? (
-        <div className="px-5 py-3">
+        <div className="py-3">
           <Notice tone="caution">
             Lessons, exams and checkrides remain FAA-based. Use your national authority's material
             for {settings.jurisdiction} requirements.
@@ -686,61 +736,58 @@ function VoiceSection({ settings }: { settings: Settings }) {
   };
 
   return (
-    <Card
-      id="voice"
-      title="Voice & microphone"
-      icon={Volume2}
-      description="ATC and instructor speech uses your browser's built-in speech synthesis; push-to-talk uses browser speech recognition where available."
-    >
+    <Card id="voice" title="Voice & microphone" icon={Volume2}>
       <Row label="ATC speech" hint="Read controller transmissions aloud." htmlFor="atcspeech">
         <Toggle id="atcspeech" checked={v.atcSpeech} onChange={(x) => setV("atcSpeech", x)} />
       </Row>
-      <Row label="Voice">
-        {ttsSupported ? (
-          <Select
-            value={v.voiceName || "__default"}
-            onValueChange={(x) => setV("voiceName", x === "__default" ? "" : x)}
-          >
-            <SelectTrigger className="w-64">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="__default">Browser default</SelectItem>
-              {voices.map((x) => (
-                <SelectItem key={x.name} value={x.name}>
-                  {x.name} ({x.lang})
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        ) : (
-          <span className="text-xs text-warning">
-            Speech synthesis is not supported in this browser.
-          </span>
-        )}
-      </Row>
-      <Row label="Speech rate" hint={<span className="font-mono">{v.rate.toFixed(2)}×</span>}>
-        <Slider
-          className="w-56"
-          min={0.6}
-          max={1.6}
-          step={0.05}
-          value={[v.rate]}
-          onValueChange={(x) => setV("rate", x[0] ?? 1)}
-          aria-label="Speech rate"
-        />
-      </Row>
-      <Row label="Volume" hint={<span className="font-mono">{Math.round(v.volume * 100)}%</span>}>
-        <Slider
-          className="w-56"
-          min={0}
-          max={1}
-          step={0.05}
-          value={[v.volume]}
-          onValueChange={(x) => setV("volume", x[0] ?? 0.9)}
-          aria-label="Speech volume"
-        />
-      </Row>
+      <Advanced label="Voice, speed & volume">
+        <Row label="Voice">
+          {ttsSupported ? (
+            <Select
+              value={v.voiceName || "__default"}
+              onValueChange={(x) => setV("voiceName", x === "__default" ? "" : x)}
+            >
+              <SelectTrigger className="w-64">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__default">Browser default</SelectItem>
+                {voices.map((x) => (
+                  <SelectItem key={x.name} value={x.name}>
+                    {x.name} ({x.lang})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : (
+            <span className="text-xs text-warning">
+              Speech synthesis is not supported in this browser.
+            </span>
+          )}
+        </Row>
+        <Row label="Speech rate" hint={<span className="font-mono">{v.rate.toFixed(2)}×</span>}>
+          <Slider
+            className="w-56"
+            min={0.6}
+            max={1.6}
+            step={0.05}
+            value={[v.rate]}
+            onValueChange={(x) => setV("rate", x[0] ?? 1)}
+            aria-label="Speech rate"
+          />
+        </Row>
+        <Row label="Volume" hint={<span className="font-mono">{Math.round(v.volume * 100)}%</span>}>
+          <Slider
+            className="w-56"
+            min={0}
+            max={1}
+            step={0.05}
+            value={[v.volume]}
+            onValueChange={(x) => setV("volume", x[0] ?? 0.9)}
+            aria-label="Speech volume"
+          />
+        </Row>
+      </Advanced>
       <Row label="Test voice">
         <Button size="sm" variant="outline" onClick={test} disabled={!ttsSupported}>
           <Play className="size-4" /> Play sample transmission
@@ -750,14 +797,14 @@ function VoiceSection({ settings }: { settings: Settings }) {
         label="Microphone input"
         hint={
           srSupported
-            ? "Speak your radio calls (push-to-talk) in ATC practice."
+            ? "Push-to-talk in ATC practice."
             : "Speech recognition isn't available in this browser — you can still type radio calls. Chrome and Edge support it."
         }
         htmlFor="mic"
       >
         <Toggle id="mic" checked={v.micInput} onChange={(x) => setV("micInput", x)} />
       </Row>
-      <div className="px-5 py-3.5">
+      <div className="py-3">
         <div className="flex flex-wrap items-center gap-3">
           <Button
             size="sm"
@@ -809,7 +856,7 @@ function GraphicsSection({ settings }: { settings: Settings }) {
     upd((s) => ({ ...s, sim: { ...s.sim, [k]: val } }));
   return (
     <Card id="graphics" title="Simulator graphics" icon={Monitor}>
-      <Row label="Graphics quality" hint="Lower settings improve frame rate on laptops and phones.">
+      <Row label="Graphics quality" hint="Lower is smoother on laptops and phones.">
         <Seg
           label="Graphics quality"
           value={g.quality}
@@ -821,11 +868,7 @@ function GraphicsSection({ settings }: { settings: Settings }) {
           onChange={(v) => setS("quality", v)}
         />
       </Row>
-      <Row
-        label="Heads-up display"
-        hint="Overlay of airspeed, altitude, heading and scenario guidance."
-        htmlFor="hud"
-      >
+      <Row label="Heads-up display" htmlFor="hud">
         <Toggle id="hud" checked={g.hud} onChange={(v) => setS("hud", v)} />
       </Row>
       <Row label="Show frame rate (FPS)" htmlFor="fps">
@@ -858,12 +901,13 @@ function ControlsSection({ settings }: { settings: Settings }) {
   const setS = <K extends keyof Settings["sim"]>(k: K, val: Settings["sim"][K]) =>
     upd((s) => ({ ...s, sim: { ...s.sim, [k]: val } }));
   return (
-    <Card id="controls" title="Control configuration" icon={Gamepad2}>
-      <div className="px-5 py-4">
-        <p className="label-caps mb-2 flex items-center gap-1.5">
-          <Keyboard className="size-3.5" /> Keyboard map
-        </p>
-        <div className="overflow-x-auto">
+    <Card id="controls" title="Controls" icon={Gamepad2}>
+      <details className="group">
+        <summary className="flex cursor-pointer list-none items-center gap-1.5 py-3 text-sm font-medium [&::-webkit-details-marker]:hidden">
+          <Keyboard className="size-4 text-muted-foreground" /> Keyboard map
+          <ChevronRight className="ml-auto size-4 text-muted-foreground transition-transform group-open:rotate-90" />
+        </summary>
+        <div className="overflow-x-auto pb-3">
           <table className="w-full text-sm">
             <tbody>
               {KEYMAP.map(([k, a]) => (
@@ -892,12 +936,8 @@ function ControlsSection({ settings }: { settings: Settings }) {
             </tbody>
           </table>
         </div>
-      </div>
-      <Row
-        label="Invert pitch"
-        hint="Flight-stick style: pushing forward (W / ↑) pitches up instead of down."
-        htmlFor="invert"
-      >
+      </details>
+      <Row label="Invert pitch" hint="Flight-stick style: forward pitches up." htmlFor="invert">
         <Toggle id="invert" checked={g.invertPitch} onChange={(v) => setS("invertPitch", v)} />
       </Row>
       <Row
@@ -914,11 +954,7 @@ function ControlsSection({ settings }: { settings: Settings }) {
           aria-label="Control sensitivity"
         />
       </Row>
-      <Row
-        label="Mouse yoke"
-        hint="Fly with the mouse: horizontal = roll, vertical = pitch (click the view to capture)."
-        htmlFor="mouse"
-      >
+      <Row label="Mouse yoke" hint="Horizontal = roll, vertical = pitch." htmlFor="mouse">
         <Toggle id="mouse" checked={g.mouseYoke} onChange={(v) => setS("mouseYoke", v)} />
       </Row>
     </Card>
@@ -933,36 +969,18 @@ function AccessibilitySection({ settings, night }: { settings: Settings; night: 
     upd((s) => ({ ...s, accessibility: { ...s.accessibility, [k]: val } }));
   return (
     <Card id="accessibility" title="Accessibility & theme" icon={Accessibility}>
-      <Row
-        label="Reduce motion"
-        hint="Turns off interface animations and transitions."
-        htmlFor="rm"
-      >
+      <Row label="Reduce motion" htmlFor="rm">
         <Toggle id="rm" checked={a.reducedMotion} onChange={(v) => setA("reducedMotion", v)} />
       </Row>
-      <Row
-        label="Large text"
-        hint="Increases the size of all text and controls by 12.5%."
-        htmlFor="lt"
-      >
+      <Row label="Large text" hint="+12.5% text and controls." htmlFor="lt">
         <Toggle id="lt" checked={a.largeText} onChange={(v) => setA("largeText", v)} />
       </Row>
-      <Row
-        label="High contrast"
-        hint="Brighter text, stronger borders and focus outlines."
-        htmlFor="hc"
-      >
+      <Row label="High contrast" htmlFor="hc">
         <Toggle id="hc" checked={a.highContrast} onChange={(v) => setA("highContrast", v)} />
       </Row>
       <Row
-        label="Theme"
-        hint="TeachX uses a dark cockpit theme designed for long study sessions and avionics realism."
-      >
-        <Pill tone="primary">Dark cockpit</Pill>
-      </Row>
-      <Row
         label="Night (red) cockpit lighting"
-        hint="Red-tinted interface that preserves night vision — like red flood lighting in the cockpit. Saved on this device."
+        hint="Red tint that preserves night vision. Saved on this device."
         htmlFor="night"
       >
         <span className="flex items-center gap-2">
@@ -985,24 +1003,16 @@ function NotificationsSection({ settings }: { settings: Settings }) {
       id="notifications"
       title="Notifications"
       icon={Bell}
-      description="In-app only — TeachX does not send emails or push notifications."
+      description="In-app only — no emails or push notifications."
     >
-      <Row
-        label="Achievement pop-ups"
-        hint="Show a notification when you unlock an achievement."
-        htmlFor="ach"
-      >
+      <Row label="Achievement pop-ups" htmlFor="ach">
         <Toggle
           id="ach"
           checked={n.achievementToasts}
           onChange={(v) => setN("achievementToasts", v)}
         />
       </Row>
-      <Row
-        label="Study reminders"
-        hint="In-app reminders about your daily study goal."
-        htmlFor="rem"
-      >
+      <Row label="Study reminders" htmlFor="rem">
         <Toggle id="rem" checked={n.studyReminders} onChange={(v) => setN("studyReminders", v)} />
       </Row>
     </Card>
@@ -1015,17 +1025,17 @@ const PROVIDERS: { v: Settings["ai"]["provider"]; l: string; d: string }[] = [
   {
     v: "on-device",
     l: "On-device AI (recommended)",
-    d: `${MODEL_LABEL} runs right here in your browser on your GPU. One-time download (${MODEL_DOWNLOAD_LABEL}), then cached. Nothing is sent to any server. Needs WebGPU (recent Chrome or Edge on desktop).`,
+    d: `${MODEL_LABEL} runs in your browser. One-time ${MODEL_DOWNLOAD_LABEL} download; needs WebGPU.`,
   },
   {
     v: "local-browser",
     l: "Your own local model server",
-    d: "A model you run on your own computer (e.g. Ollama or LM Studio), called directly from this browser via an OpenAI-compatible URL. No key needed.",
+    d: "Ollama, LM Studio or any OpenAI-compatible URL on your computer.",
   },
   {
     v: "scripted",
     l: "Scripted (no AI)",
-    d: "Deterministic scripted ATC, rubric-based oral grading. Works fully offline.",
+    d: "Built-in scripted ATC and rubric grading. Works offline.",
   },
 ];
 
@@ -1042,7 +1052,7 @@ function OnDevicePanel() {
   }, [local.status]);
   const running = local.status === "ready" || local.status === "thinking";
   return (
-    <div className="space-y-3 px-5 py-4">
+    <div className="space-y-3 py-4">
       <p className="label-caps">On-device model</p>
       <div className="flex flex-wrap items-center gap-2 text-sm">
         <span className="font-medium">{MODEL_LABEL}</span>
@@ -1109,10 +1119,16 @@ function OnDevicePanel() {
           </Button>
         ) : null}
       </div>
-      <p className="text-[11px] leading-relaxed text-muted-foreground">
-        The model files come from Hugging Face the first time and are stored in your browser&apos;s
-        cache. After that it works offline. Clearing site data removes the download.
-      </p>
+      <details className="text-[11px] text-muted-foreground">
+        <summary className="cursor-pointer hover:text-foreground">
+          Where does the model come from?
+        </summary>
+        <p className="mt-1 leading-relaxed">
+          The model files come from Hugging Face the first time and are stored in your
+          browser&apos;s cache. After that it works offline. Clearing site data removes the
+          download.
+        </p>
+      </details>
     </div>
   );
 }
@@ -1199,9 +1215,9 @@ function AiSection({ settings }: { settings: Settings }) {
       id="ai"
       title="AI provider"
       icon={Bot}
-      description="Powers AI ATC, the AI Instructor and the oral examiner. Every feature also works in scripted mode without any AI."
+      description="Powers AI ATC, the AI Instructor and the oral examiner. Everything also works without AI."
     >
-      <div className="space-y-2 px-5 py-4" role="radiogroup" aria-label="AI provider">
+      <div className="space-y-2 py-4" role="radiogroup" aria-label="AI provider">
         {PROVIDERS.map((p) => {
           const avail =
             status === null
@@ -1259,7 +1275,7 @@ function AiSection({ settings }: { settings: Settings }) {
       </div>
       {ai.provider === "on-device" ? <OnDevicePanel /> : null}
       {ai.provider === "local-browser" ? (
-        <div className="space-y-3 px-5 py-4">
+        <div className="space-y-3 py-4">
           <p className="label-caps">Local model in this browser</p>
           <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_200px]">
             <label className="text-xs">
@@ -1332,8 +1348,8 @@ function AiSection({ settings }: { settings: Settings }) {
           ) : null}
         </div>
       ) : null}
-      <div className="px-5 py-3">
-        <Notice tone="info" title="All AI on TeachX is local.">
+      <div className="py-3">
+        <Notice tone="caution" title="All AI on TeachX is local; output may be wrong.">
           Nothing is sent to a cloud AI service and there are no API keys. The on-device model runs
           inside your browser; your own model server is reached directly at the URL above. AI output
           is a training aid and may be wrong; always verify against official FAA sources.
@@ -1391,20 +1407,20 @@ function DataSection() {
       id="data"
       title="Data management"
       icon={Database}
-      description="Your training record lives in this browser's local storage. Clearing browser data deletes it — export regularly."
+      description="Stored only in this browser — clearing browser data deletes it. Export regularly."
     >
-      <div className="px-5 py-3 text-xs text-muted-foreground">
+      <div className="py-3 text-xs text-muted-foreground">
         {Object.keys(counts.lessons).length} lessons · {counts.quizzes.length} quizzes ·{" "}
         {counts.exams.length} exams · {counts.flights.length} flights · {counts.atcSessions.length}{" "}
         ATC sessions · {counts.orals.length} oral exams · {counts.checkrides.length} checkrides ·{" "}
         {counts.flightPlans.length} flight plans
       </div>
-      <Row label="Export" hint="Download your complete training record as JSON.">
+      <Row label="Export" hint="Your complete training record as JSON.">
         <Button size="sm" variant="outline" onClick={exportAll}>
           <Download className="size-4" /> Export JSON
         </Button>
       </Row>
-      <Row label="Import" hint="Restore from a TeachX export. This replaces your current record.">
+      <Row label="Import" hint="Replaces your current record.">
         <>
           <input
             ref={fileRef}
@@ -1427,10 +1443,7 @@ function DataSection() {
           />
         </>
       </Row>
-      <Row
-        label="Reset everything"
-        hint="Permanently delete your profile, progress, logbook, plans and settings from this browser."
-      >
+      <Row label="Reset everything" hint="Permanently delete everything in this browser.">
         <ConfirmAction
           title="Reset all training data?"
           description="This permanently deletes your pilot profile, lesson progress, quiz and exam history, logbook, ATC sessions, flight plans, achievements and settings from this browser. It cannot be undone."
@@ -1447,7 +1460,7 @@ function DataSection() {
         />
       </Row>
       {msg ? (
-        <div className="px-5 py-3">
+        <div className="py-3">
           <p
             className={cn("flex items-center gap-1.5 text-xs", msg.ok ? "text-ok" : "text-warning")}
           >

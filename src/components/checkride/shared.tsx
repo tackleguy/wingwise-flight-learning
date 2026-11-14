@@ -4,7 +4,6 @@ import type { QuizQuestion } from "@/lib/content/types";
 import type { CheckrideAttempt, CheckrideStageResult } from "@/lib/store";
 import type { CheckrideTrackDef, SelectItem, StageDef } from "@/lib/checkride/types";
 import { PASS_SCORE } from "@/lib/checkride/content";
-import { Pill } from "@/components/app/page";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { QuestionCard } from "@/components/exams/QuestionCard";
@@ -31,19 +30,19 @@ export function StageFrame({
   aside?: ReactNode;
 }) {
   return (
-    <section className="panel overflow-hidden animate-fade-up">
-      <header className="flex flex-wrap items-start gap-3 border-b bg-muted/20 px-4 py-3 sm:px-5">
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-md border border-primary/40 bg-primary/10 font-mono text-sm font-bold text-primary">
-          {stage.number}
+    <section className="animate-fade-up">
+      <header className="mb-5 flex flex-wrap items-start gap-3 border-b pb-4">
+        <span className="font-mono text-sm font-semibold text-primary">
+          {String(stage.number).padStart(2, "0")}
         </span>
         <div className="min-w-0 flex-1">
-          <h2 className="text-lg font-semibold leading-tight">{stage.name}</h2>
-          <p className="mt-0.5 text-xs text-muted-foreground">{stage.summary}</p>
-          <p className="mt-1 font-mono text-[10.5px] text-cyan">{stage.acsRef}</p>
+          <h2 className="text-xl font-semibold leading-tight">{stage.name}</h2>
+          <p className="mt-1 text-sm text-muted-foreground">{stage.summary}</p>
+          <p className="mt-1 font-mono text-[10.5px] text-muted-foreground/80">{stage.acsRef}</p>
         </div>
         {aside}
       </header>
-      <div className="p-4 sm:p-5">{children}</div>
+      <div>{children}</div>
     </section>
   );
 }
@@ -188,7 +187,9 @@ export function StageResult({
         >
           {score}
         </span>
-        <Pill tone={sat ? "ok" : "warning"}>{sat ? "Satisfactory" : "Unsatisfactory"}</Pill>
+        <span className={cn("text-sm font-semibold", sat ? "text-ok" : "text-warning")}>
+          {sat ? "Satisfactory" : "Unsatisfactory"}
+        </span>
         <span className="text-xs text-muted-foreground">Satisfactory at {PASS_SCORE} or above</span>
         <Button className="ml-auto" onClick={onContinue}>
           <ClipboardCheck /> {continueLabel} <ArrowRight />

@@ -3,6 +3,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
   ArrowLeft,
   CheckCircle2,
+  ChevronDown,
   ChevronRight,
   CircleDashed,
   ClipboardCheck,
@@ -10,17 +11,7 @@ import {
   Play,
   XCircle,
 } from "lucide-react";
-import {
-  EmptyState,
-  Meter,
-  Notice,
-  Page,
-  PageHeader,
-  Panel,
-  Pill,
-  Section,
-  formatDate,
-} from "@/components/app/page";
+import { EmptyState, Meter, Notice, Page, PageHeader, formatDate } from "@/components/app/page";
 import { Button } from "@/components/ui/button";
 import {
   actions,
@@ -165,109 +156,113 @@ function CheckrideHome() {
     void navigate({ to: "/checkrides", search: { attempt: attempt.id } });
   };
 
+  const stageNames = CHECKRIDE_TRACKS[0]?.stages ?? [];
+
   return (
-    <Page>
+    <Page className="max-w-5xl">
       <PageHeader
         eyebrow="Test"
         title="Virtual Checkrides"
         icon={ClipboardCheck}
-        description="A complete mock practical test in 12 stages — eligibility and documents, weather and planning, an examiner oral, the walk-around, the flight in the simulator, radio work, emergencies and a debrief. Every stage is graded against ACS-style standards."
+        description="A mock practical test in 12 stages — from documents and the oral to the flight in the simulator and a debrief, each graded against ACS-style standards."
       />
       <SimNotice />
 
-      <Section title="Choose a checkride">
-        <div className="grid gap-4 lg:grid-cols-3">
-          {CHECKRIDE_TRACKS.map((t) => {
-            const recommended = goal === t.trackId;
-            return (
-              <div
-                key={t.key}
-                className={cn("panel flex flex-col p-5", recommended && "border-primary/50")}
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <Pill tone="primary">{t.ifr ? "IFR" : "VFR"}</Pill>
-                  {recommended ? <Pill tone="cyan">Your goal</Pill> : null}
-                </div>
-                <h3 className="mt-2 text-lg font-semibold">{t.title}</h3>
-                <p className="text-xs text-muted-foreground">{t.certificate}</p>
-                <p className="mt-2 flex-1 text-sm text-foreground/85">{t.description}</p>
-                <ol className="mt-3 grid grid-cols-2 gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground">
-                  {t.stages.map((s) => (
-                    <li key={s.id}>
-                      <span className="font-mono">{s.number}.</span> {s.name}
-                    </li>
-                  ))}
-                </ol>
-                <Button className="mt-4" onClick={() => start(t)}>
-                  <Play /> Begin {t.title.replace(" Checkride", "")} checkride
-                </Button>
+      <ul className="mb-10 divide-y border-y">
+        {CHECKRIDE_TRACKS.map((t) => {
+          const recommended = goal === t.trackId;
+          return (
+            <li
+              key={t.key}
+              className="flex flex-col gap-3 py-5 sm:flex-row sm:items-center sm:gap-6"
+            >
+              <div className="min-w-0 flex-1">
+                <p className="flex flex-wrap items-baseline gap-x-2">
+                  <span className="text-lg font-semibold">{t.title}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {t.ifr ? "IFR" : "VFR"} · {t.certificate}
+                  </span>
+                  {recommended ? (
+                    <span className="text-xs font-medium text-primary">· Your goal</span>
+                  ) : null}
+                </p>
+                <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{t.description}</p>
               </div>
-            );
-          })}
-        </div>
-      </Section>
+              <Button
+                className="shrink-0 self-start sm:self-center"
+                variant={recommended ? "default" : "outline"}
+                onClick={() => start(t)}
+              >
+                <Play /> Begin
+              </Button>
+            </li>
+          );
+        })}
+      </ul>
 
-      <div className="mb-8 grid gap-4 lg:grid-cols-[1.4fr_1fr]">
-        <Panel title="Your checkride attempts">
-          {!hydrated ? (
-            <p className="text-sm text-muted-foreground">Loading…</p>
-          ) : checkrides.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              No attempts yet. Your progress is saved after every stage, so you can leave for the
-              simulator or ATC practice and come back.
-            </p>
-          ) : (
-            <ul className="grid gap-2">
-              {checkrides.slice(0, 10).map((c) => {
-                const done = c.stages.filter((s) => s.status !== "incomplete").length;
-                return (
-                  <li key={c.id}>
-                    <Link
-                      to="/checkrides"
-                      search={{ attempt: c.id }}
-                      className="flex items-center gap-3 rounded-md border px-3 py-2.5 hover:border-primary/50 hover:bg-accent/30"
-                    >
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold">{c.title}</p>
-                        <p className="text-[11px] text-muted-foreground">
-                          {formatDate(c.date)} · {done}/{c.stages.length} stages
-                        </p>
-                      </div>
-                      {c.completed ? (
-                        <Pill tone={c.passed ? "ok" : "warning"}>
-                          {c.passed ? "Satisfactory" : "Unsatisfactory"}
-                        </Pill>
-                      ) : (
-                        <Pill tone="caution">In progress</Pill>
+      {hydrated && checkrides.length > 0 ? (
+        <section className="mb-10">
+          <h2 className="mb-2 text-sm font-semibold">Your attempts</h2>
+          <ul className="divide-y border-y">
+            {checkrides.slice(0, 10).map((c) => {
+              const done = c.stages.filter((s) => s.status !== "incomplete").length;
+              return (
+                <li key={c.id}>
+                  <Link
+                    to="/checkrides"
+                    search={{ attempt: c.id }}
+                    className="group flex items-center gap-3 py-2.5"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium group-hover:text-primary">
+                        {c.title}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground">
+                        {formatDate(c.date)} · {done}/{c.stages.length} stages
+                      </p>
+                    </div>
+                    <span
+                      className={cn(
+                        "text-xs",
+                        c.completed ? (c.passed ? "text-ok" : "text-warning") : "text-caution",
                       )}
-                      <span className="w-10 text-right font-mono text-sm tabular">
-                        {done ? Math.round(c.overall) : "—"}
-                      </span>
-                      <ChevronRight className="size-4 text-muted-foreground" />
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </Panel>
-        <Panel title="How grading works">
-          <ul className="grid gap-2 text-sm text-foreground/85">
-            <li>
-              • Each of the 12 stages is scored 0–100 and is satisfactory at {PASS_SCORE} or above.
-            </li>
-            <li>• Like a real practical test, you pass only if every stage is satisfactory.</li>
-            <li>
-              • The flight portion and radio stage use your linked TeachX simulator flight and ATC
-              session.
-            </li>
-            <li>
-              • The final instructor-style report lists ACS references and debrief notes, and can be
-              printed or saved as a PDF.
-            </li>
+                    >
+                      {c.completed ? (c.passed ? "Satisfactory" : "Unsatisfactory") : "In progress"}
+                    </span>
+                    <span className="w-10 text-right font-mono text-sm tabular">
+                      {done ? Math.round(c.overall) : "—"}
+                    </span>
+                    <ChevronRight className="size-4 text-muted-foreground" />
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
-        </Panel>
-      </div>
+        </section>
+      ) : null}
+
+      <details className="group text-sm">
+        <summary className="flex cursor-pointer list-none items-center gap-1.5 font-medium text-muted-foreground select-none hover:text-foreground [&::-webkit-details-marker]:hidden">
+          <ChevronRight className="size-4 transition-transform group-open:rotate-90" />
+          The 12 stages &amp; how grading works
+        </summary>
+        <div className="mt-3 grid gap-6 pl-5 md:grid-cols-2">
+          <ol className="grid grid-cols-1 gap-y-1 text-muted-foreground sm:grid-cols-2 sm:gap-x-4">
+            {stageNames.map((s) => (
+              <li key={s.id}>
+                <span className="font-mono text-xs">{s.number}.</span> {s.name}
+              </li>
+            ))}
+          </ol>
+          <ul className="list-disc space-y-1.5 pl-4 text-foreground/85 marker:text-muted-foreground">
+            <li>Each stage is scored 0–100 and is satisfactory at {PASS_SCORE} or above.</li>
+            <li>Like a real practical test, you pass only if every stage is satisfactory.</li>
+            <li>The flight and radio stages use your linked simulator flight and ATC session.</li>
+            <li>Progress saves after every stage, so you can leave and come back.</li>
+            <li>The final report lists ACS references and debrief notes, and can be printed.</li>
+          </ul>
+        </div>
+      </details>
     </Page>
   );
 }
@@ -316,10 +311,39 @@ function AttemptView({ attempt, track }: { attempt: CheckrideAttempt; track: Che
     save(stage.id, (s) => ({ ...s, notes }));
 
   const StageComp = current ? STAGE_COMPONENTS[current.id] : null;
+  const stageList = (
+    <ol className="grid gap-0.5">
+      {attempt.stages.map((s, i) => {
+        const isCurrent = i === currentIdx;
+        const clickable = s.status !== "incomplete";
+        return (
+          <li key={s.id}>
+            <button
+              type="button"
+              disabled={!clickable}
+              onClick={() => setViewing(s.id)}
+              className={cn(
+                "flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-xs",
+                isCurrent && "bg-primary/10 font-semibold text-foreground",
+                clickable && "hover:bg-accent/50",
+                !clickable && !isCurrent && "text-muted-foreground",
+                viewing === s.id && "bg-accent/60",
+              )}
+            >
+              <span className="w-4 font-mono text-[10px] text-muted-foreground">{i + 1}</span>
+              <StageStatusIcon s={s} />
+              <span className="flex-1 truncate">{s.name}</span>
+              {clickable ? <span className="font-mono tabular">{Math.round(s.score)}</span> : null}
+            </button>
+          </li>
+        );
+      })}
+    </ol>
+  );
   const saved = current ? attempt.stages[currentIdx] : undefined;
 
   return (
-    <Page wide>
+    <Page className="max-w-6xl">
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <Link
           to="/checkrides"
@@ -329,66 +353,54 @@ function AttemptView({ attempt, track }: { attempt: CheckrideAttempt; track: Che
         </Link>
         <span className="text-muted-foreground/40">/</span>
         <h1 className="text-lg font-bold tracking-tight">{track.title}</h1>
-        <Pill tone="caution" className="ml-auto">
+        <span className="ml-auto text-xs text-muted-foreground">
           Simulated · not an FAA practical test
-        </Pill>
+        </span>
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-[270px_1fr]">
+      <div className="grid gap-6 lg:grid-cols-[240px_1fr] xl:gap-10">
         <aside className="lg:sticky lg:top-16 lg:self-start">
-          <Panel title="Stages">
+          <details className="group rounded-md border lg:hidden">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2.5 text-sm select-none [&::-webkit-details-marker]:hidden">
+              <span className="min-w-0 truncate">
+                <span className="text-muted-foreground">
+                  Stage {Math.min(doneCount + 1, attempt.stages.length)} of {attempt.stages.length}{" "}
+                  ·
+                </span>{" "}
+                <span className="font-medium">{current?.name ?? "Report"}</span>
+              </span>
+              <ChevronDown className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
+            </summary>
+            <div className="border-t p-1.5">{stageList}</div>
+          </details>
+          <nav className="hidden lg:block" aria-label="Stages">
             <Meter
               value={(doneCount / attempt.stages.length) * 100}
               label={`${doneCount} of ${attempt.stages.length} graded`}
-              className="mb-3"
+              className="mb-3 px-2"
             />
-            <ol className="grid gap-0.5">
-              {attempt.stages.map((s, i) => {
-                const isCurrent = i === currentIdx;
-                const clickable = s.status !== "incomplete";
-                return (
-                  <li key={s.id}>
-                    <button
-                      type="button"
-                      disabled={!clickable}
-                      onClick={() => setViewing(s.id)}
-                      className={cn(
-                        "flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-xs",
-                        isCurrent && "bg-primary/10 font-semibold text-foreground",
-                        clickable && "hover:bg-accent/50",
-                        !clickable && !isCurrent && "text-muted-foreground",
-                        viewing === s.id && "bg-accent/60",
-                      )}
-                    >
-                      <span className="w-4 font-mono text-[10px] text-muted-foreground">
-                        {i + 1}
-                      </span>
-                      <StageStatusIcon s={s} />
-                      <span className="flex-1 truncate">{s.name}</span>
-                      {clickable ? (
-                        <span className="font-mono tabular">{Math.round(s.score)}</span>
-                      ) : null}
-                    </button>
-                  </li>
-                );
-              })}
-            </ol>
-            <p className="mt-3 text-[11px] text-muted-foreground">
-              Progress is saved after every stage. Leave anytime and resume from Virtual Checkrides.
+            {stageList}
+            <p className="mt-3 px-2 text-[11px] text-muted-foreground">
+              Progress saves after every stage.
             </p>
-          </Panel>
+          </nav>
         </aside>
 
         <div className="min-w-0">
           {viewed ? (
-            <div className="panel mb-4 p-4 animate-fade-up">
+            <div className="mb-6 rounded-md border p-4 animate-fade-up">
               <div className="flex flex-wrap items-center gap-2">
                 <StageStatusIcon s={viewed} />
                 <h2 className="font-semibold">{viewed.name}</h2>
                 <span className="font-mono text-sm tabular">{Math.round(viewed.score)}/100</span>
-                <Pill tone={viewed.status === "satisfactory" ? "ok" : "warning"}>
+                <span
+                  className={cn(
+                    "text-xs capitalize",
+                    viewed.status === "satisfactory" ? "text-ok" : "text-warning",
+                  )}
+                >
                   {viewed.status}
-                </Pill>
+                </span>
                 <Button
                   variant="ghost"
                   size="sm"

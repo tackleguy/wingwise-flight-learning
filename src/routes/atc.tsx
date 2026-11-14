@@ -473,6 +473,22 @@ function AtcPage() {
     const ctx = session.ctx;
     const atisVisible = session.difficulty === "beginner" || atisHeard;
 
+    const taskBlock = (
+      <div className="border-l-2 border-primary/60 pl-3">
+        <div className="label-caps">
+          {session.done
+            ? "Scenario complete"
+            : `Step ${Math.min(session.index + 1, facs.length)} of ${facs.length}`}
+        </div>
+        <p className="mt-0.5 text-sm font-semibold">
+          {step ? step.title : "All calls made — end & score when ready."}
+        </p>
+        {step && canHint && showChecklist ? (
+          <p className="mt-0.5 text-xs text-muted-foreground">{stepHint(session)}</p>
+        ) : null}
+      </div>
+    );
+
     return (
       <Page wide>
         <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -503,10 +519,11 @@ function AtcPage() {
           </div>
         </div>
         <Notice tone="caution" title="Simulated ATC — not real ATC." className="mb-3">
-          Training only. Nothing here is a real clearance or instruction; frequencies marked SIM
-          are training stand-ins.
+          Training only. Nothing here is a real clearance or instruction; frequencies marked SIM are
+          training stand-ins.
         </Notice>
 
+        <div className="mb-3 lg:hidden">{taskBlock}</div>
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)]">
           <div className="min-w-0 space-y-4">
             <RadioPanel
@@ -544,19 +561,7 @@ function AtcPage() {
           </div>
 
           <div className="min-w-0 space-y-4">
-            <div className="border-l-2 border-primary/60 pl-3">
-              <div className="label-caps">
-                {session.done
-                  ? "Scenario complete"
-                  : `Step ${Math.min(session.index + 1, facs.length)} of ${facs.length}`}
-              </div>
-              <p className="mt-0.5 text-sm font-semibold">
-                {step ? step.title : "All calls made — end & score when ready."}
-              </p>
-              {step && canHint && showChecklist ? (
-                <p className="mt-0.5 text-xs text-muted-foreground">{stepHint(session)}</p>
-              ) : null}
-            </div>
+            <div className="hidden lg:block">{taskBlock}</div>
 
             <dl className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs">
               {[
@@ -746,7 +751,9 @@ function AtcPage() {
                     placeholder="Notes: ATIS, altimeter, taxi route, traffic…"
                     className="min-h-20 font-mono text-xs"
                   />
-                  <p className="text-[11px] text-muted-foreground">Notes stay in this session only.</p>
+                  <p className="text-[11px] text-muted-foreground">
+                    Notes stay in this session only.
+                  </p>
                 </div>
               </TabsContent>
 
@@ -952,13 +959,11 @@ function AtcPage() {
 
             <details className="group">
               <summary className="cursor-pointer list-none text-xs text-muted-foreground hover:text-foreground [&::-webkit-details-marker]:hidden">
-                <span className="group-open:hidden">More options</span>
-                <span className="hidden group-open:inline">Fewer options</span>
-                <span className="ml-1 font-mono">
-                  · {aircraftOptions.find((a) => a.id === aircraftId)?.label.split(" ")[0]}{" "}
-                  {callsign} ·{" "}
-                  {PERSONALITIES.find((p) => p.id === personality)?.label.toLowerCase()}
+                <span className="group-open:hidden">
+                  More options — aircraft, callsign <span className="font-mono">{callsign}</span>,
+                  controller, voice
                 </span>
+                <span className="hidden group-open:inline">Fewer options</span>
               </summary>
               <div className="mt-3 space-y-4">
                 <label className="block space-y-1">

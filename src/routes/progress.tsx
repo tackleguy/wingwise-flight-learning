@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { BarChart3, BookOpen, CheckCircle2, Circle, Flame, Plane, Target } from "lucide-react";
+import { BarChart3, CheckCircle2, Circle } from "lucide-react";
 import {
   CartesianGrid,
   Legend,
@@ -17,7 +17,8 @@ import {
   YAxis,
 } from "recharts";
 
-import { EmptyState, Meter, Page, PageHeader, Panel, Section, Stat } from "@/components/app/page";
+import { EmptyState, Meter, Page, PageHeader } from "@/components/app/page";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { COURSES } from "@/lib/content";
 import {
   WRITTEN_EXAM_NAMES,
@@ -80,215 +81,277 @@ function ProgressPage() {
       Object.keys(state.lessons).length >
     0;
 
+  const next = ladder[m.trainingLevel.level + 1];
+  const trends = [
+    {
+      title: "Knowledge: quizzes & exams",
+      a: {
+        name: "Quizzes",
+        data: series(
+          state.quizzes,
+          (q) => (q.total ? (q.score / q.total) * 100 : 0),
+          (q) => q.title,
+        ),
+      },
+      b: {
+        name: "Exams",
+        data: series(
+          state.exams,
+          (e) => e.scorePct,
+          (e) => `${e.title}${e.mode === "timed" ? " (timed)" : " (study)"}`,
+        ),
+      },
+      empty: "No quizzes or practice tests yet.",
+      emptyTo: "/practice-tests",
+    },
+    {
+      title: "Simulator flight scores",
+      a: {
+        name: "Flight score",
+        data: series(
+          state.flights,
+          (f) => f.score,
+          (f) => f.scenarioTitle,
+        ),
+      },
+      empty: "No simulator flights yet.",
+      emptyTo: "/simulator",
+    },
+    {
+      title: "ATC communication scores",
+      a: {
+        name: "ATC score",
+        data: series(
+          state.atcSessions,
+          (a) => a.score,
+          (a) => `${a.title} (${a.difficulty})`,
+        ),
+      },
+      empty: "No ATC sessions yet.",
+      emptyTo: "/atc",
+    },
+    {
+      title: "Oral exams & mock checkrides",
+      a: {
+        name: "Oral",
+        data: series(
+          state.orals,
+          (o) => o.score,
+          (o) => `Oral (${o.level})`,
+        ),
+      },
+      b: {
+        name: "Checkride",
+        data: series(
+          state.checkrides.filter((c) => c.completed),
+          (c) => c.overall,
+          (c) => `${c.title} — ${c.passed ? "satisfactory" : "unsatisfactory"}`,
+        ),
+      },
+      empty: "No oral exams or mock checkrides yet.",
+      emptyTo: "/oral-exam",
+    },
+  ];
+  const withData = trends.filter((t) => t.a.data.length + (t.b?.data.length ?? 0) > 0);
+  const withoutData = trends.filter((t) => t.a.data.length + (t.b?.data.length ?? 0) === 0);
+
   return (
     <Page wide>
       <PageHeader
         eyebrow="Overview"
         icon={BarChart3}
         title="Progress & Statistics"
-        description="Everything on this page is computed from your own training record in this browser. Proficiencies stay at 0% until you have real results for them."
+        description="Computed from your own training record in this browser."
       />
 
       {!hydrated ? null : !hasAny ? (
         <EmptyState
           icon={BarChart3}
           title="No training data yet"
-          description="Complete a lesson, take a quiz, fly a simulator scenario or practice with ATC — your charts and proficiency scores will build from there."
+          description="Complete a lesson, quiz, sim flight or ATC session and your charts will build from there."
           action={{ to: "/vfr", label: "Start VFR ground school" }}
         />
       ) : (
         <>
-          <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
-            <Stat
+          <dl className="mb-6 grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
+            <Kpi
               label="Training level"
-              value={<span className="text-lg">{m.trainingLevel.label}</span>}
+              value={m.trainingLevel.label}
               sub={`Level ${m.trainingLevel.level + 1} of 8`}
-              tone="primary"
+              className="text-primary"
             />
-            <Stat
+            <Kpi
               label="Lessons"
               value={`${m.lessonsDone}/${m.lessonsTotal || "—"}`}
-              icon={BookOpen}
+              sub={`Written readiness ${m.writtenReadiness}%`}
             />
-            <Stat
+            <Kpi
               label="Sim flights"
-              value={m.flights}
-              sub={`${m.simHours.toFixed(1)} h simulated`}
-              icon={Plane}
+              value={String(m.flights)}
+              sub={`${m.simHours.toFixed(1)} h · ${m.landings} landings`}
             />
-            <Stat label="Landings" value={m.landings} />
-            <Stat
-              label="Current streak"
+            <Kpi
+              label="Streak"
               value={`${st.current}d`}
               sub={`Longest ${st.longest} days`}
-              icon={Flame}
-              tone={st.current >= 3 ? "ok" : "default"}
+              className={st.current >= 3 ? "text-ok" : undefined}
             />
-            <Stat
-              label="Written readiness"
-              value={`${m.writtenReadiness}%`}
-              icon={Target}
-              tone={
-                m.writtenReadiness >= 80 ? "ok" : m.writtenReadiness >= 70 ? "primary" : "default"
-              }
-            />
-          </div>
+          </dl>
 
-          <div className="mb-8 grid gap-4 lg:grid-cols-[minmax(0,420px)_minmax(0,1fr)]">
-            <Panel title="Proficiency radar">
-              <ProficiencyRadar m={m} />
-            </Panel>
-            <Panel title={`Training level — ${m.trainingLevel.label}`}>
-              <div className="mb-3">
-                <Meter
-                  value={m.trainingLevel.pct}
-                  label={`Progress to ${m.trainingLevel.nextLabel}`}
-                />
+          <Tabs defaultValue="overview">
+            <TabsList className="mb-5">
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="trends">Trends</TabsTrigger>
+              <TabsTrigger value="knowledge">Knowledge</TabsTrigger>
+              <TabsTrigger value="activity">Activity</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="overview">
+              <div className="grid gap-10 lg:grid-cols-[minmax(0,400px)_minmax(0,1fr)]">
+                <section>
+                  <h2 className="label-caps mb-2">Proficiency</h2>
+                  <ProficiencyRadar m={m} />
+                </section>
+                <section>
+                  <h2 className="label-caps mb-2">Training level — {m.trainingLevel.label}</h2>
+                  <Meter
+                    value={m.trainingLevel.pct}
+                    label={`Progress to ${m.trainingLevel.nextLabel}`}
+                  />
+                  {next && next.reqs.length ? (
+                    <ul className="mt-3 space-y-1 text-xs text-muted-foreground">
+                      {next.reqs.map((r) => (
+                        <li key={r.label} className={cn(r.progress >= 1 && "text-ok")}>
+                          {r.progress >= 1 ? "✓ " : `${Math.round(r.progress * 100)}% · `}
+                          {r.label}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                  <details className="group mt-4">
+                    <summary className="cursor-pointer text-xs text-muted-foreground hover:text-foreground">
+                      All {ladder.length} levels
+                    </summary>
+                    <ol className="mt-3 space-y-2.5">
+                      {ladder.map((lvl, i) => {
+                        const reached = i <= m.trainingLevel.level;
+                        const isNext = i === m.trainingLevel.level + 1;
+                        return (
+                          <li key={lvl.label} className={cn(!reached && !isNext && "opacity-70")}>
+                            <div className="flex items-center gap-2 text-sm font-semibold">
+                              {reached ? (
+                                <CheckCircle2 className="size-4 text-ok" />
+                              ) : (
+                                <Circle
+                                  className={cn(
+                                    "size-4",
+                                    isNext ? "text-primary" : "text-muted-foreground",
+                                  )}
+                                />
+                              )}
+                              <span className="font-mono text-xs text-muted-foreground">
+                                {i + 1}
+                              </span>{" "}
+                              {lvl.label}
+                            </div>
+                            {lvl.reqs.length ? (
+                              <ul className="mt-1 space-y-0.5 pl-6 text-[11px] text-muted-foreground">
+                                {lvl.reqs.map((r) => (
+                                  <li key={r.label} className={cn(r.progress >= 1 && "text-ok")}>
+                                    {r.progress >= 1 ? "✓ " : `${Math.round(r.progress * 100)}% · `}
+                                    {r.label}
+                                  </li>
+                                ))}
+                              </ul>
+                            ) : (
+                              <p className="mt-0.5 pl-6 text-[11px] text-muted-foreground">
+                                {lvl.description}
+                              </p>
+                            )}
+                          </li>
+                        );
+                      })}
+                    </ol>
+                  </details>
+                </section>
               </div>
-              <ol className="grid gap-2 sm:grid-cols-2">
-                {ladder.map((lvl, i) => {
-                  const reached = i <= m.trainingLevel.level;
-                  const isNext = i === m.trainingLevel.level + 1;
-                  return (
-                    <li
-                      key={lvl.label}
-                      className={cn(
-                        "rounded-md border p-2.5",
-                        reached
-                          ? "border-ok/30 bg-ok/5"
-                          : isNext
-                            ? "border-primary/40 bg-primary/5"
-                            : "opacity-70",
-                      )}
-                    >
-                      <div className="flex items-center gap-2 text-sm font-semibold">
-                        {reached ? (
-                          <CheckCircle2 className="size-4 text-ok" />
-                        ) : (
-                          <Circle className="size-4 text-muted-foreground" />
-                        )}
-                        <span className="font-mono text-xs text-muted-foreground">{i + 1}</span>{" "}
-                        {lvl.label}
-                      </div>
-                      {lvl.reqs.length ? (
-                        <ul className="mt-1.5 space-y-0.5 pl-6 text-[11px] text-muted-foreground">
-                          {lvl.reqs.map((r) => (
-                            <li key={r.label} className={cn(r.progress >= 1 && "text-ok")}>
-                              {r.progress >= 1 ? "✓ " : `${Math.round(r.progress * 100)}% · `}
-                              {r.label}
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <p className="mt-1 pl-6 text-[11px] text-muted-foreground">
-                          {lvl.description}
-                        </p>
-                      )}
+            </TabsContent>
+
+            <TabsContent value="trends">
+              <p className="mb-4 text-xs text-muted-foreground">
+                Each point is one attempt. Hover for details.
+              </p>
+              <div className="grid gap-x-10 gap-y-8 lg:grid-cols-2">
+                {withData.map((t) => (
+                  <TrendChart key={t.title} title={t.title} a={t.a} {...(t.b ? { b: t.b } : {})} />
+                ))}
+              </div>
+              {withoutData.length ? (
+                <ul className="mt-6 space-y-1 text-xs text-muted-foreground">
+                  {withoutData.map((t) => (
+                    <li key={t.title}>
+                      {t.empty}{" "}
+                      <Link to={t.emptyTo} className="text-primary hover:underline">
+                        Start →
+                      </Link>
                     </li>
-                  );
-                })}
-              </ol>
-            </Panel>
-          </div>
+                  ))}
+                </ul>
+              ) : null}
+            </TabsContent>
 
-          <Section title="Score trends" description="Each point is one attempt. Hover for details.">
-            <div className="grid gap-4 lg:grid-cols-2">
-              <TrendChart
-                title="Knowledge: quizzes & exams"
-                a={{
-                  name: "Quizzes",
-                  data: series(
-                    state.quizzes,
-                    (q) => (q.total ? (q.score / q.total) * 100 : 0),
-                    (q) => q.title,
-                  ),
-                }}
-                b={{
-                  name: "Exams",
-                  data: series(
-                    state.exams,
-                    (e) => e.scorePct,
-                    (e) => `${e.title}${e.mode === "timed" ? " (timed)" : " (study)"}`,
-                  ),
-                }}
-                empty="Take a module quiz or practice test to see your knowledge trend."
-                emptyTo="/practice-tests"
-              />
-              <TrendChart
-                title="Simulator flight scores"
-                a={{
-                  name: "Flight score",
-                  data: series(
-                    state.flights,
-                    (f) => f.score,
-                    (f) => f.scenarioTitle,
-                  ),
-                }}
-                empty="Fly a scenario in the simulator to see your scores."
-                emptyTo="/simulator"
-              />
-              <TrendChart
-                title="ATC communication scores"
-                a={{
-                  name: "ATC score",
-                  data: series(
-                    state.atcSessions,
-                    (a) => a.score,
-                    (a) => `${a.title} (${a.difficulty})`,
-                  ),
-                }}
-                empty="Practice radio calls with the ATC simulator."
-                emptyTo="/atc"
-              />
-              <TrendChart
-                title="Oral exams & mock checkrides"
-                a={{
-                  name: "Oral",
-                  data: series(
-                    state.orals,
-                    (o) => o.score,
-                    (o) => `Oral (${o.level})`,
-                  ),
-                }}
-                b={{
-                  name: "Checkride",
-                  data: series(
-                    state.checkrides.filter((c) => c.completed),
-                    (c) => c.overall,
-                    (c) => `${c.title} — ${c.passed ? "satisfactory" : "unsatisfactory"}`,
-                  ),
-                }}
-                empty="Try the oral exam simulator or a mock checkride."
-                emptyTo="/oral-exam"
-              />
-            </div>
-          </Section>
+            <TabsContent value="knowledge">
+              <div className="grid gap-10 lg:grid-cols-2">
+                <section>
+                  <h2 className="label-caps mb-3">Lesson completion</h2>
+                  <CourseCompletion state={state} />
+                </section>
+                <section>
+                  <h2 className="label-caps mb-3">Written exams</h2>
+                  <WrittenHistory state={state} />
+                </section>
+              </div>
+              <section className="mt-10">
+                <h2 className="label-caps mb-1">Subject strengths</h2>
+                <p className="mb-3 text-xs text-muted-foreground">
+                  From every practice test and written exam — weakest first.
+                </p>
+                <SubjectTable state={state} />
+              </section>
+            </TabsContent>
 
-          <div className="mb-8 grid gap-4 lg:grid-cols-2">
-            <Panel title="Lesson completion by course">
-              <CourseCompletion state={state} />
-            </Panel>
-            <Panel title="Written exam history">
-              <WrittenHistory state={state} />
-            </Panel>
-          </div>
-
-          <Section
-            title="Subject strengths"
-            description="Aggregated from the subject breakdown of every practice test and written exam you've taken — weakest first."
-          >
-            <SubjectTable state={state} />
-          </Section>
-
-          <Section
-            title="Training activity"
-            description="Days with any recorded training (lessons, quizzes, exams, flights, ATC, oral, checkrides, avionics tasks) over the last 26 weeks."
-          >
-            <ActivityHeatmap state={state} />
-          </Section>
+            <TabsContent value="activity">
+              <p className="mb-3 text-xs text-muted-foreground">
+                Days with any recorded training over the last 26 weeks.
+              </p>
+              <ActivityHeatmap state={state} />
+            </TabsContent>
+          </Tabs>
         </>
       )}
     </Page>
+  );
+}
+
+function Kpi({
+  label,
+  value,
+  sub,
+  className,
+}: {
+  label: string;
+  value: string;
+  sub?: string;
+  className?: string | undefined;
+}) {
+  return (
+    <div className="min-w-0">
+      <dt className="label-caps">{label}</dt>
+      <dd className={cn("mt-1 truncate font-mono text-xl font-semibold tabular", className)}>
+        {value}
+      </dd>
+      {sub ? <dd className="text-xs text-muted-foreground">{sub}</dd> : null}
+    </div>
   );
 }
 
@@ -382,40 +445,25 @@ function TrendChart({
   title,
   a,
   b,
-  empty,
-  emptyTo,
 }: {
   title: string;
   a: { name: string; data: Pt[] };
   b?: { name: string; data: Pt[] };
-  empty: string;
-  emptyTo: string;
 }) {
   const all = [...a.data, ...(b?.data ?? [])];
   const avg = (xs: Pt[]) =>
     xs.length ? Math.round(xs.reduce((s, x) => s + x.v, 0) / xs.length) : null;
   return (
-    <div className="panel">
-      <div className="flex items-center justify-between border-b px-4 py-2.5">
-        <span className="label-caps">{title}</span>
+    <section>
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-x-3">
+        <h2 className="label-caps">{title}</h2>
         <span className="text-[11px] text-muted-foreground">
           {a.data.length ? `${a.name} avg ${avg(a.data)}%` : ""}
           {b && b.data.length ? ` · ${b.name} avg ${avg(b.data)}%` : ""}
         </span>
       </div>
-      <div className="p-3">
-        {all.length === 0 ? (
-          <div className="grid h-52 place-items-center text-center text-sm text-muted-foreground">
-            <div>
-              {empty}
-              <div className="mt-2">
-                <Link to={emptyTo} className="text-primary hover:underline">
-                  Go there →
-                </Link>
-              </div>
-            </div>
-          </div>
-        ) : (
+      <div>
+        {all.length === 0 ? null : (
           <div className="h-52">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart margin={{ top: 8, right: 12, bottom: 0, left: -18 }}>
@@ -467,7 +515,7 @@ function TrendChart({
           </div>
         )}
       </div>
-    </div>
+    </section>
   );
 }
 
@@ -488,7 +536,10 @@ function CourseCompletion({ state }: { state: TrainingState }) {
               className="w-full text-left"
               aria-expanded={isOpen}
             >
-              <Meter value={p.pct} label={`${c.title} — ${p.done}/${p.total} lessons`} />
+              <Meter
+                value={p.pct}
+                label={`${c.title} — ${p.done}/${p.total} lessons ${isOpen ? "▴" : "▾"}`}
+              />
             </button>
             {isOpen ? (
               <ul className="mt-2 space-y-1.5 border-l pl-3">
@@ -519,11 +570,7 @@ function CourseCompletion({ state }: { state: TrainingState }) {
                   );
                 })}
               </ul>
-            ) : (
-              <p className="mt-1 text-[11px] text-muted-foreground">
-                Click to see module-by-module completion.
-              </p>
-            )}
+            ) : null}
           </div>
         );
       })}
@@ -592,18 +639,18 @@ function SubjectTable({ state }: { state: TrainingState }) {
   const rows = useMemo(() => subjectStrengths(state), [state]);
   if (rows.length === 0)
     return (
-      <EmptyState
-        icon={Target}
-        title="No subject data yet"
-        description="Practice tests and written exams break your score down by subject. Take one to see your strongest and weakest areas."
-        action={{ to: "/practice-tests", label: "Practice tests" }}
-      />
+      <p className="text-sm text-muted-foreground">
+        No subject data yet.{" "}
+        <Link to="/practice-tests" className="text-primary hover:underline">
+          Take a practice test →
+        </Link>
+      </p>
     );
   return (
-    <div className="panel overflow-x-auto">
+    <div className="overflow-x-auto">
       <table className="w-full min-w-[520px] text-sm">
         <thead>
-          <tr className="border-b bg-muted/40 text-left">
+          <tr className="border-b text-left">
             <th className="label-caps px-4 py-2">Subject</th>
             <th className="label-caps px-2 py-2 text-right">Correct</th>
             <th className="label-caps w-1/3 px-2 py-2">Accuracy</th>
@@ -673,7 +720,7 @@ function ActivityHeatmap({ state }: { state: TrainingState }) {
   const hoverCell = cells.find((c) => c.key === hover);
   const activeDays = cells.filter((c) => c.n > 0).length;
   return (
-    <div className="panel p-4">
+    <div>
       <div className="overflow-x-auto">
         <svg
           width={weeks * (S + G) + 28}

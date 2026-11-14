@@ -106,9 +106,7 @@ export function ModuleQuiz({
     const pass = pct >= PASS_PCT;
     return (
       <div className="space-y-5">
-        <div
-          className="flex flex-col gap-4 border-b pb-5 sm:flex-row sm:items-center sm:justify-between"
-        >
+        <div className="flex flex-col gap-4 border-b pb-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-xs text-muted-foreground">Module exam result</p>
             <p
@@ -143,10 +141,7 @@ export function ModuleQuiz({
             const a = answers[i] ?? null;
             const ok = a === q.answer;
             return (
-              <li
-                key={q.id}
-                className="py-3.5"
-              >
+              <li key={q.id} className="py-3.5">
                 <div className="flex gap-2">
                   {ok ? (
                     <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-ok" />

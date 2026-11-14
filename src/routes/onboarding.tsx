@@ -100,7 +100,7 @@ function Onboarding() {
   );
 
   return (
-    <Page className="max-w-4xl">
+    <Page className="max-w-3xl">
       <PageHeader
         eyebrow="Get started"
         icon={UserCircle2}
@@ -108,26 +108,37 @@ function Onboarding() {
         description="Three quick steps: your profile, a 15-question knowledge assessment, and your training goal."
       />
 
-      <ol className="mb-6 grid grid-cols-4 gap-2">
+      <ol className="mb-8 flex items-center gap-2 text-xs" aria-label="Steps">
         {STEPS.map((s, i) => (
           <li
             key={s}
+            aria-current={i === step ? "step" : undefined}
             className={cn(
-              "rounded-md border px-3 py-2 text-xs",
-              i === step
-                ? "border-primary bg-primary/10 text-primary"
-                : i < step
-                  ? "border-ok/30 text-ok"
-                  : "text-muted-foreground",
+              "flex min-w-0 items-center gap-1.5",
+              i === step ? "text-foreground" : i < step ? "text-ok" : "text-muted-foreground",
             )}
           >
-            <span className="font-mono">{i + 1}</span> · <span className="font-semibold">{s}</span>
+            <span
+              className={cn(
+                "grid size-5 shrink-0 place-items-center rounded-full border font-mono text-[10px]",
+                i === step && "border-primary bg-primary text-primary-foreground",
+                i < step && "border-ok/50",
+              )}
+            >
+              {i < step ? <CheckCircle2 className="size-3" /> : i + 1}
+            </span>
+            <span className={cn("truncate font-medium", i !== step && "hidden sm:inline")}>
+              {s}
+            </span>
+            {i < STEPS.length - 1 ? (
+              <span className="mx-1 h-px w-4 shrink-0 bg-border sm:w-8" aria-hidden />
+            ) : null}
           </li>
         ))}
       </ol>
 
       {step === 0 ? (
-        <div className="panel p-5">
+        <div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <Label htmlFor="name">Name</Label>
@@ -202,7 +213,7 @@ function Onboarding() {
               </select>
             </div>
           </div>
-          <Notice className="mt-5" title="Where is my data stored?">
+          <Notice className="mt-6" title="Where is my data stored?" open={false}>
             Your profile and training progress are saved privately in this browser on this device.
             Export/import is available in Settings. Signing in to sync across devices requires
             enabling a cloud account backend for this app.
@@ -216,10 +227,10 @@ function Onboarding() {
       ) : null}
 
       {step === 1 && q ? (
-        <div className="panel p-5">
+        <div>
           <div className="mb-3 flex items-center justify-between text-xs text-muted-foreground">
             <span>
-              Question {qi + 1} of {ASSESSMENT_QUESTIONS.length} · <Pill>{q.subject}</Pill>
+              Question {qi + 1} of {ASSESSMENT_QUESTIONS.length} · {q.subject}
             </span>
             <span>{answered} answered</span>
           </div>
@@ -229,7 +240,7 @@ function Onboarding() {
               {q.context}
             </pre>
           ) : null}
-          <p className="mt-4 text-base font-semibold">{q.prompt}</p>
+          <p className="mt-6 text-lg font-semibold">{q.prompt}</p>
           <div className="mt-3 space-y-2">
             {q.choices.map((c, i) => {
               const sel = answers[qi] === i;
@@ -265,7 +276,7 @@ function Onboarding() {
             })}
           </div>
           {revealed ? (
-            <p className="mt-3 rounded-md border bg-muted/40 p-3 text-sm text-foreground/90">
+            <p className="mt-3 rounded-md bg-muted/40 p-3 text-sm text-foreground/90">
               {q.explanation}
             </p>
           ) : null}
@@ -307,10 +318,10 @@ function Onboarding() {
       ) : null}
 
       {step === 2 ? (
-        <div className="panel p-5">
+        <div>
           {result ? (
-            <div className="mb-5 rounded-md border bg-muted/30 p-4">
-              <p className="label-caps">Assessment result</p>
+            <div className="mb-8 border-b pb-6">
+              <p className="text-xs text-muted-foreground">Assessment result</p>
               <p className="mt-1 text-2xl font-bold">
                 {result.score}/{result.total}{" "}
                 <span className="text-base font-medium text-muted-foreground capitalize">
@@ -328,7 +339,7 @@ function Onboarding() {
               </div>
             </div>
           ) : null}
-          <p className="label-caps mb-2">Choose your training goal</p>
+          <p className="mb-2 text-sm font-semibold">Choose your training goal</p>
           <div className="grid gap-2 sm:grid-cols-2">
             {mainTracks.map((t) => (
               <button
@@ -341,11 +352,7 @@ function Onboarding() {
               >
                 <div className="flex items-center justify-between gap-2">
                   <span className="font-semibold">{t.title}</span>
-                  {result?.recommendedTrack === t.id ? (
-                    <Pill tone="ok">Recommended</Pill>
-                  ) : (
-                    <Pill>{t.kind}</Pill>
-                  )}
+                  {result?.recommendedTrack === t.id ? <Pill tone="ok">Recommended</Pill> : null}
                 </div>
                 <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{t.summary}</p>
               </button>
@@ -363,7 +370,7 @@ function Onboarding() {
       ) : null}
 
       {step === 3 ? (
-        <div className="panel p-6 text-center">
+        <div className="py-6 text-center">
           <GraduationCap className="mx-auto size-10 text-primary" />
           <h2 className="mt-3 text-xl font-bold">You're ready to train, {name.split(" ")[0]}.</h2>
           <p className="mx-auto mt-1 max-w-lg text-sm text-muted-foreground">
