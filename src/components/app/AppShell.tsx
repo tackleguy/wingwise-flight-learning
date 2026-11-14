@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/sidebar";
 import { NAV, navItemFor } from "@/lib/nav";
 import { useStore } from "@/lib/store";
+import { useApplyAccessibility } from "@/lib/accessibility";
 
 function isActive(pathname: string, to: string) {
   if (to === "/") return pathname === "/";
@@ -135,6 +136,7 @@ function TopBar() {
 }
 
 export function AppShell({ children }: { children: ReactNode }) {
+  useApplyAccessibility();
   return (
     <SidebarProvider>
       <Sidebar collapsible="icon" variant="sidebar">

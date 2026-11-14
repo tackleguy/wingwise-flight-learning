@@ -21,19 +21,48 @@ import {
   XCircle,
 } from "lucide-react";
 
-import { EmptyState, Notice, Page, PageHeader, Panel, Pill, Section, formatDateTime } from "@/components/app/page";
+import {
+  EmptyState,
+  Notice,
+  Page,
+  PageHeader,
+  Panel,
+  Pill,
+  Section,
+  formatDateTime,
+} from "@/components/app/page";
 import { HrefLink, buildHref } from "@/components/app/xlink";
 import { ConfirmAction } from "@/components/app/confirm";
 import { BriefingExercise, NotamExercise } from "@/components/planner/exercises";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AIRCRAFT_PERF, getPerf } from "@/lib/data/aircraft-perf";
 import { AIRPORTS, AIRPORT_DATA_NOTICE, NAVAIDS, getAirport } from "@/lib/data/airports";
-import { fmtHdg, isIfrCapable, longestRunwayFt, nearestAirports, resolvePoint } from "@/lib/data/airport-utils";
+import {
+  fmtHdg,
+  isIfrCapable,
+  longestRunwayFt,
+  nearestAirports,
+  resolvePoint,
+} from "@/lib/data/airport-utils";
 import { windTriangle } from "@/lib/geo";
-import { checkCruiseAltitude, computePlan, fuelRequirement, fmtMin, fmtZulu, pointAlongRoute, type PlanResult } from "@/lib/planning";
+import {
+  checkCruiseAltitude,
+  computePlan,
+  fuelRequirement,
+  fmtMin,
+  fmtZulu,
+  pointAlongRoute,
+  type PlanResult,
+} from "@/lib/planning";
 import { actions, useHydrated, useStore, type SavedFlightPlan } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
@@ -45,7 +74,11 @@ export const Route = createFileRoute("/planner")({
   head: () => ({
     meta: [
       { title: "Flight Planner — TeachX" },
-      { name: "description", content: "Plan VFR and IFR training flights: nav log with wind correction, fuel reserves, cruising-altitude rules, alternates, diversions, briefing and NOTAM exercises." },
+      {
+        name: "description",
+        content:
+          "Plan VFR and IFR training flights: nav log with wind correction, fuel reserves, cruising-altitude rules, alternates, diversions, briefing and NOTAM exercises.",
+      },
     ],
   }),
   component: Planner,
@@ -65,7 +98,8 @@ function Planner() {
   const homeAirport = useStore((s) => s.profile?.homeAirport);
   const savedPlans = useStore((s) => s.flightPlans);
 
-  const initialDep = search.from && getAirport(search.from) ? (getAirport(search.from)?.icao ?? "KPAO") : "KPAO";
+  const initialDep =
+    search.from && getAirport(search.from) ? (getAirport(search.from)?.icao ?? "KPAO") : "KPAO";
   const [name, setName] = useState("");
   const [rules, setRules] = useState<"VFR" | "IFR">("VFR");
   const [dep, setDep] = useState(initialDep);
@@ -103,7 +137,8 @@ function Planner() {
   useEffect(() => {
     if (!hydrated) return;
     if (AIRCRAFT_PERF.some((p) => p.id === settingsAircraft)) applyAircraft(settingsAircraft);
-    if (!search.from && homeAirport && getAirport(homeAirport)) setDep(getAirport(homeAirport)?.icao ?? "KPAO");
+    if (!search.from && homeAirport && getAirport(homeAirport))
+      setDep(getAirport(homeAirport)?.icao ?? "KPAO");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hydrated]);
 
@@ -121,10 +156,12 @@ function Planner() {
     setDirty(true);
   }
 
-  const mark = <T,>(fn: (v: T) => void) => (v: T) => {
-    fn(v);
-    setDirty(true);
-  };
+  const mark =
+    <T,>(fn: (v: T) => void) =>
+    (v: T) => {
+      fn(v);
+      setDirty(true);
+    };
 
   const tasN = Number(tas) || 0;
   const burnN = Number(burn) || 0;
@@ -135,11 +172,29 @@ function Planner() {
   const depIso = depTime ? new Date(depTime).toISOString() : undefined;
 
   const plan: PlanResult = useMemo(
-    () => computePlan({ points: [dep, ...route, dst], tas: tasN, windFrom: windDirN, windKt: windKtN, burnGph: burnN, departureTime: depIso, taxiGal: Number(taxi) || 0 }),
+    () =>
+      computePlan({
+        points: [dep, ...route, dst],
+        tas: tasN,
+        windFrom: windDirN,
+        windKt: windKtN,
+        burnGph: burnN,
+        departureTime: depIso,
+        taxiGal: Number(taxi) || 0,
+      }),
     [dep, route, dst, tasN, windDirN, windKtN, burnN, depIso, taxi],
   );
   const altPlan = useMemo(
-    () => (alt ? computePlan({ points: [dst, alt], tas: tasN, windFrom: windDirN, windKt: windKtN, burnGph: burnN }) : undefined),
+    () =>
+      alt
+        ? computePlan({
+            points: [dst, alt],
+            tas: tasN,
+            windFrom: windDirN,
+            windKt: windKtN,
+            burnGph: burnN,
+          })
+        : undefined,
     [alt, dst, tasN, windDirN, windKtN, burnN],
   );
 
@@ -148,7 +203,14 @@ function Planner() {
   const altAp = alt ? getAirport(alt) : undefined;
   const sameDepDst = dep === dst;
   const firstLeg = plan.legs[0];
-  const altChecks = plan.legs.map((l) => checkCruiseAltitude(rules, altN, l.magCourse, Math.max(depAp?.elevationFt ?? 0, dstAp?.elevationFt ?? 0)));
+  const altChecks = plan.legs.map((l) =>
+    checkCruiseAltitude(
+      rules,
+      altN,
+      l.magCourse,
+      Math.max(depAp?.elevationFt ?? 0, dstAp?.elevationFt ?? 0),
+    ),
+  );
   const altitudeOk = altChecks.every((c) => c.ok);
   const destHasIap = dstAp ? isIfrCapable(dstAp) : false;
   const alternateRequired = rules === "IFR" && !(destHasIap && ceil2000 && vis3);
@@ -167,14 +229,32 @@ function Planner() {
   const missingAlternate = rules === "IFR" && alternateRequired && !altAp;
 
   const issues: string[] = [];
-  if (sameDepDst && route.length === 0) issues.push("Departure and destination are the same — add waypoints for a local flight or choose a different destination.");
-  if (impossible) issues.push("Wind exceeds true airspeed on at least one leg — no wind-correction solution.");
-  if (!fuelChk.ok) issues.push(`Fuel on board is ${Math.abs(fuelChk.marginGal).toFixed(1)} gal short of the legal minimum.`);
-  if (overCapacity) issues.push(`Fuel on board exceeds the ${perf.shortName}'s usable capacity (${perf.usableFuelGal} gal).`);
-  if (aboveCeiling) issues.push(`Cruise altitude is above the ${perf.shortName}'s service ceiling (${perf.serviceCeilingFt.toLocaleString()} ft).`);
-  if (!altitudeOk) issues.push("Cruise altitude does not match the cruising-altitude rule for every leg (see below).");
-  if (missingAlternate) issues.push("IFR: an alternate is required by the 1-2-3 rule — select one.");
-  if (rules === "VFR" && altN >= 18000) issues.push("VFR flight is not permitted at or above 18,000 ft MSL (Class A).");
+  if (sameDepDst && route.length === 0)
+    issues.push(
+      "Departure and destination are the same — add waypoints for a local flight or choose a different destination.",
+    );
+  if (impossible)
+    issues.push("Wind exceeds true airspeed on at least one leg — no wind-correction solution.");
+  if (!fuelChk.ok)
+    issues.push(
+      `Fuel on board is ${Math.abs(fuelChk.marginGal).toFixed(1)} gal short of the legal minimum.`,
+    );
+  if (overCapacity)
+    issues.push(
+      `Fuel on board exceeds the ${perf.shortName}'s usable capacity (${perf.usableFuelGal} gal).`,
+    );
+  if (aboveCeiling)
+    issues.push(
+      `Cruise altitude is above the ${perf.shortName}'s service ceiling (${perf.serviceCeilingFt.toLocaleString()} ft).`,
+    );
+  if (!altitudeOk)
+    issues.push(
+      "Cruise altitude does not match the cruising-altitude rule for every leg (see below).",
+    );
+  if (missingAlternate)
+    issues.push("IFR: an alternate is required by the 1-2-3 rule — select one.");
+  if (rules === "VFR" && altN >= 18000)
+    issues.push("VFR flight is not permitted at or above 18,000 ft MSL (Class A).");
 
   const addWaypoint = () => {
     const p = resolvePoint(wpInput);
@@ -247,18 +327,33 @@ function Planner() {
         description="Build a VFR or IFR nav log with wind correction, magnetic headings, ETEs, fuel reserves and the cruising-altitude rules — then fly it in the simulator or request a clearance from AI ATC."
         actions={
           <>
-            <Button variant="outline" size="sm" onClick={() => typeof window !== "undefined" && window.print()} disabled={plan.legs.length === 0}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => typeof window !== "undefined" && window.print()}
+              disabled={plan.legs.length === 0}
+            >
               <Printer className="size-4" /> Print nav log
             </Button>
-            <Button size="sm" onClick={save} disabled={!hydrated || plan.legs.length === 0 || plan.unresolved.length > 0}>
+            <Button
+              size="sm"
+              onClick={save}
+              disabled={!hydrated || plan.legs.length === 0 || plan.unresolved.length > 0}
+            >
               <Save className="size-4" /> {savedId && !dirty ? "Saved" : "Save plan"}
             </Button>
           </>
         }
       />
 
-      <Notice tone="caution" className="mb-5" title="Training tool — not for real-world flight planning.">
-        Calculations use a single wind, great-circle legs and the simulator's educational performance numbers (no climb/descent allowances). Airport data: {AIRPORT_DATA_NOTICE.currency} {AIRPORT_DATA_NOTICE.disclaimer}
+      <Notice
+        tone="caution"
+        className="mb-5"
+        title="Training tool — not for real-world flight planning."
+      >
+        Calculations use a single wind, great-circle legs and the simulator's educational
+        performance numbers (no climb/descent allowances). Airport data:{" "}
+        {AIRPORT_DATA_NOTICE.currency} {AIRPORT_DATA_NOTICE.disclaimer}
       </Notice>
 
       {savedPlan ? (
@@ -266,11 +361,23 @@ function Planner() {
           <div className="text-sm">
             <CheckCircle2 className="mr-1.5 inline size-4 text-ok" />
             Saved as <span className="font-semibold">{savedPlan.name}</span>
-            {dirty ? <span className="ml-2 text-caution">— you have unsaved changes; save again to update the simulator/ATC version.</span> : null}
+            {dirty ? (
+              <span className="ml-2 text-caution">
+                — you have unsaved changes; save again to update the simulator/ATC version.
+              </span>
+            ) : null}
           </div>
           <div className="flex flex-wrap gap-2">
             <Button size="sm" asChild>
-              <HrefLink href={buildHref("/simulator", { airport: savedPlan.departure, dest: savedPlan.destination, aircraft: savedPlan.aircraftId, plan: savedPlan.id, scenario: "free-flight" })}>
+              <HrefLink
+                href={buildHref("/simulator", {
+                  airport: savedPlan.departure,
+                  dest: savedPlan.destination,
+                  aircraft: savedPlan.aircraftId,
+                  plan: savedPlan.id,
+                  scenario: "free-flight",
+                })}
+              >
                 <PlaneTakeoff className="size-4" /> Fly this plan in the simulator
               </HrefLink>
             </Button>
@@ -289,11 +396,32 @@ function Planner() {
           <Panel title="Flight">
             <div className="space-y-3">
               <Field label="Plan name">
-                <Input value={name} onChange={(e) => mark(setName)(e.target.value)} placeholder={`${dep} → ${dst} (${rules})`} />
+                <Input
+                  value={name}
+                  onChange={(e) => mark(setName)(e.target.value)}
+                  placeholder={`${dep} → ${dst} (${rules})`}
+                />
               </Field>
-              <div className="grid grid-cols-2 gap-1 rounded-md border p-1" role="group" aria-label="Flight rules">
+              <div
+                className="grid grid-cols-2 gap-1 rounded-md border p-1"
+                role="group"
+                aria-label="Flight rules"
+              >
                 {(["VFR", "IFR"] as const).map((r) => (
-                  <button key={r} type="button" aria-pressed={rules === r} onClick={() => mark(setRules)(r)} className={cn("rounded py-1.5 text-sm font-semibold", rules === r ? (r === "VFR" ? "bg-ok/15 text-ok" : "bg-primary/15 text-primary") : "text-muted-foreground hover:text-foreground")}>
+                  <button
+                    key={r}
+                    type="button"
+                    aria-pressed={rules === r}
+                    onClick={() => mark(setRules)(r)}
+                    className={cn(
+                      "rounded py-1.5 text-sm font-semibold",
+                      rules === r
+                        ? r === "VFR"
+                          ? "bg-ok/15 text-ok"
+                          : "bg-primary/15 text-primary"
+                        : "text-muted-foreground hover:text-foreground",
+                    )}
+                  >
                     {r}
                   </button>
                 ))}
@@ -306,7 +434,9 @@ function Planner() {
                   <AirportSelect value={dst} onChange={mark(setDst)} />
                 </Field>
               </div>
-              <Field label={`Alternate ${rules === "IFR" ? (alternateRequired ? "(required)" : "(not required)") : "(optional)"}`}>
+              <Field
+                label={`Alternate ${rules === "IFR" ? (alternateRequired ? "(required)" : "(not required)") : "(optional)"}`}
+              >
                 <AirportSelect value={alt} onChange={mark(setAlt)} allowNone exclude={dst} />
               </Field>
               <Field label="Aircraft">
@@ -325,37 +455,88 @@ function Planner() {
               </Field>
               <div className="grid grid-cols-3 gap-2">
                 <Field label="Cruise alt ft">
-                  <Input inputMode="numeric" value={cruiseAlt} onChange={(e) => mark(setCruiseAlt)(e.target.value.replace(/[^0-9]/g, ""))} className="font-mono" />
+                  <Input
+                    inputMode="numeric"
+                    value={cruiseAlt}
+                    onChange={(e) => mark(setCruiseAlt)(e.target.value.replace(/[^0-9]/g, ""))}
+                    className="font-mono"
+                  />
                 </Field>
                 <Field label="TAS kt">
-                  <Input inputMode="numeric" value={tas} onChange={(e) => mark(setTas)(e.target.value.replace(/[^0-9]/g, ""))} className="font-mono" />
+                  <Input
+                    inputMode="numeric"
+                    value={tas}
+                    onChange={(e) => mark(setTas)(e.target.value.replace(/[^0-9]/g, ""))}
+                    className="font-mono"
+                  />
                 </Field>
                 <Field label="Burn gph">
-                  <Input inputMode="decimal" value={burn} onChange={(e) => mark(setBurn)(e.target.value.replace(/[^0-9.]/g, ""))} className="font-mono" />
+                  <Input
+                    inputMode="decimal"
+                    value={burn}
+                    onChange={(e) => mark(setBurn)(e.target.value.replace(/[^0-9.]/g, ""))}
+                    className="font-mono"
+                  />
                 </Field>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <Field label="Wind from °T">
-                  <Input inputMode="numeric" value={windDir} onChange={(e) => mark(setWindDir)(e.target.value.replace(/[^0-9]/g, "").slice(0, 3))} className="font-mono" />
+                  <Input
+                    inputMode="numeric"
+                    value={windDir}
+                    onChange={(e) =>
+                      mark(setWindDir)(e.target.value.replace(/[^0-9]/g, "").slice(0, 3))
+                    }
+                    className="font-mono"
+                  />
                 </Field>
                 <Field label="Wind kt">
-                  <Input inputMode="numeric" value={windKt} onChange={(e) => mark(setWindKt)(e.target.value.replace(/[^0-9]/g, "").slice(0, 3))} className="font-mono" />
+                  <Input
+                    inputMode="numeric"
+                    value={windKt}
+                    onChange={(e) =>
+                      mark(setWindKt)(e.target.value.replace(/[^0-9]/g, "").slice(0, 3))
+                    }
+                    className="font-mono"
+                  />
                 </Field>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <Field label="Fuel on board gal">
-                  <Input inputMode="decimal" value={fuel} onChange={(e) => mark(setFuel)(e.target.value.replace(/[^0-9.]/g, ""))} className="font-mono" />
+                  <Input
+                    inputMode="decimal"
+                    value={fuel}
+                    onChange={(e) => mark(setFuel)(e.target.value.replace(/[^0-9.]/g, ""))}
+                    className="font-mono"
+                  />
                 </Field>
                 <Field label="Taxi/T-O fuel gal">
-                  <Input inputMode="decimal" value={taxi} onChange={(e) => mark(setTaxi)(e.target.value.replace(/[^0-9.]/g, ""))} className="font-mono" />
+                  <Input
+                    inputMode="decimal"
+                    value={taxi}
+                    onChange={(e) => mark(setTaxi)(e.target.value.replace(/[^0-9.]/g, ""))}
+                    className="font-mono"
+                  />
                 </Field>
               </div>
               <Field label="Departure time (local)">
-                <Input type="datetime-local" value={depTime} onChange={(e) => mark(setDepTime)(e.target.value)} className="font-mono" />
+                <Input
+                  type="datetime-local"
+                  value={depTime}
+                  onChange={(e) => mark(setDepTime)(e.target.value)}
+                  className="font-mono"
+                />
               </Field>
-              {depIso ? <p className="-mt-2 text-[11px] text-muted-foreground">= {fmtZulu(depIso)} (UTC)</p> : null}
+              {depIso ? (
+                <p className="-mt-2 text-[11px] text-muted-foreground">= {fmtZulu(depIso)} (UTC)</p>
+              ) : null}
               <label className="flex cursor-pointer items-center gap-2 text-sm">
-                <input type="checkbox" checked={night} onChange={(e) => mark(setNight)(e.target.checked)} className="accent-[var(--color-primary)]" />
+                <input
+                  type="checkbox"
+                  checked={night}
+                  onChange={(e) => mark(setNight)(e.target.checked)}
+                  className="accent-[var(--color-primary)]"
+                />
                 Night flight {rules === "VFR" ? "(45-min VFR reserve)" : ""}
               </label>
             </div>
@@ -365,15 +546,35 @@ function Planner() {
             <div className="flex flex-wrap items-center gap-1.5 text-sm">
               <Pill tone="ok">{dep}</Pill>
               {route.map((r, i) => (
-                <span key={`${r}-${i}`} className="inline-flex items-center gap-0.5 rounded border bg-muted px-1.5 py-0.5 font-mono text-xs">
+                <span
+                  key={`${r}-${i}`}
+                  className="inline-flex items-center gap-0.5 rounded border bg-muted px-1.5 py-0.5 font-mono text-xs"
+                >
                   {r}
-                  <button type="button" aria-label={`Move ${r} earlier`} disabled={i === 0} onClick={() => mark(setRoute)(swap(route, i, i - 1))} className="text-muted-foreground hover:text-foreground disabled:opacity-30">
+                  <button
+                    type="button"
+                    aria-label={`Move ${r} earlier`}
+                    disabled={i === 0}
+                    onClick={() => mark(setRoute)(swap(route, i, i - 1))}
+                    className="text-muted-foreground hover:text-foreground disabled:opacity-30"
+                  >
                     <ArrowUp className="size-3" />
                   </button>
-                  <button type="button" aria-label={`Move ${r} later`} disabled={i === route.length - 1} onClick={() => mark(setRoute)(swap(route, i, i + 1))} className="text-muted-foreground hover:text-foreground disabled:opacity-30">
+                  <button
+                    type="button"
+                    aria-label={`Move ${r} later`}
+                    disabled={i === route.length - 1}
+                    onClick={() => mark(setRoute)(swap(route, i, i + 1))}
+                    className="text-muted-foreground hover:text-foreground disabled:opacity-30"
+                  >
                     <ArrowDown className="size-3" />
                   </button>
-                  <button type="button" aria-label={`Remove ${r}`} onClick={() => mark(setRoute)(route.filter((_, j) => j !== i))} className="text-muted-foreground hover:text-warning">
+                  <button
+                    type="button"
+                    aria-label={`Remove ${r}`}
+                    onClick={() => mark(setRoute)(route.filter((_, j) => j !== i))}
+                    className="text-muted-foreground hover:text-warning"
+                  >
                     <X className="size-3" />
                   </button>
                 </span>
@@ -387,7 +588,14 @@ function Planner() {
                 addWaypoint();
               }}
             >
-              <Input list="teachx-wpts" value={wpInput} onChange={(e) => setWpInput(e.target.value)} placeholder="Add waypoint: OSI, KHAF, 37.2,-122.0" className="font-mono" aria-label="Waypoint identifier" />
+              <Input
+                list="teachx-wpts"
+                value={wpInput}
+                onChange={(e) => setWpInput(e.target.value)}
+                placeholder="Add waypoint: OSI, KHAF, 37.2,-122.0"
+                className="font-mono"
+                aria-label="Waypoint identifier"
+              />
               <Button type="submit" variant="outline" disabled={!wpInput.trim()}>
                 <Plus className="size-4" /> Add
               </Button>
@@ -402,7 +610,14 @@ function Planner() {
                 </option>
               ))}
             </datalist>
-            {wpError ? <p className="mt-1.5 text-xs text-warning">{wpError}</p> : <p className="mt-1.5 text-[11px] text-muted-foreground">Airport ICAO/IATA, navaid identifier, or latitude,longitude. Direct (great-circle) legs between points.</p>}
+            {wpError ? (
+              <p className="mt-1.5 text-xs text-warning">{wpError}</p>
+            ) : (
+              <p className="mt-1.5 text-[11px] text-muted-foreground">
+                Airport ICAO/IATA, navaid identifier, or latitude,longitude. Direct (great-circle)
+                legs between points.
+              </p>
+            )}
           </Panel>
         </div>
 
@@ -410,9 +625,22 @@ function Planner() {
         <div className="min-w-0 space-y-4">
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
             <SummaryStat label="Distance" value={`${plan.totalNm.toFixed(1)} nm`} />
-            <SummaryStat label="ETE" value={fmtMin(plan.totalMin)} sub={plan.legs.at(-1)?.eta ? `ETA ${fmtZulu(plan.legs.at(-1)?.eta)}` : undefined} />
-            <SummaryStat label="Trip fuel" value={`${plan.totalFuel.toFixed(1)} gal`} sub={`incl. ${Number(taxi) || 0} gal taxi`} />
-            <SummaryStat label="Fuel margin" value={`${fuelChk.marginGal >= 0 ? "+" : ""}${fuelChk.marginGal.toFixed(1)} gal`} tone={fuelChk.ok ? "ok" : "warning"} sub={`Required ${fuelChk.requiredGal.toFixed(1)} gal`} />
+            <SummaryStat
+              label="ETE"
+              value={fmtMin(plan.totalMin)}
+              sub={plan.legs.at(-1)?.eta ? `ETA ${fmtZulu(plan.legs.at(-1)?.eta)}` : undefined}
+            />
+            <SummaryStat
+              label="Trip fuel"
+              value={`${plan.totalFuel.toFixed(1)} gal`}
+              sub={`incl. ${Number(taxi) || 0} gal taxi`}
+            />
+            <SummaryStat
+              label="Fuel margin"
+              value={`${fuelChk.marginGal >= 0 ? "+" : ""}${fuelChk.marginGal.toFixed(1)} gal`}
+              tone={fuelChk.ok ? "ok" : "warning"}
+              sub={`Required ${fuelChk.requiredGal.toFixed(1)} gal`}
+            />
           </div>
 
           {issues.length ? (
@@ -428,27 +656,51 @@ function Planner() {
             </div>
           ) : plan.legs.length ? (
             <div className="flex items-center gap-2 rounded-md border border-ok/30 bg-ok/5 px-4 py-2.5 text-sm">
-              <CheckCircle2 className="size-4 text-ok" /> Plan passes the fuel, altitude and route checks.
+              <CheckCircle2 className="size-4 text-ok" /> Plan passes the fuel, altitude and route
+              checks.
             </div>
           ) : null}
 
           <div id="teachx-navlog" className="panel overflow-hidden">
             <div className="flex items-center justify-between gap-2 border-b px-4 py-2.5">
               <div className="label-caps">
-                Navigation log — {name.trim() || `${dep} → ${dst}`} · {rules} · {perf.shortName} · {altN.toLocaleString()} ft · TAS {tasN} · Wind {fmtHdg(windDirN)}/{windKtN}
+                Navigation log — {name.trim() || `${dep} → ${dst}`} · {rules} · {perf.shortName} ·{" "}
+                {altN.toLocaleString()} ft · TAS {tasN} · Wind {fmtHdg(windDirN)}/{windKtN}
               </div>
             </div>
-            {plan.unresolved.length ? <p className="px-4 pt-3 text-xs text-warning">Unknown points: {plan.unresolved.join(", ")}</p> : null}
+            {plan.unresolved.length ? (
+              <p className="px-4 pt-3 text-xs text-warning">
+                Unknown points: {plan.unresolved.join(", ")}
+              </p>
+            ) : null}
             {plan.legs.length === 0 ? (
               <div className="p-4">
-                <EmptyState icon={RouteIcon} title="No legs yet" description="Choose a departure and destination to build the nav log." />
+                <EmptyState
+                  icon={RouteIcon}
+                  title="No legs yet"
+                  description="Choose a departure and destination to build the nav log."
+                />
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[860px] text-xs">
                   <thead>
                     <tr className="border-b bg-muted/40 text-left">
-                      {["Leg", "Dist nm", "TC", "Var", "MC", "WCA", "TH", "MH", "GS kt", "ETE", "Fuel gal", "ETA", "Cum nm"].map((h) => (
+                      {[
+                        "Leg",
+                        "Dist nm",
+                        "TC",
+                        "Var",
+                        "MC",
+                        "WCA",
+                        "TH",
+                        "MH",
+                        "GS kt",
+                        "ETE",
+                        "Fuel gal",
+                        "ETA",
+                        "Cum nm",
+                      ].map((h) => (
                         <th key={h} className="label-caps px-2 py-2 first:pl-4">
                           {h}
                         </th>
@@ -459,7 +711,8 @@ function Planner() {
                     {plan.legs.map((l, i) => (
                       <tr key={i} className="border-b last:border-0">
                         <td className="px-2 py-1.5 pl-4 font-sans">
-                          <span className="font-mono font-semibold">{l.from.id}</span> → <span className="font-mono font-semibold">{l.to.id}</span>
+                          <span className="font-mono font-semibold">{l.from.id}</span> →{" "}
+                          <span className="font-mono font-semibold">{l.to.id}</span>
                         </td>
                         <td className="px-2 py-1.5">{l.distNm.toFixed(1)}</td>
                         <td className="px-2 py-1.5">{fmtHdg(l.trueCourse)}</td>
@@ -468,10 +721,22 @@ function Planner() {
                           {l.magVar >= 0 ? "E" : "W"}
                         </td>
                         <td className="px-2 py-1.5 text-magenta">{fmtHdg(l.magCourse)}</td>
-                        <td className="px-2 py-1.5">{Number.isFinite(l.wca) ? `${l.wca >= 0 ? "+" : ""}${l.wca.toFixed(0)}` : "—"}</td>
+                        <td className="px-2 py-1.5">
+                          {Number.isFinite(l.wca)
+                            ? `${l.wca >= 0 ? "+" : ""}${l.wca.toFixed(0)}`
+                            : "—"}
+                        </td>
                         <td className="px-2 py-1.5">{fmtHdg(l.trueHeading)}</td>
-                        <td className="px-2 py-1.5 font-semibold text-cyan">{fmtHdg(l.magHeading)}</td>
-                        <td className="px-2 py-1.5">{l.impossible ? <span className="text-warning">n/a</span> : l.groundspeed.toFixed(0)}</td>
+                        <td className="px-2 py-1.5 font-semibold text-cyan">
+                          {fmtHdg(l.magHeading)}
+                        </td>
+                        <td className="px-2 py-1.5">
+                          {l.impossible ? (
+                            <span className="text-warning">n/a</span>
+                          ) : (
+                            l.groundspeed.toFixed(0)
+                          )}
+                        </td>
                         <td className="px-2 py-1.5">{fmtMin(l.eteMin)}</td>
                         <td className="px-2 py-1.5">{l.fuelGal.toFixed(1)}</td>
                         <td className="px-2 py-1.5">{fmtZulu(l.eta)}</td>
@@ -521,16 +786,26 @@ function Planner() {
                     {rules === "IFR" ? (
                       <tr>
                         <td className="py-0.5 font-sans text-muted-foreground">To alternate</td>
-                        <td className="text-right">{alternateRequired ? (altPlan ? `${fuelChk.alternateGal.toFixed(1)} gal` : "select alternate") : "not required"}</td>
+                        <td className="text-right">
+                          {alternateRequired
+                            ? altPlan
+                              ? `${fuelChk.alternateGal.toFixed(1)} gal`
+                              : "select alternate"
+                            : "not required"}
+                        </td>
                       </tr>
                     ) : null}
                     <tr>
-                      <td className="py-0.5 font-sans text-muted-foreground">Reserve ({fuelChk.reserveMin} min)</td>
+                      <td className="py-0.5 font-sans text-muted-foreground">
+                        Reserve ({fuelChk.reserveMin} min)
+                      </td>
                       <td className="text-right">{fuelChk.reserveGal.toFixed(1)} gal</td>
                     </tr>
                     <tr className="border-t">
                       <td className="py-0.5 font-sans font-semibold">Minimum required</td>
-                      <td className="text-right font-semibold">{fuelChk.requiredGal.toFixed(1)} gal</td>
+                      <td className="text-right font-semibold">
+                        {fuelChk.requiredGal.toFixed(1)} gal
+                      </td>
                     </tr>
                     <tr>
                       <td className="py-0.5 font-sans text-muted-foreground">On board</td>
@@ -550,21 +825,31 @@ function Planner() {
 
           <Panel title="Cruising altitude check">
             {plan.legs.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Add a route to check the cruising altitude.</p>
+              <p className="text-sm text-muted-foreground">
+                Add a route to check the cruising altitude.
+              </p>
             ) : (
               <ul className="space-y-1.5 text-sm">
                 {altChecks.map((c, i) => {
                   const l = plan.legs[i];
                   return (
                     <li key={i} className="flex gap-2">
-                      {c.ok ? <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-ok" /> : <XCircle className="mt-0.5 size-4 shrink-0 text-warning" />}
+                      {c.ok ? (
+                        <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-ok" />
+                      ) : (
+                        <XCircle className="mt-0.5 size-4 shrink-0 text-warning" />
+                      )}
                       <span>
                         <span className="font-mono text-xs text-muted-foreground">
                           {l?.from.id}→{l?.to.id} MC {fmtHdg(l?.magCourse ?? 0)}°:{" "}
                         </span>
                         {c.message}
                         {!c.ok && c.suggestion ? (
-                          <button type="button" className="ml-2 text-xs text-primary hover:underline" onClick={() => mark(setCruiseAlt)(String(c.suggestion))}>
+                          <button
+                            type="button"
+                            className="ml-2 text-xs text-primary hover:underline"
+                            onClick={() => mark(setCruiseAlt)(String(c.suggestion))}
+                          >
                             Use {c.suggestion.toLocaleString()} ft
                           </button>
                         ) : null}
@@ -584,29 +869,58 @@ function Planner() {
           {rules === "IFR" ? (
             <Panel title="IFR alternate requirement — the 1-2-3 rule (14 CFR 91.169)">
               <p className="mb-3 text-sm text-muted-foreground">
-                No alternate is required if the destination has a standard instrument approach and, from <strong>1</strong> hour before to 1 hour after the ETA, the forecast is at least a <strong>2</strong>,000-ft ceiling and <strong>3</strong> SM visibility.
+                No alternate is required if the destination has a standard instrument approach and,
+                from <strong>1</strong> hour before to 1 hour after the ETA, the forecast is at
+                least a <strong>2</strong>,000-ft ceiling and <strong>3</strong> SM visibility.
               </p>
               <div className="space-y-2 text-sm">
-                <CheckRow checked={destHasIap} readOnly label={`${dst} has a published instrument approach (${destHasIap ? "yes — from the dataset" : "none listed"})`} />
-                <CheckRow checked={ceil2000} onChange={(v) => mark(setCeil2000)(v)} label="Forecast ceiling ≥ 2,000 ft AGL from ETA −1 h to ETA +1 h" />
-                <CheckRow checked={vis3} onChange={(v) => mark(setVis3)(v)} label="Forecast visibility ≥ 3 SM over the same period" />
+                <CheckRow
+                  checked={destHasIap}
+                  readOnly
+                  label={`${dst} has a published instrument approach (${destHasIap ? "yes — from the dataset" : "none listed"})`}
+                />
+                <CheckRow
+                  checked={ceil2000}
+                  onChange={(v) => mark(setCeil2000)(v)}
+                  label="Forecast ceiling ≥ 2,000 ft AGL from ETA −1 h to ETA +1 h"
+                />
+                <CheckRow
+                  checked={vis3}
+                  onChange={(v) => mark(setVis3)(v)}
+                  label="Forecast visibility ≥ 3 SM over the same period"
+                />
               </div>
-              <div className={cn("mt-3 rounded-md border px-3 py-2 text-sm", alternateRequired ? "border-caution/40 bg-caution/5" : "border-ok/30 bg-ok/5")}>
+              <div
+                className={cn(
+                  "mt-3 rounded-md border px-3 py-2 text-sm",
+                  alternateRequired ? "border-caution/40 bg-caution/5" : "border-ok/30 bg-ok/5",
+                )}
+              >
                 {alternateRequired ? (
                   <>
-                    <span className="font-semibold text-caution">Alternate required.</span> {altAp ? `Planned alternate: ${altAp.icao}.` : "Select an alternate above."}
+                    <span className="font-semibold text-caution">Alternate required.</span>{" "}
+                    {altAp ? `Planned alternate: ${altAp.icao}.` : "Select an alternate above."}
                   </>
                 ) : (
                   <>
-                    <span className="font-semibold text-ok">No alternate required</span> by the 1-2-3 rule (you may still file one).
+                    <span className="font-semibold text-ok">No alternate required</span> by the
+                    1-2-3 rule (you may still file one).
                   </>
                 )}
               </div>
               {alternateRequired && altAp ? (
                 <div className="mt-3 space-y-2 text-sm">
                   <p className="label-caps">Alternate suitability</p>
-                  <CheckRow checked={isIfrCapable(altAp)} readOnly label={`${altAp.icao} has an instrument approach${isIfrCapable(altAp) ? "" : " — if not, the forecast must allow descent from MEA, approach and landing in basic VFR"}`} />
-                  <CheckRow checked={altMinsOk} onChange={(v) => mark(setAltMinsOk)(v)} label="Alternate forecast at ETA meets the published alternate minimums, or standard: 600-2 (precision) / 800-2 (non-precision)" />
+                  <CheckRow
+                    checked={isIfrCapable(altAp)}
+                    readOnly
+                    label={`${altAp.icao} has an instrument approach${isIfrCapable(altAp) ? "" : " — if not, the forecast must allow descent from MEA, approach and landing in basic VFR"}`}
+                  />
+                  <CheckRow
+                    checked={altMinsOk}
+                    onChange={(v) => mark(setAltMinsOk)(v)}
+                    label="Alternate forecast at ETA meets the published alternate minimums, or standard: 600-2 (precision) / 800-2 (non-precision)"
+                  />
                 </div>
               ) : null}
             </Panel>
@@ -627,10 +941,18 @@ function Planner() {
                   <span className="label-caps flex justify-between">
                     <span>Position along route</span>
                     <span className="font-mono text-foreground">
-                      {div.distFromStartNm.toFixed(0)} nm from {dep} · leg {divLeg?.from.id}→{divLeg?.to.id}
+                      {div.distFromStartNm.toFixed(0)} nm from {dep} · leg {divLeg?.from.id}→
+                      {divLeg?.to.id}
                     </span>
                   </span>
-                  <input type="range" min={0} max={100} value={divFrac} onChange={(e) => setDivFrac(Number(e.target.value))} className="mt-1 w-full accent-[var(--color-magenta)]" />
+                  <input
+                    type="range"
+                    min={0}
+                    max={100}
+                    value={divFrac}
+                    onChange={(e) => setDivFrac(Number(e.target.value))}
+                    className="mt-1 w-full accent-[var(--color-magenta)]"
+                  />
                 </label>
                 <div className="mt-3 overflow-x-auto">
                   <table className="w-full text-sm">
@@ -650,29 +972,47 @@ function Planner() {
                         return (
                           <tr key={item.icao} className="border-b last:border-0">
                             <td className="py-1.5">
-                              <Link to="/airports/$icao" params={{ icao: item.icao }} className="font-mono font-semibold hover:text-primary">
+                              <Link
+                                to="/airports/$icao"
+                                params={{ icao: item.icao }}
+                                className="font-mono font-semibold hover:text-primary"
+                              >
                                 {item.icao}
                               </Link>{" "}
-                              <span className="text-xs text-muted-foreground">{item.towered ? "Twr" : "CTAF"}</span>
+                              <span className="text-xs text-muted-foreground">
+                                {item.towered ? "Twr" : "CTAF"}
+                              </span>
                             </td>
-                            <td className="py-1.5 font-mono text-cyan">{fmtHdg(w.heading - item.magVar)}°</td>
+                            <td className="py-1.5 font-mono text-cyan">
+                              {fmtHdg(w.heading - item.magVar)}°
+                            </td>
                             <td className="py-1.5 font-mono">{distNm.toFixed(1)} nm</td>
                             <td className="py-1.5 font-mono">{fmtMin(ete)}</td>
-                            <td className="hidden py-1.5 font-mono text-xs sm:table-cell">{longestRunwayFt(item).toLocaleString()} ft</td>
+                            <td className="hidden py-1.5 font-mono text-xs sm:table-cell">
+                              {longestRunwayFt(item).toLocaleString()} ft
+                            </td>
                           </tr>
                         );
                       })}
                     </tbody>
                   </table>
                 </div>
-                <p className="mt-2 text-[11px] text-muted-foreground">* Magnetic heading corrected for the planning wind. In flight: turn toward the diversion first, then refine heading, distance and fuel — 'Aviate, Navigate, Communicate'.</p>
+                <p className="mt-2 text-[11px] text-muted-foreground">
+                  * Magnetic heading corrected for the planning wind. In flight: turn toward the
+                  diversion first, then refine heading, distance and fuel — 'Aviate, Navigate,
+                  Communicate'.
+                </p>
               </>
             )}
           </Panel>
         </div>
       </div>
 
-      <Section title="Preflight exercises" description="Practice reviewing weather and NOTAMs for the plan above (simulated products)." className="mt-8">
+      <Section
+        title="Preflight exercises"
+        description="Practice reviewing weather and NOTAMs for the plan above (simulated products)."
+        className="mt-8"
+      >
         {depAp && dstAp ? (
           <Tabs defaultValue="wx">
             <TabsList>
@@ -693,9 +1033,16 @@ function Planner() {
         ) : null}
       </Section>
 
-      <Section title="Saved flight plans" description="Plans are stored in this browser with the rest of your training record.">
+      <Section
+        title="Saved flight plans"
+        description="Plans are stored in this browser with the rest of your training record."
+      >
         {!hydrated ? null : savedPlans.length === 0 ? (
-          <EmptyState icon={ClipboardList} title="No saved plans yet" description="Save a plan to fly it in the simulator or request an IFR/VFR clearance from AI ATC." />
+          <EmptyState
+            icon={ClipboardList}
+            title="No saved plans yet"
+            description="Save a plan to fly it in the simulator or request an IFR/VFR clearance from AI ATC."
+          />
         ) : (
           <div className="panel overflow-x-auto">
             <table className="w-full min-w-[640px] text-sm">
@@ -710,26 +1057,52 @@ function Planner() {
               </thead>
               <tbody>
                 {savedPlans.map((p) => (
-                  <tr key={p.id} className={cn("border-b last:border-0", p.id === savedId && "bg-primary/5")}>
+                  <tr
+                    key={p.id}
+                    className={cn("border-b last:border-0", p.id === savedId && "bg-primary/5")}
+                  >
                     <td className="px-4 py-2">
                       <div className="font-medium">{p.name}</div>
                       <Pill tone={p.rules === "VFR" ? "ok" : "primary"}>{p.rules}</Pill>
                     </td>
-                    <td className="px-2 py-2 font-mono text-xs">{[p.departure, ...p.route, p.destination].join(" → ")}{p.alternate ? ` (alt ${p.alternate})` : ""}</td>
+                    <td className="px-2 py-2 font-mono text-xs">
+                      {[p.departure, ...p.route, p.destination].join(" → ")}
+                      {p.alternate ? ` (alt ${p.alternate})` : ""}
+                    </td>
                     <td className="px-2 py-2 text-xs">{getPerf(p.aircraftId).shortName}</td>
-                    <td className="px-2 py-2 text-xs text-muted-foreground">{formatDateTime(p.date)}</td>
+                    <td className="px-2 py-2 text-xs text-muted-foreground">
+                      {formatDateTime(p.date)}
+                    </td>
                     <td className="px-4 py-2">
                       <div className="flex justify-end gap-1">
-                        <Button size="sm" variant="ghost" onClick={() => load(p)} title="Load into planner">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => load(p)}
+                          title="Load into planner"
+                        >
                           <FolderOpen className="size-4" /> Load
                         </Button>
                         <Button size="sm" variant="ghost" asChild title="Fly in simulator">
-                          <HrefLink href={buildHref("/simulator", { airport: p.departure, dest: p.destination, aircraft: p.aircraftId, plan: p.id, scenario: "free-flight" })}>
+                          <HrefLink
+                            href={buildHref("/simulator", {
+                              airport: p.departure,
+                              dest: p.destination,
+                              aircraft: p.aircraftId,
+                              plan: p.id,
+                              scenario: "free-flight",
+                            })}
+                          >
                             <PlaneTakeoff className="size-4" />
                             <span className="sr-only">Fly this plan</span>
                           </HrefLink>
                         </Button>
-                        <Button size="sm" variant="ghost" asChild title="Request clearance with AI ATC">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          asChild
+                          title="Request clearance with AI ATC"
+                        >
                           <HrefLink href={buildHref("/ai-atc", { plan: p.id })}>
                             <MessageSquareText className="size-4" />
                             <span className="sr-only">Request clearance</span>
@@ -744,7 +1117,12 @@ function Planner() {
                             if (savedId === p.id) setSavedId(null);
                           }}
                           trigger={
-                            <Button size="sm" variant="ghost" className="text-muted-foreground hover:text-warning" title="Delete plan">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="text-muted-foreground hover:text-warning"
+                              title="Delete plan"
+                            >
                               <Trash2 className="size-4" />
                               <span className="sr-only">Delete</span>
                             </Button>
@@ -780,26 +1158,70 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
-function SummaryStat({ label, value, sub, tone }: { label: string; value: string; sub?: string | undefined; tone?: "ok" | "warning" }) {
+function SummaryStat({
+  label,
+  value,
+  sub,
+  tone,
+}: {
+  label: string;
+  value: string;
+  sub?: string | undefined;
+  tone?: "ok" | "warning";
+}) {
   return (
     <div className="panel px-3 py-2.5">
       <div className="label-caps">{label}</div>
-      <div className={cn("mt-1 font-mono text-lg font-semibold tabular", tone === "ok" && "text-ok", tone === "warning" && "text-warning")}>{value}</div>
+      <div
+        className={cn(
+          "mt-1 font-mono text-lg font-semibold tabular",
+          tone === "ok" && "text-ok",
+          tone === "warning" && "text-warning",
+        )}
+      >
+        {value}
+      </div>
       {sub ? <div className="text-[11px] text-muted-foreground">{sub}</div> : null}
     </div>
   );
 }
 
-function CheckRow({ checked, onChange, label, readOnly }: { checked: boolean; onChange?: (v: boolean) => void; label: string; readOnly?: boolean }) {
+function CheckRow({
+  checked,
+  onChange,
+  label,
+  readOnly,
+}: {
+  checked: boolean;
+  onChange?: (v: boolean) => void;
+  label: string;
+  readOnly?: boolean;
+}) {
   return (
     <label className={cn("flex items-start gap-2", readOnly ? "cursor-default" : "cursor-pointer")}>
-      <input type="checkbox" checked={checked} disabled={readOnly} onChange={(e) => onChange?.(e.target.checked)} className="mt-1 accent-[var(--color-primary)]" />
+      <input
+        type="checkbox"
+        checked={checked}
+        disabled={readOnly}
+        onChange={(e) => onChange?.(e.target.checked)}
+        className="mt-1 accent-[var(--color-primary)]"
+      />
       <span className={cn(readOnly && "text-muted-foreground")}>{label}</span>
     </label>
   );
 }
 
-function AirportSelect({ value, onChange, allowNone, exclude }: { value: string; onChange: (v: string) => void; allowNone?: boolean; exclude?: string }) {
+function AirportSelect({
+  value,
+  onChange,
+  allowNone,
+  exclude,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  allowNone?: boolean;
+  exclude?: string;
+}) {
   return (
     <Select value={value || "__none"} onValueChange={(v) => onChange(v === "__none" ? "" : v)}>
       <SelectTrigger className="font-mono">
@@ -811,7 +1233,8 @@ function AirportSelect({ value, onChange, allowNone, exclude }: { value: string;
           .filter((a) => a.icao !== exclude)
           .map((a) => (
             <SelectItem key={a.icao} value={a.icao}>
-              <span className="font-mono">{a.icao}</span> <span className="text-muted-foreground">{a.city}</span>
+              <span className="font-mono">{a.icao}</span>{" "}
+              <span className="text-muted-foreground">{a.city}</span>
             </SelectItem>
           ))}
       </SelectContent>
@@ -819,9 +1242,22 @@ function AirportSelect({ value, onChange, allowNone, exclude }: { value: string;
   );
 }
 
-function RoutePlot({ plan, altPlan, div }: { plan: PlanResult; altPlan: PlanResult | undefined; div: { lat: number; lon: number } | undefined }) {
+function RoutePlot({
+  plan,
+  altPlan,
+  div,
+}: {
+  plan: PlanResult;
+  altPlan: PlanResult | undefined;
+  div: { lat: number; lon: number } | undefined;
+}) {
   const pts = [...plan.points, ...(altPlan?.points ?? [])];
-  if (pts.length < 2) return <div className="avionics-screen grid h-40 place-items-center text-xs text-muted-foreground">Route preview</div>;
+  if (pts.length < 2)
+    return (
+      <div className="avionics-screen grid h-40 place-items-center text-xs text-muted-foreground">
+        Route preview
+      </div>
+    );
   const lats = pts.map((p) => p.lat);
   const lons = pts.map((p) => p.lon);
   const minLat = Math.min(...lats);
@@ -839,15 +1275,59 @@ function RoutePlot({ plan, altPlan, div }: { plan: PlanResult; altPlan: PlanResu
   const x = (lon: number) => ox + (lon - minLon) * k * s;
   const y = (lat: number) => oy + (maxLat - lat) * s;
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="avionics-screen w-full" role="img" aria-label="Route preview">
+    <svg
+      viewBox={`0 0 ${W} ${H}`}
+      className="avionics-screen w-full"
+      role="img"
+      aria-label="Route preview"
+    >
       {altPlan && altPlan.points.length === 2 ? (
-        <line x1={x(altPlan.points[0]?.lon ?? 0)} y1={y(altPlan.points[0]?.lat ?? 0)} x2={x(altPlan.points[1]?.lon ?? 0)} y2={y(altPlan.points[1]?.lat ?? 0)} stroke="var(--color-caution)" strokeDasharray="4 3" strokeWidth={1.5} />
+        <line
+          x1={x(altPlan.points[0]?.lon ?? 0)}
+          y1={y(altPlan.points[0]?.lat ?? 0)}
+          x2={x(altPlan.points[1]?.lon ?? 0)}
+          y2={y(altPlan.points[1]?.lat ?? 0)}
+          stroke="var(--color-caution)"
+          strokeDasharray="4 3"
+          strokeWidth={1.5}
+        />
       ) : null}
-      <polyline points={plan.points.map((p) => `${x(p.lon)},${y(p.lat)}`).join(" ")} fill="none" stroke="var(--color-magenta)" strokeWidth={2} />
+      <polyline
+        points={plan.points.map((p) => `${x(p.lon)},${y(p.lat)}`).join(" ")}
+        fill="none"
+        stroke="var(--color-magenta)"
+        strokeWidth={2}
+      />
       {pts.map((p, i) => (
         <g key={`${p.id}-${i}`}>
-          {p.kind === "airport" ? <circle cx={x(p.lon)} cy={y(p.lat)} r={4} fill="var(--color-panel)" stroke="var(--color-primary)" strokeWidth={1.5} /> : <rect x={x(p.lon) - 3} y={y(p.lat) - 3} width={6} height={6} fill="none" stroke="var(--color-cyan)" strokeWidth={1.5} transform={`rotate(45 ${x(p.lon)} ${y(p.lat)})`} />}
-          <text x={x(p.lon) + 6} y={y(p.lat) - 5} fontSize={9} fill="oklch(0.9 0.01 250)" fontFamily="var(--font-mono)">
+          {p.kind === "airport" ? (
+            <circle
+              cx={x(p.lon)}
+              cy={y(p.lat)}
+              r={4}
+              fill="var(--color-panel)"
+              stroke="var(--color-primary)"
+              strokeWidth={1.5}
+            />
+          ) : (
+            <rect
+              x={x(p.lon) - 3}
+              y={y(p.lat) - 3}
+              width={6}
+              height={6}
+              fill="none"
+              stroke="var(--color-cyan)"
+              strokeWidth={1.5}
+              transform={`rotate(45 ${x(p.lon)} ${y(p.lat)})`}
+            />
+          )}
+          <text
+            x={x(p.lon) + 6}
+            y={y(p.lat) - 5}
+            fontSize={9}
+            fill="oklch(0.9 0.01 250)"
+            fontFamily="var(--font-mono)"
+          >
             {p.id}
           </text>
         </g>

@@ -1,10 +1,28 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Check, ChevronLeft, ChevronRight, Cog, Fuel, Gauge, Plane, PlaneTakeoff, Star, Zap, CircleDot, Move3d } from "lucide-react";
+import {
+  ArrowLeft,
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Cog,
+  Fuel,
+  Gauge,
+  Plane,
+  PlaneTakeoff,
+  Star,
+  Zap,
+  CircleDot,
+  Move3d,
+} from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 import { EmptyState, Notice, Page, PageHeader, Panel, Pill, Stat } from "@/components/app/page";
 import { HrefLink, buildHref } from "@/components/app/xlink";
-import { AircraftSilhouette, AirspeedIndicator, ArcLegend } from "@/components/aircraft/aircraft-graphics";
+import {
+  AircraftSilhouette,
+  AirspeedIndicator,
+  ArcLegend,
+} from "@/components/aircraft/aircraft-graphics";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -28,7 +46,12 @@ export const Route = createFileRoute("/aircraft/$id")({
     return {
       meta: [
         { title: `${a ? a.name : "Aircraft"} — TeachX` },
-        { name: "description", content: a ? `${a.name}: systems, cockpit, V-speeds, limitations and performance (educational approximations).` : "TeachX aircraft library." },
+        {
+          name: "description",
+          content: a
+            ? `${a.name}: systems, cockpit, V-speeds, limitations and performance (educational approximations).`
+            : "TeachX aircraft library.",
+        },
       ],
     };
   },
@@ -41,7 +64,12 @@ function AircraftDetail() {
   if (!a) {
     return (
       <Page>
-        <EmptyState icon={Plane} title="Aircraft not found" description={`There is no aircraft with id "${id}" in the library.`} action={{ to: "/aircraft", label: "Back to Aircraft Library" }} />
+        <EmptyState
+          icon={Plane}
+          title="Aircraft not found"
+          description={`There is no aircraft with id "${id}" in the library.`}
+          action={{ to: "/aircraft", label: "Back to Aircraft Library" }}
+        />
       </Page>
     );
   }
@@ -59,7 +87,10 @@ function Detail({ a }: { a: AircraftInfo }) {
 
   return (
     <Page>
-      <Link to="/aircraft" className="mb-3 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
+      <Link
+        to="/aircraft"
+        className="mb-3 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+      >
         <ArrowLeft className="size-3.5" /> Aircraft Library
       </Link>
       <PageHeader
@@ -103,19 +134,48 @@ function Detail({ a }: { a: AircraftInfo }) {
 
       <div className="mb-6 grid gap-4 lg:grid-cols-2">
         <div className="avionics-screen grid-backdrop p-2">
-          <AircraftSilhouette spec={a.silhouette} spanFt={p.wingSpanFt} view="top" className="h-56 w-full" />
+          <AircraftSilhouette
+            spec={a.silhouette}
+            spanFt={p.wingSpanFt}
+            view="top"
+            className="h-56 w-full"
+          />
         </div>
         <div className="avionics-screen grid-backdrop p-2">
-          <AircraftSilhouette spec={a.silhouette} spanFt={p.wingSpanFt} view="side" className="h-56 w-full" />
+          <AircraftSilhouette
+            spec={a.silhouette}
+            spanFt={p.wingSpanFt}
+            view="side"
+            className="h-56 w-full"
+          />
         </div>
       </div>
-      <p className="-mt-4 mb-6 text-[11px] text-muted-foreground">Schematic line drawings generated to scale from approximate dimensions — not manufacturer drawings.</p>
+      <p className="-mt-4 mb-6 text-[11px] text-muted-foreground">
+        Schematic line drawings generated to scale from approximate dimensions — not manufacturer
+        drawings.
+      </p>
 
       <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Stat label="Cruise" value={`${p.cruiseKtas}`} sub={`KTAS at ${p.cruiseAltFt.toLocaleString()} ft`} />
-        <Stat label="Range" value={Math.round(rangeNm(p)).toLocaleString()} sub="nm, 45-min reserve, still air" />
-        <Stat label="Endurance" value={enduranceHr(p).toFixed(1)} sub={`h on ${p.usableFuelGal.toLocaleString()} gal ${p.fuelType}`} />
-        <Stat label="Ceiling" value={p.serviceCeilingFt.toLocaleString()} sub="ft service ceiling" />
+        <Stat
+          label="Cruise"
+          value={`${p.cruiseKtas}`}
+          sub={`KTAS at ${p.cruiseAltFt.toLocaleString()} ft`}
+        />
+        <Stat
+          label="Range"
+          value={Math.round(rangeNm(p)).toLocaleString()}
+          sub="nm, 45-min reserve, still air"
+        />
+        <Stat
+          label="Endurance"
+          value={enduranceHr(p).toFixed(1)}
+          sub={`h on ${p.usableFuelGal.toLocaleString()} gal ${p.fuelType}`}
+        />
+        <Stat
+          label="Ceiling"
+          value={p.serviceCeilingFt.toLocaleString()}
+          sub="ft service ceiling"
+        />
       </div>
 
       <Tabs defaultValue="overview">
@@ -145,7 +205,10 @@ function Detail({ a }: { a: AircraftInfo }) {
                   ["Manufacturer", a.manufacturer],
                   ["Simulated variant", a.variant],
                   ["Role", a.role],
-                  ["Engines", `${p.engines} × ${p.powerType === "jet" ? `${p.thrustLbfPerEngine.toLocaleString()} lbf` : `${p.hpPerEngine} ${p.powerType === "turboprop" ? "shp" : "hp"}`}`],
+                  [
+                    "Engines",
+                    `${p.engines} × ${p.powerType === "jet" ? `${p.thrustLbfPerEngine.toLocaleString()} lbf` : `${p.hpPerEngine} ${p.powerType === "turboprop" ? "shp" : "hp"}`}`,
+                  ],
                   ["Landing gear", p.retractableGear ? "Retractable" : "Fixed"],
                   ["Fuel", `${p.fuelType}`],
                 ].map(([k, v]) => (
@@ -188,7 +251,12 @@ function Detail({ a }: { a: AircraftInfo }) {
             <SystemPanel icon={Fuel} title="Fuel system" s={a.fuel} />
             <SystemPanel icon={Zap} title="Electrical system" s={a.electrical} />
             <SystemPanel icon={CircleDot} title="Landing gear" s={a.gear} />
-            <SystemPanel icon={Move3d} title="Flight controls" s={a.controls} className="md:col-span-2" />
+            <SystemPanel
+              icon={Move3d}
+              title="Flight controls"
+              s={a.controls}
+              className="md:col-span-2"
+            />
           </div>
         </TabsContent>
 
@@ -201,7 +269,8 @@ function Detail({ a }: { a: AircraftInfo }) {
               </div>
               {p.powerType !== "piston" ? (
                 <p className="mt-3 text-[11px] text-muted-foreground">
-                  Turbine aircraft display airspeed on a tape with a barber-pole Vmo/Mmo instead of colored arcs. This dial is a teaching aid built from the model's reference speeds.
+                  Turbine aircraft display airspeed on a tape with a barber-pole Vmo/Mmo instead of
+                  colored arcs. This dial is a teaching aid built from the model's reference speeds.
                 </p>
               ) : null}
             </Panel>
@@ -219,7 +288,9 @@ function Detail({ a }: { a: AircraftInfo }) {
                     <tbody>
                       {vs.map((r) => (
                         <tr key={r.key} className="border-b last:border-0">
-                          <td className="py-1.5 pr-3 font-mono font-semibold text-cyan">{r.label}</td>
+                          <td className="py-1.5 pr-3 font-mono font-semibold text-cyan">
+                            {r.label}
+                          </td>
                           <td className="py-1.5 pr-3 text-right font-mono tabular">{r.kias}</td>
                           <td className="py-1.5 text-muted-foreground">{r.meaning}</td>
                         </tr>
@@ -233,7 +304,10 @@ function Detail({ a }: { a: AircraftInfo }) {
                   {a.limitations.map((t) => (
                     <li key={t}>{t}</li>
                   ))}
-                  <li>Maneuvering speed (Va) shown is at maximum gross weight; Va decreases as weight decreases.</li>
+                  <li>
+                    Maneuvering speed (Va) shown is at maximum gross weight; Va decreases as weight
+                    decreases.
+                  </li>
                 </ul>
               </Panel>
             </div>
@@ -249,7 +323,9 @@ function Detail({ a }: { a: AircraftInfo }) {
                     <tr key={r.label} className="border-b last:border-0">
                       <td className="py-2 pr-4 text-muted-foreground">{r.label}</td>
                       <td className="py-2 pr-4 font-mono tabular">{r.value}</td>
-                      <td className="hidden py-2 text-xs text-muted-foreground sm:table-cell">{r.note ?? ""}</td>
+                      <td className="hidden py-2 text-xs text-muted-foreground sm:table-cell">
+                        {r.note ?? ""}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -268,7 +344,9 @@ function Detail({ a }: { a: AircraftInfo }) {
                 </div>
                 <p className="text-sm text-muted-foreground">{t.why}</p>
                 <Button size="sm" variant="outline" className="mt-auto self-start" asChild>
-                  <HrefLink href={buildHref("/simulator", { scenario: t.scenario, aircraft: a.id })}>
+                  <HrefLink
+                    href={buildHref("/simulator", { scenario: t.scenario, aircraft: a.id })}
+                  >
                     <PlaneTakeoff className="size-4" /> Fly scenario in the {p.shortName}
                   </HrefLink>
                 </Button>
@@ -284,14 +362,22 @@ function Detail({ a }: { a: AircraftInfo }) {
 
       <div className="mt-6 flex items-center justify-between gap-2 border-t pt-4 text-sm">
         {prev ? (
-          <Link to="/aircraft/$id" params={{ id: prev.id }} className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground">
+          <Link
+            to="/aircraft/$id"
+            params={{ id: prev.id }}
+            className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground"
+          >
             <ChevronLeft className="size-4" /> {prev.name}
           </Link>
         ) : (
           <span />
         )}
         {next ? (
-          <Link to="/aircraft/$id" params={{ id: next.id }} className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground">
+          <Link
+            to="/aircraft/$id"
+            params={{ id: next.id }}
+            className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground"
+          >
             {next.name} <ChevronRight className="size-4" />
           </Link>
         ) : null}
@@ -300,7 +386,17 @@ function Detail({ a }: { a: AircraftInfo }) {
   );
 }
 
-function SystemPanel({ icon: Icon, title, s, className }: { icon: LucideIcon; title: string; s: SystemInfo; className?: string }) {
+function SystemPanel({
+  icon: Icon,
+  title,
+  s,
+  className,
+}: {
+  icon: LucideIcon;
+  title: string;
+  s: SystemInfo;
+  className?: string;
+}) {
   return (
     <div className={`panel p-4 ${className ?? ""}`}>
       <div className="mb-2 flex items-center gap-2">

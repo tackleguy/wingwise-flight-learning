@@ -8,7 +8,10 @@
 import { useRouter } from "@tanstack/react-router";
 import type { AnchorHTMLAttributes, MouseEvent, ReactNode } from "react";
 
-export function buildHref(path: string, params: Record<string, string | number | undefined | null>): string {
+export function buildHref(
+  path: string,
+  params: Record<string, string | number | undefined | null>,
+): string {
   const q = new URLSearchParams();
   for (const [k, v] of Object.entries(params)) {
     if (v === undefined || v === null || v === "") continue;

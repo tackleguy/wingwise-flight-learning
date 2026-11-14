@@ -20,7 +20,11 @@ export function unproj(x: number, y: number) {
   return { lat: LAT0 - y / 60, lon: LON0 + x / (60 * K) };
 }
 
-const inBounds = (lat: number, lon: number) => lat >= CHART_BOUNDS.minLat && lat <= CHART_BOUNDS.maxLat && lon >= CHART_BOUNDS.minLon && lon <= CHART_BOUNDS.maxLon;
+const inBounds = (lat: number, lon: number) =>
+  lat >= CHART_BOUNDS.minLat &&
+  lat <= CHART_BOUNDS.maxLat &&
+  lon >= CHART_BOUNDS.minLon &&
+  lon <= CHART_BOUNDS.maxLon;
 
 export const CHART_AIRPORTS: Airport[] = AIRPORTS.filter((a) => inBounds(a.lat, a.lon));
 export const CHART_NAVAIDS: Navaid[] = NAVAIDS.filter((n) => inBounds(n.lat, n.lon));
@@ -50,9 +54,26 @@ export const AIRSPACE: AirspaceRing[] = CHART_AIRPORTS.filter((a) => a.towered).
       ],
     };
   if (a.airspace === "C")
-    return { id: `C-${a.icao}`, cls: "C" as const, airport: a.icao, lat: a.lat, lon: a.lon, rings: [{ rNm: 5, label: "40\nSFC" }, { rNm: 10, label: "40\n15" }] };
+    return {
+      id: `C-${a.icao}`,
+      cls: "C" as const,
+      airport: a.icao,
+      lat: a.lat,
+      lon: a.lon,
+      rings: [
+        { rNm: 5, label: "40\nSFC" },
+        { rNm: 10, label: "40\n15" },
+      ],
+    };
   const top = Math.round((a.elevationFt + 2500) / 100);
-  return { id: `D-${a.icao}`, cls: "D" as const, airport: a.icao, lat: a.lat, lon: a.lon, rings: [{ rNm: 4.3, label: `[${top}]` }] };
+  return {
+    id: `D-${a.icao}`,
+    cls: "D" as const,
+    airport: a.icao,
+    lat: a.lat,
+    lon: a.lon,
+    rings: [{ rNm: 4.3, label: `[${top}]` }],
+  };
 });
 
 export interface SpecialArea {
@@ -100,17 +121,94 @@ export interface PointFeature {
 }
 
 export const POINT_FEATURES: PointFeature[] = [
-  { id: "obs1", kind: "obstacle", name: "1811 (977)", lat: 37.755, lon: -122.453, note: "Illustrative tall tower: top 1,811 ft MSL, 977 ft AGL (lighted)." },
-  { id: "obs2", kind: "obstacle", name: "1549 (1203)", lat: 37.66, lon: -121.95, note: "Fictional obstacle: top 1,549 ft MSL, 1,203 ft AGL." },
-  { id: "obs3", kind: "obstacle", name: "2312 (412)", lat: 37.27, lon: -122.08, note: "Fictional antenna on a ridge: 2,312 ft MSL, 412 ft AGL." },
-  { id: "cp1", kind: "checkpoint", name: "Golden Gate Bridge", lat: 37.8199, lon: -122.4783, note: "VFR checkpoint (approximate position)." },
-  { id: "cp2", kind: "checkpoint", name: "San Mateo Bridge", lat: 37.585, lon: -122.2, note: "VFR checkpoint (approximate position)." },
-  { id: "cp3", kind: "checkpoint", name: "Dumbarton Bridge", lat: 37.505, lon: -122.115, note: "VFR checkpoint (approximate position)." },
-  { id: "cp4", kind: "checkpoint", name: "Stanford Stadium", lat: 37.4346, lon: -122.1609, note: "VFR checkpoint (approximate position)." },
-  { id: "cp5", kind: "checkpoint", name: "Coyote Hills", lat: 37.555, lon: -122.09, note: "VFR checkpoint (approximate position)." },
-  { id: "wp1", kind: "waypoint", name: "TEACH", lat: 37.2, lon: -122.3, note: "Fictional GPS waypoint (four-pointed star symbol)." },
-  { id: "wp2", kind: "waypoint", name: "XCTRY", lat: 37.0, lon: -121.75, note: "Fictional GPS waypoint." },
-  { id: "wp3", kind: "waypoint", name: "PILOT", lat: 37.95, lon: -122.75, note: "Fictional GPS waypoint." },
+  {
+    id: "obs1",
+    kind: "obstacle",
+    name: "1811 (977)",
+    lat: 37.755,
+    lon: -122.453,
+    note: "Illustrative tall tower: top 1,811 ft MSL, 977 ft AGL (lighted).",
+  },
+  {
+    id: "obs2",
+    kind: "obstacle",
+    name: "1549 (1203)",
+    lat: 37.66,
+    lon: -121.95,
+    note: "Fictional obstacle: top 1,549 ft MSL, 1,203 ft AGL.",
+  },
+  {
+    id: "obs3",
+    kind: "obstacle",
+    name: "2312 (412)",
+    lat: 37.27,
+    lon: -122.08,
+    note: "Fictional antenna on a ridge: 2,312 ft MSL, 412 ft AGL.",
+  },
+  {
+    id: "cp1",
+    kind: "checkpoint",
+    name: "Golden Gate Bridge",
+    lat: 37.8199,
+    lon: -122.4783,
+    note: "VFR checkpoint (approximate position).",
+  },
+  {
+    id: "cp2",
+    kind: "checkpoint",
+    name: "San Mateo Bridge",
+    lat: 37.585,
+    lon: -122.2,
+    note: "VFR checkpoint (approximate position).",
+  },
+  {
+    id: "cp3",
+    kind: "checkpoint",
+    name: "Dumbarton Bridge",
+    lat: 37.505,
+    lon: -122.115,
+    note: "VFR checkpoint (approximate position).",
+  },
+  {
+    id: "cp4",
+    kind: "checkpoint",
+    name: "Stanford Stadium",
+    lat: 37.4346,
+    lon: -122.1609,
+    note: "VFR checkpoint (approximate position).",
+  },
+  {
+    id: "cp5",
+    kind: "checkpoint",
+    name: "Coyote Hills",
+    lat: 37.555,
+    lon: -122.09,
+    note: "VFR checkpoint (approximate position).",
+  },
+  {
+    id: "wp1",
+    kind: "waypoint",
+    name: "TEACH",
+    lat: 37.2,
+    lon: -122.3,
+    note: "Fictional GPS waypoint (four-pointed star symbol).",
+  },
+  {
+    id: "wp2",
+    kind: "waypoint",
+    name: "XCTRY",
+    lat: 37.0,
+    lon: -121.75,
+    note: "Fictional GPS waypoint.",
+  },
+  {
+    id: "wp3",
+    kind: "waypoint",
+    name: "PILOT",
+    lat: 37.95,
+    lon: -122.75,
+    note: "Fictional GPS waypoint.",
+  },
 ];
 
 /** Coarse Pacific coastline (north → south). */
@@ -164,7 +262,20 @@ export const BAY: [number, number][] = [
   [37.83, -122.48],
 ];
 
-export type ChartFeatureKind = "airport-towered" | "airport-nontowered" | "vor" | "vortac" | "vordme" | "class-b" | "class-c" | "class-d" | "restricted" | "moa" | "obstacle" | "checkpoint" | "waypoint";
+export type ChartFeatureKind =
+  | "airport-towered"
+  | "airport-nontowered"
+  | "vor"
+  | "vortac"
+  | "vordme"
+  | "class-b"
+  | "class-c"
+  | "class-d"
+  | "restricted"
+  | "moa"
+  | "obstacle"
+  | "checkpoint"
+  | "waypoint";
 
 export const FEATURE_LABEL: Record<ChartFeatureKind, string> = {
   "airport-towered": "Airport with a control tower (blue symbol)",
@@ -193,19 +304,49 @@ export interface PracticeTarget {
 
 export function practiceTargets(): PracticeTarget[] {
   const out: PracticeTarget[] = [];
-  for (const a of CHART_AIRPORTS) out.push({ kind: a.towered ? "airport-towered" : "airport-nontowered", lat: a.lat, lon: a.lon, r: 2.2, name: a.icao });
-  for (const n of CHART_NAVAIDS) out.push({ kind: n.type === "VORTAC" ? "vortac" : n.type === "VOR-DME" ? "vordme" : "vor", lat: n.lat, lon: n.lon, r: 2.2, name: n.id });
+  for (const a of CHART_AIRPORTS)
+    out.push({
+      kind: a.towered ? "airport-towered" : "airport-nontowered",
+      lat: a.lat,
+      lon: a.lon,
+      r: 2.2,
+      name: a.icao,
+    });
+  for (const n of CHART_NAVAIDS)
+    out.push({
+      kind: n.type === "VORTAC" ? "vortac" : n.type === "VOR-DME" ? "vordme" : "vor",
+      lat: n.lat,
+      lon: n.lon,
+      r: 2.2,
+      name: n.id,
+    });
   for (const s of AIRSPACE) {
     const outer = s.rings[s.rings.length - 1];
     if (!outer) continue;
     // Highlight a point on the outer ring (north-east side).
     const b = (45 * Math.PI) / 180;
-    out.push({ kind: s.cls === "B" ? "class-b" : s.cls === "C" ? "class-c" : "class-d", lat: s.lat + (outer.rNm * Math.cos(b)) / 60, lon: s.lon + (outer.rNm * Math.sin(b)) / (60 * K), r: 2, name: s.airport });
+    out.push({
+      kind: s.cls === "B" ? "class-b" : s.cls === "C" ? "class-c" : "class-d",
+      lat: s.lat + (outer.rNm * Math.cos(b)) / 60,
+      lon: s.lon + (outer.rNm * Math.sin(b)) / (60 * K),
+      r: 2,
+      name: s.airport,
+    });
   }
   for (const a of SPECIAL_AREAS) {
-    const c = a.pts.reduce((acc, p) => ({ lat: acc.lat + p[0] / a.pts.length, lon: acc.lon + p[1] / a.pts.length }), { lat: 0, lon: 0 });
-    out.push({ kind: a.kind === "restricted" ? "restricted" : "moa", lat: c.lat, lon: c.lon, r: 4, name: a.name });
+    const c = a.pts.reduce(
+      (acc, p) => ({ lat: acc.lat + p[0] / a.pts.length, lon: acc.lon + p[1] / a.pts.length }),
+      { lat: 0, lon: 0 },
+    );
+    out.push({
+      kind: a.kind === "restricted" ? "restricted" : "moa",
+      lat: c.lat,
+      lon: c.lon,
+      r: 4,
+      name: a.name,
+    });
   }
-  for (const p of POINT_FEATURES) out.push({ kind: p.kind, lat: p.lat, lon: p.lon, r: 1.8, name: p.name });
+  for (const p of POINT_FEATURES)
+    out.push({ kind: p.kind, lat: p.lat, lon: p.lon, r: 1.8, name: p.name });
   return out;
 }

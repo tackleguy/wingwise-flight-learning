@@ -1,13 +1,41 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Fragment, useMemo, useState } from "react";
-import { CheckCircle2, ChevronDown, ChevronRight, Download, FileJson, Notebook, PlaneTakeoff, RotateCcw, Search, Trash2, XCircle } from "lucide-react";
+import {
+  CheckCircle2,
+  ChevronDown,
+  ChevronRight,
+  Download,
+  FileJson,
+  Notebook,
+  PlaneTakeoff,
+  RotateCcw,
+  Search,
+  Trash2,
+  XCircle,
+} from "lucide-react";
 
-import { EmptyState, Notice, Page, PageHeader, Pill, Stat, formatDate, formatDateTime, formatDuration } from "@/components/app/page";
+import {
+  EmptyState,
+  Notice,
+  Page,
+  PageHeader,
+  Pill,
+  Stat,
+  formatDate,
+  formatDateTime,
+  formatDuration,
+} from "@/components/app/page";
 import { ConfirmAction, downloadFile } from "@/components/app/confirm";
 import { HrefLink, buildHref } from "@/components/app/xlink";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { AIRCRAFT_PERF, getPerf } from "@/lib/data/aircraft-perf";
 import { actions, useHydrated, useStore, type FlightLog } from "@/lib/store";
 import { cn } from "@/lib/utils";
@@ -16,7 +44,11 @@ export const Route = createFileRoute("/logbook")({
   head: () => ({
     meta: [
       { title: "Flight Logbook — TeachX" },
-      { name: "description", content: "Your simulated flight history: scenarios, maneuvers, objectives, scores and instructor feedback. Export to CSV or JSON. Simulated time is not loggable flight time." },
+      {
+        name: "description",
+        content:
+          "Your simulated flight history: scenarios, maneuvers, objectives, scores and instructor feedback. Export to CSV or JSON. Simulated time is not loggable flight time.",
+      },
     ],
   }),
   component: Logbook,
@@ -64,7 +96,17 @@ function Logbook() {
         const t = new Date(f.date).getTime();
         if (t < fromT || t > toT) return false;
         if (!k) return true;
-        return [f.scenarioTitle, f.scenarioId, f.departure, f.destination, getPerf(f.aircraftId).shortName, ...f.maneuvers].join(" ").toLowerCase().includes(k);
+        return [
+          f.scenarioTitle,
+          f.scenarioId,
+          f.departure,
+          f.destination,
+          getPerf(f.aircraftId).shortName,
+          ...f.maneuvers,
+        ]
+          .join(" ")
+          .toLowerCase()
+          .includes(k);
       });
   }, [flights, q, kind, rules, aircraft, from, to]);
 
@@ -81,10 +123,31 @@ function Logbook() {
   );
 
   const filtered = q || kind !== "all" || rules !== "all" || aircraft !== "all" || from || to;
-  const usedAircraft = useMemo(() => AIRCRAFT_PERF.filter((p) => flights.some((f) => f.aircraftId === p.id)), [flights]);
+  const usedAircraft = useMemo(
+    () => AIRCRAFT_PERF.filter((p) => flights.some((f) => f.aircraftId === p.id)),
+    [flights],
+  );
 
   const exportCsv = () => {
-    const header = ["date", "aircraft", "departure", "destination", "duration_hr", "kind", "rules", "scenario_id", "scenario", "landings", "approaches", "night", "score", "maneuvers", "objectives_met", "objectives_total", "note"];
+    const header = [
+      "date",
+      "aircraft",
+      "departure",
+      "destination",
+      "duration_hr",
+      "kind",
+      "rules",
+      "scenario_id",
+      "scenario",
+      "landings",
+      "approaches",
+      "night",
+      "score",
+      "maneuvers",
+      "objectives_met",
+      "objectives_total",
+      "note",
+    ];
     const rows = list.map((f) => [
       f.date,
       getPerf(f.aircraftId).shortName,
@@ -104,12 +167,25 @@ function Logbook() {
       f.objectives.length,
       "SIMULATED - not loggable under 14 CFR 61.51",
     ]);
-    downloadFile(`teachx-logbook-${new Date().toISOString().slice(0, 10)}.csv`, [header, ...rows].map((r) => r.map(csvEscape).join(",")).join("\n"), "text/csv");
+    downloadFile(
+      `teachx-logbook-${new Date().toISOString().slice(0, 10)}.csv`,
+      [header, ...rows].map((r) => r.map(csvEscape).join(",")).join("\n"),
+      "text/csv",
+    );
   };
   const exportJson = () => {
     downloadFile(
       `teachx-logbook-${new Date().toISOString().slice(0, 10)}.json`,
-      JSON.stringify({ notice: "TeachX simulated training flights. Simulated time is not loggable flight time under 14 CFR 61.51.", exportedAt: new Date().toISOString(), flights: list }, null, 2),
+      JSON.stringify(
+        {
+          notice:
+            "TeachX simulated training flights. Simulated time is not loggable flight time under 14 CFR 61.51.",
+          exportedAt: new Date().toISOString(),
+          flights: list,
+        },
+        null,
+        2,
+      ),
       "application/json",
     );
   };
@@ -139,7 +215,11 @@ function Logbook() {
       />
 
       <Notice tone="caution" title="Simulated time is not loggable flight time." className="mb-6">
-        Under 14 CFR 61.51, time in a personal-computer simulator cannot be logged toward a certificate or rating. Training time may only be credited when it is received in an FAA-approved aviation training device (ATD), flight training device (FTD) or full flight simulator, with an authorized instructor, within the limits of the applicable regulations. TeachX is not an FAA-approved training device. This logbook is a study record only.
+        Under 14 CFR 61.51, time in a personal-computer simulator cannot be logged toward a
+        certificate or rating. Training time may only be credited when it is received in an
+        FAA-approved aviation training device (ATD), flight training device (FTD) or full flight
+        simulator, with an authorized instructor, within the limits of the applicable regulations.
+        TeachX is not an FAA-approved training device. This logbook is a study record only.
       </Notice>
 
       {!hydrated ? null : flights.length === 0 ? (
@@ -152,18 +232,40 @@ function Logbook() {
       ) : (
         <>
           <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
-            <Stat label="Flights" value={list.length} sub={filtered ? `of ${flights.length} total` : "all time"} />
-            <Stat label="Sim time" value={formatDuration(totals.sec)} sub="h:mm:ss (not loggable)" />
+            <Stat
+              label="Flights"
+              value={list.length}
+              sub={filtered ? `of ${flights.length} total` : "all time"}
+            />
+            <Stat
+              label="Sim time"
+              value={formatDuration(totals.sec)}
+              sub="h:mm:ss (not loggable)"
+            />
             <Stat label="Landings" value={totals.landings} />
             <Stat label="Approaches" value={totals.approaches} />
-            <Stat label="IFR / night" value={`${(totals.ifr / 3600).toFixed(1)} / ${(totals.night / 3600).toFixed(1)}`} sub="hours" />
-            <Stat label="Avg score" value={list.length ? Math.round(totals.avg) : "—"} tone={totals.avg >= 80 ? "ok" : totals.avg >= 60 ? "primary" : "caution"} />
+            <Stat
+              label="IFR / night"
+              value={`${(totals.ifr / 3600).toFixed(1)} / ${(totals.night / 3600).toFixed(1)}`}
+              sub="hours"
+            />
+            <Stat
+              label="Avg score"
+              value={list.length ? Math.round(totals.avg) : "—"}
+              tone={totals.avg >= 80 ? "ok" : totals.avg >= 60 ? "primary" : "caution"}
+            />
           </div>
 
           <div className="mb-3 flex flex-col gap-2 lg:flex-row lg:flex-wrap lg:items-end">
             <div className="relative lg:w-64">
               <Search className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Scenario, airport, maneuver…" className="pl-8" aria-label="Search flights" />
+              <Input
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder="Scenario, airport, maneuver…"
+                className="pl-8"
+                aria-label="Search flights"
+              />
             </div>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-5 lg:flex">
               <Select value={kind} onValueChange={(v) => setKind(v as FlightLog["kind"] | "all")}>
@@ -202,8 +304,20 @@ function Logbook() {
                   ))}
                 </SelectContent>
               </Select>
-              <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} aria-label="From date" className="lg:w-40" />
-              <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} aria-label="To date" className="lg:w-40" />
+              <Input
+                type="date"
+                value={from}
+                onChange={(e) => setFrom(e.target.value)}
+                aria-label="From date"
+                className="lg:w-40"
+              />
+              <Input
+                type="date"
+                value={to}
+                onChange={(e) => setTo(e.target.value)}
+                aria-label="To date"
+                className="lg:w-40"
+              />
             </div>
             {filtered ? (
               <Button
@@ -224,14 +338,29 @@ function Logbook() {
           </div>
 
           {list.length === 0 ? (
-            <EmptyState icon={Search} title="No flights match these filters" description="Clear or adjust the filters to see more of your logbook." />
+            <EmptyState
+              icon={Search}
+              title="No flights match these filters"
+              description="Clear or adjust the filters to see more of your logbook."
+            />
           ) : (
             <div className="panel overflow-x-auto">
               <table className="w-full min-w-[900px] text-sm">
                 <thead>
                   <tr className="border-b bg-muted/40 text-left">
                     <th className="w-8" />
-                    {["Date", "Aircraft", "From", "To", "Duration", "Kind", "Rules", "Ldg", "App", "Score"].map((h) => (
+                    {[
+                      "Date",
+                      "Aircraft",
+                      "From",
+                      "To",
+                      "Duration",
+                      "Kind",
+                      "Rules",
+                      "Ldg",
+                      "App",
+                      "Score",
+                    ].map((h) => (
                       <th key={h} className="label-caps px-2 py-2">
                         {h}
                       </th>
@@ -243,20 +372,39 @@ function Logbook() {
                     const isOpen = open === f.id;
                     return (
                       <Fragment key={f.id}>
-                        <tr className={cn("cursor-pointer border-b transition-colors hover:bg-accent/30", isOpen && "bg-accent/30")} onClick={() => setOpen(isOpen ? null : f.id)}>
+                        <tr
+                          className={cn(
+                            "cursor-pointer border-b transition-colors hover:bg-accent/30",
+                            isOpen && "bg-accent/30",
+                          )}
+                          onClick={() => setOpen(isOpen ? null : f.id)}
+                        >
                           <td className="pl-3">
-                            <button type="button" aria-expanded={isOpen} aria-label={isOpen ? "Collapse entry" : "Expand entry"} className="text-muted-foreground">
-                              {isOpen ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
+                            <button
+                              type="button"
+                              aria-expanded={isOpen}
+                              aria-label={isOpen ? "Collapse entry" : "Expand entry"}
+                              className="text-muted-foreground"
+                            >
+                              {isOpen ? (
+                                <ChevronDown className="size-4" />
+                              ) : (
+                                <ChevronRight className="size-4" />
+                              )}
                             </button>
                           </td>
                           <td className="px-2 py-2">
                             <div className="text-xs">{formatDate(f.date)}</div>
-                            <div className="max-w-[220px] truncate text-[11px] text-muted-foreground">{f.scenarioTitle}</div>
+                            <div className="max-w-[220px] truncate text-[11px] text-muted-foreground">
+                              {f.scenarioTitle}
+                            </div>
                           </td>
                           <td className="px-2 py-2 text-xs">{getPerf(f.aircraftId).shortName}</td>
                           <td className="px-2 py-2 font-mono text-xs">{f.departure}</td>
                           <td className="px-2 py-2 font-mono text-xs">{f.destination}</td>
-                          <td className="px-2 py-2 font-mono text-xs tabular">{formatDuration(f.durationSec)}</td>
+                          <td className="px-2 py-2 font-mono text-xs tabular">
+                            {formatDuration(f.durationSec)}
+                          </td>
                           <td className="px-2 py-2 text-xs">{KIND_LABEL[f.kind]}</td>
                           <td className="px-2 py-2">
                             <Pill tone={f.rules === "VFR" ? "ok" : "primary"}>{f.rules}</Pill>
@@ -264,7 +412,14 @@ function Logbook() {
                           </td>
                           <td className="px-2 py-2 font-mono text-xs">{f.landings}</td>
                           <td className="px-2 py-2 font-mono text-xs">{f.approaches}</td>
-                          <td className={cn("px-2 py-2 font-mono font-semibold tabular", scoreTone(f.score))}>{Math.round(f.score)}</td>
+                          <td
+                            className={cn(
+                              "px-2 py-2 font-mono font-semibold tabular",
+                              scoreTone(f.score),
+                            )}
+                          >
+                            {Math.round(f.score)}
+                          </td>
                         </tr>
                         {isOpen ? (
                           <tr className="border-b bg-muted/20">
@@ -287,7 +442,9 @@ function Logbook() {
                     <td colSpan={2} />
                     <td className="px-2 py-2 font-mono text-xs">{totals.landings}</td>
                     <td className="px-2 py-2 font-mono text-xs">{totals.approaches}</td>
-                    <td className={cn("px-2 py-2 font-mono text-xs", scoreTone(totals.avg))}>{Math.round(totals.avg)} avg</td>
+                    <td className={cn("px-2 py-2 font-mono text-xs", scoreTone(totals.avg))}>
+                      {Math.round(totals.avg)} avg
+                    </td>
                   </tr>
                 </tfoot>
               </table>
@@ -337,10 +494,16 @@ function EntryDetail({ f, onDeleted }: { f: FlightLog; onDeleted: () => void }) 
           <ul className="space-y-1.5 text-xs">
             {f.objectives.map((o, i) => (
               <li key={i} className="flex gap-2">
-                {o.met ? <CheckCircle2 className="mt-0.5 size-3.5 shrink-0 text-ok" /> : <XCircle className="mt-0.5 size-3.5 shrink-0 text-warning" />}
+                {o.met ? (
+                  <CheckCircle2 className="mt-0.5 size-3.5 shrink-0 text-ok" />
+                ) : (
+                  <XCircle className="mt-0.5 size-3.5 shrink-0 text-warning" />
+                )}
                 <span>
                   {o.text}
-                  {o.detail ? <span className="block text-muted-foreground">{o.detail}</span> : null}
+                  {o.detail ? (
+                    <span className="block text-muted-foreground">{o.detail}</span>
+                  ) : null}
                 </span>
               </li>
             ))}
@@ -362,7 +525,13 @@ function EntryDetail({ f, onDeleted }: { f: FlightLog; onDeleted: () => void }) 
         )}
         <div className="mt-auto flex flex-wrap gap-2 pt-4">
           <Button size="sm" asChild>
-            <HrefLink href={buildHref("/simulator", { scenario: f.scenarioId, aircraft: f.aircraftId, airport: f.departure })}>
+            <HrefLink
+              href={buildHref("/simulator", {
+                scenario: f.scenarioId,
+                aircraft: f.aircraftId,
+                airport: f.departure,
+              })}
+            >
               <RotateCcw className="size-4" /> Review training
             </HrefLink>
           </Button>

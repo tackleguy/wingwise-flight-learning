@@ -4,7 +4,10 @@ import { AIRPORTS, NAVAIDS, getAirport, getNavaid } from "./airports";
 import type { Airport, Navaid } from "./types";
 
 export function isIfrCapable(a: Airport): boolean {
-  return a.runways.some((r) => r.ends.some((e) => e.ils)) || a.procedures.some((p) => /ILS|RNAV|GPS|VOR|LOC/i.test(p));
+  return (
+    a.runways.some((r) => r.ends.some((e) => e.ils)) ||
+    a.procedures.some((p) => /ILS|RNAV|GPS|VOR|LOC/i.test(p))
+  );
 }
 
 export function hasIls(a: Airport): boolean {
@@ -22,17 +25,29 @@ export interface NearbyResult<T> {
   brgTrue: number;
 }
 
-export function nearestAirports(lat: number, lon: number, opts: { limit?: number; maxNm?: number; exclude?: string[] } = {}): NearbyResult<Airport>[] {
+export function nearestAirports(
+  lat: number,
+  lon: number,
+  opts: { limit?: number; maxNm?: number; exclude?: string[] } = {},
+): NearbyResult<Airport>[] {
   const ex = new Set(opts.exclude ?? []);
   return AIRPORTS.filter((a) => !ex.has(a.icao))
-    .map((a) => ({ item: a, distNm: distanceNm(lat, lon, a.lat, a.lon), brgTrue: bearingDeg(lat, lon, a.lat, a.lon) }))
+    .map((a) => ({
+      item: a,
+      distNm: distanceNm(lat, lon, a.lat, a.lon),
+      brgTrue: bearingDeg(lat, lon, a.lat, a.lon),
+    }))
     .filter((r) => (opts.maxNm === undefined ? true : r.distNm <= opts.maxNm))
     .sort((a, b) => a.distNm - b.distNm)
     .slice(0, opts.limit ?? 5);
 }
 
 export function nearbyNavaids(lat: number, lon: number, maxNm = 60): NearbyResult<Navaid>[] {
-  return NAVAIDS.map((n) => ({ item: n, distNm: distanceNm(lat, lon, n.lat, n.lon), brgTrue: bearingDeg(lat, lon, n.lat, n.lon) }))
+  return NAVAIDS.map((n) => ({
+    item: n,
+    distNm: distanceNm(lat, lon, n.lat, n.lon),
+    brgTrue: bearingDeg(lat, lon, n.lat, n.lon),
+  }))
     .filter((r) => r.distNm <= maxNm)
     .sort((a, b) => a.distNm - b.distNm);
 }
@@ -56,15 +71,46 @@ export function resolvePoint(id: string): RoutePoint | undefined {
     const lon = Number(coord[2]);
     if (Math.abs(lat) <= 90 && Math.abs(lon) <= 180) {
       const near = nearestAirports(lat, lon, { limit: 1 })[0];
-      return { id: `${lat.toFixed(3)},${lon.toFixed(3)}`, name: "User waypoint", kind: "coord", lat, lon, magVar: near?.item.magVar ?? 0 };
+      return {
+        id: `${lat.toFixed(3)},${lon.toFixed(3)}`,
+        name: "User waypoint",
+        kind: "coord",
+        lat,
+        lon,
+        magVar: near?.item.magVar ?? 0,
+      };
     }
   }
   const ap = getAirport(k) ?? (k.length === 3 ? getAirport(`K${k}`) : undefined);
   // Prefer a navaid when the identifier is exactly a navaid id and not an airport ICAO.
   const nv = getNavaid(k);
-  if (ap && (ap.icao === k || !nv)) return { id: ap.icao, name: ap.name, kind: "airport", lat: ap.lat, lon: ap.lon, magVar: ap.magVar };
-  if (nv) return { id: nv.id, name: `${nv.name} ${nv.type}`, kind: "navaid", lat: nv.lat, lon: nv.lon, magVar: nv.magVar };
-  if (ap) return { id: ap.icao, name: ap.name, kind: "airport", lat: ap.lat, lon: ap.lon, magVar: ap.magVar };
+  if (ap && (ap.icao === k || !nv))
+    return {
+      id: ap.icao,
+      name: ap.name,
+      kind: "airport",
+      lat: ap.lat,
+      lon: ap.lon,
+      magVar: ap.magVar,
+    };
+  if (nv)
+    return {
+      id: nv.id,
+      name: `${nv.name} ${nv.type}`,
+      kind: "navaid",
+      lat: nv.lat,
+      lon: nv.lon,
+      magVar: nv.magVar,
+    };
+  if (ap)
+    return {
+      id: ap.icao,
+      name: ap.name,
+      kind: "airport",
+      lat: ap.lat,
+      lon: ap.lon,
+      magVar: ap.magVar,
+    };
   return undefined;
 }
 

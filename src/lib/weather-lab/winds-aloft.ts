@@ -31,23 +31,42 @@ export const FB_LEVELS = [3000, 6000, 9000, 12000, 18000, 24000, 30000, 34000, 3
 export function decodeFbGroup(raw: string, altitudeFt: number | null): FbDecoded {
   const g = raw.trim().toUpperCase();
   const steps: string[] = [];
-  const base: FbDecoded = { raw: g, altitudeFt, ok: false, lightVariable: false, direction: null, speedKt: null, tempC: null, steps };
-  if (!g) return { ...base, error: "Blank — no wind forecast for this level (within 1,500 ft of the station elevation)." };
+  const base: FbDecoded = {
+    raw: g,
+    altitudeFt,
+    ok: false,
+    lightVariable: false,
+    direction: null,
+    speedKt: null,
+    tempC: null,
+    steps,
+  };
+  if (!g)
+    return {
+      ...base,
+      error: "Blank — no wind forecast for this level (within 1,500 ft of the station elevation).",
+    };
   const m = /^(\d{2})(\d{2})(?:([+-])(\d{2})|(\d{2}))?$/.exec(g);
-  if (!m) return { ...base, error: "Expected DDSS, DDSS±TT or DDSSTT (e.g. 2745, 2745-02, 731960)." };
+  if (!m)
+    return { ...base, error: "Expected DDSS, DDSS±TT or DDSSTT (e.g. 2745, 2745-02, 731960)." };
   const dd = Number(m[1]);
   const ss = Number(m[2]);
   let tempC: number | null = null;
   if (m[3] && m[4]) {
     tempC = (m[3] === "-" ? -1 : 1) * Number(m[4]);
     steps.push(`Temperature group "${m[3]}${m[4]}" = ${tempC}°C.`);
-    if (altitudeFt !== null && altitudeFt > 24000) steps.push("Note: above 24,000 ft the sign is normally omitted — this group includes one.");
+    if (altitudeFt !== null && altitudeFt > 24000)
+      steps.push("Note: above 24,000 ft the sign is normally omitted — this group includes one.");
   } else if (m[5]) {
     const plain = Number(m[5]);
     if (altitudeFt !== null && altitudeFt <= 24000) {
-      steps.push(`At ${altitudeFt.toLocaleString()} ft temperatures carry a sign; six digits without a sign are expected only above 24,000 ft. Treating it as negative.`);
+      steps.push(
+        `At ${altitudeFt.toLocaleString()} ft temperatures carry a sign; six digits without a sign are expected only above 24,000 ft. Treating it as negative.`,
+      );
     } else {
-      steps.push(`Six digits without a sign: above 24,000 ft temperatures are always below zero, so "${m[5]}" = −${plain}°C.`);
+      steps.push(
+        `Six digits without a sign: above 24,000 ft temperatures are always below zero, so "${m[5]}" = −${plain}°C.`,
+      );
     }
     tempC = -plain;
   } else if (altitudeFt === 3000) {
@@ -75,7 +94,12 @@ export function decodeFbGroup(raw: string, altitudeFt: number | null): FbDecoded
     spd = ss;
     steps.unshift(`Direction ${m[1]} × 10 = ${dir}° true; speed ${spd} kt.`);
   } else {
-    return { ...base, error: `Direction code ${m[1]} is not valid (01–36, 51–86 or 99).`, tempC, steps };
+    return {
+      ...base,
+      error: `Direction code ${m[1]} is not valid (01–36, 51–86 or 99).`,
+      tempC,
+      steps,
+    };
   }
   return { ...base, ok: true, direction: dir === 0 ? 360 : dir, speedKt: spd, tempC, steps };
 }
@@ -88,7 +112,8 @@ export interface FbLine {
 /** Decode a station line such as "SFO 2714 2725+04 2737-01 2744-06 2761-18 2768-30 760043 761552 760963". */
 export function decodeFbLine(line: string, levels = FB_LEVELS): FbLine | { error: string } {
   const toks = line.trim().toUpperCase().split(/\s+/).filter(Boolean);
-  if (toks.length < 2) return { error: "Paste a station line: identifier followed by one group per level." };
+  if (toks.length < 2)
+    return { error: "Paste a station line: identifier followed by one group per level." };
   const station = toks[0] ?? "";
   if (!/^[A-Z]{3,4}$/.test(station)) return { error: `"${station}" is not a station identifier.` };
   const groups = toks.slice(1);

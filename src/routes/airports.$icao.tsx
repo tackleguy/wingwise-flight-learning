@@ -1,13 +1,28 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { ArrowLeft, Building2, Compass, FileText, PlaneTakeoff, Radio, Route as RouteIcon, Wind } from "lucide-react";
+import {
+  ArrowLeft,
+  Building2,
+  Compass,
+  FileText,
+  PlaneTakeoff,
+  Radio,
+  Route as RouteIcon,
+  Wind,
+} from "lucide-react";
 
 import { EmptyState, Notice, Page, PageHeader, Panel, Pill, Stat } from "@/components/app/page";
 import { HrefLink, buildHref } from "@/components/app/xlink";
 import { AirportDiagram } from "@/components/airports/airport-diagram";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { AIRPORT_DATA_NOTICE, allRunwayEnds, bestRunwayForWind, getAirport, magneticHeading } from "@/lib/data/airports";
+import {
+  AIRPORT_DATA_NOTICE,
+  allRunwayEnds,
+  bestRunwayForWind,
+  getAirport,
+  magneticHeading,
+} from "@/lib/data/airports";
 import { fmtHdg, isIfrCapable, nearbyNavaids, nearestAirports } from "@/lib/data/airport-utils";
 import type { Airport } from "@/lib/data/types";
 import { formatFreq, formatLatLon, norm360, windComponents } from "@/lib/geo";
@@ -19,7 +34,12 @@ export const Route = createFileRoute("/airports/$icao")({
     return {
       meta: [
         { title: `${a ? `${a.icao} · ${a.name}` : "Airport"} — TeachX` },
-        { name: "description", content: a ? `${a.name} (${a.icao}): runways, frequencies, airspace, diagram, wind tool and procedures. Educational data, not for navigation.` : "TeachX airport database." },
+        {
+          name: "description",
+          content: a
+            ? `${a.name} (${a.icao}): runways, frequencies, airspace, diagram, wind tool and procedures. Educational data, not for navigation.`
+            : "TeachX airport database.",
+        },
       ],
     };
   },
@@ -32,7 +52,12 @@ function AirportPage() {
   if (!a) {
     return (
       <Page>
-        <EmptyState icon={Building2} title="Airport not found" description={`"${icao}" is not in the TeachX educational airport dataset.`} action={{ to: "/airports", label: "Browse airports" }} />
+        <EmptyState
+          icon={Building2}
+          title="Airport not found"
+          description={`"${icao}" is not in the TeachX educational airport dataset.`}
+          action={{ to: "/airports", label: "Browse airports" }}
+        />
       </Page>
     );
   }
@@ -70,16 +95,28 @@ function AirportDetail({ a }: { a: Airport }) {
   const dirN = Number(windDir);
   const ktN = Number(windKt);
   const gN = Number(gustKt);
-  const windValid = windDir !== "" && windKt !== "" && Number.isFinite(dirN) && dirN >= 0 && dirN <= 360 && Number.isFinite(ktN) && ktN >= 0 && ktN < 150;
+  const windValid =
+    windDir !== "" &&
+    windKt !== "" &&
+    Number.isFinite(dirN) &&
+    dirN >= 0 &&
+    dirN <= 360 &&
+    Number.isFinite(ktN) &&
+    ktN >= 0 &&
+    ktN < 150;
   const windTrue = windValid ? norm360(ref === "mag" ? dirN + a.magVar : dirN) : undefined;
-  const best = windValid && windTrue !== undefined && ktN > 0 ? bestRunwayForWind(a, windTrue) : undefined;
+  const best =
+    windValid && windTrue !== undefined && ktN > 0 ? bestRunwayForWind(a, windTrue) : undefined;
 
   const ends = useMemo(() => allRunwayEnds(a), [a]);
   const comps = useMemo(() => {
     if (!windValid || windTrue === undefined) return [];
     return ends.map(({ runway, end }) => {
       const c = windComponents(end.trueHeading, windTrue, ktN);
-      const g = gustKt !== "" && Number.isFinite(gN) && gN > ktN ? windComponents(end.trueHeading, windTrue, gN) : undefined;
+      const g =
+        gustKt !== "" && Number.isFinite(gN) && gN > ktN
+          ? windComponents(end.trueHeading, windTrue, gN)
+          : undefined;
       return { runway, end, c, g };
     });
   }, [ends, windValid, windTrue, ktN, gN, gustKt]);
@@ -91,11 +128,17 @@ function AirportDetail({ a }: { a: Airport }) {
       .map((n) => ({ ...n, listed: listed.has(n.item.id) }));
   }, [a]);
 
-  const neighbours = useMemo(() => nearestAirports(a.lat, a.lon, { limit: 5, exclude: [a.icao], maxNm: 120 }), [a]);
+  const neighbours = useMemo(
+    () => nearestAirports(a.lat, a.lon, { limit: 5, exclude: [a.icao], maxNm: 120 }),
+    [a],
+  );
 
   return (
     <Page>
-      <Link to="/airports" className="mb-3 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
+      <Link
+        to="/airports"
+        className="mb-3 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+      >
         <ArrowLeft className="size-3.5" /> Airport Database
       </Link>
       <PageHeader
@@ -125,9 +168,29 @@ function AirportDetail({ a }: { a: Airport }) {
 
       <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
         <Stat label="Elevation" value={`${a.elevationFt.toLocaleString()}`} sub="ft MSL" />
-        <Stat label="Airspace" value={`Class ${a.airspace}`} sub={a.towered ? "Towered" : "Non-towered (CTAF)"} tone="primary" />
-        <Stat label="Runways" value={a.runways.length} sub={`Longest ${Math.max(...a.runways.map((r) => r.lengthFt)).toLocaleString()} ft`} />
-        <Stat label="Instrument" value={isIfrCapable(a) ? "IFR" : "VFR only"} sub={a.runways.some((r) => r.ends.some((e) => e.ils)) ? "ILS available" : isIfrCapable(a) ? "Non-precision / RNAV" : "No instrument approach listed"} tone={isIfrCapable(a) ? "ok" : "default"} />
+        <Stat
+          label="Airspace"
+          value={`Class ${a.airspace}`}
+          sub={a.towered ? "Towered" : "Non-towered (CTAF)"}
+          tone="primary"
+        />
+        <Stat
+          label="Runways"
+          value={a.runways.length}
+          sub={`Longest ${Math.max(...a.runways.map((r) => r.lengthFt)).toLocaleString()} ft`}
+        />
+        <Stat
+          label="Instrument"
+          value={isIfrCapable(a) ? "IFR" : "VFR only"}
+          sub={
+            a.runways.some((r) => r.ends.some((e) => e.ils))
+              ? "ILS available"
+              : isIfrCapable(a)
+                ? "Non-precision / RNAV"
+                : "No instrument approach listed"
+          }
+          tone={isIfrCapable(a) ? "ok" : "default"}
+        />
       </div>
 
       <Notice tone="info" className="mb-6">
@@ -137,10 +200,18 @@ function AirportDetail({ a }: { a: Airport }) {
       <div className="mb-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,420px)]">
         <Panel title="Airport diagram (north up, to scale)">
           <div className="avionics-screen overflow-hidden">
-            <AirportDiagram airport={a} highlightEnd={best?.end.id} windFromTrue={windTrue} windKt={windValid ? ktN : undefined} className="aspect-square w-full" />
+            <AirportDiagram
+              airport={a}
+              highlightEnd={best?.end.id}
+              windFromTrue={windTrue}
+              windKt={windValid ? ktN : undefined}
+              className="aspect-square w-full"
+            />
           </div>
           <p className="mt-2 text-[11px] text-muted-foreground">
-            Runways are drawn from the dataset's threshold coordinates. Numbers are oriented for the landing direction. Dashed cyan cones mark runways with an ILS. Geometry is simplified — compare with the official FAA airport diagram.
+            Runways are drawn from the dataset's threshold coordinates. Numbers are oriented for the
+            landing direction. Dashed cyan cones mark runways with an ILS. Geometry is simplified —
+            compare with the official FAA airport diagram.
           </p>
         </Panel>
 
@@ -154,40 +225,83 @@ function AirportDetail({ a }: { a: Airport }) {
           <div className="grid grid-cols-3 gap-2">
             <label className="text-xs">
               <span className="label-caps">Direction °</span>
-              <Input inputMode="numeric" value={windDir} onChange={(e) => setWindDir(e.target.value.replace(/[^0-9]/g, "").slice(0, 3))} placeholder="280" className="mt-1 font-mono" />
+              <Input
+                inputMode="numeric"
+                value={windDir}
+                onChange={(e) => setWindDir(e.target.value.replace(/[^0-9]/g, "").slice(0, 3))}
+                placeholder="280"
+                className="mt-1 font-mono"
+              />
             </label>
             <label className="text-xs">
               <span className="label-caps">Speed kt</span>
-              <Input inputMode="numeric" value={windKt} onChange={(e) => setWindKt(e.target.value.replace(/[^0-9]/g, "").slice(0, 3))} placeholder="12" className="mt-1 font-mono" />
+              <Input
+                inputMode="numeric"
+                value={windKt}
+                onChange={(e) => setWindKt(e.target.value.replace(/[^0-9]/g, "").slice(0, 3))}
+                placeholder="12"
+                className="mt-1 font-mono"
+              />
             </label>
             <label className="text-xs">
               <span className="label-caps">Gust kt</span>
-              <Input inputMode="numeric" value={gustKt} onChange={(e) => setGustKt(e.target.value.replace(/[^0-9]/g, "").slice(0, 3))} placeholder="opt." className="mt-1 font-mono" />
+              <Input
+                inputMode="numeric"
+                value={gustKt}
+                onChange={(e) => setGustKt(e.target.value.replace(/[^0-9]/g, "").slice(0, 3))}
+                placeholder="opt."
+                className="mt-1 font-mono"
+              />
             </label>
           </div>
-          <div className="mt-2 flex gap-1 text-xs" role="group" aria-label="Wind direction reference">
+          <div
+            className="mt-2 flex gap-1 text-xs"
+            role="group"
+            aria-label="Wind direction reference"
+          >
             {(
               [
                 ["mag", "Magnetic (ATIS / tower)"],
                 ["true", "True (METAR / TAF)"],
               ] as const
             ).map(([v, l]) => (
-              <button key={v} type="button" onClick={() => setRef(v)} aria-pressed={ref === v} className={cn("flex-1 rounded border px-2 py-1", ref === v ? "border-primary/50 bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground")}>
+              <button
+                key={v}
+                type="button"
+                onClick={() => setRef(v)}
+                aria-pressed={ref === v}
+                className={cn(
+                  "flex-1 rounded border px-2 py-1",
+                  ref === v
+                    ? "border-primary/50 bg-primary/15 text-primary"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
                 {l}
               </button>
             ))}
           </div>
           {!windValid ? (
-            <p className="mt-3 text-xs text-muted-foreground">Enter a wind direction (0–360°) and speed to compute headwind and crosswind components for every runway and the recommended runway.</p>
+            <p className="mt-3 text-xs text-muted-foreground">
+              Enter a wind direction (0–360°) and speed to compute headwind and crosswind components
+              for every runway and the recommended runway.
+            </p>
           ) : (
             <>
               {best ? (
                 <div className="mt-3 rounded-md border border-ok/30 bg-ok/5 px-3 py-2 text-sm">
-                  Recommended: <span className="font-mono font-semibold text-ok">Runway {best.end.id}</span>
-                  <span className="text-muted-foreground"> — most into the wind{a.runways.length > 1 ? " (ties favour the longer runway)" : ""}.</span>
+                  Recommended:{" "}
+                  <span className="font-mono font-semibold text-ok">Runway {best.end.id}</span>
+                  <span className="text-muted-foreground">
+                    {" "}
+                    — most into the wind
+                    {a.runways.length > 1 ? " (ties favour the longer runway)" : ""}.
+                  </span>
                 </div>
               ) : (
-                <div className="mt-3 rounded-md border px-3 py-2 text-sm text-muted-foreground">Calm wind — use the runway in use / calm-wind runway.</div>
+                <div className="mt-3 rounded-md border px-3 py-2 text-sm text-muted-foreground">
+                  Calm wind — use the runway in use / calm-wind runway.
+                </div>
               )}
               <div className="mt-3 overflow-x-auto">
                 <table className="w-full text-xs">
@@ -204,15 +318,40 @@ function AirportDetail({ a }: { a: Airport }) {
                       const xw = Math.abs(c.crosswind);
                       const side = c.crosswind >= 0 ? "R" : "L";
                       return (
-                        <tr key={end.id} className={cn("border-b last:border-0", best?.end.id === end.id && "bg-ok/5")}>
+                        <tr
+                          key={end.id}
+                          className={cn(
+                            "border-b last:border-0",
+                            best?.end.id === end.id && "bg-ok/5",
+                          )}
+                        >
                           <td className="py-1.5 font-mono font-semibold">{end.id}</td>
-                          <td className="py-1.5 font-mono">{fmtHdg(magneticHeading(a, end.trueHeading))}</td>
-                          <td className={cn("py-1.5 font-mono", c.headwind < -0.5 ? "text-warning" : "text-foreground")}>
-                            {c.headwind >= -0.5 ? `${Math.round(Math.max(0, c.headwind))} kt head` : `${Math.round(-c.headwind)} kt TAIL`}
+                          <td className="py-1.5 font-mono">
+                            {fmtHdg(magneticHeading(a, end.trueHeading))}
                           </td>
-                          <td className={cn("py-1.5 font-mono", xw > 15 ? "text-warning" : xw > 10 ? "text-caution" : "")}>
+                          <td
+                            className={cn(
+                              "py-1.5 font-mono",
+                              c.headwind < -0.5 ? "text-warning" : "text-foreground",
+                            )}
+                          >
+                            {c.headwind >= -0.5
+                              ? `${Math.round(Math.max(0, c.headwind))} kt head`
+                              : `${Math.round(-c.headwind)} kt TAIL`}
+                          </td>
+                          <td
+                            className={cn(
+                              "py-1.5 font-mono",
+                              xw > 15 ? "text-warning" : xw > 10 ? "text-caution" : "",
+                            )}
+                          >
                             {Math.round(xw)} kt {xw >= 0.5 ? side : ""}
-                            {g ? <span className="text-muted-foreground"> (G {Math.round(Math.abs(g.crosswind))})</span> : null}
+                            {g ? (
+                              <span className="text-muted-foreground">
+                                {" "}
+                                (G {Math.round(Math.abs(g.crosswind))})
+                              </span>
+                            ) : null}
                           </td>
                         </tr>
                       );
@@ -221,7 +360,10 @@ function AirportDetail({ a }: { a: Airport }) {
                 </table>
               </div>
               <p className="mt-2 text-[11px] text-muted-foreground">
-                Wind used: {fmtHdg(windTrue ?? 0)}°T ({fmtHdg((windTrue ?? 0) - a.magVar)}°M) at {ktN} kt. Amber/red crosswind = above 10/15 kt — compare with your aircraft's maximum demonstrated crosswind and your personal minimums. Tailwind components are red.
+                Wind used: {fmtHdg(windTrue ?? 0)}°T ({fmtHdg((windTrue ?? 0) - a.magVar)}°M) at{" "}
+                {ktN} kt. Amber/red crosswind = above 10/15 kt — compare with your aircraft's
+                maximum demonstrated crosswind and your personal minimums. Tailwind components are
+                red.
               </p>
             </>
           )}
@@ -244,10 +386,14 @@ function AirportDetail({ a }: { a: Airport }) {
                     <Pill tone="cyan">{f.type}</Pill>
                   </td>
                   <td className="py-1.5 pr-3">
-                    <div>{f.name !== f.type ? f.name : FREQ_LABEL[f.type] ?? f.type}</div>
-                    {f.name !== f.type ? <div className="text-[11px] text-muted-foreground">{FREQ_LABEL[f.type]}</div> : null}
+                    <div>{f.name !== f.type ? f.name : (FREQ_LABEL[f.type] ?? f.type)}</div>
+                    {f.name !== f.type ? (
+                      <div className="text-[11px] text-muted-foreground">{FREQ_LABEL[f.type]}</div>
+                    ) : null}
                   </td>
-                  <td className="py-1.5 text-right font-mono text-cyan tabular">{formatFreq(f.mhz)}</td>
+                  <td className="py-1.5 text-right font-mono text-cyan tabular">
+                    {formatFreq(f.mhz)}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -281,7 +427,11 @@ function AirportDetail({ a }: { a: Airport }) {
                     </td>
                     <td className="py-1.5 text-xs">
                       {n.type}
-                      {n.freq ? <span className="ml-1 font-mono text-cyan">{n.type === "NDB" ? `${n.freq} kHz` : formatFreq(n.freq)}</span> : null}
+                      {n.freq ? (
+                        <span className="ml-1 font-mono text-cyan">
+                          {n.type === "NDB" ? `${n.freq} kHz` : formatFreq(n.freq)}
+                        </span>
+                      ) : null}
                     </td>
                     <td className="py-1.5 text-right font-mono text-xs">
                       {distNm.toFixed(1)} nm
@@ -295,7 +445,10 @@ function AirportDetail({ a }: { a: Airport }) {
               </tbody>
             </table>
           )}
-          <p className="mt-2 text-[11px] text-muted-foreground">"From apt" is the magnetic bearing and distance from the airport to the navaid. "Radial" is the navaid radial the airport lies on (using the navaid's declination).</p>
+          <p className="mt-2 text-[11px] text-muted-foreground">
+            "From apt" is the magnetic bearing and distance from the airport to the navaid. "Radial"
+            is the navaid radial the airport lies on (using the navaid's declination).
+          </p>
         </Panel>
       </div>
 
@@ -317,7 +470,10 @@ function AirportDetail({ a }: { a: Airport }) {
             <tbody>
               {a.runways.flatMap((r) =>
                 r.ends.map((e, i) => (
-                  <tr key={`${r.name}-${e.id}`} className={cn(i === 1 ? "border-b last:border-0" : "")}>
+                  <tr
+                    key={`${r.name}-${e.id}`}
+                    className={cn(i === 1 ? "border-b last:border-0" : "")}
+                  >
                     {i === 0 ? (
                       <>
                         <td rowSpan={2} className="py-1.5 pr-3 align-top font-mono font-semibold">
@@ -333,12 +489,21 @@ function AirportDetail({ a }: { a: Airport }) {
                     ) : null}
                     <td className="py-1.5 pr-3 font-mono">{e.id}</td>
                     <td className="py-1.5 pr-3 font-mono">{fmtHdg(e.trueHeading)}°</td>
-                    <td className="py-1.5 pr-3 font-mono">{fmtHdg(magneticHeading(a, e.trueHeading))}°</td>
-                    <td className="py-1.5 pr-3">{e.pattern === "right" ? <Pill tone="caution">Right</Pill> : <span className="text-muted-foreground">Left</span>}</td>
+                    <td className="py-1.5 pr-3 font-mono">
+                      {fmtHdg(magneticHeading(a, e.trueHeading))}°
+                    </td>
+                    <td className="py-1.5 pr-3">
+                      {e.pattern === "right" ? (
+                        <Pill tone="caution">Right</Pill>
+                      ) : (
+                        <span className="text-muted-foreground">Left</span>
+                      )}
+                    </td>
                     <td className="py-1.5 font-mono text-xs">
                       {e.ils ? (
                         <span className="text-cyan">
-                          {e.ils.ident} {formatFreq(e.ils.freq)} · GS {e.ils.glideslopeDeg.toFixed(1)}°
+                          {e.ils.ident} {formatFreq(e.ils.freq)} · GS{" "}
+                          {e.ils.glideslopeDeg.toFixed(1)}°
                         </span>
                       ) : (
                         <span className="text-muted-foreground">—</span>
@@ -372,7 +537,10 @@ function AirportDetail({ a }: { a: Airport }) {
           ) : (
             <p className="text-sm text-muted-foreground">No procedures listed.</p>
           )}
-          <p className="mt-3 text-[11px] text-muted-foreground">Names only — TeachX does not reproduce approach plates. Use current FAA Terminal Procedures Publications.</p>
+          <p className="mt-3 text-[11px] text-muted-foreground">
+            Names only — TeachX does not reproduce approach plates. Use current FAA Terminal
+            Procedures Publications.
+          </p>
         </Panel>
         <Panel title="Notes">
           <ul className="space-y-1.5 text-sm">
@@ -402,8 +570,13 @@ function AirportDetail({ a }: { a: Airport }) {
             <ul className="space-y-1.5 text-sm">
               {neighbours.map(({ item, distNm, brgTrue }) => (
                 <li key={item.icao} className="flex items-center justify-between gap-2">
-                  <Link to="/airports/$icao" params={{ icao: item.icao }} className="truncate hover:text-primary">
-                    <span className="font-mono font-semibold">{item.icao}</span> <span className="text-muted-foreground">{item.city}</span>
+                  <Link
+                    to="/airports/$icao"
+                    params={{ icao: item.icao }}
+                    className="truncate hover:text-primary"
+                  >
+                    <span className="font-mono font-semibold">{item.icao}</span>{" "}
+                    <span className="text-muted-foreground">{item.city}</span>
                   </Link>
                   <span className="shrink-0 font-mono text-xs text-muted-foreground">
                     {fmtHdg(brgTrue - a.magVar)}°M {distNm.toFixed(0)} nm
@@ -412,7 +585,9 @@ function AirportDetail({ a }: { a: Airport }) {
               ))}
             </ul>
           ) : (
-            <p className="text-sm text-muted-foreground">No other dataset airports within 120 nm.</p>
+            <p className="text-sm text-muted-foreground">
+              No other dataset airports within 120 nm.
+            </p>
           )}
         </Panel>
       </div>

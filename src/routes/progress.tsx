@@ -19,7 +19,17 @@ import {
 
 import { EmptyState, Meter, Page, PageHeader, Panel, Section, Stat } from "@/components/app/page";
 import { COURSES } from "@/lib/content";
-import { WRITTEN_EXAM_NAMES, activityDays, computeMetrics, courseLessonProgress, dayKey, isWrittenExam, ladderProgress, streaks, subjectStrengths } from "@/lib/metrics";
+import {
+  WRITTEN_EXAM_NAMES,
+  activityDays,
+  computeMetrics,
+  courseLessonProgress,
+  dayKey,
+  isWrittenExam,
+  ladderProgress,
+  streaks,
+  subjectStrengths,
+} from "@/lib/metrics";
 import { useHydrated, useStore, type TrainingState } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
@@ -27,7 +37,11 @@ export const Route = createFileRoute("/progress")({
   head: () => ({
     meta: [
       { title: "Progress & Statistics — TeachX" },
-      { name: "description", content: "Score trends, proficiency radar, lesson completion, subject strengths and training activity — computed from your real training record." },
+      {
+        name: "description",
+        content:
+          "Score trends, proficiency radar, lesson completion, subject strengths and training activity — computed from your real training record.",
+      },
     ],
   }),
   component: ProgressPage,
@@ -40,7 +54,11 @@ const GRID = "oklch(1 0 0 / 0.06)";
 
 type Pt = { t: number; v: number; label: string };
 
-function series<T extends { date: string }>(xs: T[], v: (x: T) => number, label: (x: T) => string): Pt[] {
+function series<T extends { date: string }>(
+  xs: T[],
+  v: (x: T) => number,
+  label: (x: T) => string,
+): Pt[] {
   return [...xs]
     .sort((a, b) => (a.date < b.date ? -1 : 1))
     .map((x) => ({ t: new Date(x.date).getTime(), v: Math.round(v(x)), label: label(x) }));
@@ -52,7 +70,15 @@ function ProgressPage() {
   const m = useMemo(() => computeMetrics(state), [state]);
   const ladder = useMemo(() => ladderProgress(state, m), [state, m]);
   const st = useMemo(() => streaks(state), [state]);
-  const hasAny = state.flights.length + state.quizzes.length + state.exams.length + state.atcSessions.length + state.orals.length + state.checkrides.length + Object.keys(state.lessons).length > 0;
+  const hasAny =
+    state.flights.length +
+      state.quizzes.length +
+      state.exams.length +
+      state.atcSessions.length +
+      state.orals.length +
+      state.checkrides.length +
+      Object.keys(state.lessons).length >
+    0;
 
   return (
     <Page wide>
@@ -73,12 +99,39 @@ function ProgressPage() {
       ) : (
         <>
           <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
-            <Stat label="Training level" value={<span className="text-lg">{m.trainingLevel.label}</span>} sub={`Level ${m.trainingLevel.level + 1} of 8`} tone="primary" />
-            <Stat label="Lessons" value={`${m.lessonsDone}/${m.lessonsTotal || "—"}`} icon={BookOpen} />
-            <Stat label="Sim flights" value={m.flights} sub={`${m.simHours.toFixed(1)} h simulated`} icon={Plane} />
+            <Stat
+              label="Training level"
+              value={<span className="text-lg">{m.trainingLevel.label}</span>}
+              sub={`Level ${m.trainingLevel.level + 1} of 8`}
+              tone="primary"
+            />
+            <Stat
+              label="Lessons"
+              value={`${m.lessonsDone}/${m.lessonsTotal || "—"}`}
+              icon={BookOpen}
+            />
+            <Stat
+              label="Sim flights"
+              value={m.flights}
+              sub={`${m.simHours.toFixed(1)} h simulated`}
+              icon={Plane}
+            />
             <Stat label="Landings" value={m.landings} />
-            <Stat label="Current streak" value={`${st.current}d`} sub={`Longest ${st.longest} days`} icon={Flame} tone={st.current >= 3 ? "ok" : "default"} />
-            <Stat label="Written readiness" value={`${m.writtenReadiness}%`} icon={Target} tone={m.writtenReadiness >= 80 ? "ok" : m.writtenReadiness >= 70 ? "primary" : "default"} />
+            <Stat
+              label="Current streak"
+              value={`${st.current}d`}
+              sub={`Longest ${st.longest} days`}
+              icon={Flame}
+              tone={st.current >= 3 ? "ok" : "default"}
+            />
+            <Stat
+              label="Written readiness"
+              value={`${m.writtenReadiness}%`}
+              icon={Target}
+              tone={
+                m.writtenReadiness >= 80 ? "ok" : m.writtenReadiness >= 70 ? "primary" : "default"
+              }
+            />
           </div>
 
           <div className="mb-8 grid gap-4 lg:grid-cols-[minmax(0,420px)_minmax(0,1fr)]">
@@ -87,17 +140,35 @@ function ProgressPage() {
             </Panel>
             <Panel title={`Training level — ${m.trainingLevel.label}`}>
               <div className="mb-3">
-                <Meter value={m.trainingLevel.pct} label={`Progress to ${m.trainingLevel.nextLabel}`} />
+                <Meter
+                  value={m.trainingLevel.pct}
+                  label={`Progress to ${m.trainingLevel.nextLabel}`}
+                />
               </div>
               <ol className="grid gap-2 sm:grid-cols-2">
                 {ladder.map((lvl, i) => {
                   const reached = i <= m.trainingLevel.level;
                   const isNext = i === m.trainingLevel.level + 1;
                   return (
-                    <li key={lvl.label} className={cn("rounded-md border p-2.5", reached ? "border-ok/30 bg-ok/5" : isNext ? "border-primary/40 bg-primary/5" : "opacity-70")}>
+                    <li
+                      key={lvl.label}
+                      className={cn(
+                        "rounded-md border p-2.5",
+                        reached
+                          ? "border-ok/30 bg-ok/5"
+                          : isNext
+                            ? "border-primary/40 bg-primary/5"
+                            : "opacity-70",
+                      )}
+                    >
                       <div className="flex items-center gap-2 text-sm font-semibold">
-                        {reached ? <CheckCircle2 className="size-4 text-ok" /> : <Circle className="size-4 text-muted-foreground" />}
-                        <span className="font-mono text-xs text-muted-foreground">{i + 1}</span> {lvl.label}
+                        {reached ? (
+                          <CheckCircle2 className="size-4 text-ok" />
+                        ) : (
+                          <Circle className="size-4 text-muted-foreground" />
+                        )}
+                        <span className="font-mono text-xs text-muted-foreground">{i + 1}</span>{" "}
+                        {lvl.label}
                       </div>
                       {lvl.reqs.length ? (
                         <ul className="mt-1.5 space-y-0.5 pl-6 text-[11px] text-muted-foreground">
@@ -109,7 +180,9 @@ function ProgressPage() {
                           ))}
                         </ul>
                       ) : (
-                        <p className="mt-1 pl-6 text-[11px] text-muted-foreground">{lvl.description}</p>
+                        <p className="mt-1 pl-6 text-[11px] text-muted-foreground">
+                          {lvl.description}
+                        </p>
                       )}
                     </li>
                   );
@@ -122,17 +195,69 @@ function ProgressPage() {
             <div className="grid gap-4 lg:grid-cols-2">
               <TrendChart
                 title="Knowledge: quizzes & exams"
-                a={{ name: "Quizzes", data: series(state.quizzes, (q) => (q.total ? (q.score / q.total) * 100 : 0), (q) => q.title) }}
-                b={{ name: "Exams", data: series(state.exams, (e) => e.scorePct, (e) => `${e.title}${e.mode === "timed" ? " (timed)" : " (study)"}`) }}
+                a={{
+                  name: "Quizzes",
+                  data: series(
+                    state.quizzes,
+                    (q) => (q.total ? (q.score / q.total) * 100 : 0),
+                    (q) => q.title,
+                  ),
+                }}
+                b={{
+                  name: "Exams",
+                  data: series(
+                    state.exams,
+                    (e) => e.scorePct,
+                    (e) => `${e.title}${e.mode === "timed" ? " (timed)" : " (study)"}`,
+                  ),
+                }}
                 empty="Take a module quiz or practice test to see your knowledge trend."
                 emptyTo="/practice-tests"
               />
-              <TrendChart title="Simulator flight scores" a={{ name: "Flight score", data: series(state.flights, (f) => f.score, (f) => f.scenarioTitle) }} empty="Fly a scenario in the simulator to see your scores." emptyTo="/simulator" />
-              <TrendChart title="ATC communication scores" a={{ name: "ATC score", data: series(state.atcSessions, (a) => a.score, (a) => `${a.title} (${a.difficulty})`) }} empty="Practice radio calls with the ATC simulator." emptyTo="/atc" />
+              <TrendChart
+                title="Simulator flight scores"
+                a={{
+                  name: "Flight score",
+                  data: series(
+                    state.flights,
+                    (f) => f.score,
+                    (f) => f.scenarioTitle,
+                  ),
+                }}
+                empty="Fly a scenario in the simulator to see your scores."
+                emptyTo="/simulator"
+              />
+              <TrendChart
+                title="ATC communication scores"
+                a={{
+                  name: "ATC score",
+                  data: series(
+                    state.atcSessions,
+                    (a) => a.score,
+                    (a) => `${a.title} (${a.difficulty})`,
+                  ),
+                }}
+                empty="Practice radio calls with the ATC simulator."
+                emptyTo="/atc"
+              />
               <TrendChart
                 title="Oral exams & mock checkrides"
-                a={{ name: "Oral", data: series(state.orals, (o) => o.score, (o) => `Oral (${o.level})`) }}
-                b={{ name: "Checkride", data: series(state.checkrides.filter((c) => c.completed), (c) => c.overall, (c) => `${c.title} — ${c.passed ? "satisfactory" : "unsatisfactory"}`) }}
+                a={{
+                  name: "Oral",
+                  data: series(
+                    state.orals,
+                    (o) => o.score,
+                    (o) => `Oral (${o.level})`,
+                  ),
+                }}
+                b={{
+                  name: "Checkride",
+                  data: series(
+                    state.checkrides.filter((c) => c.completed),
+                    (c) => c.overall,
+                    (c) => `${c.title} — ${c.passed ? "satisfactory" : "unsatisfactory"}`,
+                  ),
+                }}
                 empty="Try the oral exam simulator or a mock checkride."
                 emptyTo="/oral-exam"
               />
@@ -148,11 +273,17 @@ function ProgressPage() {
             </Panel>
           </div>
 
-          <Section title="Subject strengths" description="Aggregated from the subject breakdown of every practice test and written exam you've taken — weakest first.">
+          <Section
+            title="Subject strengths"
+            description="Aggregated from the subject breakdown of every practice test and written exam you've taken — weakest first."
+          >
             <SubjectTable state={state} />
           </Section>
 
-          <Section title="Training activity" description="Days with any recorded training (lessons, quizzes, exams, flights, ATC, oral, checkrides, avionics tasks) over the last 26 weeks.">
+          <Section
+            title="Training activity"
+            description="Days with any recorded training (lessons, quizzes, exams, flights, ATC, oral, checkrides, avionics tasks) over the last 26 weeks."
+          >
             <ActivityHeatmap state={state} />
           </Section>
         </>
@@ -178,7 +309,15 @@ function ProficiencyRadar({ m }: { m: ReturnType<typeof computeMetrics> }) {
             <PolarGrid stroke={GRID} />
             <PolarAngleAxis dataKey="k" tick={{ fill: AXIS, fontSize: 11 }} />
             <PolarRadiusAxis domain={[0, 100]} tick={false} axisLine={false} />
-            <Radar dataKey="v" stroke={C1} strokeWidth={2} fill={C1} fillOpacity={0.2} dot={{ r: 3, fill: C1 }} isAnimationActive={false} />
+            <Radar
+              dataKey="v"
+              stroke={C1}
+              strokeWidth={2}
+              fill={C1}
+              fillOpacity={0.2}
+              dot={{ r: 3, fill: C1 }}
+              isAnimationActive={false}
+            />
             <Tooltip content={<RadarTip />} />
           </RadarChart>
         </ResponsiveContainer>
@@ -192,23 +331,43 @@ function ProficiencyRadar({ m }: { m: ReturnType<typeof computeMetrics> }) {
   );
 }
 
-function RadarTip({ active, payload }: { active?: boolean; payload?: { payload: { k: string; v: number } }[] }) {
+function RadarTip({
+  active,
+  payload,
+}: {
+  active?: boolean;
+  payload?: { payload: { k: string; v: number } }[];
+}) {
   const p = payload?.[0]?.payload;
   if (!active || !p) return null;
   return (
     <div className="rounded-md border bg-popover px-2.5 py-1.5 text-xs shadow">
-      <span className="text-muted-foreground">{p.k}</span> <span className="font-mono font-semibold">{p.v}%</span>
+      <span className="text-muted-foreground">{p.k}</span>{" "}
+      <span className="font-mono font-semibold">{p.v}%</span>
     </div>
   );
 }
 
-function TrendTip({ active, payload }: { active?: boolean; payload?: { name?: string; payload: Pt }[] }) {
+function TrendTip({
+  active,
+  payload,
+}: {
+  active?: boolean;
+  payload?: { name?: string; payload: Pt }[];
+}) {
   if (!active || !payload?.length) return null;
   return (
     <div className="max-w-[240px] rounded-md border bg-popover px-2.5 py-1.5 text-xs shadow">
       {payload.map((p, i) => (
         <div key={i}>
-          <div className="text-muted-foreground">{new Date(p.payload.t).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</div>
+          <div className="text-muted-foreground">
+            {new Date(p.payload.t).toLocaleString(undefined, {
+              month: "short",
+              day: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+          </div>
           <div className="font-medium">{p.payload.label}</div>
           <div>
             {p.name}: <span className="font-mono font-semibold">{p.payload.v}%</span>
@@ -219,9 +378,22 @@ function TrendTip({ active, payload }: { active?: boolean; payload?: { name?: st
   );
 }
 
-function TrendChart({ title, a, b, empty, emptyTo }: { title: string; a: { name: string; data: Pt[] }; b?: { name: string; data: Pt[] }; empty: string; emptyTo: string }) {
+function TrendChart({
+  title,
+  a,
+  b,
+  empty,
+  emptyTo,
+}: {
+  title: string;
+  a: { name: string; data: Pt[] };
+  b?: { name: string; data: Pt[] };
+  empty: string;
+  emptyTo: string;
+}) {
   const all = [...a.data, ...(b?.data ?? [])];
-  const avg = (xs: Pt[]) => (xs.length ? Math.round(xs.reduce((s, x) => s + x.v, 0) / xs.length) : null);
+  const avg = (xs: Pt[]) =>
+    xs.length ? Math.round(xs.reduce((s, x) => s + x.v, 0) / xs.length) : null;
   return (
     <div className="panel">
       <div className="flex items-center justify-between border-b px-4 py-2.5">
@@ -253,16 +425,43 @@ function TrendChart({ title, a, b, empty, emptyTo }: { title: string; a: { name:
                   type="number"
                   scale="time"
                   domain={["dataMin", "dataMax"]}
-                  tickFormatter={(t: number) => new Date(t).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                  tickFormatter={(t: number) =>
+                    new Date(t).toLocaleDateString(undefined, { month: "short", day: "numeric" })
+                  }
                   tick={{ fill: AXIS, fontSize: 10 }}
                   stroke={GRID}
                   allowDuplicatedCategory={false}
                 />
-                <YAxis domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} tick={{ fill: AXIS, fontSize: 10 }} stroke={GRID} />
+                <YAxis
+                  domain={[0, 100]}
+                  ticks={[0, 25, 50, 75, 100]}
+                  tick={{ fill: AXIS, fontSize: 10 }}
+                  stroke={GRID}
+                />
                 <Tooltip content={<TrendTip />} cursor={{ stroke: AXIS, strokeDasharray: "3 3" }} />
                 {b ? <Legend wrapperStyle={{ fontSize: 11 }} iconType="plainline" /> : null}
-                <Line data={a.data} dataKey="v" name={a.name} stroke={C1} strokeWidth={2} dot={{ r: 4, fill: C1, stroke: "var(--color-card)", strokeWidth: 2 }} activeDot={{ r: 6 }} isAnimationActive={false} />
-                {b ? <Line data={b.data} dataKey="v" name={b.name} stroke={C2} strokeWidth={2} dot={{ r: 4, fill: C2, stroke: "var(--color-card)", strokeWidth: 2 }} activeDot={{ r: 6 }} isAnimationActive={false} /> : null}
+                <Line
+                  data={a.data}
+                  dataKey="v"
+                  name={a.name}
+                  stroke={C1}
+                  strokeWidth={2}
+                  dot={{ r: 4, fill: C1, stroke: "var(--color-card)", strokeWidth: 2 }}
+                  activeDot={{ r: 6 }}
+                  isAnimationActive={false}
+                />
+                {b ? (
+                  <Line
+                    data={b.data}
+                    dataKey="v"
+                    name={b.name}
+                    stroke={C2}
+                    strokeWidth={2}
+                    dot={{ r: 4, fill: C2, stroke: "var(--color-card)", strokeWidth: 2 }}
+                    activeDot={{ r: 6 }}
+                    isAnimationActive={false}
+                  />
+                ) : null}
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -274,7 +473,8 @@ function TrendChart({ title, a, b, empty, emptyTo }: { title: string; a: { name:
 
 function CourseCompletion({ state }: { state: TrainingState }) {
   const [open, setOpen] = useState<string | null>(null);
-  if (COURSES.length === 0) return <p className="text-sm text-muted-foreground">Course content is loading.</p>;
+  if (COURSES.length === 0)
+    return <p className="text-sm text-muted-foreground">Course content is loading.</p>;
   return (
     <div className="space-y-4">
       {COURSES.map((c) => {
@@ -282,7 +482,12 @@ function CourseCompletion({ state }: { state: TrainingState }) {
         const isOpen = open === c.id;
         return (
           <div key={c.id}>
-            <button type="button" onClick={() => setOpen(isOpen ? null : c.id)} className="w-full text-left" aria-expanded={isOpen}>
+            <button
+              type="button"
+              onClick={() => setOpen(isOpen ? null : c.id)}
+              className="w-full text-left"
+              aria-expanded={isOpen}
+            >
               <Meter value={p.pct} label={`${c.title} — ${p.done}/${p.total} lessons`} />
             </button>
             {isOpen ? (
@@ -292,7 +497,11 @@ function CourseCompletion({ state }: { state: TrainingState }) {
                   const pct = mod.lessons.length ? (done / mod.lessons.length) * 100 : 0;
                   return (
                     <li key={mod.id} className="text-xs">
-                      <Link to="/academy/$course/$module" params={{ course: c.id, module: mod.id }} className="mb-0.5 flex justify-between hover:text-primary">
+                      <Link
+                        to="/academy/$course/$module"
+                        params={{ course: c.id, module: mod.id }}
+                        className="mb-0.5 flex justify-between hover:text-primary"
+                      >
                         <span>
                           {mod.number}. {mod.title}
                         </span>
@@ -301,14 +510,19 @@ function CourseCompletion({ state }: { state: TrainingState }) {
                         </span>
                       </Link>
                       <div className="h-1 overflow-hidden rounded-full bg-muted">
-                        <div className={cn("h-full rounded-full", pct >= 100 ? "bg-ok" : "bg-primary")} style={{ width: `${pct}%` }} />
+                        <div
+                          className={cn("h-full rounded-full", pct >= 100 ? "bg-ok" : "bg-primary")}
+                          style={{ width: `${pct}%` }}
+                        />
                       </div>
                     </li>
                   );
                 })}
               </ul>
             ) : (
-              <p className="mt-1 text-[11px] text-muted-foreground">Click to see module-by-module completion.</p>
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                Click to see module-by-module completion.
+              </p>
             )}
           </div>
         );
@@ -321,14 +535,21 @@ function WrittenHistory({ state }: { state: TrainingState }) {
   const rows = Object.keys(WRITTEN_EXAM_NAMES)
     .map((id) => {
       const xs = state.exams.filter((e) => e.examId === id);
-      return { id, name: WRITTEN_EXAM_NAMES[id] ?? id, attempts: xs.length, best: xs.length ? Math.max(...xs.map((e) => e.scorePct)) : null, last: [...xs].sort((a, b) => (a.date < b.date ? 1 : -1))[0] };
+      return {
+        id,
+        name: WRITTEN_EXAM_NAMES[id] ?? id,
+        attempts: xs.length,
+        best: xs.length ? Math.max(...xs.map((e) => e.scorePct)) : null,
+        last: [...xs].sort((a, b) => (a.date < b.date ? 1 : -1))[0],
+      };
     })
     .filter((r) => r.attempts > 0);
   const other = state.exams.filter((e) => !isWrittenExam(e.examId)).length;
   if (rows.length === 0)
     return (
       <div className="text-sm text-muted-foreground">
-        No full written exams yet{other ? ` (${other} topic practice test${other > 1 ? "s" : ""} taken)` : ""}.{" "}
+        No full written exams yet
+        {other ? ` (${other} topic practice test${other > 1 ? "s" : ""} taken)` : ""}.{" "}
         <Link to="/written-exams" className="text-primary hover:underline">
           Take a written exam →
         </Link>
@@ -349,8 +570,17 @@ function WrittenHistory({ state }: { state: TrainingState }) {
           <tr key={r.id} className="border-b last:border-0">
             <td className="py-1.5 text-xs">{r.name}</td>
             <td className="py-1.5 text-right font-mono text-xs">{r.attempts}</td>
-            <td className={cn("py-1.5 text-right font-mono text-xs", (r.best ?? 0) >= 70 ? "text-ok" : "text-caution")}>{r.best !== null ? `${Math.round(r.best)}%` : "—"}</td>
-            <td className="py-1.5 text-right font-mono text-xs">{r.last ? `${Math.round(r.last.scorePct)}%` : "—"}</td>
+            <td
+              className={cn(
+                "py-1.5 text-right font-mono text-xs",
+                (r.best ?? 0) >= 70 ? "text-ok" : "text-caution",
+              )}
+            >
+              {r.best !== null ? `${Math.round(r.best)}%` : "—"}
+            </td>
+            <td className="py-1.5 text-right font-mono text-xs">
+              {r.last ? `${Math.round(r.last.scorePct)}%` : "—"}
+            </td>
           </tr>
         ))}
       </tbody>
@@ -361,7 +591,14 @@ function WrittenHistory({ state }: { state: TrainingState }) {
 function SubjectTable({ state }: { state: TrainingState }) {
   const rows = useMemo(() => subjectStrengths(state), [state]);
   if (rows.length === 0)
-    return <EmptyState icon={Target} title="No subject data yet" description="Practice tests and written exams break your score down by subject. Take one to see your strongest and weakest areas." action={{ to: "/practice-tests", label: "Practice tests" }} />;
+    return (
+      <EmptyState
+        icon={Target}
+        title="No subject data yet"
+        description="Practice tests and written exams break your score down by subject. Take one to see your strongest and weakest areas."
+        action={{ to: "/practice-tests", label: "Practice tests" }}
+      />
+    );
   return (
     <div className="panel overflow-x-auto">
       <table className="w-full min-w-[520px] text-sm">
@@ -387,8 +624,16 @@ function SubjectTable({ state }: { state: TrainingState }) {
                 </div>
               </td>
               <td className="px-4 py-2 text-xs">
-                {r.pct >= 80 ? <span className="text-ok">Strong</span> : r.pct >= 70 ? <span className="text-primary">Passing</span> : <span className="text-caution">Needs review</span>}
-                {r.total < 5 ? <span className="ml-1 text-muted-foreground">(few questions)</span> : null}
+                {r.pct >= 80 ? (
+                  <span className="text-ok">Strong</span>
+                ) : r.pct >= 70 ? (
+                  <span className="text-primary">Passing</span>
+                ) : (
+                  <span className="text-caution">Needs review</span>
+                )}
+                {r.total < 5 ? (
+                  <span className="ml-1 text-muted-foreground">(few questions)</span>
+                ) : null}
               </td>
             </tr>
           ))}
@@ -416,7 +661,13 @@ function ActivityHeatmap({ state }: { state: TrainingState }) {
   }
   const max = Math.max(1, ...cells.map((c) => c.n));
   const level = (n: number) => (n === 0 ? 0 : Math.min(4, Math.ceil((n / max) * 4)));
-  const fills = ["oklch(1 0 0 / 0.05)", "oklch(0.68 0.14 242 / 0.3)", "oklch(0.68 0.14 242 / 0.5)", "oklch(0.68 0.14 242 / 0.75)", "oklch(0.68 0.14 242)"];
+  const fills = [
+    "oklch(1 0 0 / 0.05)",
+    "oklch(0.68 0.14 242 / 0.3)",
+    "oklch(0.68 0.14 242 / 0.5)",
+    "oklch(0.68 0.14 242 / 0.75)",
+    "oklch(0.68 0.14 242)",
+  ];
   const S = 13;
   const G = 3;
   const hoverCell = cells.find((c) => c.key === hover);
@@ -424,7 +675,12 @@ function ActivityHeatmap({ state }: { state: TrainingState }) {
   return (
     <div className="panel p-4">
       <div className="overflow-x-auto">
-        <svg width={weeks * (S + G) + 28} height={7 * (S + G) + 18} role="img" aria-label={`Training activity heatmap: ${activeDays} active days in the last 26 weeks`}>
+        <svg
+          width={weeks * (S + G) + 28}
+          height={7 * (S + G) + 18}
+          role="img"
+          aria-label={`Training activity heatmap: ${activeDays} active days in the last 26 weeks`}
+        >
           {["Mon", "Wed", "Fri"].map((d, i) => (
             <text key={d} x={0} y={18 + (i * 2 + 1) * (S + G) + S - 3} fontSize={9} fill={AXIS}>
               {d}
@@ -456,7 +712,11 @@ function ActivityHeatmap({ state }: { state: TrainingState }) {
         </svg>
       </div>
       <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted-foreground">
-        <span>{hoverCell ? `${hoverCell.date.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}: ${hoverCell.n} item${hoverCell.n === 1 ? "" : "s"}` : `${activeDays} active days in the last 26 weeks`}</span>
+        <span>
+          {hoverCell
+            ? `${hoverCell.date.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}: ${hoverCell.n} item${hoverCell.n === 1 ? "" : "s"}`
+            : `${activeDays} active days in the last 26 weeks`}
+        </span>
         <span className="flex items-center gap-1">
           Less
           {fills.map((f, i) => (

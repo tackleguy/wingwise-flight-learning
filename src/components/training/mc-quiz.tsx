@@ -39,7 +39,10 @@ export function McQuiz({
   }, [resetKey]);
 
   const done = questions.length > 0 && questions.every((q) => checked[q.id]);
-  const correct = useMemo(() => questions.filter((q) => checked[q.id] && sel[q.id] === q.answer).length, [questions, checked, sel]);
+  const correct = useMemo(
+    () => questions.filter((q) => checked[q.id] && sel[q.id] === q.answer).length,
+    [questions, checked, sel],
+  );
 
   useEffect(() => {
     if (done && !reported) {
@@ -55,12 +58,22 @@ export function McQuiz({
         const s = sel[q.id];
         const right = isChecked && s === q.answer;
         return (
-          <div key={q.id} className={cn("rounded-md border p-3", isChecked && (right ? "border-ok/40" : "border-warning/40"))}>
+          <div
+            key={q.id}
+            className={cn(
+              "rounded-md border p-3",
+              isChecked && (right ? "border-ok/40" : "border-warning/40"),
+            )}
+          >
             <div className="mb-2 flex gap-2 text-sm font-medium">
               <span className="font-mono text-muted-foreground">{qi + 1}.</span>
               <div className="min-w-0 flex-1">{q.prompt}</div>
             </div>
-            {q.context ? <div className="mb-2 overflow-x-auto rounded bg-panel px-3 py-2 font-mono text-xs leading-relaxed whitespace-pre-wrap text-cyan">{q.context}</div> : null}
+            {q.context ? (
+              <div className="mb-2 overflow-x-auto rounded bg-panel px-3 py-2 font-mono text-xs leading-relaxed whitespace-pre-wrap text-cyan">
+                {q.context}
+              </div>
+            ) : null}
             <div className={cn("grid gap-1.5", compact ? "sm:grid-cols-2" : "")} role="radiogroup">
               {q.choices.map((c, ci) => {
                 const picked = s === ci;
@@ -83,7 +96,9 @@ export function McQuiz({
                       isChecked && !showRight && !showWrong && "opacity-60",
                     )}
                   >
-                    <span className="mt-0.5 font-mono text-xs text-muted-foreground">{String.fromCharCode(65 + ci)}</span>
+                    <span className="mt-0.5 font-mono text-xs text-muted-foreground">
+                      {String.fromCharCode(65 + ci)}
+                    </span>
                     <span className="flex-1">{c}</span>
                     {showRight ? <CheckCircle2 className="size-4 shrink-0 text-ok" /> : null}
                     {showWrong ? <XCircle className="size-4 shrink-0 text-warning" /> : null}
@@ -93,11 +108,19 @@ export function McQuiz({
             </div>
             {isChecked ? (
               <div className="mt-2 text-xs leading-relaxed text-muted-foreground">
-                <span className={cn("font-semibold", right ? "text-ok" : "text-warning")}>{right ? "Correct. " : "Not quite. "}</span>
+                <span className={cn("font-semibold", right ? "text-ok" : "text-warning")}>
+                  {right ? "Correct. " : "Not quite. "}
+                </span>
                 {q.explanation}
               </div>
             ) : (
-              <Button size="sm" variant="outline" className="mt-2" disabled={s === undefined} onClick={() => setChecked((m) => ({ ...m, [q.id]: true }))}>
+              <Button
+                size="sm"
+                variant="outline"
+                className="mt-2"
+                disabled={s === undefined}
+                onClick={() => setChecked((m) => ({ ...m, [q.id]: true }))}
+              >
                 Check answer
               </Button>
             )}
@@ -107,7 +130,20 @@ export function McQuiz({
       <div className="flex items-center justify-between gap-3 rounded-md border bg-muted/30 px-3 py-2 text-sm">
         <span>
           Score: <span className="font-mono font-semibold">{correct}</span> / {questions.length}
-          {done ? <span className={cn("ml-2 font-semibold", correct / questions.length >= 0.8 ? "text-ok" : "text-caution")}>{Math.round((correct / questions.length) * 100)}%</span> : <span className="ml-2 text-muted-foreground">({Object.keys(checked).length} answered)</span>}
+          {done ? (
+            <span
+              className={cn(
+                "ml-2 font-semibold",
+                correct / questions.length >= 0.8 ? "text-ok" : "text-caution",
+              )}
+            >
+              {Math.round((correct / questions.length) * 100)}%
+            </span>
+          ) : (
+            <span className="ml-2 text-muted-foreground">
+              ({Object.keys(checked).length} answered)
+            </span>
+          )}
         </span>
         <Button
           size="sm"

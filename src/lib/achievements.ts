@@ -12,7 +12,8 @@ import type { Module } from "@/lib/content/types";
 import { isWrittenExam, streaks } from "@/lib/metrics";
 import { actions, getState, type TrainingState } from "@/lib/store";
 
-export type AchievementCategory = "Flight" | "Radio" | "Ground School" | "Exams" | "Instrument" | "Avionics" | "Consistency";
+export type AchievementCategory =
+  "Flight" | "Radio" | "Ground School" | "Exams" | "Instrument" | "Avionics" | "Consistency";
 
 export interface Achievement {
   id: string;
@@ -38,17 +39,35 @@ function course(id: string) {
 function findModule(courseId: string, ids: string[], titleRe?: RegExp): Module | undefined {
   const c = course(courseId);
   if (!c) return undefined;
-  return c.modules.find((m) => ids.includes(m.id)) ?? (titleRe ? c.modules.find((m) => titleRe.test(m.title) || titleRe.test(m.id)) : undefined);
+  return (
+    c.modules.find((m) => ids.includes(m.id)) ??
+    (titleRe ? c.modules.find((m) => titleRe.test(m.title) || titleRe.test(m.id)) : undefined)
+  );
 }
 
-function moduleLessonsDone(s: TrainingState, m: Module | undefined): { done: number; total: number } {
+function moduleLessonsDone(
+  s: TrainingState,
+  m: Module | undefined,
+): { done: number; total: number } {
   if (!m) return { done: 0, total: 1 };
-  return { done: m.lessons.filter((l) => s.lessons[l.id]).length, total: Math.max(1, m.lessons.length) };
+  return {
+    done: m.lessons.filter((l) => s.lessons[l.id]).length,
+    total: Math.max(1, m.lessons.length),
+  };
 }
 
-function bestModuleQuizPct(s: TrainingState, courseId: string, moduleId: string | undefined): number {
+function bestModuleQuizPct(
+  s: TrainingState,
+  courseId: string,
+  moduleId: string | undefined,
+): number {
   if (!moduleId) return 0;
-  return Math.max(0, ...s.quizzes.filter((q) => q.course === courseId && q.moduleId === moduleId && q.total > 0).map((q) => (q.score / q.total) * 100));
+  return Math.max(
+    0,
+    ...s.quizzes
+      .filter((q) => q.course === courseId && q.moduleId === moduleId && q.total > 0)
+      .map((q) => (q.score / q.total) * 100),
+  );
 }
 
 function courseLessons(s: TrainingState, courseId: string) {
@@ -57,18 +76,28 @@ function courseLessons(s: TrainingState, courseId: string) {
   return { done: ids.filter((id) => s.lessons[id]).length, total: ids.length };
 }
 
-const flightsWith = (s: TrainingState, pred: (f: TrainingState["flights"][number]) => boolean) => s.flights.filter(pred);
-const bestScenario = (s: TrainingState, id: string) => Math.max(0, ...s.flights.filter((f) => f.scenarioId === id).map((f) => f.score));
+const flightsWith = (s: TrainingState, pred: (f: TrainingState["flights"][number]) => boolean) =>
+  s.flights.filter(pred);
+const bestScenario = (s: TrainingState, id: string) =>
+  Math.max(0, ...s.flights.filter((f) => f.scenarioId === id).map((f) => f.score));
 const count = (current: number, target: number) => ({ current: Math.min(current, target), target });
 
 function ifrFundamentals() {
-  return findModule("ifr", ["fundamentals", "ifr-fundamentals", "instrument-fundamentals", "basics"], /fundamental/i) ?? course("ifr")?.modules[0];
+  return (
+    findModule(
+      "ifr",
+      ["fundamentals", "ifr-fundamentals", "instrument-fundamentals", "basics"],
+      /fundamental/i,
+    ) ?? course("ifr")?.modules[0]
+  );
 }
 function vfrNavModules(): Module[] {
   const c = course("vfr");
   if (!c) return [];
   const out = c.modules.filter((m) => ["pilotage", "dead-reckoning"].includes(m.id));
-  return out.length ? out : c.modules.filter((m) => /pilotage|dead[- ]reckoning/i.test(`${m.id} ${m.title}`));
+  return out.length
+    ? out
+    : c.modules.filter((m) => /pilotage|dead[- ]reckoning/i.test(`${m.id} ${m.title}`));
 }
 
 function atcTop5(s: TrainingState) {
@@ -93,7 +122,12 @@ export const ACHIEVEMENTS: Achievement[] = [
     description: "Log a flight with at least one landing and a landing objective met.",
     icon: "PlaneLanding",
     category: "Flight",
-    check: (s) => s.flights.some((f) => f.landings >= 1 && f.objectives.some((o) => o.met && /land|touchdown|flare/i.test(o.text))),
+    check: (s) =>
+      s.flights.some(
+        (f) =>
+          f.landings >= 1 &&
+          f.objectives.some((o) => o.met && /land|touchdown|flare/i.test(o.text)),
+      ),
   },
   {
     id: "first-xc",
@@ -111,7 +145,11 @@ export const ACHIEVEMENTS: Achievement[] = [
     icon: "Repeat",
     category: "Flight",
     check: (s) => s.flights.reduce((n, f) => n + f.landings, 0) >= 25,
-    progress: (s) => count(s.flights.reduce((n, f) => n + f.landings, 0), 25),
+    progress: (s) =>
+      count(
+        s.flights.reduce((n, f) => n + f.landings, 0),
+        25,
+      ),
   },
   {
     id: "sim-10h",
@@ -136,25 +174,43 @@ export const ACHIEVEMENTS: Achievement[] = [
     description: "Score 70+ on three different emergency scenarios.",
     icon: "Siren",
     category: "Flight",
-    check: (s) => new Set(flightsWith(s, (f) => f.scenarioId.startsWith("emg-") && f.score >= 70).map((f) => f.scenarioId)).size >= 3,
-    progress: (s) => count(new Set(flightsWith(s, (f) => f.scenarioId.startsWith("emg-") && f.score >= 70).map((f) => f.scenarioId)).size, 3),
+    check: (s) =>
+      new Set(
+        flightsWith(s, (f) => f.scenarioId.startsWith("emg-") && f.score >= 70).map(
+          (f) => f.scenarioId,
+        ),
+      ).size >= 3,
+    progress: (s) =>
+      count(
+        new Set(
+          flightsWith(s, (f) => f.scenarioId.startsWith("emg-") && f.score >= 70).map(
+            (f) => f.scenarioId,
+          ),
+        ).size,
+        3,
+      ),
   },
   {
     id: "vfr-navigation",
     title: "VFR Navigation",
-    description: "Complete the Pilotage and Dead Reckoning modules and fly a VFR cross-country scoring 70+.",
+    description:
+      "Complete the Pilotage and Dead Reckoning modules and fly a VFR cross-country scoring 70+.",
     icon: "Compass",
     category: "Ground School",
     check: (s) => {
       const mods = vfrNavModules();
       if (mods.length === 0) return false;
-      const lessonsDone = mods.every((m) => m.lessons.length > 0 && m.lessons.every((l) => s.lessons[l.id]));
+      const lessonsDone = mods.every(
+        (m) => m.lessons.length > 0 && m.lessons.every((l) => s.lessons[l.id]),
+      );
       return lessonsDone && bestScenario(s, "vfr-xc") >= 70;
     },
     progress: (s) => {
       const mods = vfrNavModules();
       const total = mods.reduce((n, m) => n + m.lessons.length, 0) + 1;
-      const done = mods.reduce((n, m) => n + m.lessons.filter((l) => s.lessons[l.id]).length, 0) + (bestScenario(s, "vfr-xc") >= 70 ? 1 : 0);
+      const done =
+        mods.reduce((n, m) => n + m.lessons.filter((l) => s.lessons[l.id]).length, 0) +
+        (bestScenario(s, "vfr-xc") >= 70 ? 1 : 0);
       return count(done, total);
     },
   },
@@ -235,14 +291,20 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: "atc-proficiency",
     title: "ATC Proficiency",
-    description: "Five ATC sessions averaging 80+ (your best five), including at least one advanced or checkride-level session scoring 80+.",
+    description:
+      "Five ATC sessions averaging 80+ (your best five), including at least one advanced or checkride-level session scoring 80+.",
     icon: "Headphones",
     category: "Radio",
     check: (s) => {
       const top = atcTop5(s);
       if (top.length < 5) return false;
       const mean = top.reduce((n, a) => n + a.score, 0) / 5;
-      return mean >= 80 && s.atcSessions.some((a) => (a.difficulty === "advanced" || a.difficulty === "checkride") && a.score >= 80);
+      return (
+        mean >= 80 &&
+        s.atcSessions.some(
+          (a) => (a.difficulty === "advanced" || a.difficulty === "checkride") && a.score >= 80,
+        )
+      );
     },
     progress: (s) => count(atcTop5(s).filter((a) => a.score >= 80).length, 5),
   },
@@ -253,7 +315,11 @@ export const ACHIEVEMENTS: Achievement[] = [
     icon: "Cpu",
     category: "Avionics",
     check: (s) => AVIONICS_TASKS.length > 0 && AVIONICS_TASKS.every((t) => s.avionicsTasks[t.id]),
-    progress: (s) => count(AVIONICS_TASKS.filter((t) => s.avionicsTasks[t.id]).length, Math.max(1, AVIONICS_TASKS.length)),
+    progress: (s) =>
+      count(
+        AVIONICS_TASKS.filter((t) => s.avionicsTasks[t.id]).length,
+        Math.max(1, AVIONICS_TASKS.length),
+      ),
   },
   {
     id: "written-ready",
@@ -261,8 +327,20 @@ export const ACHIEVEMENTS: Achievement[] = [
     description: "Score 80%+ on a full written knowledge exam in timed mode.",
     icon: "FileCheck2",
     category: "Exams",
-    check: (s) => s.exams.some((e) => isWrittenExam(e.examId) && e.mode === "timed" && e.scorePct >= 80),
-    progress: (s) => count(Math.round(Math.max(0, ...s.exams.filter((e) => isWrittenExam(e.examId) && e.mode === "timed").map((e) => e.scorePct))), 80),
+    check: (s) =>
+      s.exams.some((e) => isWrittenExam(e.examId) && e.mode === "timed" && e.scorePct >= 80),
+    progress: (s) =>
+      count(
+        Math.round(
+          Math.max(
+            0,
+            ...s.exams
+              .filter((e) => isWrittenExam(e.examId) && e.mode === "timed")
+              .map((e) => e.scorePct),
+          ),
+        ),
+        80,
+      ),
   },
   {
     id: "perfect-score",
@@ -278,9 +356,21 @@ export const ACHIEVEMENTS: Achievement[] = [
     description: "Score 80%+ on a full Weather Lab decision-scenario session (8+ scenarios).",
     icon: "CloudSun",
     category: "Ground School",
-    check: (s) => s.quizzes.some((q) => q.course === "weather" && q.moduleId === "decisions" && q.total >= 8 && q.score / q.total >= 0.8),
+    check: (s) =>
+      s.quizzes.some(
+        (q) =>
+          q.course === "weather" &&
+          q.moduleId === "decisions" &&
+          q.total >= 8 &&
+          q.score / q.total >= 0.8,
+      ),
     progress: (s) => {
-      const best = Math.max(0, ...s.quizzes.filter((q) => q.course === "weather" && q.moduleId === "decisions" && q.total >= 8).map((q) => Math.round((q.score / q.total) * 100)));
+      const best = Math.max(
+        0,
+        ...s.quizzes
+          .filter((q) => q.course === "weather" && q.moduleId === "decisions" && q.total >= 8)
+          .map((q) => Math.round((q.score / q.total) * 100)),
+      );
       return count(best, 80);
     },
   },
@@ -291,7 +381,13 @@ export const ACHIEVEMENTS: Achievement[] = [
     icon: "Mic",
     category: "Exams",
     check: (s) => s.orals.some((o) => o.level !== "beginner" && o.score >= 70),
-    progress: (s) => count(Math.round(Math.max(0, ...s.orals.filter((o) => o.level !== "beginner").map((o) => o.score))), 70),
+    progress: (s) =>
+      count(
+        Math.round(
+          Math.max(0, ...s.orals.filter((o) => o.level !== "beginner").map((o) => o.score)),
+        ),
+        70,
+      ),
   },
   {
     id: "mock-checkride",
@@ -349,7 +445,10 @@ function safeCheck(a: Achievement, s: TrainingState): boolean {
   }
 }
 
-export function achievementProgress(a: Achievement, s: TrainingState): { current: number; target: number } | null {
+export function achievementProgress(
+  a: Achievement,
+  s: TrainingState,
+): { current: number; target: number } | null {
   if (!a.progress) return null;
   try {
     return a.progress(s);
@@ -371,9 +470,12 @@ export function evaluateAchievements(): string[] {
       void import("sonner")
         .then(({ toast }) => {
           if (newly.length > 3) {
-            toast.success(`${newly.length} achievements unlocked`, { description: newly.map((a) => a.title).join(" · ") });
+            toast.success(`${newly.length} achievements unlocked`, {
+              description: newly.map((a) => a.title).join(" · "),
+            });
           } else {
-            for (const a of newly) toast.success(`Achievement unlocked: ${a.title}`, { description: a.description });
+            for (const a of newly)
+              toast.success(`Achievement unlocked: ${a.title}`, { description: a.description });
           }
         })
         .catch(() => {

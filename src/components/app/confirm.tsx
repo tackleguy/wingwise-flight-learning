@@ -40,7 +40,10 @@ export function ConfirmAction({
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm} className={destructive ? buttonVariants({ variant: "destructive" }) : undefined}>
+          <AlertDialogAction
+            onClick={onConfirm}
+            className={destructive ? buttonVariants({ variant: "destructive" }) : undefined}
+          >
             {confirmLabel}
           </AlertDialogAction>
         </AlertDialogFooter>

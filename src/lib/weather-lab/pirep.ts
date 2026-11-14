@@ -63,9 +63,25 @@ const INTENSITY: Record<string, string> = {
   EXTRM_: "extreme",
 };
 
-const FREQ: Record<string, string> = { OCNL: "occasional", INTMT: "intermittent", CONS: "continuous", CONT: "continuous" };
-const TB_TYPE: Record<string, string> = { CHOP: "chop", CAT: "clear-air turbulence", LLWS: "low-level wind shear", MWAVE: "mountain wave" };
-const IC_TYPE: Record<string, string> = { RIME: "rime", CLR: "clear", CLEAR: "clear", MX: "mixed", MXD: "mixed" };
+const FREQ: Record<string, string> = {
+  OCNL: "occasional",
+  INTMT: "intermittent",
+  CONS: "continuous",
+  CONT: "continuous",
+};
+const TB_TYPE: Record<string, string> = {
+  CHOP: "chop",
+  CAT: "clear-air turbulence",
+  LLWS: "low-level wind shear",
+  MWAVE: "mountain wave",
+};
+const IC_TYPE: Record<string, string> = {
+  RIME: "rime",
+  CLR: "clear",
+  CLEAR: "clear",
+  MX: "mixed",
+  MXD: "mixed",
+};
 
 const ft = (hundreds: string) => `${(Number(hundreds) * 100).toLocaleString("en-US")} ft MSL`;
 
@@ -116,13 +132,18 @@ function decodeFL(v: string): { text: string; warn?: boolean } {
 }
 
 function decodeSK(v: string): string {
-  const layers = v.split(/[/,]/).map((x) => x.trim()).filter(Boolean);
+  const layers = v
+    .split(/[/,]/)
+    .map((x) => x.trim())
+    .filter(Boolean);
   const out = layers.map((l) => {
     let txt = "";
     const tokens = l.split(/\s+/);
     for (const t of tokens) {
       const top = /^TOPS?(\d{3})$/.exec(t);
-      const m = top ? null : /^([A-Z]{3})(?:-([A-Z]{3}))?(\d{3}|UNKN)?(?:-TOP(\d{3}|UNKN))?$/.exec(t);
+      const m = top
+        ? null
+        : /^([A-Z]{3})(?:-([A-Z]{3}))?(\d{3}|UNKN)?(?:-TOP(\d{3}|UNKN))?$/.exec(t);
       if (m && COVER[m[1] ?? ""]) {
         const cov = m[2] ? `${COVER[m[1] ?? ""]} to ${COVER[m[2]] ?? m[2]}` : COVER[m[1] ?? ""];
         txt += `${cov?.[0]?.toUpperCase()}${cov?.slice(1)}`;
@@ -176,7 +197,10 @@ function decodeWV(v: string): string {
 }
 
 function decodeTB(v: string): { text: string; warn: boolean } {
-  const segs = v.split("/").map((s) => s.trim()).filter(Boolean);
+  const segs = v
+    .split("/")
+    .map((s) => s.trim())
+    .filter(Boolean);
   let warn = false;
   const texts = segs.map((seg) => {
     const toks = seg.split(/\s+/);
@@ -212,7 +236,9 @@ function decodeIC(v: string): { text: string; warn: boolean } {
     else alts.push(t);
   }
   const a = altRange(alts);
-  const s = `${words.join(" ")}${words.length && !words.includes("none (negative)") ? " icing" : ""}${a ? ` ${a}` : ""}`.trim() || v;
+  const s =
+    `${words.join(" ")}${words.length && !words.includes("none (negative)") ? " icing" : ""}${a ? ` ${a}` : ""}`.trim() ||
+    v;
   return { text: `${s[0]?.toUpperCase() ?? ""}${s.slice(1)}`, warn };
 }
 
@@ -224,13 +250,17 @@ export function parsePirep(raw: string): Pirep {
   const head = /^(?:([A-Z0-9]{3,4})\s+)?(UUA|UA)\b/.exec(text);
   const urgent = head?.[2] === "UUA";
   const station = head?.[1] ?? null;
-  if (!head) errors.push('A PIREP starts with "UA" (routine) or "UUA" (urgent), optionally preceded by the station identifier.');
+  if (!head)
+    errors.push(
+      'A PIREP starts with "UA" (routine) or "UUA" (urgent), optionally preceded by the station identifier.',
+    );
   const body = head ? text.slice(head[0].length) : text;
   // Split at "/XX" where XX is a field code (FL may be followed directly by digits).
   const re = /\/\s*(OV|TM|FL|TP|SK|WX|TA|WV|TB|IC|RM)(?=\s|\d|UNKN|DUR|$)/g;
   const marks: { code: string; start: number; end: number }[] = [];
   let m: RegExpExecArray | null;
-  while ((m = re.exec(body))) marks.push({ code: m[1] ?? "", start: m.index, end: m.index + m[0].length });
+  while ((m = re.exec(body)))
+    marks.push({ code: m[1] ?? "", start: m.index, end: m.index + m[0].length });
   const fields: PirepField[] = [];
   marks.forEach((mk, i) => {
     const next = marks[i + 1];
@@ -244,7 +274,9 @@ export function parsePirep(raw: string): Pirep {
         t = decodeOV(value);
         break;
       case "TM":
-        t = /^\d{4}$/.test(value) ? `${value.slice(0, 2)}:${value.slice(2)} UTC (${value}Z)` : value;
+        t = /^\d{4}$/.test(value)
+          ? `${value.slice(0, 2)}:${value.slice(2)} UTC (${value}Z)`
+          : value;
         break;
       case "FL":
         t = decodeFL(value).text;
@@ -281,33 +313,80 @@ export function parsePirep(raw: string): Pirep {
     }
     fields.push({ code: mk.code, label, raw: rawField, text: t, warn });
   });
-  for (const req of ["OV", "TM", "FL", "TP"]) if (head && !fields.some((f) => f.code === req)) errors.push(`Required field /${req} (${FIELD_LABEL[req]}) is missing.`);
-  if (head && fields.length && !fields.some((f) => !["OV", "TM", "FL", "TP"].includes(f.code))) errors.push("A PIREP must report at least one weather element (/SK, /WX, /TA, /WV, /TB, /IC).");
+  for (const req of ["OV", "TM", "FL", "TP"])
+    if (head && !fields.some((f) => f.code === req))
+      errors.push(`Required field /${req} (${FIELD_LABEL[req]}) is missing.`);
+  if (head && fields.length && !fields.some((f) => !["OV", "TM", "FL", "TP"].includes(f.code)))
+    errors.push("A PIREP must report at least one weather element (/SK, /WX, /TA, /WV, /TB, /IC).");
 
   const get = (c: string) => fields.find((f) => f.code === c)?.text;
   const parts = [
     `${urgent ? "URGENT pilot report" : "Routine pilot report"}${station ? ` (filed through ${station})` : ""}`,
     get("TP") ? `by the crew of a ${get("TP")?.replace(" (ICAO type designator)", "")}` : "",
-    get("OV") ? (get("OV")?.startsWith("Over") ? `over${get("OV")?.slice(4)}` : `at ${get("OV")}`) : "",
-    get("FL") ? (/^During|unknown/i.test(get("FL") ?? "") ? (get("FL") ?? "").toLowerCase() : `at ${get("FL")}`) : "",
+    get("OV")
+      ? get("OV")?.startsWith("Over")
+        ? `over${get("OV")?.slice(4)}`
+        : `at ${get("OV")}`
+      : "",
+    get("FL")
+      ? /^During|unknown/i.test(get("FL") ?? "")
+        ? (get("FL") ?? "").toLowerCase()
+        : `at ${get("FL")}`
+      : "",
     get("TM") ? `at ${get("TM")?.split(" (")[0]}` : "",
   ].filter(Boolean);
   return { raw, station, urgent, fields, errors, summary: `${parts.join(", ")}.` };
 }
 
 export const PIREP_FIELD_HELP: { code: string; label: string; help: string }[] = [
-  { code: "UA / UUA", label: "Report type", help: "UA = routine. UUA = urgent: tornado/funnel cloud/waterspout, severe or extreme turbulence (incl. CAT), severe icing, hail, LLWS within 2,000 ft AGL, volcanic ash, or anything the specialist considers hazardous." },
-  { code: "/OV", label: "Location", help: "Navaid/airport identifier, often with radial and DME distance: OAK270015 = 15 nm on the 270° radial from OAK." },
+  {
+    code: "UA / UUA",
+    label: "Report type",
+    help: "UA = routine. UUA = urgent: tornado/funnel cloud/waterspout, severe or extreme turbulence (incl. CAT), severe icing, hail, LLWS within 2,000 ft AGL, volcanic ash, or anything the specialist considers hazardous.",
+  },
+  {
+    code: "/OV",
+    label: "Location",
+    help: "Navaid/airport identifier, often with radial and DME distance: OAK270015 = 15 nm on the 270° radial from OAK.",
+  },
   { code: "/TM", label: "Time", help: "UTC time of the observation, HHMM." },
-  { code: "/FL", label: "Altitude", help: "Altitude MSL in hundreds of feet (FL085 = 8,500 ft), or DURC/DURD (during climb/descent), UNKN." },
-  { code: "/TP", label: "Aircraft type", help: "ICAO type designator — important for judging turbulence/icing reports (a C172 vs. a B738)." },
-  { code: "/SK", label: "Sky cover", help: "Cover, base and tops in hundreds of feet MSL: BKN030-TOP055." },
-  { code: "/WX", label: "Weather", help: "Flight visibility (FV05SM) and weather using METAR codes (HZ, -RA, TS…)." },
+  {
+    code: "/FL",
+    label: "Altitude",
+    help: "Altitude MSL in hundreds of feet (FL085 = 8,500 ft), or DURC/DURD (during climb/descent), UNKN.",
+  },
+  {
+    code: "/TP",
+    label: "Aircraft type",
+    help: "ICAO type designator — important for judging turbulence/icing reports (a C172 vs. a B738).",
+  },
+  {
+    code: "/SK",
+    label: "Sky cover",
+    help: "Cover, base and tops in hundreds of feet MSL: BKN030-TOP055.",
+  },
+  {
+    code: "/WX",
+    label: "Weather",
+    help: "Flight visibility (FV05SM) and weather using METAR codes (HZ, -RA, TS…).",
+  },
   { code: "/TA", label: "Temperature", help: "Outside air temperature °C; M = minus." },
   { code: "/WV", label: "Wind", help: "Direction (three digits) and speed: 27045KT." },
-  { code: "/TB", label: "Turbulence", help: "Intensity (LGT, MOD, SEV, EXTRM), type (CHOP, CAT, LLWS), frequency (OCNL, INTMT, CONS) and altitudes." },
-  { code: "/IC", label: "Icing", help: "Intensity (TRACE, LGT, MOD, SEV), type (RIME, CLR, MX) and altitudes." },
-  { code: "/RM", label: "Remarks", help: "Free text — e.g. 'SMOOTH ABV 090', 'LLWS -15KT SFC-008 DURC RWY 28'." },
+  {
+    code: "/TB",
+    label: "Turbulence",
+    help: "Intensity (LGT, MOD, SEV, EXTRM), type (CHOP, CAT, LLWS), frequency (OCNL, INTMT, CONS) and altitudes.",
+  },
+  {
+    code: "/IC",
+    label: "Icing",
+    help: "Intensity (TRACE, LGT, MOD, SEV), type (RIME, CLR, MX) and altitudes.",
+  },
+  {
+    code: "/RM",
+    label: "Remarks",
+    help: "Free text — e.g. 'SMOOTH ABV 090', 'LLWS -15KT SFC-008 DURC RWY 28'.",
+  },
 ];
 
 export const PIREP_EXAMPLES = [

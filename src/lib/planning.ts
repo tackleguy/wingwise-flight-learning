@@ -92,7 +92,8 @@ export function computePlan(input: PlanInput): PlanResult {
       cumNm,
       impossible,
     };
-    if (dep && !Number.isNaN(dep.getTime())) leg.eta = new Date(dep.getTime() + cumMin * 60000).toISOString();
+    if (dep && !Number.isNaN(dep.getTime()))
+      leg.eta = new Date(dep.getTime() + cumMin * 60000).toISOString();
     legs.push(leg);
   }
   return {
@@ -106,7 +107,10 @@ export function computePlan(input: PlanInput): PlanResult {
 }
 
 /** Point at a fraction (0–1) of total route distance. */
-export function pointAlongRoute(result: PlanResult, frac: number): { lat: number; lon: number; legIndex: number; distFromStartNm: number } | undefined {
+export function pointAlongRoute(
+  result: PlanResult,
+  frac: number,
+): { lat: number; lon: number; legIndex: number; distFromStartNm: number } | undefined {
   if (result.legs.length === 0) return undefined;
   const target = Math.max(0, Math.min(1, frac)) * result.totalNm;
   let acc = 0;
@@ -137,18 +141,41 @@ export interface AltitudeCheck {
  * IFR — 14 CFR 91.179: 0–179° → odd thousands; 180–359° → even thousands
  * (this odd/even convention continues through RVSM airspace up to FL410).
  */
-export function checkCruiseAltitude(rules: "VFR" | "IFR", altMsl: number, magCourse: number, groundElevFt: number): AltitudeCheck {
+export function checkCruiseAltitude(
+  rules: "VFR" | "IFR",
+  altMsl: number,
+  magCourse: number,
+  groundElevFt: number,
+): AltitudeCheck {
   const east = norm360(magCourse) < 180;
-  const dirText = east ? `eastbound (magnetic course ${Math.round(norm360(magCourse))}°, 0–179°)` : `westbound (magnetic course ${Math.round(norm360(magCourse))}°, 180–359°)`;
+  const dirText = east
+    ? `eastbound (magnetic course ${Math.round(norm360(magCourse))}°, 0–179°)`
+    : `westbound (magnetic course ${Math.round(norm360(magCourse))}°, 180–359°)`;
   if (rules === "VFR") {
-    if (altMsl >= 18000) return { ok: false, applies: true, message: "VFR flight is not permitted in Class A airspace (18,000 ft MSL and above).", suggestion: east ? 17500 : 16500 };
+    if (altMsl >= 18000)
+      return {
+        ok: false,
+        applies: true,
+        message: "VFR flight is not permitted in Class A airspace (18,000 ft MSL and above).",
+        suggestion: east ? 17500 : 16500,
+      };
     if (altMsl - groundElevFt <= 3000)
-      return { ok: true, applies: false, message: `At or below 3,000 ft AGL the VFR hemispheric rule (91.159) does not apply. Any altitude that meets 91.119 minimum safe altitudes and airspace rules is acceptable.` };
+      return {
+        ok: true,
+        applies: false,
+        message: `At or below 3,000 ft AGL the VFR hemispheric rule (91.159) does not apply. Any altitude that meets 91.119 minimum safe altitudes and airspace rules is acceptable.`,
+      };
     const thousands = Math.floor(altMsl / 1000);
     const hasFive = altMsl % 1000 === 500;
     const parityOk = east ? thousands % 2 === 1 : thousands % 2 === 0;
     const ok = hasFive && parityOk;
-    const suggest = nearestValid(altMsl, (a) => a % 1000 === 500 && (east ? Math.floor(a / 1000) % 2 === 1 : Math.floor(a / 1000) % 2 === 0) && a - groundElevFt > 3000);
+    const suggest = nearestValid(
+      altMsl,
+      (a) =>
+        a % 1000 === 500 &&
+        (east ? Math.floor(a / 1000) % 2 === 1 : Math.floor(a / 1000) % 2 === 0) &&
+        a - groundElevFt > 3000,
+    );
     return {
       ok,
       applies: true,
@@ -161,12 +188,17 @@ export function checkCruiseAltitude(rules: "VFR" | "IFR", altMsl: number, magCou
   // IFR above FL410 (non-RVSM): eastbound FL450, 490…; westbound FL430, 470, 510…
   if (altMsl > 41000) {
     const fl = Math.round(altMsl / 100);
-    const okHi = (a: number) => a > 41000 && a % 1000 === 0 && (east ? (a / 100 - 450) % 40 === 0 : (a / 100 - 430) % 40 === 0);
+    const okHi = (a: number) =>
+      a > 41000 &&
+      a % 1000 === 0 &&
+      (east ? (a / 100 - 450) % 40 === 0 : (a / 100 - 430) % 40 === 0);
     const suggest = nearestValid(altMsl, okHi);
     return {
       ok: okHi(altMsl),
       applies: true,
-      message: okHi(altMsl) ? `FL${fl} is correct for IFR ${dirText} above FL410.` : `Above FL410, IFR ${east ? "eastbound uses FL450, 490…" : "westbound uses FL430, 470, 510…"}. Try FL${Math.round(suggest / 100)}.`,
+      message: okHi(altMsl)
+        ? `FL${fl} is correct for IFR ${dirText} above FL410.`
+        : `Above FL410, IFR ${east ? "eastbound uses FL450, 490…" : "westbound uses FL430, 470, 510…"}. Try FL${Math.round(suggest / 100)}.`,
       suggestion: suggest,
     };
   }
@@ -174,7 +206,10 @@ export function checkCruiseAltitude(rules: "VFR" | "IFR", altMsl: number, magCou
   const whole = altMsl % 1000 === 0;
   const parityOk = east ? thousands % 2 === 1 : thousands % 2 === 0;
   const ok = whole && parityOk;
-  const suggest = nearestValid(altMsl, (a) => a % 1000 === 0 && (east ? (a / 1000) % 2 === 1 : (a / 1000) % 2 === 0));
+  const suggest = nearestValid(
+    altMsl,
+    (a) => a % 1000 === 0 && (east ? (a / 1000) % 2 === 1 : (a / 1000) % 2 === 0),
+  );
   return {
     ok,
     applies: true,
@@ -240,7 +275,13 @@ export function fuelRequirement(opts: {
 }
 
 export function perfDefaults(p: AircraftPerf) {
-  return { tas: p.cruiseKtas, burn: p.fuelBurnCruiseGph, alt: p.cruiseAltFt, fuel: p.usableFuelGal, taxi: Math.round(p.fuelBurnFullGph * 0.1 * 10) / 10 };
+  return {
+    tas: p.cruiseKtas,
+    burn: p.fuelBurnCruiseGph,
+    alt: p.cruiseAltFt,
+    fuel: p.usableFuelGal,
+    taxi: Math.round(p.fuelBurnFullGph * 0.1 * 10) / 10,
+  };
 }
 
 export function fmtMin(min: number): string {

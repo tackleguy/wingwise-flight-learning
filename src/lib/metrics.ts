@@ -72,20 +72,23 @@ function avg(xs: number[]): number {
 /** Safe wrappers around the content index (content may still be loading/empty). */
 function safeLessonIds(courseId?: string): string[] {
   try {
-    return (courseId ? allLessons(courseId as never) : allLessons()).map((l) => l.id);
+    return allLessons(courseId).map((l) => l.lesson.id);
   } catch {
     return [];
   }
 }
 function safeLessonCount(courseId?: string): number {
   try {
-    return courseId ? lessonCount(courseId as never) : lessonCount();
+    return lessonCount(courseId);
   } catch {
     return 0;
   }
 }
 
-export function courseLessonProgress(state: TrainingState, courseId: string): { done: number; total: number; pct: number } {
+export function courseLessonProgress(
+  state: TrainingState,
+  courseId: string,
+): { done: number; total: number; pct: number } {
   const ids = safeLessonIds(courseId);
   const total = ids.length || safeLessonCount(courseId);
   const done = ids.filter((id) => state.lessons[id]).length;
@@ -97,7 +100,8 @@ export function moduleQuizAverage(state: TrainingState, courseId: string): numbe
   const course = COURSES.find((c) => c.id === courseId);
   const quizzes = state.quizzes.filter((q) => q.course === courseId);
   const best = new Map<string, number>();
-  for (const q of quizzes) best.set(q.moduleId, Math.max(best.get(q.moduleId) ?? 0, pct(q.score, q.total)));
+  for (const q of quizzes)
+    best.set(q.moduleId, Math.max(best.get(q.moduleId) ?? 0, pct(q.score, q.total)));
   if (course && course.modules.length) return avg(course.modules.map((m) => best.get(m.id) ?? 0));
   return best.size ? avg([...best.values()]) : 0;
 }
@@ -145,7 +149,10 @@ export function dayKey(d: Date): string {
 }
 
 /** Longest and current streaks of consecutive active days. */
-export function streaks(state: TrainingState, now = new Date()): { current: number; longest: number } {
+export function streaks(
+  state: TrainingState,
+  now = new Date(),
+): { current: number; longest: number } {
   const days = activityDays(state);
   if (days.size === 0) return { current: 0, longest: 0 };
   const sorted = [...days.keys()].sort();
@@ -185,7 +192,8 @@ export interface LadderLevel {
 
 type BaseMetrics = Omit<Metrics, "trainingLevel">;
 
-const bestExam = (s: TrainingState, id: string) => Math.max(0, ...s.exams.filter((e) => e.examId === id).map((e) => e.scorePct));
+const bestExam = (s: TrainingState, id: string) =>
+  Math.max(0, ...s.exams.filter((e) => e.examId === id).map((e) => e.scorePct));
 const ratio = (v: number, target: number) => Math.max(0, Math.min(1, target > 0 ? v / target : 0));
 
 export const TRAINING_LADDER: LadderLevel[] = [
@@ -195,7 +203,10 @@ export const TRAINING_LADDER: LadderLevel[] = [
     description: "Building basic knowledge and first simulator flights.",
     requirements: [
       { label: "Complete 5 lessons", progress: (_s, m) => ratio(m.lessonsDone, 5) },
-      { label: "Fly a simulator flight scoring 60+", progress: (s) => (s.flights.some((f) => f.score >= 60) ? 1 : 0) },
+      {
+        label: "Fly a simulator flight scoring 60+",
+        progress: (s) => (s.flights.some((f) => f.score >= 60) ? 1 : 0),
+      },
     ],
   },
   {
@@ -204,7 +215,10 @@ export const TRAINING_LADDER: LadderLevel[] = [
     requirements: [
       { label: "VFR proficiency 25%", progress: (_s, m) => ratio(m.vfrProficiency, 25) },
       { label: "Log 5 simulated landings", progress: (_s, m) => ratio(m.landings, 5) },
-      { label: "First ATC session scoring 60+", progress: (s) => (s.atcSessions.some((a) => a.score >= 60) ? 1 : 0) },
+      {
+        label: "First ATC session scoring 60+",
+        progress: (s) => (s.atcSessions.some((a) => a.score >= 60) ? 1 : 0),
+      },
     ],
   },
   {
@@ -212,7 +226,11 @@ export const TRAINING_LADDER: LadderLevel[] = [
     description: "Navigating between airports.",
     requirements: [
       { label: "VFR proficiency 45%", progress: (_s, m) => ratio(m.vfrProficiency, 45) },
-      { label: "VFR cross-country flight scoring 70+", progress: (s) => (s.flights.some((f) => f.scenarioId === "vfr-xc" && f.score >= 70) ? 1 : 0) },
+      {
+        label: "VFR cross-country flight scoring 70+",
+        progress: (s) =>
+          s.flights.some((f) => f.scenarioId === "vfr-xc" && f.score >= 70) ? 1 : 0,
+      },
       { label: "Save a flight plan", progress: (s) => (s.flightPlans.length > 0 ? 1 : 0) },
     ],
   },
@@ -230,7 +248,10 @@ export const TRAINING_LADDER: LadderLevel[] = [
     description: "Learning to fly by reference to instruments.",
     requirements: [
       { label: "IFR proficiency 25%", progress: (_s, m) => ratio(m.ifrProficiency, 25) },
-      { label: "Fly an IFR scenario scoring 60+", progress: (s) => (s.flights.some((f) => f.kind === "ifr" && f.score >= 60) ? 1 : 0) },
+      {
+        label: "Fly an IFR scenario scoring 60+",
+        progress: (s) => (s.flights.some((f) => f.kind === "ifr" && f.score >= 60) ? 1 : 0),
+      },
     ],
   },
   {
@@ -239,7 +260,11 @@ export const TRAINING_LADDER: LadderLevel[] = [
     requirements: [
       { label: "IFR proficiency 70%", progress: (_s, m) => ratio(m.ifrProficiency, 70) },
       { label: "Instrument written (IRA) 70%+", progress: (s) => ratio(bestExam(s, "ira"), 70) },
-      { label: "ILS approach flown scoring 80+", progress: (s) => (s.flights.some((f) => f.scenarioId === "ifr-ils" && f.score >= 80) ? 1 : 0) },
+      {
+        label: "ILS approach flown scoring 80+",
+        progress: (s) =>
+          s.flights.some((f) => f.scenarioId === "ifr-ils" && f.score >= 80) ? 1 : 0,
+      },
     ],
   },
   {
@@ -247,7 +272,10 @@ export const TRAINING_LADDER: LadderLevel[] = [
     description: "Advanced knowledge and consistent performance.",
     requirements: [
       { label: "Commercial written (CAX) 70%+", progress: (s) => ratio(bestExam(s, "cax"), 70) },
-      { label: "Pass a mock checkride", progress: (s) => (s.checkrides.some((c) => c.completed && c.passed) ? 1 : 0) },
+      {
+        label: "Pass a mock checkride",
+        progress: (s) => (s.checkrides.some((c) => c.completed && c.passed) ? 1 : 0),
+      },
       { label: "10 simulated hours", progress: (_s, m) => ratio(m.simHours, 10) },
     ],
   },
@@ -272,14 +300,22 @@ export interface Metrics {
 export function computeMetrics(state: TrainingState): Metrics {
   const allIds = safeLessonIds();
   const lessonsTotal = allIds.length || safeLessonCount();
-  const lessonsDone = allIds.length ? allIds.filter((id) => state.lessons[id]).length : Object.keys(state.lessons).length;
+  const lessonsDone = allIds.length
+    ? allIds.filter((id) => state.lessons[id]).length
+    : Object.keys(state.lessons).length;
 
   const atc = newestFirst(state.atcSessions).map((a) => ({ v: a.score }));
   const avionicsDone = AVIONICS_TASKS.filter((t) => state.avionicsTasks[t.id]).length;
-  const avionicsCompletion = AVIONICS_TASKS.length > 0 ? (avionicsDone / AVIONICS_TASKS.length) * 100 : 0;
-  const written = writtenAttempts(state).map((e) => ({ v: e.scorePct, w: e.mode === "study" ? 0.5 : 1 }));
+  const avionicsCompletion =
+    AVIONICS_TASKS.length > 0 ? (avionicsDone / AVIONICS_TASKS.length) * 100 : 0;
+  const written = writtenAttempts(state).map((e) => ({
+    v: e.scorePct,
+    w: e.mode === "study" ? 0.5 : 1,
+  }));
   const orals = newestFirst(state.orals).map((o) => ({ v: o.score }));
-  const rides = newestFirst(state.checkrides.filter((c) => c.completed)).map((c) => ({ v: c.overall }));
+  const rides = newestFirst(state.checkrides.filter((c) => c.completed)).map((c) => ({
+    v: c.overall,
+  }));
 
   const base: BaseMetrics = {
     simHours: state.flights.reduce((s, f) => s + f.durationSec, 0) / 3600,
@@ -290,7 +326,9 @@ export function computeMetrics(state: TrainingState): Metrics {
     vfrProficiency: Math.round(courseProficiency(state, "vfr")),
     ifrProficiency: Math.round(courseProficiency(state, "ifr")),
     atcScore: Math.round(clamp100(recencyWeighted(atc, 5))),
-    avionicsProficiency: Math.round(clamp100(0.7 * avionicsCompletion + 0.3 * lastFlightsAvg(state.flights, "avionics"))),
+    avionicsProficiency: Math.round(
+      clamp100(0.7 * avionicsCompletion + 0.3 * lastFlightsAvg(state.flights, "avionics")),
+    ),
     writtenReadiness: Math.round(clamp100(recencyWeighted(written, 5))),
     oralScore: Math.round(clamp100(recencyWeighted(orals, 5))),
     checkrideScore: Math.round(clamp100(recencyWeighted(rides, 3))),
@@ -301,7 +339,10 @@ export function computeMetrics(state: TrainingState): Metrics {
 
 export function ladderProgress(state: TrainingState, base: BaseMetrics) {
   return TRAINING_LADDER.map((lvl) => {
-    const reqs = lvl.requirements.map((r) => ({ label: r.label, progress: safeProgress(() => r.progress(state, base)) }));
+    const reqs = lvl.requirements.map((r) => ({
+      label: r.label,
+      progress: safeProgress(() => r.progress(state, base)),
+    }));
     return { ...lvl, reqs, met: reqs.every((r) => r.progress >= 1) };
   });
 }
@@ -325,11 +366,18 @@ function trainingLevel(state: TrainingState, base: BaseMetrics): Metrics["traini
   const cur = lp[level];
   const next = lp[level + 1];
   const p = next ? avg(next.reqs.map((r) => r.progress)) * 100 : 100;
-  return { label: cur?.label ?? "Ground Student", level, nextLabel: next?.label ?? "Top level reached", pct: Math.round(p) };
+  return {
+    label: cur?.label ?? "Ground Student",
+    level,
+    nextLabel: next?.label ?? "Top level reached",
+    pct: Math.round(p),
+  };
 }
 
 /** Aggregate exam performance by subject across all exam attempts. */
-export function subjectStrengths(state: TrainingState): { subject: string; correct: number; total: number; pct: number; attempts: number }[] {
+export function subjectStrengths(
+  state: TrainingState,
+): { subject: string; correct: number; total: number; pct: number; attempts: number }[] {
   const m = new Map<string, { correct: number; total: number; attempts: number }>();
   for (const e of state.exams) {
     for (const [subject, v] of Object.entries(e.bySubject)) {
