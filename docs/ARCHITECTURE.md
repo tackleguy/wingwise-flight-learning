@@ -70,14 +70,21 @@ Postgres backend (Lovable Cloud) without changing the UI.
 
 All user tables use row-level security: `user_id = auth.uid()`.
 
-## AI services
+## AI services (all local)
 
-AI ATC, the AI Instructor and the Oral Examiner call `aiChat()` in `src/lib/ai/client.ts`. Providers:
+AI ATC, the AI Instructor and the Oral Examiner call `aiChat()` in `src/lib/ai/client.ts`. There is no
+server-side AI and no API key. Providers:
 
-1. **Cloud** — Lovable AI Gateway, called from a server function with `LOVABLE_API_KEY` (never exposed to the browser).
-2. **Local server model** — any OpenAI-compatible endpoint configured on the server (`LOCAL_AI_BASE_URL`, `LOCAL_AI_MODEL`).
-3. **Local model in the browser** — an OpenAI-compatible endpoint on the user's own computer (e.g. Ollama), configured in Settings.
-4. **Scripted fallback** — every AI feature has a rule-based mode, so the platform works with no AI configured.
+1. **On-device (default)** — `src/lib/ai/local-model.ts` runs Llama 3.2 3B with WebLLM in a Web Worker
+   (`model.worker.ts`) on the user's GPU. The model downloads only after the user turns it on and is
+   cached by the browser (`model-cache.ts` retries interrupted downloads). Once enabled it auto-starts
+   from cache on later visits. Requests are serialised and time out after 90 s.
+2. **User's own local model server** — an OpenAI-compatible URL on the user's computer (e.g. Ollama),
+   called directly from the browser.
+3. **Scripted fallback** — every AI feature has a rule-based mode, used whenever the model is off,
+   unsupported (no WebGPU), loading or busy.
+
+Guardrail system prompts (`guardrails.ts`) are prepended to every request on every provider.
 
 ## Honesty rules built into the product
 

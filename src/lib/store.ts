@@ -231,8 +231,15 @@ export interface Settings {
     difficulty: "beginner" | "intermediate" | "advanced";
   };
   ai: {
-    /** Which provider the client asks for. The server decides what is actually configured. */
-    provider: "auto" | "cloud" | "local-server" | "local-browser" | "scripted";
+    /**
+     * All AI is local:
+     *   "on-device"     — model runs in this browser on the GPU (WebLLM), default
+     *   "local-browser" — the user's own OpenAI-compatible model server (e.g. Ollama on their computer)
+     *   "scripted"      — no AI; rule-based training mode
+     */
+    provider: "on-device" | "local-browser" | "scripted";
+    /** Set once the user has turned the on-device model on; it then starts automatically from cache. */
+    onDeviceEnabled: boolean;
     /** OpenAI-compatible endpoint reachable from the browser, e.g. http://localhost:11434/v1 (Ollama). No keys stored. */
     localBrowserUrl: string;
     localBrowserModel: string;
@@ -279,7 +286,8 @@ export const DEFAULT_SETTINGS: Settings = {
   notifications: { studyReminders: true, achievementToasts: true },
   training: { dailyGoalMin: 30, showHints: true, difficulty: "beginner" },
   ai: {
-    provider: "auto",
+    provider: "on-device",
+    onDeviceEnabled: false,
     localBrowserUrl: "http://localhost:11434/v1",
     localBrowserModel: "llama3.1",
   },
@@ -310,6 +318,14 @@ let state: TrainingState = INITIAL_STATE;
 let loaded = false;
 const listeners = new Set<() => void>();
 
+/** Older saves may name cloud/server providers that no longer exist — everything is local now. */
+function normalizeAi(ai: Settings["ai"]): Settings["ai"] {
+  const p = ai.provider as string;
+  const provider: Settings["ai"]["provider"] =
+    p === "local-browser" || p === "scripted" ? p : "on-device";
+  return { ...ai, provider, onDeviceEnabled: !!ai.onDeviceEnabled };
+}
+
 function deepMergeSettings(s: Partial<Settings> | undefined): Settings {
   const d = DEFAULT_SETTINGS;
   if (!s) return d;
@@ -322,7 +338,7 @@ function deepMergeSettings(s: Partial<Settings> | undefined): Settings {
     accessibility: { ...d.accessibility, ...(s.accessibility ?? {}) },
     notifications: { ...d.notifications, ...(s.notifications ?? {}) },
     training: { ...d.training, ...(s.training ?? {}) },
-    ai: { ...d.ai, ...(s.ai ?? {}) },
+    ai: normalizeAi({ ...d.ai, ...(s.ai ?? {}) }),
   };
 }
 

@@ -1,23 +1,31 @@
 /**
- * Client-side AI entry point used by AI ATC, the AI Instructor and the Oral Examiner.
+ * Client entry point used by AI ATC, the AI Instructor and the Oral Examiner.
+ *
+ * ALL AI ON TEACHX IS LOCAL — nothing is sent to a cloud AI service and no API keys exist.
  *
  * Contract (do not change the signatures — several features depend on them):
  *   aiChat(req)      -> { ok: true, text, provider } | { ok: false, reason }
- *   getAiStatus()    -> which providers are available
+ *   getAiStatus()    -> which local provider is active
  *
  * When ok === false, callers MUST fall back to their scripted/rubric logic, so every feature
- * works without any AI configured.
+ * works without any AI.
  *
- * Routing (Settings → AI provider, `settings.ai.provider`):
+ * Providers (Settings → AI, `settings.ai.provider`):
+ *   "on-device"     model runs in this browser on the GPU via WebLLM (default; explicit one-time download)
+ *   "local-browser" the user's own OpenAI-compatible server on their computer (e.g. Ollama), no key
  *   "scripted"      never calls a model
- *   "cloud"         server → Lovable AI Gateway (LOVABLE_API_KEY stays on the server)
- *   "local-server"  server → OpenAI-compatible endpoint from LOCAL_AI_BASE_URL
- *   "local-browser" browser → the user's own OpenAI-compatible URL (e.g. Ollama on localhost), no key
- *   "auto"          server (cloud, then local-server) → local-browser if reachable → ok:false
  */
-import { getState } from "@/lib/store";
-import { aiChatFn, aiStatusFn } from "./ai.functions";
+import { actions, getState } from "@/lib/store";
 import { guardedSystem, stripReasoning } from "./guardrails";
+import {
+  getLocalModelState,
+  isModelCached,
+  loadLocalModel,
+  localChat,
+  localModelReady,
+  webGpuAvailable,
+  type LocalModelStatus,
+} from "./local-model";
 
 export type AiService = "atc" | "instructor" | "oral" | "scenario" | "evaluate";
 
@@ -39,21 +47,22 @@ export type AiChatResult =
   { ok: true; text: string; provider: string } | { ok: false; reason: string };
 
 export interface AiStatus {
-  cloud: boolean;
-  localServer: boolean;
+  /** On-device (WebLLM) model state */
+  onDevice: LocalModelStatus;
+  /** Browser supports WebGPU */
+  webgpu: boolean;
+  /** User's own local model server reachable (only checked when selected) */
   localBrowser: boolean;
-  active: "cloud" | "local-server" | "local-browser" | "scripted";
+  active: "on-device" | "local-browser" | "scripted";
 }
 
 export const AI_PROVIDER_LABEL: Record<string, string> = {
-  cloud: "Lovable AI (cloud)",
-  "local-server": "Local model (server)",
-  "local-browser": "Local model (this browser)",
+  "on-device": "On-device AI",
+  "local-browser": "Your local model server",
   scripted: "Scripted training mode",
 };
 
-const CLIENT_TIMEOUT_MS = 25_000;
-const STATUS_TTL_MS = 60_000;
+const CLIENT_TIMEOUT_MS = 30_000;
 const PROBE_TTL_MS = 5 * 60_000;
 
 function aiSettings() {
@@ -66,29 +75,78 @@ function withTimeout<T>(p: (signal: AbortSignal) => Promise<T>, ms: number): Pro
   return p(ctrl.signal).finally(() => clearTimeout(t));
 }
 
-function trimMessages(messages: AiMessage[]): AiMessage[] {
-  const clean = messages
+function trimMessages(messages: AiMessage[], max = 40, chars = 8000): AiMessage[] {
+  return messages
     .filter((m) => m.content.trim())
-    .map((m) => ({ role: m.role, content: m.content.slice(0, 8000) }));
-  return clean.slice(-40);
+    .map((m) => ({ role: m.role, content: m.content.slice(0, chars) }))
+    .slice(-max);
 }
 
-// ---------- server status cache ----------
+// ---------- on-device (WebLLM) ----------
 
-let serverStatus: { at: number; cloud: boolean; localServer: boolean } | null = null;
+/** Turn the on-device AI on (downloads once, then cached) and remember the choice. */
+export async function enableOnDeviceAi(): Promise<boolean> {
+  const ok = await loadLocalModel();
+  if (ok && !aiSettings().onDeviceEnabled)
+    actions.updateSettings((s) => ({ ...s, ai: { ...s.ai, onDeviceEnabled: true } }));
+  return ok;
+}
 
-async function fetchServerStatus(): Promise<{ cloud: boolean; localServer: boolean }> {
-  if (serverStatus && Date.now() - serverStatus.at < STATUS_TTL_MS) return serverStatus;
-  try {
-    const s = await withTimeout((signal) => aiStatusFn({ signal }), 8000);
-    serverStatus = { at: Date.now(), cloud: !!s.cloud, localServer: !!s.localServer };
-  } catch {
-    serverStatus = { at: Date.now(), cloud: false, localServer: false };
+let autoStartTried = false;
+
+/** If the user enabled on-device AI before and the files are cached, start it quietly. */
+export async function autoStartOnDeviceAi(): Promise<void> {
+  const ai = aiSettings();
+  if (autoStartTried || ai.provider !== "on-device" || !ai.onDeviceEnabled || localModelReady())
+    return;
+  autoStartTried = true;
+  if (webGpuAvailable() && (await isModelCached())) await loadLocalModel();
+}
+
+async function onDeviceChat(req: AiChatRequest): Promise<AiChatResult> {
+  if (!localModelReady()) {
+    const st = getLocalModelState().status;
+    if (st === "loading")
+      return {
+        ok: false,
+        reason: "The on-device AI is still loading — scripted mode is answering for now.",
+      };
+    if (aiSettings().onDeviceEnabled && webGpuAvailable() && (await isModelCached())) {
+      if (!(await loadLocalModel()))
+        return {
+          ok: false,
+          reason: getLocalModelState().message || "The on-device AI couldn't start.",
+        };
+    } else {
+      return {
+        ok: false,
+        reason: webGpuAvailable()
+          ? "On-device AI is off — turn it on to use AI. Scripted mode is answering."
+          : "This browser doesn't support WebGPU, so on-device AI can't run here. Scripted mode is answering.",
+      };
+    }
   }
-  return serverStatus;
+  try {
+    // Small on-device models have short context windows: keep the prompt compact.
+    const text = await localChat({
+      system: guardedSystem(req.service, req.system.slice(0, 6000), req.json),
+      messages: trimMessages(req.messages, 12, 2000),
+      temperature: req.temperature ?? 0.4,
+      json: !!req.json,
+      timeoutMs: 90_000,
+    });
+    const clean = stripReasoning(text);
+    if (!clean) return { ok: false, reason: "The on-device AI returned an empty answer." };
+    return { ok: true, text: clean, provider: "on-device" };
+  } catch (e) {
+    return {
+      ok: false,
+      reason: e instanceof Error ? e.message : "The on-device AI couldn't answer.",
+    };
+  }
 }
 
-// ---------- local browser provider ----------
+// ---------- user's own local model server (e.g. Ollama) ----------
 
 let probe: { at: number; url: string; ok: boolean } | null = null;
 
@@ -113,7 +171,7 @@ async function probeBrowser(url: string): Promise<boolean> {
 
 async function browserChat(req: AiChatRequest, url: string, model: string): Promise<AiChatResult> {
   if (typeof window === "undefined")
-    return { ok: false, reason: "The local browser model is only available in the browser." };
+    return { ok: false, reason: "Your local model server is only reachable from the browser." };
   if (!/^https?:\/\//i.test(url.trim()))
     return {
       ok: false,
@@ -150,12 +208,12 @@ async function browserChat(req: AiChatRequest, url: string, model: string): Prom
     if (!res.ok)
       return {
         ok: false,
-        reason: `Local model returned HTTP ${res.status}. Check the model name in Settings.`,
+        reason: `Your local model server returned HTTP ${res.status}. Check the model name in Settings.`,
       };
     const data = (await res.json()) as { choices?: { message?: { content?: unknown } }[] };
     const content = data.choices?.[0]?.message?.content;
     const text = typeof content === "string" ? stripReasoning(content) : "";
-    if (!text) return { ok: false, reason: "The local model returned an empty response." };
+    if (!text) return { ok: false, reason: "Your local model returned an empty response." };
     probe = { at: Date.now(), url: base, ok: true };
     return { ok: true, text, provider: "local-browser" };
   } catch (e) {
@@ -164,50 +222,13 @@ async function browserChat(req: AiChatRequest, url: string, model: string): Prom
     return {
       ok: false,
       reason: aborted
-        ? "The local model timed out."
-        : "Couldn't reach the local model. Is it running, and does it allow this site (CORS)? For Ollama set OLLAMA_ORIGINS to include this site's address.",
+        ? "Your local model timed out."
+        : "Couldn't reach your local model server. Is it running, and does it allow this site (CORS)? For Ollama set OLLAMA_ORIGINS to include this site's address.",
     };
   }
 }
 
-// ---------- server provider ----------
-
-async function serverChat(
-  req: AiChatRequest,
-  provider: "auto" | "cloud" | "local-server",
-): Promise<AiChatResult> {
-  try {
-    const r = await withTimeout(
-      (signal) =>
-        aiChatFn({
-          data: {
-            service: req.service,
-            system: req.system.slice(0, 24000),
-            messages: trimMessages(req.messages),
-            ...(req.temperature !== undefined
-              ? { temperature: Math.max(0, Math.min(1.5, req.temperature)) }
-              : {}),
-            ...(req.json !== undefined ? { json: req.json } : {}),
-            provider,
-          },
-          signal,
-        }),
-      CLIENT_TIMEOUT_MS,
-    );
-    if (r.ok) return { ok: true, text: r.text, provider: r.provider };
-    if (r.code === "not-configured" && serverStatus)
-      serverStatus = { ...serverStatus, at: Date.now(), cloud: false, localServer: false };
-    return { ok: false, reason: r.reason };
-  } catch (e) {
-    const aborted = e instanceof Error && e.name === "AbortError";
-    return {
-      ok: false,
-      reason: aborted
-        ? "The AI service timed out — continuing in scripted mode."
-        : "The AI service is unreachable — continuing in scripted mode.",
-    };
-  }
-}
+// ---------- public API ----------
 
 export async function aiChat(req: AiChatRequest): Promise<AiChatResult> {
   if (!req.messages.length) return { ok: false, reason: "Nothing to send." };
@@ -217,63 +238,25 @@ export async function aiChat(req: AiChatRequest): Promise<AiChatResult> {
       return { ok: false, reason: "Scripted training mode is selected in Settings." };
     case "local-browser":
       return browserChat(req, ai.localBrowserUrl, ai.localBrowserModel);
-    case "cloud":
-    case "local-server":
-      return serverChat(req, ai.provider);
-    case "auto":
-    default: {
-      const s = await fetchServerStatus();
-      let serverResult: AiChatResult | null = null;
-      if (s.cloud || s.localServer) {
-        serverResult = await serverChat(req, "auto");
-        if (serverResult.ok) return serverResult;
-      }
-      // "Auto" never reaches into the visitor's own computer (localhost) on its own — that
-      // causes failed requests and browser local-network prompts for most users. The local
-      // browser model is used only when it is explicitly selected in Settings.
-      return (
-        serverResult ?? {
-          ok: false,
-          reason: "No AI provider is configured — using scripted training mode.",
-        }
-      );
-    }
+    case "on-device":
+    default:
+      return onDeviceChat(req);
   }
 }
 
 export async function getAiStatus(): Promise<AiStatus> {
   const ai = aiSettings();
-  const s = await fetchServerStatus();
+  const onDevice = getLocalModelState().status;
+  const webgpu = webGpuAvailable();
   const localBrowser =
     ai.provider === "local-browser" ? await probeBrowser(ai.localBrowserUrl) : false;
   let active: AiStatus["active"] = "scripted";
-  switch (ai.provider) {
-    case "cloud":
-      active = s.cloud ? "cloud" : "scripted";
-      break;
-    case "local-server":
-      active = s.localServer ? "local-server" : "scripted";
-      break;
-    case "local-browser":
-      active = localBrowser ? "local-browser" : "scripted";
-      break;
-    case "auto":
-      active = s.cloud
-        ? "cloud"
-        : s.localServer
-          ? "local-server"
-          : localBrowser
-            ? "local-browser"
-            : "scripted";
-      break;
-    default:
-      active = "scripted";
-  }
-  return { cloud: s.cloud, localServer: s.localServer, localBrowser, active };
+  if (ai.provider === "on-device" && localModelReady()) active = "on-device";
+  if (ai.provider === "local-browser" && localBrowser) active = "local-browser";
+  return { onDevice, webgpu, localBrowser, active };
 }
 
-/** Forget cached status (call after the user changes AI settings). */
+/** Forget the cached reachability check for the user's own local model server. */
 export function clearAiStatusCache() {
-  serverStatus = null;
   probe = null;
 }

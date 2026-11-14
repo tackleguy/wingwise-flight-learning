@@ -4,6 +4,7 @@ import {
   Accessibility,
   Bell,
   Bot,
+  Cpu,
   CheckCircle2,
   Database,
   Download,
@@ -40,7 +41,9 @@ import {
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { applyAccessibility, setNightLighting, useNightLighting } from "@/lib/accessibility";
-import { getAiStatus, type AiStatus } from "@/lib/ai/client";
+import { enableOnDeviceAi, getAiStatus, type AiStatus } from "@/lib/ai/client";
+import { MODEL_DOWNLOAD_LABEL, MODEL_LABEL } from "@/lib/ai/local-model-id";
+import { isModelCached, stopLocalModel, useLocalModel } from "@/lib/ai/local-model";
 import { AIRCRAFT_PERF } from "@/lib/data/aircraft-perf";
 import { AIRPORTS } from "@/lib/data/airports";
 import { actions, useHydrated, useStore, type Settings, type TrackId } from "@/lib/store";
@@ -1010,24 +1013,14 @@ function NotificationsSection({ settings }: { settings: Settings }) {
 
 const PROVIDERS: { v: Settings["ai"]["provider"]; l: string; d: string }[] = [
   {
-    v: "auto",
-    l: "Automatic",
-    d: "Use the best available provider: cloud if the app owner configured it, otherwise a local model, otherwise scripted training mode.",
-  },
-  {
-    v: "cloud",
-    l: "Cloud (Lovable AI gateway)",
-    d: "Hosted model configured by the app owner on the server. Keys stay on the server.",
-  },
-  {
-    v: "local-server",
-    l: "Local server model",
-    d: "An OpenAI-compatible model the app's server can reach (configured by the owner via server environment variables).",
+    v: "on-device",
+    l: "On-device AI (recommended)",
+    d: `${MODEL_LABEL} runs right here in your browser on your GPU. One-time download (${MODEL_DOWNLOAD_LABEL}), then cached. Nothing is sent to any server. Needs WebGPU (recent Chrome or Edge on desktop).`,
   },
   {
     v: "local-browser",
-    l: "Local model in this browser",
-    d: "Your own model (e.g. Ollama or LM Studio) called directly from this browser via an OpenAI-compatible URL.",
+    l: "Your own local model server",
+    d: "A model you run on your own computer (e.g. Ollama or LM Studio), called directly from this browser via an OpenAI-compatible URL. No key needed.",
   },
   {
     v: "scripted",
@@ -1035,6 +1028,94 @@ const PROVIDERS: { v: Settings["ai"]["provider"]; l: string; d: string }[] = [
     d: "Deterministic scripted ATC, rubric-based oral grading. Works fully offline.",
   },
 ];
+
+function OnDevicePanel() {
+  const local = useLocalModel();
+  const enabled = useStore((s) => s.settings.ai.onDeviceEnabled);
+  const [cached, setCached] = useState<boolean | null>(null);
+  useEffect(() => {
+    let alive = true;
+    void isModelCached().then((c) => alive && setCached(c));
+    return () => {
+      alive = false;
+    };
+  }, [local.status]);
+  const running = local.status === "ready" || local.status === "thinking";
+  return (
+    <div className="space-y-3 px-5 py-4">
+      <p className="label-caps">On-device model</p>
+      <div className="flex flex-wrap items-center gap-2 text-sm">
+        <span className="font-medium">{MODEL_LABEL}</span>
+        {running ? (
+          <Pill tone="ok">Running on this device</Pill>
+        ) : local.status === "loading" ? (
+          <Pill tone="primary">Loading · {Math.round(local.progress * 100)}%</Pill>
+        ) : local.status === "unsupported" ? (
+          <Pill tone="caution">WebGPU not available</Pill>
+        ) : local.status === "error" ? (
+          <Pill tone="warning">Couldn&apos;t start</Pill>
+        ) : (
+          <Pill>Off</Pill>
+        )}
+        {cached ? <Pill tone="cyan">Downloaded</Pill> : null}
+        {enabled && !running ? (
+          <span className="text-[11px] text-muted-foreground">
+            Starts automatically when you use an AI feature.
+          </span>
+        ) : null}
+      </div>
+      {local.status === "loading" ? (
+        <div>
+          <div className="h-1.5 overflow-hidden rounded bg-muted">
+            <div
+              className="h-full bg-primary transition-all"
+              style={{ width: `${Math.round(local.progress * 100)}%` }}
+            />
+          </div>
+          <p className="mt-1 truncate text-[11px] text-muted-foreground">{local.message}</p>
+        </div>
+      ) : local.message && local.status !== "ready" ? (
+        <p className="text-xs text-muted-foreground">{local.message}</p>
+      ) : null}
+      <div className="flex flex-wrap gap-2">
+        {running ? (
+          <Button size="sm" variant="outline" onClick={stopLocalModel}>
+            Stop &amp; free GPU memory
+          </Button>
+        ) : (
+          <Button
+            size="sm"
+            onClick={() => void enableOnDeviceAi()}
+            disabled={local.status === "loading"}
+          >
+            {local.status === "loading" ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <Cpu className="size-4" />
+            )}{" "}
+            {cached ? "Start on-device AI" : `Download & start (${MODEL_DOWNLOAD_LABEL}, one time)`}
+          </Button>
+        )}
+        {enabled ? (
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => {
+              stopLocalModel();
+              upd((s) => ({ ...s, ai: { ...s.ai, onDeviceEnabled: false } }));
+            }}
+          >
+            Don&apos;t auto-start
+          </Button>
+        ) : null}
+      </div>
+      <p className="text-[11px] leading-relaxed text-muted-foreground">
+        The model files come from Hugging Face the first time and are stored in your browser&apos;s
+        cache. After that it works offline. Clearing site data removes the download.
+      </p>
+    </div>
+  );
+}
 
 function AiSection({ settings }: { settings: Settings }) {
   const ai = settings.ai;
@@ -1125,13 +1206,13 @@ function AiSection({ settings }: { settings: Settings }) {
           const avail =
             status === null
               ? null
-              : p.v === "cloud"
-                ? status.cloud
-                : p.v === "local-server"
-                  ? status.localServer
-                  : p.v === "local-browser"
+              : p.v === "on-device"
+                ? status.webgpu
+                : p.v === "local-browser"
+                  ? ai.provider === "local-browser"
                     ? status.localBrowser
-                    : true;
+                    : null
+                  : true;
           return (
             <button
               key={p.v}
@@ -1155,10 +1236,14 @@ function AiSection({ settings }: { settings: Settings }) {
               <span className="min-w-0 flex-1">
                 <span className="flex flex-wrap items-center gap-2 text-sm font-medium">
                   {p.l}
-                  {p.v === "auto" && status ? (
-                    <Pill tone="cyan">Currently: {status.active}</Pill>
+                  {p.v === "on-device" && status ? (
+                    status.webgpu ? (
+                      <Pill tone="ok">WebGPU available</Pill>
+                    ) : (
+                      <Pill tone="caution">Not supported in this browser</Pill>
+                    )
                   ) : null}
-                  {p.v !== "auto" && p.v !== "scripted" && avail !== null ? (
+                  {p.v === "local-browser" && avail !== null ? (
                     avail ? (
                       <Pill tone="ok">Available</Pill>
                     ) : (
@@ -1172,7 +1257,8 @@ function AiSection({ settings }: { settings: Settings }) {
           );
         })}
       </div>
-      {ai.provider === "local-browser" || ai.provider === "auto" ? (
+      {ai.provider === "on-device" ? <OnDevicePanel /> : null}
+      {ai.provider === "local-browser" ? (
         <div className="space-y-3 px-5 py-4">
           <p className="label-caps">Local model in this browser</p>
           <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_200px]">
@@ -1247,10 +1333,10 @@ function AiSection({ settings }: { settings: Settings }) {
         </div>
       ) : null}
       <div className="px-5 py-3">
-        <Notice tone="info" title="API keys are never stored in your browser.">
-          Cloud AI runs through the Lovable AI gateway, configured by the app owner on the server —
-          no key is entered here. A local model is reached directly at the URL above without a key.
-          AI output is a training aid and may be wrong; always verify against official FAA sources.
+        <Notice tone="info" title="All AI on TeachX is local.">
+          Nothing is sent to a cloud AI service and there are no API keys. The on-device model runs
+          inside your browser; your own model server is reached directly at the URL above. AI output
+          is a training aid and may be wrong; always verify against official FAA sources.
         </Notice>
       </div>
     </Card>

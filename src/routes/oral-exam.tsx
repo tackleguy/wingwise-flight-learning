@@ -13,6 +13,12 @@ import {
   UserRound,
 } from "lucide-react";
 import { Notice, Page, PageHeader, Panel, Pill, Section, formatDate } from "@/components/app/page";
+import { AiStatusPill, useAiStatus } from "@/components/ai/AiStatusPill";
+
+function OralAiPill() {
+  const { status, loading } = useAiStatus();
+  return <AiStatusPill status={status} loading={loading} />;
+}
 import { Button } from "@/components/ui/button";
 import { OralExamSession, type OralSessionResult } from "@/components/oral/OralExamSession";
 import { LEVELS, ORAL_QUESTIONS, trackToOral, type OralLevel, type OralTrack } from "@/lib/oral";
@@ -98,6 +104,7 @@ function OralExamPage() {
         title="Oral Exam Simulator"
         icon={MessageSquareText}
         description="Sit across the table from a simulated examiner. Answer by typing or speaking; the examiner checks your answer against the key concepts, follows up when something is missing, and explains what a complete answer looks like."
+        actions={<OralAiPill />}
       />
       <Notice tone="caution" title="Simulated, unofficial oral exam." className="mb-6">
         TeachX's examiner is a training tool built from FAA publications and the ACS. It is not a
@@ -199,9 +206,9 @@ function OralExamPage() {
                 incomplete answers are explained with a model answer and reference.
               </li>
               <li className="flex gap-2">
-                <Sparkles className="mt-0.5 size-4 shrink-0 text-magenta" /> If an AI provider is
-                configured in Settings, its assessment is blended with the rubric (never more than
-                ±20 points). Without AI, rubric grading works fully offline.
+                <Sparkles className="mt-0.5 size-4 shrink-0 text-magenta" /> If the on-device AI (or
+                your own local model) is on, its assessment is blended with the rubric (never more
+                than ±20 points). Without AI, rubric grading works fully offline.
               </li>
               <li className="flex gap-2">
                 <Mic className="mt-0.5 size-4 shrink-0 text-primary" /> Answer by voice in browsers

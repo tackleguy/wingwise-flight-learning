@@ -1,6 +1,6 @@
 /**
- * Guardrail system prompts shared by the server (cloud / local-server providers) and the
- * browser (local-browser provider). Contains NO secrets — safe to ship to the client.
+ * Guardrail system prompts applied to every local AI request (on-device model or the user's own
+ * local model server). Contains NO secrets.
  *
  * The guardrails are always placed BEFORE the feature's own instructions, and the feature
  * instructions are explicitly marked as unable to override them.

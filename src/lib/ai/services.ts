@@ -1,6 +1,6 @@
 /**
  * Tailored AI service helpers. Each builds a focused system prompt and calls `aiChat` with
- * the right service id (so the server applies that service's guardrails). All return
+ * the right service id (so that service's guardrails are applied). All return
  * `AiChatResult` (or parsed JSON) and callers must keep their scripted fallback.
  */
 import { aiChat, type AiChatResult, type AiMessage } from "./client";
