@@ -1,8 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { ArrowLeftRight, Plane, Search, X } from "lucide-react";
+import { ArrowLeftRight, ChevronDown, Plane, Search, X } from "lucide-react";
 
-import { EmptyState, Notice, Page, PageHeader, Panel, Pill, Section } from "@/components/app/page";
+import { EmptyState, Notice, Page, PageHeader, Pill } from "@/components/app/page";
 import { AircraftSilhouette } from "@/components/aircraft/aircraft-graphics";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   AIRCRAFT,
   CATEGORY_LABELS,
@@ -49,6 +50,7 @@ function AircraftLibrary() {
   const [cat, setCat] = useState<AircraftCategory | "all">("all");
   const [cmpA, setCmpA] = useState<string>("c172");
   const [cmpB, setCmpB] = useState<string>("pa28");
+  const [view, setView] = useState<"browse" | "compare">("browse");
   const preferred = useStore((s) => s.settings.preferredAircraft);
 
   const list = useMemo(() => {
@@ -79,11 +81,12 @@ function AircraftLibrary() {
   }, []);
 
   const addToCompare = (id: string) => {
-    if (id === cmpA || id === cmpB) return;
-    setCmpA(cmpB);
-    setCmpB(id);
-    if (typeof document !== "undefined")
-      document.getElementById("compare")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (id !== cmpA && id !== cmpB) {
+      setCmpA(cmpB);
+      setCmpB(id);
+    }
+    setView("compare");
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   return (
@@ -92,90 +95,84 @@ function AircraftLibrary() {
         eyebrow="Fly"
         icon={Plane}
         title="Aircraft Library"
-        description="Systems, cockpit layout, limitations and performance for every aircraft in the TeachX simulator. Numbers come straight from the simulator's flight model so what you read here is what you fly."
-        actions={
-          <Button variant="outline" size="sm" asChild>
-            <a href="#compare">
-              <ArrowLeftRight className="size-4" /> Compare aircraft
-            </a>
-          </Button>
-        }
+        description="Systems, limitations and performance for every aircraft in the TeachX simulator."
       />
 
-      <Notice tone="caution" title="Educational data." className="mb-6">
-        {SIMULATION_ASSUMPTIONS}
+      <Notice tone="caution" title="Educational data." className="mb-4">
+        {SIMULATION_ASSUMPTIONS} Numbers come straight from the simulator's flight model, so what
+        you read here is what you fly.
       </Notice>
 
-      <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center">
-        <div className="relative lg:w-80">
-          <Search className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Search aircraft, maker, role…"
-            className="pl-8"
-            aria-label="Search aircraft"
-          />
-          {q ? (
-            <button
-              type="button"
-              onClick={() => setQ("")}
-              className="absolute top-1/2 right-2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              aria-label="Clear search"
-            >
-              <X className="size-4" />
-            </button>
-          ) : null}
-        </div>
-        <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filter by category">
-          {(["all", ...CATS] as const).map((c) => (
-            <button
-              key={c}
-              type="button"
-              onClick={() => setCat(c)}
-              aria-pressed={cat === c}
-              className={cn(
-                "rounded-md border px-2.5 py-1 text-xs font-medium transition-colors",
-                cat === c
-                  ? "border-primary/50 bg-primary/15 text-primary"
-                  : "bg-card text-muted-foreground hover:text-foreground",
-              )}
-            >
-              {c === "all" ? "All" : CATEGORY_LABELS[c]}{" "}
-              <span className="ml-1 font-mono opacity-70">{counts[c]}</span>
-            </button>
-          ))}
-        </div>
-      </div>
+      <Tabs value={view} onValueChange={(v) => setView(v as "browse" | "compare")}>
+        <TabsList className="mb-4">
+          <TabsTrigger value="browse">Browse</TabsTrigger>
+          <TabsTrigger value="compare">
+            <ArrowLeftRight className="size-4" /> Compare
+          </TabsTrigger>
+        </TabsList>
 
-      {list.length === 0 ? (
-        <EmptyState
-          icon={Search}
-          title="No aircraft match"
-          description="Try a different search term or category."
-        />
-      ) : (
-        <div className="mb-10 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {list.map((a) => (
-            <AircraftCard
-              key={a.id}
-              a={a}
-              preferred={preferred === a.id}
-              onCompare={() => addToCompare(a.id)}
-              inCompare={a.id === cmpA || a.id === cmpB}
+        <TabsContent value="browse" className="mt-0">
+          <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center">
+            <div className="relative sm:w-80">
+              <Search className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder="Search aircraft, maker, role…"
+                className="pl-8"
+                aria-label="Search aircraft"
+              />
+              {q ? (
+                <button
+                  type="button"
+                  onClick={() => setQ("")}
+                  className="absolute top-1/2 right-2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  aria-label="Clear search"
+                >
+                  <X className="size-4" />
+                </button>
+              ) : null}
+            </div>
+            <Select value={cat} onValueChange={(v) => setCat(v as AircraftCategory | "all")}>
+              <SelectTrigger className="sm:w-56" aria-label="Filter by category">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {(["all", ...CATS] as const).map((c) => (
+                  <SelectItem key={c} value={c}>
+                    {c === "all" ? "All categories" : CATEGORY_LABELS[c]}{" "}
+                    <span className="font-mono text-muted-foreground">{counts[c]}</span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {list.length === 0 ? (
+            <EmptyState
+              icon={Search}
+              title="No aircraft match"
+              description="Try a different search term or category."
             />
-          ))}
-        </div>
-      )}
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              {list.map((a) => (
+                <AircraftCard
+                  key={a.id}
+                  a={a}
+                  preferred={preferred === a.id}
+                  onCompare={() => addToCompare(a.id)}
+                />
+              ))}
+            </div>
+          )}
+        </TabsContent>
 
-      <Section
-        title="Compare aircraft"
-        description="Pick any two aircraft to compare performance, limitations and V-speeds side by side."
-        className="scroll-mt-20"
-      >
-        <div id="compare" className="scroll-mt-20" />
-        <Compare a={cmpA} b={cmpB} setA={setCmpA} setB={setCmpB} />
-      </Section>
+        <TabsContent value="compare" className="mt-0">
+          <div id="compare" />
+          <Compare a={cmpA} b={cmpB} setA={setCmpA} setB={setCmpB} />
+        </TabsContent>
+      </Tabs>
     </Page>
   );
 }
@@ -184,62 +181,48 @@ function AircraftCard({
   a,
   preferred,
   onCompare,
-  inCompare,
 }: {
   a: AircraftInfo;
   preferred: boolean;
   onCompare: () => void;
-  inCompare: boolean;
 }) {
   const p = perfFor(a);
   return (
     <div className="panel flex flex-col overflow-hidden transition-colors hover:border-primary/40">
-      <Link to="/aircraft/$id" params={{ id: a.id }} className="group block">
-        <div className="avionics-screen m-3 mb-0 grid-backdrop">
+      <Link to="/aircraft/$id" params={{ id: a.id }} className="group block p-3 pb-0">
+        <div className="avionics-screen grid-backdrop">
           <AircraftSilhouette
             spec={a.silhouette}
             spanFt={p.wingSpanFt}
             view="top"
-            className="h-32 w-full"
+            className="h-28 w-full"
           />
         </div>
-        <div className="px-4 pt-3">
-          <div className="flex items-start justify-between gap-2">
-            <div>
-              <h3 className="font-semibold group-hover:text-primary">{a.name}</h3>
-              <p className="text-xs text-muted-foreground">{a.manufacturer}</p>
-            </div>
-            {preferred ? <Pill tone="primary">Preferred</Pill> : null}
+        <div className="flex items-start justify-between gap-2 px-1 pt-3">
+          <div className="min-w-0">
+            <h3 className="font-semibold group-hover:text-primary">{a.name}</h3>
+            <p className="text-xs text-muted-foreground">
+              {a.categories.map((c) => CATEGORY_LABELS[c]).join(" · ")}
+            </p>
           </div>
-          <div className="mt-2 flex flex-wrap gap-1">
-            {a.categories.map((c) => (
-              <Pill key={c}>{CATEGORY_LABELS[c]}</Pill>
-            ))}
-          </div>
+          {preferred ? <Pill tone="primary">Preferred</Pill> : null}
         </div>
       </Link>
-      <dl className="mx-4 mt-3 grid grid-cols-3 gap-2 border-t pt-3 text-xs">
-        <div>
-          <dt className="label-caps">Cruise</dt>
-          <dd className="font-mono tabular">{p.cruiseKtas} kt</dd>
-        </div>
-        <div>
-          <dt className="label-caps">Range*</dt>
-          <dd className="font-mono tabular">{Math.round(rangeNm(p)).toLocaleString()} nm</dd>
-        </div>
-        <div>
-          <dt className="label-caps">Seats</dt>
-          <dd className="font-mono tabular">{a.seats}</dd>
-        </div>
-      </dl>
-      <div className="mt-auto flex items-center gap-2 p-4 pt-3">
-        <Button asChild size="sm" className="flex-1">
-          <Link to="/aircraft/$id" params={{ id: a.id }}>
-            View details
-          </Link>
-        </Button>
-        <Button size="sm" variant="outline" onClick={onCompare} disabled={inCompare}>
-          <ArrowLeftRight className="size-3.5" /> {inCompare ? "Comparing" : "Compare"}
+      <div className="mt-auto flex items-center justify-between gap-2 px-4 pt-2 pb-3 text-xs">
+        <span
+          className="font-mono text-muted-foreground tabular"
+          title="Cruise speed · still-air range with a 45-minute reserve · seats"
+        >
+          {p.cruiseKtas} kt · {Math.round(rangeNm(p)).toLocaleString()} nm · {a.seats} seats
+        </span>
+        <Button
+          size="sm"
+          variant="ghost"
+          className="h-7 px-2 text-xs"
+          onClick={onCompare}
+          title="Compare with another aircraft"
+        >
+          <ArrowLeftRight className="size-3.5" /> Compare
         </Button>
       </div>
     </div>
@@ -383,7 +366,7 @@ function Compare({
                     />
                   </div>
                 </div>
-                <span className="w-28 text-center text-muted-foreground sm:w-40">{r.label}</span>
+                <span className="w-24 text-center text-muted-foreground sm:w-40">{r.label}</span>
                 <div className="flex items-center gap-2">
                   <div className="hidden h-1.5 w-28 overflow-hidden rounded-full bg-muted sm:block">
                     <div
@@ -401,56 +384,62 @@ function Compare({
         </div>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[560px] text-sm">
-          <thead>
-            <tr className="border-b bg-muted/40 text-left">
-              <th className="label-caps px-4 py-2">Specification</th>
-              <th className="px-4 py-2 font-semibold text-primary">{A.name}</th>
-              <th className="px-4 py-2 font-semibold text-magenta">{B.name}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr className="border-b">
-              <td className="px-4 py-2 text-muted-foreground">Category</td>
-              <td className="px-4 py-2">
-                {A.categories.map((c) => CATEGORY_LABELS[c]).join(", ")}
-              </td>
-              <td className="px-4 py-2">
-                {B.categories.map((c) => CATEGORY_LABELS[c]).join(", ")}
-              </td>
-            </tr>
-            <tr className="border-b">
-              <td className="px-4 py-2 text-muted-foreground">Seats</td>
-              <td className="px-4 py-2 font-mono">{A.seats}</td>
-              <td className="px-4 py-2 font-mono">{B.seats}</td>
-            </tr>
-            {sa.map((row, i) => (
-              <tr key={row.label} className="border-b">
-                <td className="px-4 py-2 text-muted-foreground">{row.label}</td>
-                <td className="px-4 py-2 font-mono text-xs">{row.value}</td>
-                <td className="px-4 py-2 font-mono text-xs">{sb[i]?.value ?? "—"}</td>
+      <details className="group">
+        <summary className="flex cursor-pointer list-none items-center gap-1.5 px-4 py-3 text-sm font-medium text-muted-foreground select-none hover:text-foreground [&::-webkit-details-marker]:hidden">
+          <ChevronDown className="size-4 transition-transform group-open:rotate-180" />
+          All specifications & V-speeds
+        </summary>
+        <div className="overflow-x-auto border-t">
+          <table className="w-full min-w-[560px] text-sm">
+            <thead>
+              <tr className="border-b bg-muted/40 text-left">
+                <th className="label-caps px-4 py-2">Specification</th>
+                <th className="px-4 py-2 font-semibold text-primary">{A.name}</th>
+                <th className="px-4 py-2 font-semibold text-magenta">{B.name}</th>
               </tr>
-            ))}
-            <tr className="border-b bg-muted/40">
-              <td colSpan={3} className="label-caps px-4 py-2">
-                V-speeds (KIAS)
-              </td>
-            </tr>
-            {vKeys.map((k) => {
-              const ra = va.find((r) => r.key === k);
-              const rb = vb.find((r) => r.key === k);
-              return (
-                <tr key={k} className="border-b last:border-0">
-                  <td className="px-4 py-2 text-muted-foreground">{ra?.label ?? rb?.label}</td>
-                  <td className="px-4 py-2 font-mono">{ra ? ra.kias : "—"}</td>
-                  <td className="px-4 py-2 font-mono">{rb ? rb.kias : "—"}</td>
+            </thead>
+            <tbody>
+              <tr className="border-b">
+                <td className="px-4 py-2 text-muted-foreground">Category</td>
+                <td className="px-4 py-2">
+                  {A.categories.map((c) => CATEGORY_LABELS[c]).join(", ")}
+                </td>
+                <td className="px-4 py-2">
+                  {B.categories.map((c) => CATEGORY_LABELS[c]).join(", ")}
+                </td>
+              </tr>
+              <tr className="border-b">
+                <td className="px-4 py-2 text-muted-foreground">Seats</td>
+                <td className="px-4 py-2 font-mono">{A.seats}</td>
+                <td className="px-4 py-2 font-mono">{B.seats}</td>
+              </tr>
+              {sa.map((row, i) => (
+                <tr key={row.label} className="border-b">
+                  <td className="px-4 py-2 text-muted-foreground">{row.label}</td>
+                  <td className="px-4 py-2 font-mono text-xs">{row.value}</td>
+                  <td className="px-4 py-2 font-mono text-xs">{sb[i]?.value ?? "—"}</td>
                 </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+              ))}
+              <tr className="border-b bg-muted/40">
+                <td colSpan={3} className="label-caps px-4 py-2">
+                  V-speeds (KIAS)
+                </td>
+              </tr>
+              {vKeys.map((k) => {
+                const ra = va.find((r) => r.key === k);
+                const rb = vb.find((r) => r.key === k);
+                return (
+                  <tr key={k} className="border-b last:border-0">
+                    <td className="px-4 py-2 text-muted-foreground">{ra?.label ?? rb?.label}</td>
+                    <td className="px-4 py-2 font-mono">{ra ? ra.kias : "—"}</td>
+                    <td className="px-4 py-2 font-mono">{rb ? rb.kias : "—"}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </details>
       <p className="border-t px-4 py-2 text-[11px] text-muted-foreground">
         * Range is still-air at cruise speed with a 45-minute reserve, no allowance for climb,
         descent or wind. Educational approximation only.

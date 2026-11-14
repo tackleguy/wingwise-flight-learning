@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import {
+  BookOpen,
   Calculator,
   Crosshair,
   Eraser,
@@ -15,6 +16,7 @@ import {
 import { Notice, Page, PageHeader, Panel } from "@/components/app/page";
 import { BayChart, type ChartPoint, type Layers } from "@/components/navigation/bay-chart";
 import {
+  AirportDiagramTraining,
   ChartPractice,
   EnrouteTraining,
   SectionalTraining,
@@ -23,8 +25,9 @@ import {
 import { E6B } from "@/components/navigation/e6b";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getAirport } from "@/lib/data/airports";
+import { AIRPORT_DATA_NOTICE, getAirport } from "@/lib/data/airports";
 import { fmtHdg } from "@/lib/data/airport-utils";
 import { bearingDeg, distanceNm, norm360, windTriangle } from "@/lib/geo";
 import { fmtMin } from "@/lib/planning";
@@ -52,21 +55,25 @@ const DEFAULT_LAYERS: Layers = {
   labels: true,
 };
 
+type ReadingTopic = "sectional" | "enroute" | "terminal" | "diagrams";
+
 function NavigationPage() {
   const [layers, setLayers] = useState<Layers>(DEFAULT_LAYERS);
+  const [topic, setTopic] = useState<ReadingTopic>("sectional");
   return (
     <Page wide>
       <PageHeader
         eyebrow="Train"
         icon={MapIcon}
         title="Navigation & Charts"
-        description="Plot a route on an interactive chart, work the numbers with an E6B, and practice reading sectional, en-route and terminal charts."
+        description="Plot a route, work the numbers with an E6B, and practice reading charts."
       />
-      <Notice tone="caution" title="Educational chart — not for navigation." className="mb-5">
+      <Notice tone="caution" title="Educational chart — not for navigation." className="mb-4">
         The chart is a stylized drawing built from TeachX's educational airport and navaid dataset.
         Airspace shapes are simplified rings, the coastline is approximate, and the restricted area,
-        MOA, some obstacles and the GPS waypoints are fictional examples for symbol training. Always
-        use current FAA charts for flight.
+        MOA, some obstacles and the GPS waypoints are fictional examples for symbol training. The
+        approach plate is a schematic layout only — TeachX does not reproduce approach charts.{" "}
+        {AIRPORT_DATA_NOTICE.disclaimer} Always use current FAA charts for flight.
       </Notice>
       <Tabs defaultValue="workspace">
         <div className="overflow-x-auto">
@@ -77,11 +84,11 @@ function NavigationPage() {
             <TabsTrigger value="e6b">
               <Calculator className="size-4" /> E6B
             </TabsTrigger>
-            <TabsTrigger value="sectional">Sectional</TabsTrigger>
-            <TabsTrigger value="enroute">IFR en-route</TabsTrigger>
-            <TabsTrigger value="terminal">Approach plates & diagrams</TabsTrigger>
+            <TabsTrigger value="reading">
+              <BookOpen className="size-4" /> Chart reading
+            </TabsTrigger>
             <TabsTrigger value="practice">
-              <Crosshair className="size-4" /> Chart practice
+              <Crosshair className="size-4" /> Symbol practice
             </TabsTrigger>
           </TabsList>
         </div>
@@ -93,14 +100,40 @@ function NavigationPage() {
             <E6B />
           </div>
         </TabsContent>
-        <TabsContent value="sectional">
-          <SectionalTraining />
-        </TabsContent>
-        <TabsContent value="enroute">
-          <EnrouteTraining />
-        </TabsContent>
-        <TabsContent value="terminal">
-          <TerminalTraining />
+        <TabsContent value="reading">
+          <div
+            className="mb-4 flex gap-x-4 overflow-x-auto border-b text-sm whitespace-nowrap"
+            role="group"
+            aria-label="Chart type"
+          >
+            {(
+              [
+                ["sectional", "Sectional"],
+                ["enroute", "IFR en-route"],
+                ["terminal", "Approach plates"],
+                ["diagrams", "Airport diagrams"],
+              ] as const
+            ).map(([k, l]) => (
+              <button
+                key={k}
+                type="button"
+                aria-pressed={topic === k}
+                onClick={() => setTopic(k)}
+                className={cn(
+                  "-mb-px border-b-2 px-0.5 pb-2 font-medium",
+                  topic === k
+                    ? "border-primary text-foreground"
+                    : "border-transparent text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {l}
+              </button>
+            ))}
+          </div>
+          {topic === "sectional" ? <SectionalTraining /> : null}
+          {topic === "enroute" ? <EnrouteTraining /> : null}
+          {topic === "terminal" ? <TerminalTraining /> : null}
+          {topic === "diagrams" ? <AirportDiagramTraining /> : null}
         </TabsContent>
         <TabsContent value="practice">
           <LayerToggles layers={layers} setLayers={setLayers} className="mb-3" />
@@ -111,6 +144,7 @@ function NavigationPage() {
   );
 }
 
+/** Chart layer switches, tucked into a small popover so the chart toolbar stays short. */
 function LayerToggles({
   layers,
   setLayers,
@@ -127,25 +161,34 @@ function LayerToggles({
     ["points", "Obstacles, checkpoints, waypoints"],
     ["labels", "Labels"],
   ];
+  const hidden = items.filter(([k]) => !layers[k]).length;
   return (
-    <div className={cn("flex flex-wrap items-center gap-1.5 text-xs", className)}>
-      <span className="label-caps mr-1 flex items-center gap-1">
-        <LayersIcon className="size-3.5" /> Layers
-      </span>
-      {items.map(([k, l]) => (
-        <button
-          key={k}
-          type="button"
-          aria-pressed={layers[k]}
-          onClick={() => setLayers({ ...layers, [k]: !layers[k] })}
-          className={cn(
-            "rounded border px-2 py-0.5",
-            layers[k] ? "border-primary/50 bg-primary/15 text-primary" : "text-muted-foreground",
-          )}
-        >
-          {l}
-        </button>
-      ))}
+    <div className={className}>
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button variant="outline" size="sm" className="h-7 gap-1.5 text-xs">
+            <LayersIcon className="size-3.5" /> Layers
+            {hidden ? <span className="text-muted-foreground">({hidden} off)</span> : null}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent align="start" className="w-64 p-2">
+          <ul className="space-y-0.5 text-sm">
+            {items.map(([k, l]) => (
+              <li key={k}>
+                <label className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 hover:bg-accent/40">
+                  <input
+                    type="checkbox"
+                    checked={layers[k]}
+                    onChange={() => setLayers({ ...layers, [k]: !layers[k] })}
+                    className="accent-[var(--color-primary)]"
+                  />
+                  {l}
+                </label>
+              </li>
+            ))}
+          </ul>
+        </PopoverContent>
+      </Popover>
     </div>
   );
 }
@@ -209,7 +252,7 @@ function Workspace({ layers, setLayers }: { layers: Layers; setLayers: (l: Layer
   };
 
   return (
-    <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_420px]">
+    <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_380px]">
       <div className="min-w-0 space-y-2">
         <div className="flex flex-wrap items-center gap-2">
           <div className="inline-flex rounded-md border p-0.5" role="group" aria-label="Chart tool">
@@ -248,11 +291,11 @@ function Workspace({ layers, setLayers }: { layers: Layers; setLayers: (l: Layer
         />
         <p className="text-[11px] text-muted-foreground">
           {mode === "route"
-            ? "Click to add route points — clicks near an airport, VOR, checkpoint or waypoint snap to it."
+            ? "Click to add points (snaps to nearby airports, VORs and waypoints)."
             : mode === "measure"
-              ? "Click two points to measure distance and course; a third click starts a new measurement."
+              ? "Click two points to measure."
               : "Drag to pan."}{" "}
-          Scroll or use the buttons to zoom; drag to pan in any mode.
+          Scroll to zoom.
         </p>
       </div>
 
@@ -364,72 +407,72 @@ function Workspace({ layers, setLayers }: { layers: Layers; setLayers: (l: Layer
               ))}
             </ol>
           )}
-        </Panel>
-
-        {legs.length ? (
-          <div className="panel overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[520px] text-xs">
-                <thead>
-                  <tr className="border-b bg-muted/40 text-left">
-                    {["Leg", "Dist", "TC", "MC", "WCA", "MH", "GS", "ETE", "Fuel"].map((h) => (
-                      <th key={h} className="label-caps px-2 py-1.5 first:pl-3">
-                        {h}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="font-mono">
-                  {legs.map((l, i) => (
-                    <tr key={i} className="border-b last:border-0">
-                      <td className="px-2 py-1.5 pl-3 font-sans">
-                        {i + 1}→{i + 2}
-                      </td>
-                      <td className="px-2 py-1.5">{l.dist.toFixed(1)}</td>
-                      <td className="px-2 py-1.5">{fmtHdg(l.tc)}</td>
-                      <td className="px-2 py-1.5 text-magenta">{fmtHdg(l.mc)}</td>
-                      <td className="px-2 py-1.5">
-                        {Number.isFinite(l.wca)
-                          ? `${l.wca >= 0 ? "+" : ""}${l.wca.toFixed(0)}`
-                          : "—"}
-                      </td>
-                      <td className="px-2 py-1.5 font-semibold text-cyan">{fmtHdg(l.mh)}</td>
-                      <td className="px-2 py-1.5">
-                        {Number.isFinite(l.gs) ? l.gs.toFixed(0) : "—"}
-                      </td>
-                      <td className="px-2 py-1.5">{fmtMin(l.ete)}</td>
-                      <td className="px-2 py-1.5">
-                        {Number.isFinite(l.fuel) ? l.fuel.toFixed(1) : "—"}
-                      </td>
+          {legs.length ? (
+            <div className="-mx-4 mt-3 border-t">
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[480px] text-xs">
+                  <thead>
+                    <tr className="border-b bg-muted/40 text-left">
+                      {["Leg", "Dist", "TC", "MC", "WCA", "MH", "GS", "ETE", "Fuel"].map((h) => (
+                        <th key={h} className="label-caps px-2 py-1.5 first:pl-3">
+                          {h}
+                        </th>
+                      ))}
                     </tr>
-                  ))}
-                  <tr className="border-t bg-muted/40 font-semibold">
-                    <td className="px-2 py-1.5 pl-3 font-sans">Total</td>
-                    <td className="px-2 py-1.5">{totals.dist.toFixed(1)}</td>
-                    <td colSpan={5} />
-                    <td className="px-2 py-1.5">{fmtMin(totals.ete)}</td>
-                    <td className="px-2 py-1.5">{totals.fuel.toFixed(1)}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <div className="border-t px-3 py-2 text-[11px] text-muted-foreground">
-              Fuel excludes taxi, climb and the legal reserve (VFR day: +30 min ={" "}
-              {((Number(burn) || 0) * 0.5).toFixed(1)} gal).{" "}
-              {firstAp ? (
-                <Link
-                  to="/planner"
-                  search={{ from: firstAp.icao }}
-                  className="text-primary hover:underline"
+                  </thead>
+                  <tbody className="font-mono">
+                    {legs.map((l, i) => (
+                      <tr key={i} className="border-b last:border-0">
+                        <td className="px-2 py-1.5 pl-3 font-sans">
+                          {i + 1}→{i + 2}
+                        </td>
+                        <td className="px-2 py-1.5">{l.dist.toFixed(1)}</td>
+                        <td className="px-2 py-1.5">{fmtHdg(l.tc)}</td>
+                        <td className="px-2 py-1.5 text-magenta">{fmtHdg(l.mc)}</td>
+                        <td className="px-2 py-1.5">
+                          {Number.isFinite(l.wca)
+                            ? `${l.wca >= 0 ? "+" : ""}${l.wca.toFixed(0)}`
+                            : "—"}
+                        </td>
+                        <td className="px-2 py-1.5 font-semibold text-cyan">{fmtHdg(l.mh)}</td>
+                        <td className="px-2 py-1.5">
+                          {Number.isFinite(l.gs) ? l.gs.toFixed(0) : "—"}
+                        </td>
+                        <td className="px-2 py-1.5">{fmtMin(l.ete)}</td>
+                        <td className="px-2 py-1.5">
+                          {Number.isFinite(l.fuel) ? l.fuel.toFixed(1) : "—"}
+                        </td>
+                      </tr>
+                    ))}
+                    <tr className="border-t bg-muted/40 font-semibold">
+                      <td className="px-2 py-1.5 pl-3 font-sans">Total</td>
+                      <td className="px-2 py-1.5">{totals.dist.toFixed(1)}</td>
+                      <td colSpan={5} />
+                      <td className="px-2 py-1.5">{fmtMin(totals.ete)}</td>
+                      <td className="px-2 py-1.5">{totals.fuel.toFixed(1)}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div className="border-t px-4 pt-2 text-[11px] text-muted-foreground">
+                <span
+                  title={`Fuel excludes taxi, climb and the legal reserve (VFR day: +30 min = ${((Number(burn) || 0) * 0.5).toFixed(1)} gal).`}
                 >
-                  Build a full plan from {firstAp.icao} in the Flight Planner →
-                </Link>
-              ) : null}
+                  Fuel excludes taxi, climb and reserve.
+                </span>{" "}
+                {firstAp ? (
+                  <Link
+                    to="/planner"
+                    search={{ from: firstAp.icao }}
+                    className="text-primary hover:underline"
+                  >
+                    Full plan from {firstAp.icao} →
+                  </Link>
+                ) : null}
+              </div>
             </div>
-          </div>
-        ) : null}
-
-        <E6B />
+          ) : null}
+        </Panel>
       </div>
     </div>
   );

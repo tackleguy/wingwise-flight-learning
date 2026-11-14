@@ -246,7 +246,7 @@ function Planner() {
     );
   if (!altitudeOk)
     issues.push(
-      "Cruise altitude does not match the cruising-altitude rule for every leg (see below).",
+      "Cruise altitude does not match the cruising-altitude rule for every leg (see Fuel & checks).",
     );
   if (missingAlternate)
     issues.push("IFR: an alternate is required by the 1-2-3 rule — select one.");

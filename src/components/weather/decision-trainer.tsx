@@ -13,7 +13,7 @@ import {
   XCircle,
 } from "lucide-react";
 
-import { Notice, Pill } from "@/components/app/page";
+import { Pill } from "@/components/app/page";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -137,12 +137,6 @@ export function DecisionTrainer() {
 
   return (
     <div className="space-y-4">
-      <Notice tone="caution" title="Simulated weather for training.">
-        Every METAR, TAF, PIREP and advisory in these scenarios is invented for teaching. Never use
-        them for a real flight — get an official briefing (1800wxbrief.com or another FAA-approved
-        source).
-      </Notice>
-
       <div className="grid gap-4 lg:grid-cols-[240px_minmax(0,1fr)]">
         <div className="space-y-2">
           <ol className="panel divide-y overflow-hidden">

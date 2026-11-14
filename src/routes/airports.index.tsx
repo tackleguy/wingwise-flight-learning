@@ -1,9 +1,11 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { Building2, Map as MapIcon, Radio, Search, X } from "lucide-react";
+import { Building2, Map as MapIcon, Search, SlidersHorizontal, X } from "lucide-react";
 
 import { EmptyState, Notice, Page, PageHeader, Pill } from "@/components/app/page";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { AIRPORTS, AIRPORT_DATA_NOTICE } from "@/lib/data/airports";
 import { isIfrCapable } from "@/lib/data/airport-utils";
 import type { Airport, AirspaceClass } from "@/lib/data/types";
@@ -47,7 +49,8 @@ function AirportsIndex() {
     });
   }, [q, cls, towered, ifrOnly]);
 
-  const active = cls !== "all" || towered !== "all" || ifrOnly || q;
+  const filterCount = (cls !== "all" ? 1 : 0) + (towered !== "all" ? 1 : 0) + (ifrOnly ? 1 : 0);
+  const active = filterCount > 0 || q;
 
   return (
     <Page wide>
@@ -55,15 +58,15 @@ function AirportsIndex() {
         eyebrow="Fly"
         icon={Building2}
         title="Airport Database"
-        description="Runways, frequencies, airspace, procedures and diagrams for the airports used in TeachX training. Select an airport for its diagram, wind tool and nearby navaids."
+        description="Runways, frequencies, airspace and diagrams for TeachX training airports."
       />
-      <Notice tone="caution" title="Educational dataset." className="mb-5">
+      <Notice tone="caution" title="Educational dataset." className="mb-4">
         {AIRPORT_DATA_NOTICE.source}. {AIRPORT_DATA_NOTICE.currency}{" "}
         <strong>{AIRPORT_DATA_NOTICE.disclaimer}</strong>
       </Notice>
 
-      <div className="mb-4 flex flex-col gap-3 xl:flex-row xl:items-center">
-        <div className="relative xl:w-80">
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <div className="relative w-full sm:w-80">
           <Search className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={q}
@@ -73,76 +76,90 @@ function AirportsIndex() {
             aria-label="Search airports"
           />
         </div>
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs">
-          <div className="flex items-center gap-1" role="group" aria-label="Airspace class">
-            <span className="label-caps mr-1">Airspace</span>
-            {(["all", ...CLASSES] as const).map((c) => (
-              <button
-                key={c}
-                type="button"
-                aria-pressed={cls === c}
-                onClick={() => setCls(c)}
-                className={cn(
-                  "rounded border px-2 py-1 font-mono",
-                  cls === c
-                    ? "border-primary/50 bg-primary/15 text-primary"
-                    : "bg-card text-muted-foreground hover:text-foreground",
-                )}
-              >
-                {c === "all" ? "All" : c}
-              </button>
-            ))}
-          </div>
-          <div className="flex items-center gap-1" role="group" aria-label="Tower">
-            <span className="label-caps mr-1">Tower</span>
-            {(["all", "yes", "no"] as const).map((t) => (
-              <button
-                key={t}
-                type="button"
-                aria-pressed={towered === t}
-                onClick={() => setTowered(t)}
-                className={cn(
-                  "rounded border px-2 py-1",
-                  towered === t
-                    ? "border-primary/50 bg-primary/15 text-primary"
-                    : "bg-card text-muted-foreground hover:text-foreground",
-                )}
-              >
-                {t === "all" ? "Any" : t === "yes" ? "Towered" : "Non-towered"}
-              </button>
-            ))}
-          </div>
-          <label className="flex cursor-pointer items-center gap-2">
-            <input
-              type="checkbox"
-              checked={ifrOnly}
-              onChange={(e) => setIfrOnly(e.target.checked)}
-              className="accent-[var(--color-primary)]"
-            />
-            <span>IFR-capable (instrument approach)</span>
-          </label>
-          {active ? (
-            <button
-              type="button"
-              className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground"
-              onClick={() => {
-                setQ("");
-                setCls("all");
-                setTowered("all");
-                setIfrOnly(false);
-              }}
-            >
-              <X className="size-3.5" /> Clear filters
-            </button>
-          ) : null}
-        </div>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline" size="sm" className="h-9 gap-1.5">
+              <SlidersHorizontal className="size-4" /> Filters
+              {filterCount ? (
+                <span className="rounded bg-primary/15 px-1.5 font-mono text-xs text-primary">
+                  {filterCount}
+                </span>
+              ) : null}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent align="start" className="w-80 space-y-4 text-xs">
+            <div role="group" aria-label="Airspace class">
+              <p className="label-caps mb-1.5">Airspace</p>
+              <div className="flex flex-wrap gap-1">
+                {(["all", ...CLASSES] as const).map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    aria-pressed={cls === c}
+                    onClick={() => setCls(c)}
+                    className={cn(
+                      "rounded border px-2 py-1 font-mono",
+                      cls === c
+                        ? "border-primary/50 bg-primary/15 text-primary"
+                        : "bg-card text-muted-foreground hover:text-foreground",
+                    )}
+                  >
+                    {c === "all" ? "All" : c}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div role="group" aria-label="Tower">
+              <p className="label-caps mb-1.5">Tower</p>
+              <div className="flex flex-wrap gap-1">
+                {(["all", "yes", "no"] as const).map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    aria-pressed={towered === t}
+                    onClick={() => setTowered(t)}
+                    className={cn(
+                      "rounded border px-2 py-1",
+                      towered === t
+                        ? "border-primary/50 bg-primary/15 text-primary"
+                        : "bg-card text-muted-foreground hover:text-foreground",
+                    )}
+                  >
+                    {t === "all" ? "Any" : t === "yes" ? "Towered" : "Non-towered"}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <label className="flex cursor-pointer items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={ifrOnly}
+                onChange={(e) => setIfrOnly(e.target.checked)}
+                className="accent-[var(--color-primary)]"
+              />
+              IFR-capable (instrument approach)
+            </label>
+          </PopoverContent>
+        </Popover>
+        <span className="text-xs text-muted-foreground">{list.length} airports</span>
+        {active ? (
+          <button
+            type="button"
+            className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+            onClick={() => {
+              setQ("");
+              setCls("all");
+              setTowered("all");
+              setIfrOnly(false);
+            }}
+          >
+            <X className="size-3.5" /> Clear
+          </button>
+        ) : null}
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,520px)]">
         <div className="panel overflow-hidden">
-          <div className="flex items-center justify-between border-b px-4 py-2.5">
-            <span className="label-caps">{list.length} airports</span>
-          </div>
           {list.length === 0 ? (
             <div className="p-4">
               <EmptyState
@@ -225,10 +242,12 @@ function AirportsIndex() {
                           {longest.toLocaleString()} ft
                         </td>
                         <td className="px-2 py-2 align-top">
-                          <div className="flex flex-wrap gap-1">
-                            {a.towered ? <Pill tone="ok">Twr</Pill> : <Pill>CTAF</Pill>}
-                            {isIfrCapable(a) ? <Pill tone="primary">IFR</Pill> : null}
-                          </div>
+                          <span className="text-xs whitespace-nowrap text-muted-foreground">
+                            <span className={a.towered ? "text-ok" : undefined}>
+                              {a.towered ? "Twr" : "CTAF"}
+                            </span>
+                            {isIfrCapable(a) ? " · IFR" : ""}
+                          </span>
                         </td>
                       </tr>
                     );
@@ -415,9 +434,6 @@ function AirportMap({
         <span className="flex items-center gap-1.5">
           <span className="inline-block size-2.5 rounded-full border-2 border-magenta" />{" "}
           Non-towered
-        </span>
-        <span className="flex items-center gap-1.5">
-          <Radio className="size-3" /> Click a symbol for details
         </span>
         <span className="ml-auto">Schematic plot — not a chart</span>
       </div>

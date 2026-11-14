@@ -15,8 +15,9 @@ import {
   Move3d,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import type { ReactNode } from "react";
 
-import { EmptyState, Notice, Page, PageHeader, Panel, Pill, Stat } from "@/components/app/page";
+import { EmptyState, Notice, Page, PageHeader, Panel } from "@/components/app/page";
 import { HrefLink, buildHref } from "@/components/app/xlink";
 import {
   AircraftSilhouette,
@@ -121,24 +122,22 @@ function Detail({ a }: { a: AircraftInfo }) {
         }
       />
 
-      <div className="mb-6 flex flex-wrap gap-1.5">
-        {a.categories.map((c) => (
-          <Pill key={c} tone="primary">
-            {CATEGORY_LABELS[c]}
-          </Pill>
-        ))}
-        <Pill>{a.seats} seats</Pill>
-        <Pill>First flight {a.firstFlight}</Pill>
-        <Pill tone="caution">Educational approximations</Pill>
-      </div>
+      <Notice tone="caution" title="Educational approximations." className="mb-3">
+        {SIMULATION_ASSUMPTIONS}
+      </Notice>
 
-      <div className="mb-6 grid gap-4 lg:grid-cols-2">
-        <div className="avionics-screen grid-backdrop p-2">
+      <p className="mb-5 text-sm text-muted-foreground">
+        {a.categories.map((c) => CATEGORY_LABELS[c]).join(", ")} · {a.seats} seats · First flight{" "}
+        {a.firstFlight}
+      </p>
+
+      <div className="mb-2 grid gap-4 sm:grid-cols-2">
+        <div className="avionics-screen grid-backdrop hidden p-2 sm:block">
           <AircraftSilhouette
             spec={a.silhouette}
             spanFt={p.wingSpanFt}
             view="top"
-            className="h-56 w-full"
+            className="h-40 w-full"
           />
         </div>
         <div className="avionics-screen grid-backdrop p-2">
@@ -146,37 +145,36 @@ function Detail({ a }: { a: AircraftInfo }) {
             spec={a.silhouette}
             spanFt={p.wingSpanFt}
             view="side"
-            className="h-56 w-full"
+            className="h-40 w-full"
           />
         </div>
       </div>
-      <p className="-mt-4 mb-6 text-[11px] text-muted-foreground">
-        Schematic line drawings generated to scale from approximate dimensions — not manufacturer
-        drawings.
+      <p className="mb-5 text-[11px] text-muted-foreground">
+        Schematic drawings to scale — not manufacturer drawings.
       </p>
 
-      <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Stat
+      <dl className="mb-6 grid grid-cols-2 gap-y-3 rounded-lg border px-4 py-3 sm:grid-cols-4">
+        <Fact
           label="Cruise"
-          value={`${p.cruiseKtas}`}
+          value={`${p.cruiseKtas} kt`}
           sub={`KTAS at ${p.cruiseAltFt.toLocaleString()} ft`}
         />
-        <Stat
+        <Fact
           label="Range"
-          value={Math.round(rangeNm(p)).toLocaleString()}
-          sub="nm, 45-min reserve, still air"
+          value={`${Math.round(rangeNm(p)).toLocaleString()} nm`}
+          sub="45-min reserve, still air"
         />
-        <Stat
+        <Fact
           label="Endurance"
-          value={enduranceHr(p).toFixed(1)}
-          sub={`h on ${p.usableFuelGal.toLocaleString()} gal ${p.fuelType}`}
+          value={`${enduranceHr(p).toFixed(1)} h`}
+          sub={`on ${p.usableFuelGal.toLocaleString()} gal ${p.fuelType}`}
         />
-        <Stat
+        <Fact
           label="Ceiling"
-          value={p.serviceCeilingFt.toLocaleString()}
-          sub="ft service ceiling"
+          value={`${p.serviceCeilingFt.toLocaleString()} ft`}
+          sub="service ceiling"
         />
-      </div>
+      </dl>
 
       <Tabs defaultValue="overview">
         <div className="overflow-x-auto">
@@ -191,15 +189,13 @@ function Detail({ a }: { a: AircraftInfo }) {
         </div>
 
         <TabsContent value="overview" className="animate-fade-up">
-          <div className="grid gap-4 lg:grid-cols-3">
-            <Panel title="About this aircraft" className="lg:col-span-2">
-              <div className="space-y-3 text-sm leading-relaxed text-foreground/90">
-                {a.overview.map((t, i) => (
-                  <p key={i}>{t}</p>
-                ))}
-              </div>
-            </Panel>
-            <Panel title="At a glance">
+          <div className="grid gap-8 lg:grid-cols-3">
+            <div className="max-w-3xl space-y-3 text-sm leading-relaxed text-foreground/90 lg:col-span-2">
+              {a.overview.map((t, i) => (
+                <p key={i}>{t}</p>
+              ))}
+            </div>
+            <div>
               <dl className="space-y-2 text-sm">
                 {[
                   ["Manufacturer", a.manufacturer],
@@ -218,16 +214,15 @@ function Detail({ a }: { a: AircraftInfo }) {
                   </div>
                 ))}
               </dl>
-            </Panel>
+            </div>
           </div>
         </TabsContent>
 
         <TabsContent value="cockpit" className="animate-fade-up">
-          <div className="grid gap-4 lg:grid-cols-2">
-            <Panel title="Cockpit layout">
-              <p className="text-sm leading-relaxed text-foreground/90">{a.cockpit.layout}</p>
-            </Panel>
-            <Panel title="Key instruments">
+          <div className="grid gap-8 lg:grid-cols-2">
+            <p className="text-sm leading-relaxed text-foreground/90">{a.cockpit.layout}</p>
+            <div>
+              <h3 className="label-caps mb-2">Key instruments</h3>
               <ul className="space-y-1.5 text-sm">
                 {a.cockpit.instruments.map((t) => (
                   <li key={t} className="flex gap-2">
@@ -236,9 +231,9 @@ function Detail({ a }: { a: AircraftInfo }) {
                   </li>
                 ))}
               </ul>
-            </Panel>
+            </div>
           </div>
-          <div className="mt-4 flex flex-wrap gap-2">
+          <div className="mt-6 flex flex-wrap gap-2">
             <Button variant="outline" size="sm" asChild>
               <Link to="/avionics">Practice in the Avionics Lab</Link>
             </Button>
@@ -246,17 +241,12 @@ function Detail({ a }: { a: AircraftInfo }) {
         </TabsContent>
 
         <TabsContent value="systems" className="animate-fade-up">
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-x-8 gap-y-6 md:grid-cols-2">
             <SystemPanel icon={Cog} title="Engine & propeller" s={a.engine} />
             <SystemPanel icon={Fuel} title="Fuel system" s={a.fuel} />
             <SystemPanel icon={Zap} title="Electrical system" s={a.electrical} />
             <SystemPanel icon={CircleDot} title="Landing gear" s={a.gear} />
-            <SystemPanel
-              icon={Move3d}
-              title="Flight controls"
-              s={a.controls}
-              className="md:col-span-2"
-            />
+            <SystemPanel icon={Move3d} title="Flight controls" s={a.controls} />
           </div>
         </TabsContent>
 
@@ -274,8 +264,9 @@ function Detail({ a }: { a: AircraftInfo }) {
                 </p>
               ) : null}
             </Panel>
-            <div className="space-y-4">
-              <Panel title="V-speeds (KIAS, simulator model)">
+            <div className="space-y-6">
+              <section>
+                <h3 className="label-caps mb-2">V-speeds (KIAS, simulator model)</h3>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
@@ -298,8 +289,9 @@ function Detail({ a }: { a: AircraftInfo }) {
                     </tbody>
                   </table>
                 </div>
-              </Panel>
-              <Panel title="Other operating limitations">
+              </section>
+              <section>
+                <h3 className="label-caps mb-2">Other operating limitations</h3>
                 <ul className="list-disc space-y-1.5 pl-5 text-sm">
                   {a.limitations.map((t) => (
                     <li key={t}>{t}</li>
@@ -309,13 +301,14 @@ function Detail({ a }: { a: AircraftInfo }) {
                     decreases.
                   </li>
                 </ul>
-              </Panel>
+              </section>
             </div>
           </div>
         </TabsContent>
 
         <TabsContent value="performance" className="animate-fade-up">
-          <Panel title="Performance specification (from the simulator flight model)">
+          <div>
+            <h3 className="label-caps mb-2">From the simulator flight model</h3>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <tbody>
@@ -331,36 +324,34 @@ function Detail({ a }: { a: AircraftInfo }) {
                 </tbody>
               </table>
             </div>
-          </Panel>
+          </div>
         </TabsContent>
 
         <TabsContent value="training" className="animate-fade-up">
-          <div className="grid gap-3 md:grid-cols-2">
+          <ul className="divide-y rounded-lg border">
             {a.training.map((t) => (
-              <div key={t.scenario} className="panel flex flex-col gap-2 p-4">
-                <div className="flex items-center justify-between gap-2">
+              <li
+                key={t.scenario}
+                className="flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div className="min-w-0">
                   <h3 className="font-semibold">{t.label}</h3>
-                  <Pill tone="cyan">{t.scenario}</Pill>
+                  <p className="text-sm text-muted-foreground">{t.why}</p>
                 </div>
-                <p className="text-sm text-muted-foreground">{t.why}</p>
-                <Button size="sm" variant="outline" className="mt-auto self-start" asChild>
+                <Button size="sm" variant="outline" className="shrink-0 self-start" asChild>
                   <HrefLink
                     href={buildHref("/simulator", { scenario: t.scenario, aircraft: a.id })}
                   >
-                    <PlaneTakeoff className="size-4" /> Fly scenario in the {p.shortName}
+                    <PlaneTakeoff className="size-4" /> Fly scenario
                   </HrefLink>
                 </Button>
-              </div>
+              </li>
             ))}
-          </div>
+          </ul>
         </TabsContent>
       </Tabs>
 
-      <Notice tone="caution" title="Simulation assumptions." className="mt-8">
-        {SIMULATION_ASSUMPTIONS}
-      </Notice>
-
-      <div className="mt-6 flex items-center justify-between gap-2 border-t pt-4 text-sm">
+      <div className="mt-10 flex items-center justify-between gap-2 border-t pt-4 text-sm">
         {prev ? (
           <Link
             to="/aircraft/$id"
@@ -398,13 +389,13 @@ function SystemPanel({
   className?: string;
 }) {
   return (
-    <div className={`panel p-4 ${className ?? ""}`}>
+    <div className={className}>
       <div className="mb-2 flex items-center gap-2">
         <Icon className="size-4 text-primary" />
         <h3 className="text-sm font-semibold">{title}</h3>
       </div>
       <p className="text-sm text-foreground/90">{s.summary}</p>
-      <ul className="mt-3 space-y-1.5 border-t pt-3 text-sm text-muted-foreground">
+      <ul className="mt-2 space-y-1.5 text-sm text-muted-foreground">
         {s.details.map((d) => (
           <li key={d} className="flex gap-2">
             <span className="mt-2 size-1 shrink-0 rounded-full bg-cyan" />
@@ -412,6 +403,16 @@ function SystemPanel({
           </li>
         ))}
       </ul>
+    </div>
+  );
+}
+
+function Fact({ label, value, sub }: { label: string; value: ReactNode; sub?: string }) {
+  return (
+    <div className="min-w-0">
+      <dt className="label-caps">{label}</dt>
+      <dd className="mt-0.5 font-mono text-lg font-semibold tabular">{value}</dd>
+      {sub ? <dd className="text-[11px] text-muted-foreground">{sub}</dd> : null}
     </div>
   );
 }
