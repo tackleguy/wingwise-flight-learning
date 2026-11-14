@@ -5,6 +5,7 @@
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { Keyboard } from "lucide-react";
 import { clamp } from "@/lib/geo";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import type { SimEngine } from "@/sim/engine";
 import { useSimEngine, useSimSelector } from "@/sim/react";
@@ -100,7 +101,7 @@ function YokePad() {
       ref={ref}
       role="application"
       aria-label="Yoke pad: drag to roll and pitch. Drag down to pull (nose up)."
-      className="relative aspect-square w-full max-w-[150px] cursor-crosshair touch-none rounded-xl border border-white/10 bg-[radial-gradient(circle,oklch(0.22_0.01_258),oklch(0.13_0.01_258))]"
+      className="relative aspect-square w-full max-w-[112px] cursor-crosshair touch-none rounded-xl border border-white/10 bg-[radial-gradient(circle,oklch(0.22_0.01_258),oklch(0.13_0.01_258))]"
       onPointerDown={(e) => {
         active.current = true;
         e.currentTarget.setPointerCapture(e.pointerId);
@@ -153,6 +154,15 @@ function HoldBtn({
   );
 }
 
+const KEYS: [string, string][] = [
+  ["W / S", "pitch (S = pull)"],
+  ["A / D", "roll"],
+  ["Q / E", "rudder"],
+  ["+ / −", "throttle"],
+  ["[ / ]", "trim"],
+  ["P", "pause"],
+];
+
 export function FlightControls({ className }: { className?: string | undefined }) {
   const engine = useSimEngine();
   const c = useSimSelector((s) => s.controls);
@@ -160,16 +170,10 @@ export function FlightControls({ className }: { className?: string | undefined }
   const flaps = engine.perf.flapDetents;
   return (
     <div className={cn("rounded-xl border border-white/10 bg-card p-3", className)}>
-      <div className="mb-2 flex items-center justify-between">
-        <span className="label-caps">Flight controls</span>
-        {apOn ? (
-          <span className="font-mono text-[10px] text-ok">AP ENGAGED — input disconnects it</span>
-        ) : null}
-      </div>
-      <div className="grid gap-3 sm:grid-cols-[150px_1fr]">
-        <div className="flex flex-col items-center gap-2">
+      <div className="grid items-center gap-3 sm:grid-cols-[112px_minmax(0,1fr)]">
+        <div className="flex items-center gap-2 sm:flex-col">
           <YokePad />
-          <div className="flex w-full max-w-[150px] gap-1">
+          <div className="flex w-full max-w-[112px] gap-1">
             <HoldBtn
               label="Left rudder"
               onDown={() => engine.setControls({ rudder: -0.6 })}
@@ -186,7 +190,7 @@ export function FlightControls({ className }: { className?: string | undefined }
             </HoldBtn>
           </div>
         </div>
-        <div className="space-y-2.5">
+        <div className="min-w-0 space-y-2.5">
           <label className="flex items-center gap-2">
             <span className="w-16 font-mono text-[10px] font-bold text-white/60">THROTTLE</span>
             <input
@@ -195,7 +199,7 @@ export function FlightControls({ className }: { className?: string | undefined }
               max={100}
               value={Math.round(c.throttle * 100)}
               onChange={(e) => engine.setControls({ throttle: Number(e.target.value) / 100 })}
-              className="flex-1 accent-white"
+              className="min-w-0 flex-1 accent-white"
               aria-label="Throttle"
             />
             <span className="w-10 text-right font-mono text-[11px] tabular">
@@ -210,9 +214,9 @@ export function FlightControls({ className }: { className?: string | undefined }
               onClick={() => engine.setControls({ trim: clamp(c.trim - 0.02, -1, 1) })}
               aria-label="Trim nose down"
             >
-              NOSE DN
+              DN
             </button>
-            <div className="relative h-2 flex-1 rounded-full bg-black/60">
+            <div className="relative h-2 min-w-0 flex-1 rounded-full bg-black/60">
               <div
                 className="absolute top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan"
                 style={{ left: `${(c.trim + 1) * 50}%` }}
@@ -224,12 +228,12 @@ export function FlightControls({ className }: { className?: string | undefined }
               onClick={() => engine.setControls({ trim: clamp(c.trim + 0.02, -1, 1) })}
               aria-label="Trim nose up"
             >
-              NOSE UP
+              UP
             </button>
           </div>
           <div className="flex items-center gap-2">
             <span className="w-16 font-mono text-[10px] font-bold text-white/60">FLAPS</span>
-            <div className="flex flex-1 gap-1">
+            <div className="flex min-w-0 flex-1 gap-1">
               {flaps.map((deg, i) => (
                 <button
                   key={deg}
@@ -248,15 +252,30 @@ export function FlightControls({ className }: { className?: string | undefined }
               ))}
             </div>
           </div>
-          <div className="flex items-start gap-2 rounded-md bg-muted/40 px-2 py-1.5 text-[11px] leading-relaxed text-muted-foreground">
-            <Keyboard className="mt-0.5 size-3.5 shrink-0" />
-            <span>
-              <b className="text-foreground">W/S</b> pitch (S = pull) ·{" "}
-              <b className="text-foreground">A/D</b> roll · <b className="text-foreground">Q/E</b>{" "}
-              rudder · <b className="text-foreground">+/−</b> throttle ·{" "}
-              <b className="text-foreground">[ ]</b> trim · <b className="text-foreground">P</b>{" "}
-              pause
-            </span>
+          <div className="flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
+            <Popover>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-1.5 hover:text-foreground"
+                >
+                  <Keyboard className="size-3.5" /> Keyboard keys
+                </button>
+              </PopoverTrigger>
+              <PopoverContent align="start" className="w-56 p-3">
+                <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
+                  {KEYS.map(([k, v]) => (
+                    <div key={k} className="contents">
+                      <dt className="font-mono font-bold">{k}</dt>
+                      <dd className="text-muted-foreground">{v}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </PopoverContent>
+            </Popover>
+            {apOn ? (
+              <span className="font-mono text-[10px] text-ok">AP ON — input disconnects</span>
+            ) : null}
           </div>
         </div>
       </div>

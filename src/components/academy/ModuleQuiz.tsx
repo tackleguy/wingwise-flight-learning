@@ -107,13 +107,10 @@ export function ModuleQuiz({
     return (
       <div className="space-y-5">
         <div
-          className={cn(
-            "panel flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between",
-            pass ? "border-ok/40" : "border-caution/40",
-          )}
+          className="flex flex-col gap-4 border-b pb-5 sm:flex-row sm:items-center sm:justify-between"
         >
           <div>
-            <p className="label-caps">Module exam result</p>
+            <p className="text-xs text-muted-foreground">Module exam result</p>
             <p
               className={cn(
                 "mt-1 font-mono text-4xl font-bold tabular",
@@ -141,17 +138,14 @@ export function ModuleQuiz({
             {showAll ? "Hide explanations for correct answers" : "Show all explanations"}
           </Button>
         </div>
-        <ol className="space-y-3">
+        <ol className="divide-y border-y">
           {questions.map((q, i) => {
             const a = answers[i] ?? null;
             const ok = a === q.answer;
             return (
               <li
                 key={q.id}
-                className={cn(
-                  "rounded-md border p-3.5",
-                  ok ? "border-border" : "border-warning/40 bg-warning/[0.03]",
-                )}
+                className="py-3.5"
               >
                 <div className="flex gap-2">
                   {ok ? (
@@ -220,7 +214,7 @@ export function ModuleQuiz({
       />
 
       {mode === "single" && q ? (
-        <div className="panel p-4 sm:p-5">
+        <div className="pt-2">
           <QuestionCard
             q={q}
             n={idx + 1}
@@ -270,9 +264,9 @@ export function ModuleQuiz({
           </div>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="divide-y">
           {questions.map((qq, i) => (
-            <div key={qq.id} className="panel p-4">
+            <div key={qq.id} className="py-5 first:pt-2">
               <QuestionCard
                 q={qq}
                 n={i + 1}
@@ -282,7 +276,7 @@ export function ModuleQuiz({
               />
             </div>
           ))}
-          <div className="flex items-center justify-end gap-3">
+          <div className="flex items-center justify-end gap-3 pt-4">
             {answered < questions.length ? (
               <span className="text-xs text-caution">
                 {questions.length - answered} unanswered — they will be marked wrong
@@ -302,13 +296,15 @@ export function ModuleQuiz({
       ) : null}
 
       {history.length ? (
-        <div className="rounded-md border">
-          <div className="border-b px-3 py-2 text-xs font-semibold">Previous attempts</div>
-          <ul className="divide-y text-xs">
+        <details className="pt-2 text-xs">
+          <summary className="cursor-pointer text-muted-foreground select-none hover:text-foreground">
+            Previous attempts ({history.length})
+          </summary>
+          <ul className="mt-2 divide-y border-y">
             {history.map((h) => {
               const pct = Math.round((h.score / h.total) * 100);
               return (
-                <li key={h.id} className="flex items-center justify-between px-3 py-1.5">
+                <li key={h.id} className="flex items-center justify-between py-1.5">
                   <span className="text-muted-foreground">{formatDateTime(h.date)}</span>
                   <span className="flex items-center gap-2 font-mono">
                     {h.score}/{h.total}
@@ -318,7 +314,7 @@ export function ModuleQuiz({
               );
             })}
           </ul>
-        </div>
+        </details>
       ) : null}
     </div>
   );

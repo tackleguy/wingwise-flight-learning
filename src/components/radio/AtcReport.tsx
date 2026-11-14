@@ -3,7 +3,7 @@
  */
 import { useState, type ReactNode } from "react";
 import { CheckCircle2, ChevronDown, CircleAlert, Trophy, XCircle } from "lucide-react";
-import { Meter, Notice, Pill } from "@/components/app/page";
+import { Meter, Pill } from "@/components/app/page";
 import { cn } from "@/lib/utils";
 import type { RadioLine, SessionReport } from "@/lib/atc/types";
 import { AtcTranscript } from "./AtcTranscript";
@@ -88,14 +88,13 @@ export function AtcReport({
           : "warning";
   return (
     <div className="space-y-5 animate-fade-up">
-      <div className="panel flex flex-col gap-5 p-5 sm:flex-row sm:items-center">
+      <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
         <ScoreRing score={report.score} />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <Trophy className="size-4 text-caution" />
-            <span className="label-caps">Communication report</span>
+            <span className="label-caps">Communication report · simulated ATC</span>
             <Pill tone={gradeTone}>{report.grade}</Pill>
-            <Pill tone="caution">Simulated ATC</Pill>
           </div>
           <h2 className="mt-1 text-xl font-bold tracking-tight">{title}</h2>
           {subtitle ? <div className="mt-1 text-sm text-muted-foreground">{subtitle}</div> : null}
@@ -104,8 +103,8 @@ export function AtcReport({
       </div>
       {note}
 
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)]">
-        <div className="panel p-4">
+      <div className="grid gap-8 border-t pt-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)]">
+        <div>
           <div className="label-caps mb-3">Score breakdown</div>
           {report.categories.length ? (
             <div className="space-y-3">
@@ -121,7 +120,7 @@ export function AtcReport({
             <p className="text-sm text-muted-foreground">No transmissions were scored.</p>
           )}
           {report.strengths.length ? (
-            <div className="mt-4 border-t pt-3">
+            <div className="mt-4">
               <div className="label-caps mb-1.5">Strengths</div>
               <ul className="space-y-1 text-xs">
                 {report.strengths.map((s) => (
@@ -134,7 +133,7 @@ export function AtcReport({
           ) : null}
         </div>
 
-        <div className="panel p-4">
+        <div>
           <div className="label-caps mb-3">What to work on</div>
           {report.feedback.length ? (
             <ul className="space-y-2.5 text-sm">
@@ -153,11 +152,9 @@ export function AtcReport({
         </div>
       </div>
 
-      <div className="panel">
-        <div className="border-b px-4 py-2.5">
-          <span className="label-caps">Per-transmission feedback</span>
-        </div>
-        <ul className="divide-y">
+      <div>
+        <div className="label-caps mb-2">Per-transmission feedback</div>
+        <ul className="divide-y rounded-lg border">
           {report.transmissions.map((t) => {
             const isOpen = open === t.id;
             const bad = t.items.filter((i) => !i.ok);
@@ -240,9 +237,10 @@ export function AtcReport({
                       ))}
                     </ul>
                     {bad.length ? (
-                      <Notice title="Correct phraseology:">
-                        <span className="font-mono">“{t.example}”</span>
-                      </Notice>
+                      <p className="text-xs">
+                        <span className="text-muted-foreground">Correct phraseology: </span>
+                        <span className="font-mono text-ok">“{t.example}”</span>
+                      </p>
                     ) : null}
                   </div>
                 ) : null}
@@ -252,12 +250,12 @@ export function AtcReport({
         </ul>
       </div>
 
-      <details className="panel group">
-        <summary className="flex cursor-pointer items-center justify-between px-4 py-3 text-sm font-semibold">
+      <details className="group">
+        <summary className="flex cursor-pointer list-none items-center gap-1.5 py-1 text-sm font-semibold text-muted-foreground hover:text-foreground [&::-webkit-details-marker]:hidden">
+          <ChevronDown className="size-4 transition-transform group-open:rotate-180" />
           Full transcript
-          <ChevronDown className="size-4 text-muted-foreground transition-transform group-open:rotate-180" />
         </summary>
-        <div className="px-4 pb-4">
+        <div className="pt-2">
           <AtcTranscript
             lines={lines}
             {...(pilotLabel ? { pilotLabel } : {})}

@@ -5,17 +5,16 @@ import {
   ArrowRight,
   BookOpen,
   CheckCircle2,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Circle,
-  Clock,
   GraduationCap,
   Layers,
-  Target,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { EmptyState, Notice, Page, PageHeader, Pill } from "@/components/app/page";
+import { EmptyState, Notice, Page, PageHeader } from "@/components/app/page";
 import { bestQuiz, moduleCompletion } from "@/components/academy/CourseOverview";
 import { Flashcards } from "@/components/academy/Flashcards";
 import { LessonRenderer } from "@/components/academy/LessonRenderer";
@@ -130,13 +129,51 @@ function ModulePage() {
     else go(n, "quiz");
   };
 
+  const lessonList = (
+    <ol className="space-y-0.5">
+      {mod.lessons.map((l, i) => {
+        const done = !!lessonsDone[l.id];
+        const active = i + 1 === n;
+        return (
+          <li key={l.id}>
+            <button
+              type="button"
+              onClick={() => go(i + 1)}
+              aria-current={active ? "step" : undefined}
+              className={cn(
+                "flex w-full items-start gap-2.5 rounded-md px-2 py-2 text-left text-sm transition-colors",
+                active ? "bg-primary/10 text-primary" : "text-foreground/85 hover:bg-accent/40",
+              )}
+            >
+              {done ? (
+                <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-ok" />
+              ) : (
+                <Circle
+                  className={cn(
+                    "mt-0.5 size-4 shrink-0",
+                    active ? "text-primary" : "text-muted-foreground/50",
+                  )}
+                />
+              )}
+              <span className={cn("min-w-0 flex-1 leading-snug", active && "font-semibold")}>
+                {l.title}
+              </span>
+              <span className="shrink-0 text-[11px] text-muted-foreground tabular">
+                {l.minutes}m
+              </span>
+            </button>
+          </li>
+        );
+      })}
+    </ol>
+  );
+
   return (
     <Page>
       <div ref={topRef} className="scroll-mt-20" />
       <PageHeader
         eyebrow={`${course.title} · Module ${mod.number} of ${course.modules.length}`}
         title={mod.title}
-        description={mod.summary}
         actions={
           <Link
             to={coursePath}
@@ -149,7 +186,7 @@ function ModulePage() {
       />
 
       <Tabs value={tab} onValueChange={setTab}>
-        <div className="-mx-4 mb-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+        <div className="-mx-4 mb-6 overflow-x-auto px-4 sm:mx-0 sm:px-0">
           <TabsList>
             <TabsTrigger value="lessons" className="gap-1.5">
               <BookOpen className="size-3.5" />
@@ -180,137 +217,82 @@ function ModulePage() {
         </div>
 
         <TabsContent value="lessons">
-          <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
-            {/* Lesson list */}
+          <div className="grid gap-8 lg:grid-cols-[240px_minmax(0,1fr)] xl:gap-12">
+            {/* Lesson list: a quiet sidebar on desktop, collapsed on mobile. */}
             <aside className="lg:sticky lg:top-4 lg:self-start">
-              <div className="panel overflow-hidden">
-                <div className="flex items-center justify-between border-b px-3 py-2">
-                  <span className="label-caps">Lessons</span>
-                  <span className="font-mono text-[11px] text-muted-foreground">
-                    {comp.done}/{comp.total} done
+              <details className="group rounded-md border lg:hidden">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2.5 text-sm select-none [&::-webkit-details-marker]:hidden">
+                  <span className="min-w-0 truncate">
+                    <span className="text-muted-foreground">
+                      Lesson {n} of {total} ·
+                    </span>{" "}
+                    <span className="font-medium">{lesson?.title}</span>
                   </span>
-                </div>
-                <ol className="max-h-72 divide-y overflow-y-auto lg:max-h-none">
-                  {mod.lessons.map((l, i) => {
-                    const done = !!lessonsDone[l.id];
-                    const active = i + 1 === n;
-                    return (
-                      <li key={l.id}>
-                        <button
-                          type="button"
-                          onClick={() => go(i + 1)}
-                          className={cn(
-                            "flex w-full items-start gap-2.5 px-3 py-2.5 text-left text-sm transition-colors",
-                            active ? "bg-primary/10" : "hover:bg-accent/40",
-                          )}
-                        >
-                          {done ? (
-                            <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-ok" />
-                          ) : (
-                            <Circle
-                              className={cn(
-                                "mt-0.5 size-4 shrink-0",
-                                active ? "text-primary" : "text-muted-foreground/50",
-                              )}
-                            />
-                          )}
-                          <span className="min-w-0 flex-1">
-                            <span
-                              className={cn(
-                                "block leading-snug",
-                                active && "font-semibold text-primary",
-                              )}
-                            >
-                              {i + 1}. {l.title}
-                            </span>
-                            <span className="text-[11px] text-muted-foreground">
-                              {l.minutes} min
-                            </span>
-                          </span>
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ol>
-                <div className="grid grid-cols-2 gap-px border-t bg-border">
-                  <button
-                    type="button"
-                    onClick={() => setTab("flashcards")}
-                    className="flex items-center justify-center gap-1.5 bg-card px-2 py-2 text-xs hover:bg-accent/40"
-                  >
-                    <Layers className="size-3.5" /> Flashcards
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setTab("quiz")}
-                    className="flex items-center justify-center gap-1.5 bg-card px-2 py-2 text-xs hover:bg-accent/40"
-                  >
-                    <GraduationCap className="size-3.5" /> Module exam
-                  </button>
-                </div>
-              </div>
-              <div className="mt-3 hidden gap-2 lg:grid">
-                {prevMod ? (
-                  <Link
-                    to="/academy/$course/$module"
-                    params={{ course: course.id, module: prevMod.id }}
-                    search={{ lesson: 1 }}
-                    className="flex items-center gap-1.5 rounded-md border px-3 py-2 text-xs text-muted-foreground hover:text-foreground"
-                  >
-                    <ChevronLeft className="size-3.5" />
-                    <span className="truncate">
-                      Module {prevMod.number}: {prevMod.title}
-                    </span>
-                  </Link>
-                ) : null}
-                {nextMod ? (
-                  <Link
-                    to="/academy/$course/$module"
-                    params={{ course: course.id, module: nextMod.id }}
-                    search={{ lesson: 1 }}
-                    className="flex items-center justify-between gap-1.5 rounded-md border px-3 py-2 text-xs text-muted-foreground hover:text-foreground"
-                  >
-                    <span className="truncate">
-                      Module {nextMod.number}: {nextMod.title}
-                    </span>
-                    <ChevronRight className="size-3.5" />
-                  </Link>
-                ) : null}
-              </div>
-            </aside>
-
-            {/* Lesson content */}
-            {lesson ? (
-              <article className="min-w-0 animate-fade-up" key={lesson.id}>
-                <div className="mb-4 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                  <span className="font-mono">
-                    Lesson {n} of {total}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Clock className="size-3.5" />
-                    {lesson.minutes} min
-                  </span>
-                  {isDone ? (
-                    <Pill tone="ok">
-                      <CheckCircle2 className="size-3" /> Completed
-                    </Pill>
+                  <ChevronDown className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
+                </summary>
+                <div className="border-t p-1.5">{lessonList}</div>
+              </details>
+              <nav className="hidden lg:block" aria-label="Lessons">
+                <p className="label-caps mb-2 px-2">Lessons</p>
+                {lessonList}
+                <div className="mt-6 space-y-1 border-t pt-4 text-xs">
+                  {prevMod ? (
+                    <Link
+                      to="/academy/$course/$module"
+                      params={{ course: course.id, module: prevMod.id }}
+                      search={{ lesson: 1 }}
+                      className="flex items-center gap-1.5 px-2 py-1 text-muted-foreground hover:text-foreground"
+                    >
+                      <ChevronLeft className="size-3.5 shrink-0" />
+                      <span className="truncate">{prevMod.title}</span>
+                    </Link>
+                  ) : null}
+                  {nextMod ? (
+                    <Link
+                      to="/academy/$course/$module"
+                      params={{ course: course.id, module: nextMod.id }}
+                      search={{ lesson: 1 }}
+                      className="flex items-center gap-1.5 px-2 py-1 text-muted-foreground hover:text-foreground"
+                    >
+                      <ChevronRight className="size-3.5 shrink-0" />
+                      <span className="truncate">{nextMod.title}</span>
+                    </Link>
                   ) : null}
                 </div>
-                <h2 className="mb-4 text-xl font-bold tracking-tight sm:text-2xl">
+              </nav>
+            </aside>
+
+            {/* Lesson content — a calm reading column (~70ch). */}
+            {lesson ? (
+              <article className="min-w-0 w-full max-w-[70ch] animate-fade-up xl:mx-auto" key={lesson.id}>
+                <p className="mb-2 flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
+                  <span className="hidden lg:inline">
+                    Lesson {n} of {total}
+                  </span>
+                  <span aria-hidden className="hidden lg:inline">
+                    ·
+                  </span>
+                  <span>{lesson.minutes} min read</span>
+                  {isDone ? (
+                    <>
+                      <span aria-hidden>·</span>
+                      <span className="inline-flex items-center gap-1 text-ok">
+                        <CheckCircle2 className="size-3.5" /> Completed
+                      </span>
+                    </>
+                  ) : null}
+                </p>
+                <h2 className="mb-5 text-2xl font-bold tracking-tight sm:text-[28px]">
                   {lesson.title}
                 </h2>
                 {lesson.objectives.length ? (
-                  <div className="mb-6 rounded-md border border-cyan/25 bg-cyan/5 p-4">
-                    <p className="label-caps mb-2 flex items-center gap-1.5 text-cyan">
-                      <Target className="size-3.5" />
-                      Objectives
+                  <div className="mb-8 border-l-2 border-cyan/50 pl-4">
+                    <p className="mb-1.5 text-xs font-medium text-muted-foreground">
+                      In this lesson
                     </p>
-                    <ul className="space-y-1 text-sm">
+                    <ul className="space-y-1 text-sm text-foreground/85">
                       {lesson.objectives.map((o) => (
-                        <li key={o} className="flex gap-2">
-                          <span className="mt-[9px] size-1 shrink-0 rounded-full bg-cyan" />
-                          <span>{o}</span>
-                        </li>
+                        <li key={o}>{o}</li>
                       ))}
                     </ul>
                   </div>
@@ -318,15 +300,15 @@ function ModulePage() {
 
                 <LessonRenderer blocks={lesson.blocks} />
 
-                <div className="mt-8 flex flex-col-reverse gap-3 border-t pt-5 sm:flex-row sm:items-center sm:justify-between">
-                  <Button variant="outline" disabled={n <= 1} onClick={() => go(n - 1)}>
+                <div className="mt-10 flex flex-col-reverse gap-3 border-t pt-5 sm:flex-row sm:items-center sm:justify-between">
+                  <Button variant="ghost" disabled={n <= 1} onClick={() => go(n - 1)}>
                     <ArrowLeft className="size-4" />
-                    Previous lesson
+                    Previous
                   </Button>
-                  <div className="flex flex-col gap-2 sm:flex-row">
-                    {n < total ? (
+                  <div className="flex flex-col-reverse gap-2 sm:flex-row">
+                    {n < total && !isDone ? (
                       <Button variant="ghost" onClick={() => go(n + 1)}>
-                        Skip to next
+                        Skip
                       </Button>
                     ) : null}
                     <Button onClick={completeAndContinue}>
@@ -343,13 +325,15 @@ function ModulePage() {
                 </div>
 
                 {mod.practice.length ? (
-                  <section className="mt-8">
-                    <h3 className="mb-2 text-sm font-semibold">Practise this module</h3>
-                    <div className="grid gap-2 sm:grid-cols-2">
+                  <section className="mt-10">
+                    <h3 className="mb-1 text-sm font-semibold">Practise this module</h3>
+                    <ul className="grid gap-x-6 sm:grid-cols-2">
                       {mod.practice.map((p) => (
-                        <PracticeCard key={p.to + p.label} to={p.to} label={p.label} compact />
+                        <li key={p.to + p.label}>
+                          <PracticeCard to={p.to} label={p.label} compact />
+                        </li>
                       ))}
-                    </div>
+                    </ul>
                   </section>
                 ) : null}
               </article>
@@ -364,42 +348,42 @@ function ModulePage() {
         </TabsContent>
 
         <TabsContent value="quiz">
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
+          <div className="max-w-3xl">
+            {comp.done < comp.total ? (
+              <Notice tone="caution" className="mb-4">
+                {comp.done} of {comp.total} lessons done — finish them first for the best result.
+              </Notice>
+            ) : null}
             <ModuleQuiz
               key={mod.id}
               courseId={course.id}
               mod={mod}
               link={`/academy/${course.id}/${mod.id}?tab=quiz`}
             />
-            <aside className="space-y-3">
-              <Notice title="Module exam.">
-                Pass with {70}% or better. Your best score counts toward course and
-                certification-track progress. Every attempt is saved to your training record.
-              </Notice>
-              {comp.done < comp.total ? (
-                <Notice tone="caution">
-                  You have completed {comp.done} of {comp.total} lessons in this module. Finish the
-                  lessons first for the best result.
-                </Notice>
-              ) : null}
-              {mod.practice.map((p) => (
-                <PracticeCard key={p.to + p.label} to={p.to} label={p.label} compact />
-              ))}
+            <div className="mt-10 flex flex-col gap-4 border-t pt-5 sm:flex-row sm:items-start sm:justify-between">
+              {mod.practice.length ? (
+                <ul className="min-w-0">
+                  {mod.practice.map((p) => (
+                    <li key={p.to + p.label}>
+                      <PracticeCard to={p.to} label={p.label} compact />
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <span />
+              )}
               {nextMod ? (
                 <Link
                   to="/academy/$course/$module"
                   params={{ course: course.id, module: nextMod.id }}
                   search={{ lesson: 1 }}
-                  className="flex items-center justify-between gap-2 rounded-md border px-3 py-2.5 text-sm hover:bg-accent/40"
+                  className="inline-flex shrink-0 items-center gap-1.5 text-sm font-medium text-primary hover:underline"
                 >
-                  <span className="min-w-0">
-                    <span className="label-caps block">Next module</span>
-                    <span className="block truncate font-medium">{nextMod.title}</span>
-                  </span>
+                  Next module: {nextMod.title}
                   <ChevronRight className="size-4 shrink-0" />
                 </Link>
               ) : null}
-            </aside>
+            </div>
           </div>
         </TabsContent>
       </Tabs>

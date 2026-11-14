@@ -1,7 +1,18 @@
 /**
- * Avionics Lab task list + current task card (instructions, live status, explanation, set-up).
+ * Avionics Lab task list + current task card (instructions, live status, set-up, and the
+ * "why it matters" explanation one click away). Neither draws its own box; the route places
+ * both in a single panel.
  */
-import { CheckCircle2, Circle, Lightbulb, MonitorPlay, Wrench } from "lucide-react";
+import {
+  CheckCircle2,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Circle,
+  Lightbulb,
+  MonitorPlay,
+  Wrench,
+} from "lucide-react";
 import { Meter, Pill } from "@/components/app/page";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,11 +29,12 @@ import { HOLD_MS, type CurrentTaskState } from "./useTaskRunner";
 const DISPLAY_LABEL: Record<LabDisplay, string> = {
   glass: "Glass cockpit",
   sixpack: "Six-pack",
-  nav: "Navigation instruments",
-  gps: "GPS navigator",
+  nav: "Nav instruments",
+  gps: "GPS",
   autopilot: "Autopilot",
 };
 
+/** Collapsible list of all training tasks with overall progress. */
 export function TaskList({
   currentId,
   onSelect,
@@ -36,15 +48,16 @@ export function TaskList({
   const hydrated = useHydrated();
   const count = AVIONICS_TASKS.filter((t) => done[t.id]).length;
   return (
-    <div className={cn("panel p-3", className)}>
-      <div className="mb-2 flex items-center justify-between">
-        <span className="label-caps">Training tasks</span>
+    <details className={cn("group", className)}>
+      <summary className="flex cursor-pointer list-none items-center gap-3 select-none [&::-webkit-details-marker]:hidden">
+        <span className="text-sm font-medium">All tasks</span>
+        <Meter value={hydrated ? (count / AVIONICS_TASKS.length) * 100 : 0} className="flex-1" />
         <span className="font-mono text-xs text-muted-foreground tabular">
           {hydrated ? count : 0}/{AVIONICS_TASKS.length}
         </span>
-      </div>
-      <Meter value={hydrated ? (count / AVIONICS_TASKS.length) * 100 : 0} className="mb-3" />
-      <ol className="max-h-[420px] space-y-0.5 overflow-auto pr-1">
+        <ChevronDown className="size-4 text-muted-foreground transition-transform group-open:rotate-180" />
+      </summary>
+      <ol className="mt-2 max-h-[360px] space-y-0.5 overflow-auto pr-1">
         {AVIONICS_TASKS.map((t, i) => {
           const isDone = hydrated && !!done[t.id];
           const sel = t.id === currentId;
@@ -54,35 +67,29 @@ export function TaskList({
                 type="button"
                 onClick={() => onSelect(t.id)}
                 aria-current={sel ? "true" : undefined}
+                title={AVIONICS_CATEGORY_LABELS[t.category]}
                 className={cn(
-                  "flex w-full items-start gap-2 rounded-md px-2 py-1.5 text-left text-sm transition",
+                  "flex w-full items-center gap-2 rounded-md px-2 py-1 text-left text-sm transition",
                   sel
-                    ? "bg-primary/15 text-foreground ring-1 ring-primary/40"
+                    ? "bg-primary/15 text-foreground"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground",
                 )}
               >
                 {isDone ? (
-                  <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-ok" />
+                  <CheckCircle2 className="size-4 shrink-0 text-ok" />
                 ) : (
-                  <Circle className="mt-0.5 size-4 shrink-0 opacity-50" />
+                  <Circle className="size-4 shrink-0 opacity-50" />
                 )}
-                <span className="min-w-0">
-                  <span className="block leading-snug">
-                    <span className="mr-1 font-mono text-[10px] opacity-60">
-                      {String(i + 1).padStart(2, "0")}
-                    </span>
-                    {t.title}
-                  </span>
-                  <span className="text-[10px] tracking-wide uppercase opacity-60">
-                    {AVIONICS_CATEGORY_LABELS[t.category]}
-                  </span>
+                <span className="w-5 shrink-0 font-mono text-[10px] opacity-60">
+                  {String(i + 1).padStart(2, "0")}
                 </span>
+                <span className="min-w-0 leading-snug">{t.title}</span>
               </button>
             </li>
           );
         })}
       </ol>
-    </div>
+    </details>
   );
 }
 
@@ -91,31 +98,63 @@ export function CurrentTaskCard({
   runner,
   engine,
   onShowDisplay,
+  onSelect,
   className,
 }: {
   task: AvionicsTask;
   runner: CurrentTaskState;
   engine: SimEngine;
   onShowDisplay: (d: LabDisplay) => void;
+  /** Move to another task (prev/next arrows). */
+  onSelect?: ((id: string) => void) | undefined;
   className?: string | undefined;
 }) {
   const doneAt = useStore((s) => s.avionicsTasks[task.id]);
   const hydrated = useHydrated();
   const done = hydrated && !!doneAt;
   const pct = Math.min(100, (runner.heldMs / HOLD_MS) * 100);
+  const idx = AVIONICS_TASKS.findIndex((t) => t.id === task.id);
+  const prev = AVIONICS_TASKS[idx - 1];
+  const next = AVIONICS_TASKS[idx + 1];
   return (
-    <div className={cn("panel p-4", className)}>
-      <div className="flex flex-wrap items-center gap-1.5">
-        <Pill tone="primary">{AVIONICS_CATEGORY_LABELS[task.category]}</Pill>
+    <div className={className}>
+      <div className="flex items-center gap-2">
+        <span className="label-caps min-w-0 flex-1 truncate">
+          Task {idx + 1} of {AVIONICS_TASKS.length} · {AVIONICS_CATEGORY_LABELS[task.category]}
+        </span>
+        {onSelect ? (
+          <span className="flex shrink-0">
+            <Button
+              size="icon"
+              variant="ghost"
+              className="size-7"
+              disabled={!prev}
+              onClick={() => prev && onSelect(prev.id)}
+              aria-label="Previous task"
+            >
+              <ChevronLeft />
+            </Button>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="size-7"
+              disabled={!next}
+              onClick={() => next && onSelect(next.id)}
+              aria-label="Next task"
+            >
+              <ChevronRight />
+            </Button>
+          </span>
+        ) : null}
+      </div>
+      <h3 className="mt-1 flex flex-wrap items-center gap-2 text-base font-semibold tracking-tight">
+        {task.title}
         {done ? (
-          <Pill tone="ok">Completed</Pill>
+          <Pill tone="ok">Done</Pill>
         ) : runner.passing ? (
           <Pill tone="cyan">Holding…</Pill>
-        ) : (
-          <Pill>In progress</Pill>
-        )}
-      </div>
-      <h3 className="mt-2 text-base font-semibold tracking-tight">{task.title}</h3>
+        ) : null}
+      </h3>
       <p className="mt-0.5 text-sm text-muted-foreground">{task.description}</p>
 
       <ol className="mt-3 space-y-1.5 text-sm">
@@ -129,30 +168,30 @@ export function CurrentTaskCard({
         ))}
       </ol>
 
-      {runner.status ? (
-        <div
-          className="mt-3 rounded-md border border-white/10 bg-black px-2.5 py-2 font-mono text-[11px] leading-relaxed text-ok"
-          aria-live="polite"
-        >
-          {runner.status}
+      {runner.status || !done ? (
+        <div className="mt-3 overflow-hidden rounded-md border border-white/10 bg-black">
+          {runner.status ? (
+            <p
+              className="px-2.5 py-2 font-mono text-[11px] leading-relaxed text-ok"
+              aria-live="polite"
+            >
+              {runner.status}
+            </p>
+          ) : null}
+          {!done ? (
+            <div className="h-1 bg-white/5">
+              <div
+                className={cn(
+                  "h-full bg-cyan transition-[width] duration-200",
+                  !runner.passing && "opacity-0",
+                )}
+                style={{ width: `${pct}%` }}
+              />
+            </div>
+          ) : null}
         </div>
       ) : null}
-      {!done ? (
-        <div className="mt-2">
-          <div className="h-1 overflow-hidden rounded-full bg-muted">
-            <div
-              className={cn(
-                "h-full rounded-full bg-cyan transition-[width] duration-200",
-                !runner.passing && "opacity-0",
-              )}
-              style={{ width: `${pct}%` }}
-            />
-          </div>
-          <p className="mt-1 text-[10px] text-muted-foreground">
-            Completes automatically when the condition holds for 2 seconds.
-          </p>
-        </div>
-      ) : (
+      {done ? (
         <p className="mt-2 text-xs text-ok">
           Completed{" "}
           {new Date(doneAt!).toLocaleString(undefined, {
@@ -161,29 +200,36 @@ export function CurrentTaskCard({
             hour: "2-digit",
             minute: "2-digit",
           })}{" "}
-          — you can practise it again any time.
+          — practise again any time.
+        </p>
+      ) : (
+        <p className="mt-1 text-[11px] text-muted-foreground">
+          Completes automatically after holding for 2 s.
         </p>
       )}
 
-      <div className="mt-3 flex flex-wrap gap-2">
-        {task.setup ? (
-          <Button size="sm" variant="secondary" onClick={() => task.setup!.run(engine)}>
-            <Wrench /> {task.setup.label}
-          </Button>
-        ) : null}
-        {task.display ? (
-          <Button size="sm" variant="outline" onClick={() => onShowDisplay(task.display!)}>
-            <MonitorPlay /> Show {DISPLAY_LABEL[task.display]}
-          </Button>
-        ) : null}
-      </div>
+      {task.setup || task.display ? (
+        <div className="mt-3 flex flex-wrap gap-2">
+          {task.setup ? (
+            <Button size="sm" variant="secondary" onClick={() => task.setup!.run(engine)}>
+              <Wrench /> {task.setup.label}
+            </Button>
+          ) : null}
+          {task.display ? (
+            <Button size="sm" variant="ghost" onClick={() => onShowDisplay(task.display!)}>
+              <MonitorPlay /> {DISPLAY_LABEL[task.display]}
+            </Button>
+          ) : null}
+        </div>
+      ) : null}
 
-      <div className="mt-4 rounded-md border border-primary/25 bg-primary/5 p-3">
-        <p className="flex items-center gap-1.5 text-xs font-semibold text-primary">
+      <details className="group mt-3">
+        <summary className="flex cursor-pointer list-none items-center gap-1.5 text-xs font-semibold text-primary select-none [&::-webkit-details-marker]:hidden">
           <Lightbulb className="size-3.5" /> Why it matters
-        </p>
-        <p className="mt-1 text-sm leading-relaxed text-foreground/85">{task.explain}</p>
-      </div>
+          <ChevronDown className="size-3.5 transition-transform group-open:rotate-180" />
+        </summary>
+        <p className="mt-1.5 text-sm leading-relaxed text-foreground/85">{task.explain}</p>
+      </details>
     </div>
   );
 }

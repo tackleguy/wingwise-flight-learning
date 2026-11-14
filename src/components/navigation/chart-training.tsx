@@ -5,11 +5,10 @@
 import { useMemo, useState, type KeyboardEvent } from "react";
 import { CheckCircle2, Shuffle, XCircle } from "lucide-react";
 
-import { Notice } from "@/components/app/page";
 import { AirportDiagram } from "@/components/airports/airport-diagram";
 import { McQuiz, type McQuestion } from "@/components/training/mc-quiz";
 import { Button } from "@/components/ui/button";
-import { AIRPORTS, AIRPORT_DATA_NOTICE, magneticHeading } from "@/lib/data/airports";
+import { AIRPORTS, magneticHeading } from "@/lib/data/airports";
 import { fmtHdg } from "@/lib/data/airport-utils";
 import { cn } from "@/lib/utils";
 import { BayChart, type Layers } from "./bay-chart";
@@ -141,8 +140,8 @@ export function SectionalTraining() {
   return (
     <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
       <McQuiz questions={SECTIONAL_QUESTIONS} />
-      <div className="panel h-fit p-4 text-sm">
-        <p className="label-caps mb-2">Sectional legend essentials</p>
+      <div className="h-fit text-sm lg:border-l lg:pl-4">
+        <p className="label-caps mb-2">Legend essentials</p>
         <ul className="space-y-1.5 text-xs">
           {[
             ["bg-[oklch(0.66_0.14_250)]", "Class B — solid blue"],
@@ -168,9 +167,7 @@ export function SectionalTraining() {
           ))}
         </ul>
         <p className="mt-3 text-xs text-muted-foreground">
-          The official legend is in the FAA Aeronautical Chart User's Guide. Explore the symbols in
-          context on the <strong>Chart workspace</strong> tab and test yourself in{" "}
-          <strong>Chart practice</strong>.
+          Full legend: FAA Aeronautical Chart User's Guide.
         </p>
       </div>
     </div>
@@ -595,9 +592,6 @@ export function TerminalTraining() {
       </text>
     </g>
   );
-  const [apIcao, setApIcao] = useState("KSFO");
-  const ap = AIRPORTS.find((a) => a.icao === apIcao) ?? AIRPORTS[0];
-  const apQuestions = useMemo(() => (ap ? airportDiagramQuestions(ap) : []), [ap]);
   return (
     <div className="space-y-6">
       <div className="grid gap-4 lg:grid-cols-[minmax(0,360px)_1fr]">
@@ -615,21 +609,27 @@ export function TerminalTraining() {
           {zone("mins", 10, 310, 170, 82, "Landing minimums")}
           {zone("sketch", 184, 310, 106, 82, "Airport sketch")}
         </svg>
-        <div className="space-y-3">
-          <div className="panel p-4">
-            <p className="label-caps mb-1">{PLATE_PARTS[sel]?.t}</p>
-            <p className="text-sm">{PLATE_PARTS[sel]?.d}</p>
-          </div>
-          <Notice tone="caution">
-            Schematic layout only — TeachX does not reproduce approach charts. Use current FAA
-            Terminal Procedures Publications for real flight.
-          </Notice>
+        <div className="space-y-1">
+          <p className="label-caps">{PLATE_PARTS[sel]?.t}</p>
+          <p className="text-sm">{PLATE_PARTS[sel]?.d}</p>
+          <p className="pt-2 text-[11px] text-muted-foreground">
+            Schematic layout only — click a section of the plate.
+          </p>
         </div>
       </div>
       <McQuiz questions={TERMINAL_QUESTIONS} />
+    </div>
+  );
+}
 
+/** Airport diagram reading practice (split from the approach-plate trainer). */
+export function AirportDiagramTraining() {
+  const [apIcao, setApIcao] = useState("KSFO");
+  const ap = AIRPORTS.find((a) => a.icao === apIcao) ?? AIRPORTS[0];
+  const apQuestions = useMemo(() => (ap ? airportDiagramQuestions(ap) : []), [ap]);
+  return (
+    <div className="space-y-6">
       <div>
-        <h3 className="mb-2 font-semibold">Airport diagram reading practice</h3>
         <div className="mb-3 flex flex-wrap gap-1.5">
           {AIRPORTS.filter((a) => a.runways.length >= 1)
             .slice(0, 14)
@@ -655,9 +655,7 @@ export function TerminalTraining() {
               <div className="avionics-screen overflow-hidden">
                 <AirportDiagram airport={ap} className="aspect-square w-full" />
               </div>
-              <p className="mt-1 text-[11px] text-muted-foreground">
-                {ap.name}. {AIRPORT_DATA_NOTICE.disclaimer}
-              </p>
+              <p className="mt-1 text-[11px] text-muted-foreground">{ap.name}</p>
             </div>
             <McQuiz questions={apQuestions} resetKey={ap.icao} />
           </div>
@@ -800,8 +798,8 @@ export function ChartPractice({ layers }: { layers: Layers }) {
         {!target ? (
           <div>
             <p className="text-sm text-muted-foreground">
-              A random feature on the chart will be highlighted with an amber ring. Choose what it
-              is. Labels stay on — you can hide them under "Layers" for a harder test.
+              A chart feature will be ringed in amber — name it. Hide labels under "Layers" for a
+              harder test.
             </p>
             <Button className="mt-3" onClick={next}>
               <Shuffle className="size-4" /> Start

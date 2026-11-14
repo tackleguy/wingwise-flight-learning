@@ -12,7 +12,6 @@ import {
   MessageSquareText,
   Mic,
   Play,
-  Plane,
   Radio,
   RotateCcw,
   Square,
@@ -20,7 +19,7 @@ import {
   Wand2,
 } from "lucide-react";
 import { toast } from "sonner";
-import { Page, PageHeader, Panel, Notice, Pill, formatDateTime } from "@/components/app/page";
+import { Page, PageHeader, Notice, Pill, formatDateTime } from "@/components/app/page";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -419,13 +418,13 @@ function AtcPage() {
           pilotLabel={session.ctx.cs.full}
           note={
             checkrideLink ? (
-              <Notice title="Checkride stage complete.">
-                Your score has been saved.{" "}
+              <p className="text-sm text-muted-foreground">
+                Checkride stage complete — your score has been saved.{" "}
                 <a href={checkrideLink} className="font-semibold text-primary underline">
                   Return to checkride
                 </a>{" "}
                 to continue.
-              </Notice>
+              </p>
             ) : undefined
           }
           actions={
@@ -476,26 +475,26 @@ function AtcPage() {
 
     return (
       <Page wide>
-        <div className="mb-4 flex flex-col gap-3 border-b pb-4 md:flex-row md:items-center md:justify-between">
+        <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div className="min-w-0">
             <p className="label-caps mb-1 text-primary">
               ATC Simulator · {PHASES.find((p) => p.id === session.def.phase)?.label}
             </p>
             <h1 className="flex flex-wrap items-center gap-2 text-xl font-bold tracking-tight sm:text-2xl">
               {session.def.title}
-              <Pill tone="caution">Simulated</Pill>
               <Pill tone="primary">
                 {DIFFICULTIES.find((d) => d.id === session.difficulty)?.label}
               </Pill>
-              <Pill>{PERSONALITIES.find((p) => p.id === session.personality)?.label}</Pill>
             </h1>
             <p className="mt-1 text-xs text-muted-foreground">
-              {ctx.airport.icao} {ctx.airport.name} · {ctx.aircraft.shortName}{" "}
-              <span className="font-mono">{ctx.cs.full}</span> · {session.def.rules}
+              {ctx.airport.icao} · {ctx.aircraft.shortName}{" "}
+              <span className="font-mono">{ctx.cs.full}</span> · {session.def.rules} ·{" "}
+              {PERSONALITIES.find((p) => p.id === session.personality)?.label}
+              {checkrideLink ? " · Checkride stage — finish, then return to your checkride" : ""}
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" size="sm" onClick={start}>
+            <Button variant="ghost" size="sm" onClick={start}>
               <RotateCcw /> Restart
             </Button>
             <Button variant="secondary" size="sm" onClick={abort}>
@@ -503,19 +502,10 @@ function AtcPage() {
             </Button>
           </div>
         </div>
-        <Notice
-          tone="caution"
-          title="Simulated ATC for training — not real air traffic control."
-          className="mb-4"
-        >
-          Nothing here is a real clearance or instruction. Frequencies marked SIM are training
-          stand-ins.
+        <Notice tone="caution" title="Simulated ATC — not real ATC." className="mb-3">
+          Training only. Nothing here is a real clearance or instruction; frequencies marked SIM
+          are training stand-ins.
         </Notice>
-        {checkrideLink ? (
-          <Notice className="mb-4" title="Checkride stage.">
-            Complete this scenario, then return to your mock checkride.
-          </Notice>
-        ) : null}
 
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)]">
           <div className="min-w-0 space-y-4">
@@ -554,31 +544,41 @@ function AtcPage() {
           </div>
 
           <div className="min-w-0 space-y-4">
-            <div className="panel grid grid-cols-2 gap-px overflow-hidden bg-border sm:grid-cols-4">
+            <div className="border-l-2 border-primary/60 pl-3">
+              <div className="label-caps">
+                {session.done
+                  ? "Scenario complete"
+                  : `Step ${Math.min(session.index + 1, facs.length)} of ${facs.length}`}
+              </div>
+              <p className="mt-0.5 text-sm font-semibold">
+                {step ? step.title : "All calls made — end & score when ready."}
+              </p>
+              {step && canHint && showChecklist ? (
+                <p className="mt-0.5 text-xs text-muted-foreground">{stepHint(session)}</p>
+              ) : null}
+            </div>
+
+            <dl className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs">
               {[
-                { l: "Position", v: ctx.position },
-                { l: "Altitude", v: `${alt(ctx.altitude).text} ft` },
-                { l: "Heading", v: hdg(ctx.heading).text },
-                { l: "Runway", v: ctx.runway.id },
+                { l: "Rwy", v: ctx.runway.id },
                 { l: "Wind", v: `${hdg(ctx.atis.windDirMag).text}@${ctx.atis.windKt}` },
                 {
                   l: "ATIS",
                   v: atisVisible ? (PHONETIC[ctx.atis.letter] ?? ctx.atis.letter) : "—",
                 },
-                { l: "Squawk", v: displaySquawk(session) },
-                {
-                  l: "Talking to",
-                  v: session.difficulty === "checkride" ? "—" : (fac?.name ?? "—"),
-                },
+                { l: "Sqk", v: displaySquawk(session) },
+                { l: "Alt", v: `${alt(ctx.altitude).text} ft` },
+                { l: "Hdg", v: hdg(ctx.heading).text },
+                { l: "Pos", v: ctx.position },
               ].map((x) => (
-                <div key={x.l} className="bg-card px-3 py-2">
-                  <div className="label-caps !text-[9px]">{x.l}</div>
-                  <div className="truncate text-xs font-semibold" title={x.v}>
+                <div key={x.l} className="flex min-w-0 items-baseline gap-1">
+                  <dt className="text-[10px] text-muted-foreground uppercase">{x.l}</dt>
+                  <dd className="max-w-[12rem] truncate font-mono font-semibold" title={x.v}>
                     {x.v}
-                  </div>
+                  </dd>
                 </div>
               ))}
-            </div>
+            </dl>
 
             {tunedAtis ? (
               <div className="avionics-screen p-3">
@@ -615,215 +615,205 @@ function AtcPage() {
                 </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="briefing">
-                <Panel title="Scenario briefing">
-                  <div className="space-y-3 text-sm">
-                    <p>{brief.situation}</p>
-                    <p className="rounded border border-primary/25 bg-primary/5 px-3 py-2 text-xs">
-                      <span className="font-semibold text-primary">Goal: </span>
-                      {brief.goal}
-                    </p>
+              <TabsContent value="briefing" className="pt-2">
+                <div className="space-y-3 text-sm">
+                  <p>{brief.situation}</p>
+                  <p className="text-xs">
+                    <span className="font-semibold text-primary">Goal: </span>
+                    {brief.goal}
+                  </p>
+                  <div>
+                    <div className="label-caps mb-1">What to say</div>
+                    <ul className="list-disc space-y-1 pl-4 text-xs text-foreground/85">
+                      {brief.say.map((x) => (
+                        <li key={x}>{x}</li>
+                      ))}
+                    </ul>
+                  </div>
+                  {atisVisible && !tunedAtis ? (
                     <div>
-                      <div className="label-caps mb-1">What to say</div>
-                      <ul className="list-disc space-y-1 pl-4 text-xs text-foreground/85">
-                        {brief.say.map((x) => (
-                          <li key={x}>{x}</li>
-                        ))}
-                      </ul>
-                    </div>
-                    <div>
-                      <div className="label-caps mb-1">Why</div>
-                      <ul className="list-disc space-y-1 pl-4 text-xs text-foreground/85">
-                        {brief.why.map((x) => (
-                          <li key={x}>{x}</li>
-                        ))}
-                      </ul>
-                    </div>
-                    {atisVisible ? (
-                      <div>
-                        <div className="label-caps mb-1">ATIS {PHONETIC[ctx.atis.letter]}</div>
-                        <p className="avionics-screen p-2 font-mono text-[11px] leading-relaxed text-cyan/90">
-                          {ctx.atis.phrase.text}
-                        </p>
-                      </div>
-                    ) : ctx.atisFreq ? (
-                      <p className="text-xs text-muted-foreground">
-                        Tune the ATIS on{" "}
-                        <span className="font-mono text-cyan">{formatFreqShort(ctx.atisFreq)}</span>{" "}
-                        to get the current information code.
+                      <div className="label-caps mb-1">ATIS {PHONETIC[ctx.atis.letter]}</div>
+                      <p className="font-mono text-[11px] leading-relaxed text-cyan/90">
+                        {ctx.atis.phrase.text}
                       </p>
-                    ) : null}
-                    <p className="text-[11px] text-muted-foreground">
-                      References: {session.def.refs.join(" · ")}
-                    </p>
-                  </div>
-                </Panel>
-              </TabsContent>
-
-              <TabsContent value="hints">
-                <Panel title={step ? `Now: ${step.title}` : "Complete"}>
-                  {!canHint ? (
-                    <p className="text-sm text-muted-foreground">
-                      Checkride mode: no hints or explanations until the final report.
-                    </p>
-                  ) : step ? (
-                    <div className="space-y-3 text-sm">
-                      {showChecklist ? (
-                        <>
-                          <p className="text-xs text-foreground/85">{stepHint(session)}</p>
-                          <ul className="space-y-1">
-                            {stepChecklist(session, session.difficulty === "beginner").map((c) => (
-                              <li key={c} className="flex items-start gap-2 text-xs">
-                                <Circle className="mt-0.5 size-3 shrink-0 text-primary" /> {c}
-                              </li>
-                            ))}
-                          </ul>
-                          {session.difficulty === "beginner" ? (
-                            <div className="rounded border border-ok/25 bg-ok/5 p-2">
-                              <div className="label-caps mb-1 !text-ok">Example</div>
-                              <p className="font-mono text-xs">{stepExample(session)?.text}</p>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="mt-2 h-7 text-xs"
-                                onClick={() => setDraft(stepExample(session)?.text ?? "")}
-                              >
-                                <Wand2 /> Say it for me
-                              </Button>
-                            </div>
-                          ) : null}
-                        </>
-                      ) : (
-                        <div className="space-y-2">
-                          <p className="text-xs text-muted-foreground">
-                            Hints remaining:{" "}
-                            <span className="font-mono">{Math.max(0, hintsLeft)}</span>. A hint
-                            shows what this transmission must contain.
-                          </p>
-                          <Button
-                            size="sm"
-                            disabled={hintsLeft <= 0}
-                            onClick={() => {
-                              const r = consumeHint(session);
-                              if (!r.allowed) return;
-                              sessionRef.current = r.session;
-                              setSession(r.session);
-                              setRevealed(true);
-                            }}
-                          >
-                            <Lightbulb /> Reveal hint
-                          </Button>
-                        </div>
-                      )}
                     </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">Scenario complete.</p>
-                  )}
-                </Panel>
-              </TabsContent>
-
-              <TabsContent value="pad">
-                <Panel title="Clearance notepad (CRAFT)">
-                  <div className="space-y-2">
-                    {(
-                      [
-                        ["c", "C — Clearance limit"],
-                        ["r", "R — Route"],
-                        ["a", "A — Altitude"],
-                        ["f", "F — Frequency"],
-                        ["t", "T — Transponder"],
-                      ] as const
-                    ).map(([k, l]) => (
-                      <label
-                        key={k}
-                        className="grid grid-cols-[7.5rem_1fr] items-center gap-2 text-xs"
-                      >
-                        <span className="font-semibold text-muted-foreground">{l}</span>
-                        <Input
-                          value={pad[k]}
-                          onChange={(e) => setPad({ ...pad, [k]: e.target.value })}
-                          className="h-8 font-mono text-xs"
-                        />
-                      </label>
-                    ))}
-                    <Textarea
-                      value={pad.notes}
-                      onChange={(e) => setPad({ ...pad, notes: e.target.value })}
-                      placeholder="Notes: ATIS, altimeter, taxi route, traffic…"
-                      className="min-h-20 font-mono text-xs"
-                    />
-                    <p className="text-[11px] text-muted-foreground">
-                      Write clearances as you hear them, then read back from the pad. Your notes
-                      stay in this session only.
+                  ) : !atisVisible && ctx.atisFreq ? (
+                    <p className="text-xs text-muted-foreground">
+                      Tune the ATIS on{" "}
+                      <span className="font-mono text-cyan">{formatFreqShort(ctx.atisFreq)}</span>{" "}
+                      to get the current information code.
                     </p>
-                  </div>
-                </Panel>
-              </TabsContent>
-
-              <TabsContent value="progress">
-                <Panel title={`Progress · ${Math.min(session.index, facs.length)}/${facs.length}`}>
-                  <ol className="space-y-2">
-                    {facs.map((f, i) => {
-                      const done = i < session.index || session.done;
-                      const cur = i === session.index && !session.done;
-                      const evs = session.evals.filter((e) => e.stepId === f.id);
-                      const last = evs[evs.length - 1];
-                      return (
-                        <li
-                          key={f.id}
-                          className={cn(
-                            "flex items-start gap-2 rounded px-2 py-1.5 text-xs",
-                            cur && "bg-primary/10",
-                          )}
-                        >
-                          {done ? (
-                            <CheckCircle2 className="mt-0.5 size-3.5 shrink-0 text-ok" />
-                          ) : cur ? (
-                            <Play className="mt-0.5 size-3.5 shrink-0 text-primary" />
-                          ) : (
-                            <Circle className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
-                          )}
-                          <div className="min-w-0 flex-1">
-                            <div className="font-semibold">{f.title}</div>
-                            <div className="text-muted-foreground">
-                              {session.difficulty === "checkride" ? "" : `${f.facility.name} · `}
-                              {f.atcFirst ? "ATC calls first" : "You call first"}
-                            </div>
-                          </div>
-                          {last && session.difficulty !== "checkride" ? (
-                            <span
-                              className={cn(
-                                "font-mono",
-                                last.score >= 80
-                                  ? "text-ok"
-                                  : last.score >= 60
-                                    ? "text-caution"
-                                    : "text-warning",
-                              )}
-                            >
-                              {last.score}
-                            </span>
-                          ) : null}
-                        </li>
-                      );
-                    })}
-                  </ol>
-                  {session.evals.length ? (
-                    <div className="mt-3 border-t pt-3">
-                      <div className="label-caps mb-1.5">Communication history</div>
-                      <ul className="max-h-48 space-y-1 overflow-y-auto">
-                        {session.evals.map((e) => (
-                          <li key={e.id} className="flex gap-2 text-[11px]">
-                            <span className="w-7 shrink-0 font-mono text-muted-foreground">
-                              {session.difficulty === "checkride" ? "—" : e.score}
-                            </span>
-                            <span className="truncate font-mono">“{e.text}”</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
                   ) : null}
-                </Panel>
+                  <details className="group text-xs">
+                    <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
+                      Why it matters &amp; references
+                    </summary>
+                    <ul className="mt-2 list-disc space-y-1 pl-4 text-foreground/85">
+                      {brief.why.map((x) => (
+                        <li key={x}>{x}</li>
+                      ))}
+                    </ul>
+                    <p className="mt-2 text-[11px] text-muted-foreground">
+                      {session.def.refs.join(" · ")}
+                    </p>
+                  </details>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="hints" className="pt-2">
+                {!canHint ? (
+                  <p className="text-sm text-muted-foreground">
+                    Checkride mode: no hints until the final report.
+                  </p>
+                ) : step ? (
+                  <div className="space-y-3 text-sm">
+                    {showChecklist ? (
+                      <>
+                        <ul className="space-y-1">
+                          {stepChecklist(session, session.difficulty === "beginner").map((c) => (
+                            <li key={c} className="flex items-start gap-2 text-xs">
+                              <Circle className="mt-0.5 size-3 shrink-0 text-primary" /> {c}
+                            </li>
+                          ))}
+                        </ul>
+                        {session.difficulty === "beginner" ? (
+                          <div className="border-l-2 border-ok/50 pl-3">
+                            <div className="label-caps mb-1 !text-ok">Example</div>
+                            <p className="font-mono text-xs">{stepExample(session)?.text}</p>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="mt-2 h-7 text-xs"
+                              onClick={() => setDraft(stepExample(session)?.text ?? "")}
+                            >
+                              <Wand2 /> Say it for me
+                            </Button>
+                          </div>
+                        ) : null}
+                      </>
+                    ) : (
+                      <div className="flex flex-wrap items-center gap-3">
+                        <Button
+                          size="sm"
+                          disabled={hintsLeft <= 0}
+                          onClick={() => {
+                            const r = consumeHint(session);
+                            if (!r.allowed) return;
+                            sessionRef.current = r.session;
+                            setSession(r.session);
+                            setRevealed(true);
+                          }}
+                        >
+                          <Lightbulb /> Reveal hint
+                        </Button>
+                        <span className="text-xs text-muted-foreground">
+                          {Math.max(0, hintsLeft)} left
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">Scenario complete.</p>
+                )}
+              </TabsContent>
+
+              <TabsContent value="pad" className="pt-2">
+                <div className="space-y-2">
+                  {(
+                    [
+                      ["c", "C — Clearance limit"],
+                      ["r", "R — Route"],
+                      ["a", "A — Altitude"],
+                      ["f", "F — Frequency"],
+                      ["t", "T — Transponder"],
+                    ] as const
+                  ).map(([k, l]) => (
+                    <label
+                      key={k}
+                      className="grid grid-cols-[7.5rem_1fr] items-center gap-2 text-xs"
+                    >
+                      <span className="font-semibold text-muted-foreground">{l}</span>
+                      <Input
+                        value={pad[k]}
+                        onChange={(e) => setPad({ ...pad, [k]: e.target.value })}
+                        className="h-8 font-mono text-xs"
+                      />
+                    </label>
+                  ))}
+                  <Textarea
+                    value={pad.notes}
+                    onChange={(e) => setPad({ ...pad, notes: e.target.value })}
+                    placeholder="Notes: ATIS, altimeter, taxi route, traffic…"
+                    className="min-h-20 font-mono text-xs"
+                  />
+                  <p className="text-[11px] text-muted-foreground">Notes stay in this session only.</p>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="progress" className="pt-2">
+                <ol className="space-y-1">
+                  {facs.map((f, i) => {
+                    const done = i < session.index || session.done;
+                    const cur = i === session.index && !session.done;
+                    const evs = session.evals.filter((e) => e.stepId === f.id);
+                    const last = evs[evs.length - 1];
+                    return (
+                      <li
+                        key={f.id}
+                        className={cn(
+                          "flex items-start gap-2 rounded px-2 py-1.5 text-xs",
+                          cur && "bg-primary/10",
+                        )}
+                      >
+                        {done ? (
+                          <CheckCircle2 className="mt-0.5 size-3.5 shrink-0 text-ok" />
+                        ) : cur ? (
+                          <Play className="mt-0.5 size-3.5 shrink-0 text-primary" />
+                        ) : (
+                          <Circle className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <div className="font-semibold">{f.title}</div>
+                          <div className="text-muted-foreground">
+                            {session.difficulty === "checkride" ? "" : `${f.facility.name} · `}
+                            {f.atcFirst ? "ATC calls first" : "You call first"}
+                          </div>
+                        </div>
+                        {last && session.difficulty !== "checkride" ? (
+                          <span
+                            className={cn(
+                              "font-mono",
+                              last.score >= 80
+                                ? "text-ok"
+                                : last.score >= 60
+                                  ? "text-caution"
+                                  : "text-warning",
+                            )}
+                          >
+                            {last.score}
+                          </span>
+                        ) : null}
+                      </li>
+                    );
+                  })}
+                </ol>
+                {session.evals.length ? (
+                  <details className="mt-3 text-xs">
+                    <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
+                      Communication history ({session.evals.length})
+                    </summary>
+                    <ul className="mt-1.5 max-h-48 space-y-1 overflow-y-auto">
+                      {session.evals.map((e) => (
+                        <li key={e.id} className="flex gap-2 text-[11px]">
+                          <span className="w-7 shrink-0 font-mono text-muted-foreground">
+                            {session.difficulty === "checkride" ? "—" : e.score}
+                          </span>
+                          <span className="truncate font-mono">“{e.text}”</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
+                ) : null}
               </TabsContent>
             </Tabs>
           </div>
@@ -833,13 +823,21 @@ function AtcPage() {
   }
 
   // ---------------- setup ----------------
+  const recent = hydrated ? sessions.filter((s) => s.engine === "scripted").slice(0, 5) : [];
+  const optionBtn = (on: boolean) =>
+    cn(
+      "rounded-md border px-2 py-1.5 text-xs font-semibold",
+      on
+        ? "border-primary bg-primary/15 text-primary"
+        : "border-border text-muted-foreground hover:text-foreground",
+    );
   return (
     <Page>
       <PageHeader
         eyebrow="Radio"
         title="ATC Simulator"
         icon={Radio}
-        description="Fifteen scripted radio scenarios built on FAA phraseology (AIM Chapter 4, Pilot/Controller Glossary). Tune the radio, key the mic, and get scored on every readback."
+        description="Pick a scripted radio scenario, tune the radio and get scored on every call."
         actions={
           <Button variant="outline" asChild>
             <Link to="/ai-atc">
@@ -848,30 +846,20 @@ function AtcPage() {
           </Button>
         }
       />
-      <Notice
-        tone="caution"
-        title="Simulated ATC for training — not real air traffic control."
-        className="mb-6"
-      >
-        Scenarios use an educational airport dataset; frequencies and procedures may be outdated.
-        Never use this for real-world operations.
+      <Notice tone="caution" title="Simulated ATC — not real ATC." className="-mt-2 mb-5">
+        Training only. Scenarios use an educational airport dataset; frequencies and procedures may
+        be outdated. Never use this for real-world operations.
       </Notice>
-      {checkrideLink ? (
-        <Notice className="mb-6" title="Checkride stage.">
-          Your mock checkride includes this radio scenario. Complete it, then use “Return to
-          checkride”.
-        </Notice>
-      ) : null}
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="space-y-6">
           {PHASES.map((p) => {
             const list = SCENARIOS.filter((s) => s.phase === p.id);
             if (!list.length) return null;
             return (
               <section key={p.id}>
-                <h2 className="label-caps mb-2">{p.label}</h2>
-                <div className="grid gap-2.5 sm:grid-cols-2">
+                <h2 className="label-caps mb-1.5">{p.label}</h2>
+                <div className="grid gap-1 sm:grid-cols-2">
                   {list.map((s) => {
                     const sel = s.id === scenarioId;
                     const best = bestByScenario.get(s.id);
@@ -881,9 +869,10 @@ function AtcPage() {
                         type="button"
                         onClick={() => setScenarioId(s.id)}
                         aria-pressed={sel}
+                        title={s.summary}
                         className={cn(
-                          "panel flex flex-col gap-2 p-3.5 text-left transition-colors hover:border-primary/50",
-                          sel && "border-primary bg-primary/[0.06] ring-1 ring-primary/40",
+                          "flex flex-col gap-1 rounded-md border border-transparent px-3 py-2.5 text-left transition-colors hover:bg-muted/40",
+                          sel && "border-primary/60 bg-primary/[0.07] hover:bg-primary/[0.07]",
                         )}
                       >
                         <div className="flex items-start justify-between gap-2">
@@ -899,15 +888,13 @@ function AtcPage() {
                             </span>
                           ) : null}
                         </div>
-                        <p className="line-clamp-2 text-xs text-muted-foreground">{s.summary}</p>
-                        <div className="mt-auto flex flex-wrap gap-1">
+                        <p className="line-clamp-1 text-xs text-muted-foreground">{s.summary}</p>
+                        <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
                           <Pill tone={s.rules === "IFR" ? "magenta" : "ok"}>{s.rules}</Pill>
-                          {s.stations.map((st) => (
-                            <Pill key={st}>{st}</Pill>
-                          ))}
-                          <Pill tone="cyan">
-                            {s.firstSpeaker === "pilot" ? "You call first" : "ATC calls first"}
-                          </Pill>
+                          <span>
+                            {s.stations.join(" · ")} ·{" "}
+                            {s.firstSpeaker === "pilot" ? "you call first" : "ATC calls first"}
+                          </span>
                         </div>
                       </button>
                     );
@@ -918,30 +905,63 @@ function AtcPage() {
           })}
         </div>
 
-        <div className="space-y-4 lg:sticky lg:top-4 lg:self-start">
-          <Panel title="Session setup">
-            <div className="space-y-4">
+        <div className="space-y-6 lg:sticky lg:top-4 lg:self-start">
+          <section className="panel space-y-4 p-4">
+            <div>
+              <div className="label-caps mb-0.5">Scenario</div>
+              <p className="text-sm font-semibold">{scenario?.title}</p>
+            </div>
+            <div className="grid gap-3">
+              <label className="space-y-1">
+                <span className="label-caps">Airport</span>
+                <Select value={airport} onValueChange={setAirport}>
+                  <SelectTrigger aria-label="Airport">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {towered.map((a) => (
+                      <SelectItem key={a.icao} value={a.icao}>
+                        {a.icao} — {a.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </label>
               <div>
-                <div className="label-caps mb-1">Scenario</div>
-                <p className="text-sm font-semibold">{scenario?.title}</p>
+                <div className="label-caps mb-1.5">Difficulty</div>
+                <div className="grid grid-cols-2 gap-1.5" role="radiogroup" aria-label="Difficulty">
+                  {DIFFICULTIES.map((d) => (
+                    <button
+                      key={d.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={difficulty === d.id}
+                      onClick={() => setDifficulty(d.id)}
+                      title={d.description}
+                      className={optionBtn(difficulty === d.id)}
+                    >
+                      {d.label}
+                    </button>
+                  ))}
+                </div>
+                <p className="mt-1.5 text-[11px] text-muted-foreground">
+                  {DIFFICULTIES.find((d) => d.id === difficulty)?.description}
+                </p>
               </div>
-              <div className="grid gap-3">
-                <label className="space-y-1">
-                  <span className="label-caps">Airport</span>
-                  <Select value={airport} onValueChange={setAirport}>
-                    <SelectTrigger aria-label="Airport">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {towered.map((a) => (
-                        <SelectItem key={a.icao} value={a.icao}>
-                          {a.icao} — {a.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </label>
-                <label className="space-y-1">
+            </div>
+
+            <details className="group">
+              <summary className="cursor-pointer list-none text-xs text-muted-foreground hover:text-foreground [&::-webkit-details-marker]:hidden">
+                <span className="group-open:hidden">More options</span>
+                <span className="hidden group-open:inline">Fewer options</span>
+                <span className="ml-1 font-mono">
+                  · {aircraftOptions.find((a) => a.id === aircraftId)?.label.split(" ")[0]}{" "}
+                  {callsign} ·{" "}
+                  {PERSONALITIES.find((p) => p.id === personality)?.label.toLowerCase()}
+                </span>
+              </summary>
+              <div className="mt-3 space-y-4">
+                <label className="block space-y-1">
                   <span className="label-caps">Aircraft</span>
                   <Select value={aircraftId} onValueChange={setAircraftId}>
                     <SelectTrigger aria-label="Aircraft">
@@ -956,7 +976,7 @@ function AtcPage() {
                     </SelectContent>
                   </Select>
                 </label>
-                <label className="space-y-1">
+                <label className="block space-y-1">
                   <span className="label-caps">Callsign</span>
                   <Input
                     value={callsign}
@@ -968,142 +988,111 @@ function AtcPage() {
                           .slice(0, 7),
                       )
                     }
+                    title="FAA N-numbers abbreviate after ATC does (N172TX → N2TX)."
                     className={cn("font-mono", !callsignValid && "border-warning")}
                     aria-invalid={!callsignValid}
                   />
-                  <span className="block text-[11px] text-muted-foreground">
-                    FAA N-numbers abbreviate after ATC does (N172TX → N2TX).
-                  </span>
                 </label>
-              </div>
-
-              <div>
-                <div className="label-caps mb-1.5">Difficulty</div>
-                <div className="grid grid-cols-2 gap-1.5" role="radiogroup" aria-label="Difficulty">
-                  {DIFFICULTIES.map((d) => (
-                    <button
-                      key={d.id}
-                      type="button"
-                      role="radio"
-                      aria-checked={difficulty === d.id}
-                      onClick={() => setDifficulty(d.id)}
-                      className={cn(
-                        "rounded-md border px-2 py-1.5 text-xs font-semibold",
-                        difficulty === d.id
-                          ? "border-primary bg-primary/15 text-primary"
-                          : "border-border text-muted-foreground hover:text-foreground",
-                      )}
-                    >
-                      {d.label}
-                    </button>
-                  ))}
-                </div>
-                <p className="mt-1.5 text-[11px] text-muted-foreground">
-                  {DIFFICULTIES.find((d) => d.id === difficulty)?.description}
-                </p>
-              </div>
-
-              <div>
-                <div className="label-caps mb-1.5">Controller</div>
-                <div
-                  className="grid grid-cols-2 gap-1.5"
-                  role="radiogroup"
-                  aria-label="Controller personality"
-                >
-                  {PERSONALITIES.map((p) => (
-                    <button
-                      key={p.id}
-                      type="button"
-                      role="radio"
-                      aria-checked={personality === p.id}
-                      onClick={() => setPersonality(p.id)}
-                      className={cn(
-                        "rounded-md border px-2 py-1.5 text-xs font-semibold",
-                        personality === p.id
-                          ? "border-primary bg-primary/15 text-primary"
-                          : "border-border text-muted-foreground hover:text-foreground",
-                      )}
-                    >
-                      {p.label}
-                    </button>
-                  ))}
-                </div>
-                <p className="mt-1.5 text-[11px] text-muted-foreground">
-                  {PERSONALITIES.find((p) => p.id === personality)?.description}
-                </p>
-              </div>
-
-              <div className="space-y-2 rounded-md border p-3">
-                <label className="flex items-center justify-between gap-2 text-xs">
-                  <span className="flex items-center gap-1.5">
-                    <Volume2 className="size-3.5" /> Controller voice
-                  </span>
-                  <Switch
-                    checked={settings.voice.atcSpeech}
-                    onCheckedChange={(v) =>
-                      actions.updateSettings((s) => ({ ...s, voice: { ...s.voice, atcSpeech: v } }))
-                    }
-                  />
-                </label>
-                <label className="flex items-center justify-between gap-2 text-xs">
-                  <span className="flex items-center gap-1.5">
-                    <Mic className="size-3.5" /> Microphone (push-to-talk)
-                  </span>
-                  <Switch
-                    checked={settings.voice.micInput}
-                    onCheckedChange={(v) =>
-                      actions.updateSettings((s) => ({ ...s, voice: { ...s.voice, micInput: v } }))
-                    }
-                  />
-                </label>
-                <p className="text-[11px] text-muted-foreground">
-                  {!hydrated
-                    ? "Checking browser speech support…"
-                    : `Speech: ${support.tts ? "voice output available" : "no voice output in this browser"} · ${support.stt ? "voice input available" : "voice input not supported — type your calls"}.`}
-                </p>
-              </div>
-
-              <Button className="w-full" size="lg" onClick={start} disabled={!callsignValid}>
-                <Play /> Start scenario
-              </Button>
-            </div>
-          </Panel>
-
-          <Panel title="Recent sessions">
-            {hydrated && sessions.filter((s) => s.engine === "scripted").length ? (
-              <ul className="space-y-2">
-                {sessions
-                  .filter((s) => s.engine === "scripted")
-                  .slice(0, 5)
-                  .map((s) => (
-                    <li key={s.id} className="flex items-center justify-between gap-2 text-xs">
-                      <span className="min-w-0">
-                        <span className="block truncate font-medium">{s.title}</span>
-                        <span className="text-muted-foreground">
-                          {s.airport} · {s.difficulty} · {formatDateTime(s.date)}
-                        </span>
-                      </span>
-                      <span
-                        className={cn(
-                          "font-mono font-semibold",
-                          s.score >= 80
-                            ? "text-ok"
-                            : s.score >= 60
-                              ? "text-caution"
-                              : "text-warning",
-                        )}
+                <div>
+                  <div className="label-caps mb-1.5">Controller</div>
+                  <div
+                    className="grid grid-cols-2 gap-1.5"
+                    role="radiogroup"
+                    aria-label="Controller personality"
+                  >
+                    {PERSONALITIES.map((p) => (
+                      <button
+                        key={p.id}
+                        type="button"
+                        role="radio"
+                        aria-checked={personality === p.id}
+                        onClick={() => setPersonality(p.id)}
+                        title={p.description}
+                        className={optionBtn(personality === p.id)}
                       >
-                        {Math.round(s.score)}%
-                      </span>
-                    </li>
-                  ))}
-              </ul>
-            ) : (
-              <p className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Plane className="size-3.5" /> Your scored sessions will appear here.
+                        {p.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="flex items-center justify-between gap-2 text-xs">
+                    <span className="flex items-center gap-1.5">
+                      <Volume2 className="size-3.5" /> Controller voice
+                    </span>
+                    <Switch
+                      checked={settings.voice.atcSpeech}
+                      onCheckedChange={(v) =>
+                        actions.updateSettings((s) => ({
+                          ...s,
+                          voice: { ...s.voice, atcSpeech: v },
+                        }))
+                      }
+                    />
+                  </label>
+                  <label className="flex items-center justify-between gap-2 text-xs">
+                    <span className="flex items-center gap-1.5">
+                      <Mic className="size-3.5" /> Microphone (push-to-talk)
+                    </span>
+                    <Switch
+                      checked={settings.voice.micInput}
+                      onCheckedChange={(v) =>
+                        actions.updateSettings((s) => ({
+                          ...s,
+                          voice: { ...s.voice, micInput: v },
+                        }))
+                      }
+                    />
+                  </label>
+                </div>
+              </div>
+            </details>
+
+            {hydrated && (!support.tts || !support.stt) ? (
+              <p className="text-[11px] text-caution">
+                {!support.tts ? "No voice output in this browser. " : ""}
+                {!support.stt ? "Voice input not supported — type your calls." : ""}
               </p>
-            )}
-          </Panel>
+            ) : null}
+            {!callsignValid ? (
+              <p className="text-[11px] text-warning">Check the callsign under More options.</p>
+            ) : null}
+
+            <Button className="w-full" size="lg" onClick={start} disabled={!callsignValid}>
+              <Play /> Start scenario
+            </Button>
+            {checkrideLink ? (
+              <p className="text-[11px] text-muted-foreground">
+                Checkride stage: complete it, then use “Return to checkride”.
+              </p>
+            ) : null}
+          </section>
+
+          {recent.length ? (
+            <section>
+              <h2 className="label-caps mb-2">Recent sessions</h2>
+              <ul className="space-y-2">
+                {recent.map((s) => (
+                  <li key={s.id} className="flex items-center justify-between gap-2 text-xs">
+                    <span className="min-w-0">
+                      <span className="block truncate font-medium">{s.title}</span>
+                      <span className="text-muted-foreground">
+                        {s.airport} · {s.difficulty} · {formatDateTime(s.date)}
+                      </span>
+                    </span>
+                    <span
+                      className={cn(
+                        "font-mono font-semibold",
+                        s.score >= 80 ? "text-ok" : s.score >= 60 ? "text-caution" : "text-warning",
+                      )}
+                    >
+                      {Math.round(s.score)}%
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
         </div>
       </div>
     </Page>

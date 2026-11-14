@@ -13,7 +13,6 @@ import {
   Route,
   type LucideIcon,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 /** Split "/simulator?scenario=vfr-pattern" into a router path and a search object. */
 export function splitHref(href: string): { to: string; search: Record<string, string> } {
@@ -76,7 +75,10 @@ export function HrefLink({
   );
 }
 
-/** Prominent call-to-action card that links into another part of the platform. */
+/**
+ * Link into another part of the platform. Default: a quiet bordered row (used inside lessons).
+ * `compact`: a plain icon + text link with no box (used in lists).
+ */
 export function PracticeCard({
   to,
   label,
@@ -89,30 +91,39 @@ export function PracticeCard({
   compact?: boolean;
 }) {
   const Icon = practiceIcon(to);
+  const area = practiceArea(to);
+  if (compact) {
+    return (
+      <HrefLink
+        href={to}
+        title={text ? `${area} — ${text}` : area}
+        className="group flex items-start gap-2.5 rounded-md py-1.5 text-sm transition-colors hover:text-primary"
+      >
+        <Icon className="mt-0.5 size-4 shrink-0 text-primary/80" />
+        <span className="min-w-0 flex-1">
+          <span className="block font-medium">{label}</span>
+          {text ? (
+            <span className="block text-xs leading-relaxed text-muted-foreground">{text}</span>
+          ) : null}
+        </span>
+      </HrefLink>
+    );
+  }
   return (
     <HrefLink
       href={to}
-      className={cn(
-        "group flex items-center gap-3 rounded-lg border border-primary/30 bg-gradient-to-r from-primary/10 to-transparent transition-colors hover:border-primary/60 hover:from-primary/15",
-        compact ? "px-3 py-2.5" : "px-4 py-3.5",
-      )}
+      className="group flex items-center gap-3 rounded-md border px-4 py-3 transition-colors hover:border-primary/50"
     >
-      <span
-        className={cn(
-          "flex shrink-0 items-center justify-center rounded-md bg-primary/15 text-primary",
-          compact ? "size-8" : "size-10",
-        )}
-      >
-        <Icon className={compact ? "size-4" : "size-5"} />
-      </span>
+      <Icon className="size-4.5 shrink-0 text-primary" />
       <span className="min-w-0 flex-1">
-        <span className="label-caps block text-primary/90">{practiceArea(to)}</span>
-        <span className="block text-sm font-semibold">{label}</span>
+        <span className="block text-sm font-medium">
+          {label} <span className="font-normal text-muted-foreground">· {area}</span>
+        </span>
         {text ? (
           <span className="mt-0.5 block text-xs leading-relaxed text-muted-foreground">{text}</span>
         ) : null}
       </span>
-      <ArrowRight className="size-4 shrink-0 text-primary transition-transform group-hover:translate-x-0.5" />
+      <ArrowRight className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
     </HrefLink>
   );
 }

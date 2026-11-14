@@ -3,8 +3,8 @@
  * own model server). Shows which is active and lets the user turn the on-device model on.
  */
 import { useCallback, useEffect, useState } from "react";
-import { Cpu, Loader2, Power, ScrollText, Server } from "lucide-react";
-import { Pill } from "@/components/app/page";
+import { Cpu, Loader2, Power, ScrollText, Server, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 import {
   AI_PROVIDER_LABEL,
   autoStartOnDeviceAi,
@@ -53,7 +53,7 @@ export function useAiStatus() {
   return { status, loading, refresh, aiAvailable: !!status && status.active !== "scripted" };
 }
 
-/** Status pill plus (for on-device AI) a turn-on button with download progress. */
+/** Status chip plus (for on-device AI) a compact turn-on / progress / stop control. */
 export function AiStatusPill({
   status,
   loading,
@@ -73,81 +73,85 @@ export function AiStatusPill({
       local.status === "error" ||
       local.status === "unsupported")
   ) {
-    if (local.status === "loading")
+    if (local.status === "loading") {
+      const pct = Math.round(local.progress * 100);
       return (
-        <span className="inline-flex flex-wrap items-center gap-2">
-          <Pill tone="primary">
-            <Loader2 className="size-3 animate-spin" /> Loading on-device AI ·{" "}
-            {Math.round(local.progress * 100)}%
-          </Pill>
-          <span
-            className="max-w-[260px] truncate text-[11px] text-muted-foreground"
-            title={local.message}
-          >
-            {local.message}
+        <span
+          className={cn(CHIP, "border-primary/30 text-primary")}
+          title={local.message}
+          role="status"
+        >
+          <Loader2 className="size-3 animate-spin" /> AI loading {pct}%
+          <span className="h-1 w-10 overflow-hidden rounded-full bg-primary/15" aria-hidden>
+            <span className="block h-full bg-primary" style={{ width: `${pct}%` }} />
           </span>
         </span>
       );
+    }
     if (local.status === "unsupported")
       return (
-        <Pill tone="caution" className="normal-case">
-          <ScrollText className="size-3" /> Scripted mode · this browser lacks WebGPU
-        </Pill>
+        <span
+          className={cn(CHIP, "text-muted-foreground")}
+          title="This browser lacks WebGPU, so the built-in scripted mode is used."
+        >
+          <ScrollText className="size-3" /> Scripted · no WebGPU
+        </span>
       );
+    const err = local.status === "error";
     return (
-      <span className="inline-flex flex-wrap items-center gap-2">
-        <Pill tone="caution">
-          <ScrollText className="size-3" /> Scripted mode
-        </Pill>
+      <span
+        className={cn(CHIP, "pr-0.5 text-muted-foreground")}
+        title={err ? local.message : undefined}
+      >
+        <ScrollText className="size-3" /> Scripted
         <button
           type="button"
           onClick={() => void enableOnDeviceAi()}
-          title={`Downloads ${MODEL_LABEL} (${MODEL_DOWNLOAD_LABEL}, one time) and runs it on this device. Nothing is sent to a server.`}
-          className="inline-flex items-center gap-1 rounded border border-primary/40 bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary hover:bg-primary/20"
+          title={`Downloads ${MODEL_LABEL} (${MODEL_DOWNLOAD_LABEL}, one time) and runs it on this device. Nothing is sent to a server.${err && local.message ? `\nLast error: ${local.message}` : ""}`}
+          className={cn(
+            "ml-0.5 inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 font-semibold hover:bg-primary/15",
+            err ? "text-warning" : "text-primary",
+          )}
         >
-          <Power className="size-3" />{" "}
-          {local.status === "error" ? "Retry on-device AI" : "Turn on on-device AI"}
+          <Power className="size-3" /> {err ? "Retry AI" : "Turn on AI"}
         </button>
-        {local.status === "error" ? (
-          <span className="max-w-[260px] truncate text-[11px] text-warning" title={local.message}>
-            {local.message}
-          </span>
-        ) : null}
       </span>
     );
   }
 
   if (loading)
     return (
-      <Pill>
+      <span className={cn(CHIP, "text-muted-foreground")}>
         <Loader2 className="size-3 animate-spin" /> Checking AI…
-      </Pill>
+      </span>
     );
   const active = status?.active ?? "scripted";
   if (active === "scripted" || using === "scripted")
     return (
-      <Pill tone="caution">
+      <span className={cn(CHIP, "text-muted-foreground")}>
         <ScrollText className="size-3" />{" "}
-        {using === "scripted" && active !== "scripted" ? "Scripted fallback" : "Scripted mode"}
-      </Pill>
+        {using === "scripted" && active !== "scripted" ? "Scripted fallback" : "Scripted"}
+      </span>
     );
   return (
-    <span className="inline-flex items-center gap-2">
-      <Pill tone="ok">
-        {active === "on-device" ? <Cpu className="size-3" /> : <Server className="size-3" />}{" "}
-        {AI_PROVIDER_LABEL[active] ?? active}
-        {active === "on-device" && local.status === "thinking" ? " · thinking" : ""}
-      </Pill>
+    <span className={cn(CHIP, "border-ok/30 text-ok", active === "on-device" && "pr-0.5")}>
+      {active === "on-device" ? <Cpu className="size-3" /> : <Server className="size-3" />}{" "}
+      {AI_PROVIDER_LABEL[active] ?? active}
+      {active === "on-device" && local.status === "thinking" ? " · thinking" : ""}
       {active === "on-device" ? (
         <button
           type="button"
           onClick={stopLocalModel}
-          className="text-[11px] text-muted-foreground hover:text-foreground"
+          className="ml-0.5 rounded-full p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground"
           title="Stop the on-device model and free GPU memory"
+          aria-label="Stop on-device AI"
         >
-          Stop
+          <X className="size-3" />
         </button>
       ) : null}
     </span>
   );
 }
+
+const CHIP =
+  "inline-flex max-w-full items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium whitespace-nowrap";

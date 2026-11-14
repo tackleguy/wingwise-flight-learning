@@ -23,15 +23,15 @@ import { Choices, Feedback } from "./exercises/shared";
 import { PracticeCard } from "./PracticeLink";
 
 const CALLOUT: Record<CalloutTone, { cls: string; icon: typeof Info; label: string }> = {
-  info: { cls: "border-primary/30 bg-primary/5 [&_.ct]:text-primary", icon: Info, label: "Note" },
-  tip: { cls: "border-ok/30 bg-ok/5 [&_.ct]:text-ok", icon: Lightbulb, label: "Tip" },
+  info: { cls: "border-primary/50 [&_.ct]:text-primary", icon: Info, label: "Note" },
+  tip: { cls: "border-ok/50 [&_.ct]:text-ok", icon: Lightbulb, label: "Tip" },
   caution: {
-    cls: "border-caution/35 bg-caution/5 [&_.ct]:text-caution",
+    cls: "border-caution/60 bg-caution/[0.04] [&_.ct]:text-caution",
     icon: AlertTriangle,
     label: "Caution",
   },
   warning: {
-    cls: "border-warning/40 bg-warning/5 [&_.ct]:text-warning",
+    cls: "border-warning/60 bg-warning/[0.04] [&_.ct]:text-warning",
     icon: AlertOctagon,
     label: "Warning",
   },
@@ -45,7 +45,7 @@ export function LessonRenderer({
   className?: string;
 }) {
   return (
-    <div className={cn("space-y-4", className)}>
+    <div className={cn("space-y-5", className)}>
       {blocks.map((b, i) => (
         <Block key={i} block={b} />
       ))}
@@ -57,29 +57,29 @@ function Block({ block }: { block: LessonBlock }) {
   switch (block.type) {
     case "h":
       return (
-        <h3 className="flex items-center gap-2 pt-3 text-lg font-semibold tracking-tight first:pt-0">
+        <h3 className="flex items-center gap-2 pt-4 text-lg font-semibold tracking-tight first:pt-0">
           {block.text}
         </h3>
       );
     case "p":
-      return <p className="text-[15px] leading-7 text-foreground/90">{block.text}</p>;
+      return <p className="text-base leading-[1.75] text-foreground/90">{block.text}</p>;
     case "list": {
       const Tag = block.ordered ? "ol" : "ul";
       return (
         <Tag
           className={cn(
-            "space-y-1.5 pl-1 text-[15px] leading-7 text-foreground/90",
+            "space-y-1.5 pl-1 text-base leading-7 text-foreground/90",
             block.ordered ? "list-none [counter-reset:li]" : "",
           )}
         >
           {block.items.map((it, i) => (
             <li key={i} className="flex gap-2.5">
               {block.ordered ? (
-                <span className="mt-1 flex size-5 shrink-0 items-center justify-center rounded bg-primary/15 font-mono text-[11px] font-semibold text-primary">
-                  {i + 1}
+                <span className="w-5 shrink-0 text-right text-muted-foreground tabular">
+                  {i + 1}.
                 </span>
               ) : (
-                <span className="mt-[11px] size-1.5 shrink-0 rounded-full bg-primary" />
+                <span className="mt-[13px] size-1 shrink-0 rounded-full bg-muted-foreground" />
               )}
               <span className="min-w-0">{it}</span>
             </li>
@@ -91,9 +91,9 @@ function Block({ block }: { block: LessonBlock }) {
       const c = CALLOUT[block.tone];
       const Icon = c.icon;
       return (
-        <div className={cn("flex gap-3 rounded-md border px-4 py-3", c.cls)}>
-          <Icon className="ct mt-0.5 size-4 shrink-0" />
-          <div className="min-w-0 text-sm leading-relaxed">
+        <div className={cn("flex gap-3 rounded-r-md border-l-2 py-1.5 pr-3 pl-4", c.cls)}>
+          <Icon className="ct mt-1 size-4 shrink-0" />
+          <div className="min-w-0 text-[15px] leading-relaxed">
             <p className="ct font-semibold">{block.title ?? c.label}</p>
             <p className="mt-0.5 text-foreground/85">{block.text}</p>
           </div>
@@ -102,14 +102,14 @@ function Block({ block }: { block: LessonBlock }) {
     }
     case "table":
       return (
-        <div className="overflow-x-auto rounded-md border">
+        <div className="overflow-x-auto">
           <table className="w-full min-w-[480px] text-sm">
-            <thead className="bg-muted/50">
+            <thead className="border-b">
               <tr>
                 {block.headers.map((hd) => (
                   <th
                     key={hd}
-                    className="px-3 py-2 text-left text-xs font-semibold tracking-wide text-muted-foreground uppercase"
+                    className="py-2 pr-4 text-left text-xs font-medium text-muted-foreground"
                   >
                     {hd}
                   </th>
@@ -118,11 +118,11 @@ function Block({ block }: { block: LessonBlock }) {
             </thead>
             <tbody className="divide-y">
               {block.rows.map((r, i) => (
-                <tr key={i} className="align-top hover:bg-muted/20">
+                <tr key={i} className="align-top">
                   {r.map((c, j) => (
                     <td
                       key={j}
-                      className={cn("px-3 py-2 leading-relaxed", j === 0 && "font-medium")}
+                      className={cn("py-2 pr-4 leading-relaxed", j === 0 && "font-medium")}
                     >
                       {c}
                     </td>
@@ -149,18 +149,15 @@ function DiagramBlock({ id, caption }: { id: string; caption: string }) {
   if (!d) return null;
   const C = d.component;
   return (
-    <figure className="panel overflow-hidden">
-      <div className="flex items-center justify-between gap-2 border-b px-4 py-2">
-        <span className="label-caps flex items-center gap-1.5">
-          <MousePointerClick className="size-3.5 text-cyan" />
-          Interactive · {d.title}
-        </span>
-      </div>
-      <div className="p-3 sm:p-4">
+    <figure className="py-2">
+      <div className="rounded-lg border p-3 sm:p-4">
         <C />
       </div>
-      <figcaption className="border-t bg-muted/20 px-4 py-2 text-xs leading-relaxed text-muted-foreground">
-        {caption}
+      <figcaption className="mt-2 flex gap-1.5 text-xs leading-relaxed text-muted-foreground">
+        <MousePointerClick className="mt-0.5 size-3.5 shrink-0 text-cyan" aria-hidden />
+        <span>
+          <span className="font-medium text-foreground/80">{d.title}.</span> {caption}
+        </span>
       </figcaption>
     </figure>
   );
@@ -171,13 +168,13 @@ function ExerciseBlock({ id, title }: { id: string; title: string }) {
   if (!e) return null;
   const C = e.component;
   return (
-    <section className="panel overflow-hidden border-cyan/25">
-      <div className="flex items-center gap-2 border-b bg-cyan/5 px-4 py-2">
-        <PenLine className="size-3.5 text-cyan" />
-        <span className="label-caps text-cyan">Exercise</span>
-        <span className="truncate text-sm font-semibold">{title}</span>
-      </div>
-      <div className="p-3 sm:p-4">
+    <section className="py-2">
+      <p className="mb-2 flex items-center gap-2 text-sm font-semibold">
+        <PenLine className="size-4 text-cyan" aria-hidden />
+        <span className="text-cyan">Exercise</span>
+        <span className="min-w-0 truncate">{title}</span>
+      </p>
+      <div className="rounded-lg border p-3 sm:p-4">
         <C />
       </div>
     </section>
@@ -190,17 +187,17 @@ export function KnowledgeCheck({ question }: { question: QuizQuestion }) {
   const [tries, setTries] = useState(0);
   const correct = sel === question.answer;
   return (
-    <div className="rounded-lg border border-primary/25 bg-card">
-      <div className="flex items-center justify-between gap-2 border-b px-4 py-2">
-        <span className="label-caps flex items-center gap-1.5 text-primary">
-          <BookMarked className="size-3.5" />
-          Knowledge check
-        </span>
-        {question.reference ? (
-          <span className="text-[10px] text-muted-foreground">{question.reference}</span>
-        ) : null}
-      </div>
-      <div className="space-y-3 p-4">
+    <div className="rounded-lg border p-4">
+      <div className="space-y-3">
+        <p className="flex items-center justify-between gap-2 text-xs">
+          <span className="flex items-center gap-1.5 font-medium text-primary">
+            <BookMarked className="size-3.5" aria-hidden />
+            Knowledge check
+          </span>
+          {question.reference ? (
+            <span className="text-[10px] text-muted-foreground">{question.reference}</span>
+          ) : null}
+        </p>
         {question.context ? (
           <pre className="avionics-screen overflow-x-auto p-2.5 font-mono text-xs whitespace-pre-wrap text-ok">
             {question.context}

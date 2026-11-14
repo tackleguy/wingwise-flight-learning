@@ -64,9 +64,6 @@ export function Flashcards({ cards }: { cards: Flashcard[] }) {
           </Button>
         </div>
       </div>
-      <p className="text-xs text-muted-foreground">
-        Tap a card to flip it. Mark the ones you know — they are saved to your training record.
-      </p>
       {list.length === 0 ? (
         <EmptyState
           icon={Check}

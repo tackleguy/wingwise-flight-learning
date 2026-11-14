@@ -29,7 +29,7 @@ import {
   Plus,
   Radio,
   Send,
-  Volume2,
+  SlidersHorizontal,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -485,7 +485,7 @@ function ComRow({
     <div
       className={cn(
         "rounded-md border px-2.5 py-2 transition-colors sm:px-3",
-        selected ? "border-ok/30 bg-ok/[0.03]" : "border-border/60",
+        selected ? "border-ok/30 bg-ok/[0.03]" : "border-transparent bg-muted/20",
       )}
     >
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
@@ -608,6 +608,7 @@ export function RadioPanel({
   const [txActive, setTxActive] = useState(false);
   const [partial, setPartial] = useState("");
   const [notice, setNotice] = useState<string | null>(null);
+  const [showOptions, setShowOptions] = useState(false);
   const pttAt = useRef(0);
   const listening = useRef(false);
   const recognizer = useRef<Recognizer | null>(null);
@@ -721,37 +722,21 @@ export function RadioPanel({
 
   return (
     <div className={cn("avionics-screen p-3 sm:p-4", className)}>
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+      <div className="mb-2.5 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
         <div className="flex items-center gap-2">
           <Radio className="size-4 text-ok" />
           <span className="label-caps !text-foreground/80">COM radio</span>
-          <span className="rounded border border-caution/30 bg-caution/10 px-1.5 py-0.5 text-[9px] font-bold tracking-wide text-caution uppercase">
-            Simulated
-          </span>
+          <span className="text-[10px] text-muted-foreground">simulated</span>
         </div>
-        <div
-          className="flex items-center gap-1 rounded-md border border-border p-0.5"
-          role="radiogroup"
-          aria-label="Channel spacing"
-        >
-          {([25, 8.33] as ChannelSpacing[]).map((sp) => (
-            <button
-              key={sp}
-              type="button"
-              role="radio"
-              aria-checked={value.spacing === sp}
-              onClick={() => onChange({ ...value, spacing: sp })}
-              className={cn(
-                "rounded px-2 py-0.5 text-[10px] font-semibold",
-                value.spacing === sp
-                  ? "bg-primary/20 text-primary"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              {sp === 25 ? "25 kHz (US)" : "8.33 kHz"}
-            </button>
-          ))}
-        </div>
+        {expected ? (
+          <div className="min-w-0 truncate text-xs" title="Current controller">
+            <span className="text-muted-foreground">Talking to </span>
+            <span className="font-semibold">{expected.name}</span>{" "}
+            <span className={cn("font-mono", onExpected ? "text-ok" : "text-caution")}>
+              {formatCom(expected.mhz)}
+            </span>
+          </div>
+        ) : null}
       </div>
 
       <div className="space-y-2">
@@ -777,81 +762,28 @@ export function RadioPanel({
         />
       </div>
 
-      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-border/60 pt-3">
-        <div className="flex items-center gap-1" role="radiogroup" aria-label="Microphone select">
-          {([1, 2] as const).map((n) => (
+      {directorySorted.length ? (
+        <div className="mt-2.5 flex flex-wrap gap-1.5" aria-label={`Frequency list — tap to load COM${value.tx} standby`}>
+          {directorySorted.map((d) => (
             <button
-              key={n}
+              key={`${d.name}-${d.mhz}`}
               type="button"
-              role="radio"
-              aria-checked={value.tx === n}
-              onClick={() => onChange({ ...value, tx: n })}
-              className={cn(
-                "rounded border px-2 py-1 font-mono text-[10px] font-bold",
-                value.tx === n
-                  ? "border-ok/50 bg-ok/15 text-ok"
-                  : "border-border text-muted-foreground hover:text-foreground",
-              )}
+              disabled={disabled}
+              onClick={() =>
+                onChange(
+                  value.tx === 1
+                    ? { ...value, com1: { ...value.com1, standby: d.mhz } }
+                    : { ...value, com2: { ...value.com2, standby: d.mhz } },
+                )
+              }
+              className="rounded px-1.5 py-0.5 text-left text-[11px] leading-tight hover:bg-cyan/10"
+              title={`Load into COM${value.tx} standby${d.simulated ? " (simulated training frequency)" : ""}`}
             >
-              MIC {n}
+              <span className="text-muted-foreground">{d.name}</span>{" "}
+              <span className="font-mono text-cyan">{formatCom(d.mhz)}</span>
+              {d.simulated ? <span className="ml-1 text-[9px] text-caution">SIM</span> : null}
             </button>
           ))}
-          <button
-            type="button"
-            aria-pressed={value.monitor2}
-            onClick={() => onChange({ ...value, monitor2: !value.monitor2 })}
-            className={cn(
-              "ml-1 rounded border px-2 py-1 font-mono text-[10px] font-bold",
-              value.monitor2
-                ? "border-cyan/50 bg-cyan/15 text-cyan"
-                : "border-border text-muted-foreground hover:text-foreground",
-            )}
-            title="Monitor COM2 while transmitting on COM1"
-          >
-            MON 2
-          </button>
-        </div>
-        <VolumeKnob value={value.volume} onChange={(v) => onChange({ ...value, volume: v })} />
-        {expected ? (
-          <div className="min-w-0 flex-1 text-right">
-            <div className="label-caps !text-[9px]">Current controller</div>
-            <div className="truncate text-xs font-semibold">
-              {expected.name}{" "}
-              <span className={cn("font-mono", onExpected ? "text-ok" : "text-caution")}>
-                {formatCom(expected.mhz)}
-              </span>
-            </div>
-          </div>
-        ) : null}
-      </div>
-
-      {directorySorted.length ? (
-        <div className="mt-3">
-          <div className="label-caps mb-1.5 !text-[9px]">
-            Frequency list — tap to load COM{value.tx} standby
-          </div>
-          <div className="flex flex-wrap gap-1.5">
-            {directorySorted.map((d) => (
-              <button
-                key={`${d.name}-${d.mhz}`}
-                type="button"
-                disabled={disabled}
-                onClick={() =>
-                  onChange(
-                    value.tx === 1
-                      ? { ...value, com1: { ...value.com1, standby: d.mhz } }
-                      : { ...value, com2: { ...value.com2, standby: d.mhz } },
-                  )
-                }
-                className="rounded border border-border bg-muted/40 px-2 py-1 text-left text-[11px] leading-tight hover:border-cyan/50 hover:bg-cyan/5"
-                title={d.simulated ? "Simulated training frequency" : "Load into standby"}
-              >
-                <span className="text-muted-foreground">{d.name}</span>{" "}
-                <span className="font-mono text-cyan">{formatCom(d.mhz)}</span>
-                {d.simulated ? <span className="ml-1 text-[9px] text-caution">SIM</span> : null}
-              </button>
-            ))}
-          </div>
         </div>
       ) : null}
 
@@ -875,7 +807,7 @@ export function RadioPanel({
                   : "Push to talk — sends the typed transmission"
               }
               className={cn(
-                "flex min-h-12 shrink-0 touch-none items-center justify-center gap-2 rounded-md border px-4 font-semibold tracking-wide uppercase select-none sm:w-40",
+                "flex min-h-12 shrink-0 touch-none items-center justify-center gap-2 rounded-md border px-4 font-semibold tracking-wide uppercase select-none sm:w-36",
                 txActive
                   ? "border-warning bg-warning text-white shadow-[0_0_18px_-2px] shadow-warning/60"
                   : "border-warning/50 bg-warning/10 text-warning hover:bg-warning/20",
@@ -900,9 +832,7 @@ export function RadioPanel({
                 disabled={disabled}
                 placeholder={
                   composerPlaceholder ??
-                  (useVoice
-                    ? "Hold SPACE / PTT to speak — or type your call and press Enter"
-                    : "Type your radio call and press Enter")
+                  (useVoice ? "Hold SPACE to speak, or type your call" : "Type your radio call")
                 }
                 aria-label="Transmission text"
                 className="h-12 min-w-0 flex-1 rounded-md border border-input bg-black/40 px-3 font-mono text-sm outline-none placeholder:font-sans placeholder:text-muted-foreground/70 focus:border-primary"
@@ -919,7 +849,16 @@ export function RadioPanel({
             </div>
           </div>
           <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted-foreground">
-            <span className="flex items-center gap-1.5">
+            <span
+              className="flex min-w-0 items-center gap-1.5"
+              title={
+                micEnabled
+                  ? support.stt
+                    ? "Hold SPACE or the PTT button while speaking."
+                    : "Voice input is not supported in this browser — typed transmissions work everywhere."
+                  : "Microphone is off (Settings → Voice). Type your transmissions."
+              }
+            >
               {micEnabled ? (
                 support.stt ? (
                   <Mic className="size-3 text-ok" />
@@ -929,22 +868,93 @@ export function RadioPanel({
               ) : (
                 <MicOff className="size-3" />
               )}
-              {micEnabled
-                ? support.stt
-                  ? "Voice: hold SPACE or the PTT button while speaking."
-                  : "Voice input not supported in this browser — typed transmissions work everywhere."
-                : "Microphone off (Settings → Voice). Type your transmissions."}
-              <span className="hidden items-center gap-1 sm:inline-flex">
-                <Volume2 className="ml-2 size-3" /> TX on COM{value.tx} {formatCom(txMhz)}
+              <span className="truncate">
+                {micEnabled ? (support.stt ? "Voice on" : "No voice input — type calls") : "Mic off — type calls"}
+                {" · "}TX COM{value.tx} <span className="font-mono">{formatCom(txMhz)}</span>
               </span>
             </span>
-            {composerActions}
+            <span className="flex items-center gap-2">
+              {composerActions}
+              <button
+                type="button"
+                onClick={() => setShowOptions((o) => !o)}
+                aria-expanded={showOptions}
+                className={cn(
+                  "inline-flex items-center gap-1 rounded px-1.5 py-1 hover:text-foreground",
+                  showOptions && "text-foreground",
+                )}
+              >
+                <SlidersHorizontal className="size-3" /> Radio options
+              </button>
+            </span>
           </div>
           {notice ? (
             <div className="mt-2 rounded border border-caution/30 bg-caution/5 px-2 py-1 text-[11px] text-caution">
               {notice}
             </div>
           ) : null}
+        </div>
+      ) : null}
+
+      {showOptions || !onTransmit ? (
+        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-border/60 pt-3">
+          <div className="flex items-center gap-1" role="radiogroup" aria-label="Microphone select">
+            {([1, 2] as const).map((n) => (
+              <button
+                key={n}
+                type="button"
+                role="radio"
+                aria-checked={value.tx === n}
+                onClick={() => onChange({ ...value, tx: n })}
+                className={cn(
+                  "rounded border px-2 py-1 font-mono text-[10px] font-bold",
+                  value.tx === n
+                    ? "border-ok/50 bg-ok/15 text-ok"
+                    : "border-border text-muted-foreground hover:text-foreground",
+                )}
+              >
+                MIC {n}
+              </button>
+            ))}
+            <button
+              type="button"
+              aria-pressed={value.monitor2}
+              onClick={() => onChange({ ...value, monitor2: !value.monitor2 })}
+              className={cn(
+                "ml-1 rounded border px-2 py-1 font-mono text-[10px] font-bold",
+                value.monitor2
+                  ? "border-cyan/50 bg-cyan/15 text-cyan"
+                  : "border-border text-muted-foreground hover:text-foreground",
+              )}
+              title="Monitor COM2 while transmitting on COM1"
+            >
+              MON 2
+            </button>
+          </div>
+          <VolumeKnob value={value.volume} onChange={(v) => onChange({ ...value, volume: v })} />
+          <div
+            className="flex items-center gap-1 rounded-md border border-border p-0.5"
+            role="radiogroup"
+            aria-label="Channel spacing"
+          >
+            {([25, 8.33] as ChannelSpacing[]).map((sp) => (
+              <button
+                key={sp}
+                type="button"
+                role="radio"
+                aria-checked={value.spacing === sp}
+                onClick={() => onChange({ ...value, spacing: sp })}
+                className={cn(
+                  "rounded px-2 py-0.5 text-[10px] font-semibold",
+                  value.spacing === sp
+                    ? "bg-primary/20 text-primary"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {sp === 25 ? "25 kHz (US)" : "8.33 kHz"}
+              </button>
+            ))}
+          </div>
         </div>
       ) : null}
     </div>

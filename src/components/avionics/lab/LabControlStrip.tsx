@@ -1,11 +1,20 @@
 /**
- * Avionics Lab control strip: pause, time acceleration, reposition presets and failure injection.
+ * Avionics Lab toolbar: pause, time acceleration, a "Scenario" menu with reposition presets and a
+ * "Failures" popover (each failure with its explanation). Kept to one compact row.
  */
-import { useState } from "react";
-import { MapPin, Pause, Play, TriangleAlert } from "lucide-react";
+import { useState, type ReactNode } from "react";
+import { ChevronDown, MapPin, Pause, Play, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Switch } from "@/components/ui/switch";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { applyPreset, LAB_PRESETS } from "@/lib/avionics/scenarios";
 import { cn } from "@/lib/utils";
 import { useSimEngine, useSimSelector } from "@/sim/react";
@@ -62,118 +71,141 @@ export const FAILURE_INFO: {
   },
 ];
 
-export function LabControlStrip({ className }: { className?: string | undefined }) {
+export function LabControlStrip({
+  className,
+  children,
+}: {
+  className?: string | undefined;
+  /** Extra actions rendered at the end of the toolbar. */
+  children?: ReactNode;
+}) {
   const engine = useSimEngine();
   const paused = useSimSelector((s) => s.paused);
   const failures = useSimSelector((s) => s.failures);
   const [scale, setScale] = useState(engine.timeScale);
   const glass = engine.perf.avionics !== "steam";
-  const anyFailure = Object.values(failures).some(Boolean);
+  const available = FAILURE_INFO.filter((f) => !(f.glassOnly && !glass) && !(f.steamOnly && glass));
+  const activeCount = available.filter((f) => failures[f.key]).length;
 
   return (
-    <TooltipProvider delayDuration={250}>
-      <div className={cn("panel flex flex-col gap-3 p-3 lg:flex-row lg:items-start", className)}>
-        <div className="flex flex-wrap items-center gap-2">
+    <div className={cn("flex flex-wrap items-center gap-2", className)}>
+      <Button
+        size="sm"
+        variant={paused ? "default" : "secondary"}
+        onClick={() => engine.togglePause()}
+        aria-label={paused ? "Resume simulation" : "Pause simulation"}
+      >
+        {paused ? <Play /> : <Pause />}
+        {paused ? "Resume" : "Pause"}
+      </Button>
+      <div
+        className="flex h-8 overflow-hidden rounded-md border"
+        role="radiogroup"
+        aria-label="Time acceleration"
+      >
+        {[1, 2, 4].map((t) => (
+          <button
+            key={t}
+            type="button"
+            role="radio"
+            aria-checked={scale === t}
+            onClick={() => {
+              engine.timeScale = t;
+              setScale(t);
+            }}
+            className={cn(
+              "px-2.5 font-mono text-xs",
+              scale === t
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:bg-muted",
+            )}
+          >
+            ×{t}
+          </button>
+        ))}
+      </div>
+
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button size="sm" variant="outline">
+            <MapPin /> Scenario <ChevronDown className="opacity-60" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-80">
+          <DropdownMenuLabel className="text-xs text-muted-foreground">
+            Reposition the aircraft
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          {LAB_PRESETS.map((p) => (
+            <DropdownMenuItem
+              key={p.id}
+              onSelect={() => applyPreset(engine, p.id)}
+              className="flex-col items-start gap-0.5"
+            >
+              <span className="font-medium">{p.label}</span>
+              <span className="text-xs leading-snug text-muted-foreground">{p.description}</span>
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <Popover>
+        <PopoverTrigger asChild>
           <Button
             size="sm"
-            variant={paused ? "default" : "secondary"}
-            onClick={() => engine.togglePause()}
-            aria-label={paused ? "Resume simulation" : "Pause simulation"}
+            variant="outline"
+            className={cn(activeCount > 0 && "border-caution/60 text-caution")}
           >
-            {paused ? <Play /> : <Pause />}
-            {paused ? "Resume" : "Pause"}
+            <TriangleAlert /> Failures
+            {activeCount > 0 ? (
+              <span className="rounded bg-caution px-1 font-mono text-[10px] text-black">
+                {activeCount}
+              </span>
+            ) : null}
+            <ChevronDown className="opacity-60" />
           </Button>
-          <div
-            className="flex overflow-hidden rounded-md border"
-            role="radiogroup"
-            aria-label="Time acceleration"
-          >
-            {[1, 2, 4].map((t) => (
-              <button
-                key={t}
-                type="button"
-                role="radio"
-                aria-checked={scale === t}
-                onClick={() => {
-                  engine.timeScale = t;
-                  setScale(t);
-                }}
-                className={cn(
-                  "px-2.5 py-1 font-mono text-xs",
-                  scale === t
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:bg-muted",
-                )}
+        </PopoverTrigger>
+        <PopoverContent align="start" className="w-[min(22rem,calc(100vw-2rem))] p-0">
+          <div className="flex items-center justify-between border-b px-3 py-2">
+            <span className="text-sm font-semibold">Inject a failure</span>
+            {activeCount > 0 ? (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-7 text-xs"
+                onClick={() => available.forEach((f) => engine.setFailure(f.key, false))}
               >
-                ×{t}
-              </button>
-            ))}
+                Clear all
+              </Button>
+            ) : null}
           </div>
-        </div>
-
-        <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-          <span className="label-caps flex items-center gap-1.5">
-            <MapPin className="size-3" /> Reposition
-          </span>
-          <div className="flex flex-wrap gap-1.5">
-            {LAB_PRESETS.map((p) => (
-              <Tooltip key={p.id}>
-                <TooltipTrigger asChild>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="h-7 text-xs"
-                    onClick={() => applyPreset(engine, p.id)}
-                  >
-                    {p.label}
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent className="max-w-64 bg-popover text-popover-foreground ring-1 ring-border">
-                  {p.description}
-                </TooltipContent>
-              </Tooltip>
-            ))}
-          </div>
-        </div>
-
-        <div className="flex min-w-0 flex-col gap-1.5 lg:max-w-[46%]">
-          <span className="label-caps flex items-center gap-1.5">
-            <TriangleAlert className={cn("size-3", anyFailure && "text-caution")} /> Failures
-          </span>
-          <div className="grid grid-cols-2 gap-x-3 gap-y-1 sm:grid-cols-4">
-            {FAILURE_INFO.filter((f) => !(f.glassOnly && !glass) && !(f.steamOnly && glass)).map(
-              (f) => (
-                <Tooltip key={f.key}>
-                  <TooltipTrigger asChild>
-                    <label
-                      className={cn(
-                        "flex cursor-pointer items-center gap-1.5 rounded px-1 py-0.5 text-xs",
-                        failures[f.key]
-                          ? "text-caution"
-                          : "text-muted-foreground hover:text-foreground",
-                      )}
+          <ul className="max-h-[60vh] divide-y overflow-auto">
+            {available.map((f) => (
+              <li key={f.key}>
+                <label className="flex cursor-pointer gap-3 px-3 py-2.5 hover:bg-muted/50">
+                  <Switch
+                    checked={failures[f.key]}
+                    onCheckedChange={(v) => engine.setFailure(f.key, v)}
+                    aria-label={`${f.label} failure`}
+                    className="mt-0.5 data-[state=checked]:bg-caution"
+                  />
+                  <span className="min-w-0">
+                    <span
+                      className={cn("block text-sm font-medium", failures[f.key] && "text-caution")}
                     >
-                      <Switch
-                        checked={failures[f.key]}
-                        onCheckedChange={(v) => engine.setFailure(f.key, v)}
-                        aria-label={`${f.label} failure`}
-                        className="data-[state=checked]:bg-caution"
-                      />
                       {f.label}
-                    </label>
-                  </TooltipTrigger>
-                  <TooltipContent className="max-w-72 bg-popover text-popover-foreground ring-1 ring-border">
-                    <p className="font-semibold">{f.label} failure</p>
-                    <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
+                    </span>
+                    <span className="block text-xs leading-snug text-muted-foreground">
                       {f.help}
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              ),
-            )}
-          </div>
-        </div>
-      </div>
-    </TooltipProvider>
+                    </span>
+                  </span>
+                </label>
+              </li>
+            ))}
+          </ul>
+        </PopoverContent>
+      </Popover>
+      {children}
+    </div>
   );
 }

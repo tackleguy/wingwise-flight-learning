@@ -54,14 +54,14 @@ export function AtcTranscript({
             {l.from === "system" ? (
               <div
                 className={cn(
-                  "min-w-0 flex-1 rounded border px-2 py-1 font-sans text-xs whitespace-pre-line",
+                  "min-w-0 flex-1 border-l-2 py-0.5 pl-2 font-sans text-xs whitespace-pre-line",
                   l.tone === "warning"
-                    ? "border-warning/30 bg-warning/5 text-warning"
+                    ? "border-warning/60 text-warning"
                     : l.tone === "caution"
-                      ? "border-caution/30 bg-caution/5 text-foreground/90"
+                      ? "border-caution/60 text-foreground/85"
                       : l.tone === "ok"
-                        ? "border-ok/30 bg-ok/5 text-ok"
-                        : "border-primary/20 bg-primary/5 text-foreground/80",
+                        ? "border-ok/60 text-ok"
+                        : "border-primary/40 text-muted-foreground",
                 )}
               >
                 {l.text}

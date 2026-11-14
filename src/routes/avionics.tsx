@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
-import { BookOpen, Cpu, Loader2 } from "lucide-react";
+import { BookOpen, ChevronDown, Cpu, Loader2 } from "lucide-react";
 
 import { Notice, Page, PageHeader } from "@/components/app/page";
 import { Annunciators } from "@/components/avionics/Annunciators";
@@ -40,9 +40,10 @@ import {
 } from "@/lib/avionics/scenarios";
 import { AVIONICS_TASKS, type AvionicsTask, type LabDisplay } from "@/lib/avionics/tasks";
 import { useStore } from "@/lib/store";
+import { cn } from "@/lib/utils";
 import { WEATHER_PRESETS } from "@/sim/environment";
 import type { SimEngine } from "@/sim/engine";
-import { SimProvider, useCreateSim } from "@/sim/react";
+import { SimProvider, useCreateSim, useSimSelector } from "@/sim/react";
 
 export const Route = createFileRoute("/avionics")({
   head: () => ({
@@ -85,7 +86,7 @@ function AvionicsLab() {
         eyebrow="Train"
         title="Avionics Lab"
         icon={Cpu}
-        description="Fly a live simulation and learn every display, radio and autopilot mode by doing. Every needle, tape and annunciation is driven by the same flight model."
+        description="Fly a live simulation and learn every display, radio and autopilot mode by doing."
         actions={
           <>
             <Select value={perfId} onValueChange={(v) => setPerfId(v as LabAircraftId)}>
@@ -138,6 +139,16 @@ function AvionicsLab() {
   );
 }
 
+type SidePanel = "autopilot" | "radios" | "systems";
+
+/** Which side-panel tab a task mostly uses. */
+function panelFor(task: AvionicsTask): SidePanel {
+  if (task.id === "baro-set") return "radios";
+  if (task.category === "steam") return "systems";
+  if (task.category === "radios" || task.category === "nav") return "radios";
+  return "autopilot";
+}
+
 function LabBody({ engine }: { engine: SimEngine }) {
   const glass = engine.perf.avionics !== "steam";
   const [display, setDisplay] = useState<LabDisplay>(glass ? "glass" : "sixpack");
@@ -146,6 +157,12 @@ function LabBody({ engine }: { engine: SimEngine }) {
     () => AVIONICS_TASKS.find((t) => !done[t.id])?.id ?? AVIONICS_TASKS[0]!.id,
   );
   const task = AVIONICS_TASKS.find((t) => t.id === taskId) ?? AVIONICS_TASKS[0]!;
+  const [panel, setPanel] = useState<SidePanel>(() => panelFor(task));
+  const selectTask = useCallback((id: string) => {
+    setTaskId(id);
+    const t = AVIONICS_TASKS.find((x) => x.id === id);
+    if (t) setPanel(panelFor(t));
+  }, []);
   const [infoId, setInfoId] = useState<InstrumentId>("pfd");
   const [infoOpen, setInfoOpen] = useState(false);
   const explain = useCallback((id: InstrumentId) => {
@@ -156,41 +173,52 @@ function LabBody({ engine }: { engine: SimEngine }) {
 
   return (
     <InstrumentExplainContext.Provider value={explain}>
-      <LabControlStrip className="mb-4" />
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px] xl:grid-cols-[300px_minmax(0,1fr)_380px]">
-        {/* centre: displays */}
+      <LabControlStrip className="mb-4">
+        <AlertStrip onOpen={() => setPanel("systems")} />
+      </LabControlStrip>
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_340px] xl:grid-cols-[300px_minmax(0,1fr)_360px]">
+        {/* left: current task + task list */}
+        <aside
+          className="panel min-w-0 space-y-4 self-start p-4 lg:col-start-1 lg:row-start-2 xl:row-start-1"
+          aria-label="Training tasks"
+        >
+          <TaskCardHost
+            task={task}
+            engine={engine}
+            onShowDisplay={setDisplay}
+            onSelect={selectTask}
+          />
+          <TaskList currentId={taskId} onSelect={selectTask} className="border-t pt-3" />
+        </aside>
+
+        {/* centre: displays + flight controls */}
         <section
-          className="min-w-0 space-y-4 lg:col-start-1 xl:col-start-2 xl:row-start-1"
+          className="min-w-0 space-y-3 lg:col-start-1 lg:row-start-1 xl:col-start-2"
           aria-label="Displays"
         >
           <Tabs value={display} onValueChange={(v) => setDisplay(v as LabDisplay)}>
-            <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center justify-between gap-2">
               <TabsList className="h-auto max-w-full flex-wrap justify-start">
                 {DISPLAYS.map((d) => (
-                  <TabsTrigger key={d.id} value={d.id} className="text-xs sm:text-sm">
-                    <span className="hidden sm:inline">{d.label}</span>
-                    <span className="sm:hidden">{d.short}</span>
+                  <TabsTrigger
+                    key={d.id}
+                    value={d.id}
+                    title={d.label}
+                    className="px-2.5 text-xs sm:text-sm"
+                  >
+                    {d.short}
                   </TabsTrigger>
                 ))}
               </TabsList>
               <Button
                 size="sm"
                 variant="ghost"
-                onClick={() =>
-                  explain(
-                    display === "glass"
-                      ? "pfd"
-                      : display === "sixpack"
-                        ? "ai"
-                        : display === "nav"
-                          ? "vor"
-                          : display === "gps"
-                            ? "gps"
-                            : "autopilot",
-                  )
-                }
+                className="shrink-0"
+                aria-label="Explain this display"
+                title="Explain this display (instrument guide)"
+                onClick={() => explain(DISPLAY_INFO[display])}
               >
-                <BookOpen /> Explain this display
+                <BookOpen /> <span className="hidden sm:inline">Explain</span>
               </Button>
             </div>
             <TabsContent value="glass" className="space-y-3">
@@ -200,12 +228,11 @@ function LabBody({ engine }: { engine: SimEngine }) {
               </div>
             </TabsContent>
             <TabsContent value="sixpack">
-              <div className="mx-auto max-w-3xl space-y-3">
+              <div className="mx-auto max-w-3xl space-y-2">
                 <SixPack />
                 {glass ? (
                   <p className="text-center text-xs text-muted-foreground">
-                    In this glass-cockpit aircraft, the six-pack represents the standby instruments
-                    — the standby attitude indicator keeps working after an AHRS failure.
+                    Standby instruments — they keep working after an AHRS failure.
                   </p>
                 ) : null}
               </div>
@@ -221,49 +248,37 @@ function LabBody({ engine }: { engine: SimEngine }) {
             <TabsContent value="autopilot" className="space-y-3">
               <div className="grid gap-3 min-[1880px]:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
                 <Pfd hideSoftKeys />
-                <div className="space-y-3">
-                  <AutopilotPanel />
-                  <ModeGuide />
-                </div>
+                <AutopilotPanel />
               </div>
             </TabsContent>
           </Tabs>
           <FlightControls />
         </section>
 
-        {/* left: tasks */}
+        {/* right: one tabbed panel for autopilot / radios / systems */}
         <aside
-          className="min-w-0 space-y-4 lg:col-start-1 lg:row-start-2 xl:col-start-1 xl:row-start-1"
-          aria-label="Training tasks"
+          className="min-w-0 lg:col-start-2 lg:row-span-2 lg:row-start-1 xl:col-start-3"
+          aria-label="Cockpit panels"
         >
-          <TaskCardHost task={task} engine={engine} onShowDisplay={setDisplay} />
-          <TaskList currentId={taskId} onSelect={setTaskId} />
-          <div className="panel p-3">
-            <p className="label-caps mb-1.5">Explain an instrument</p>
-            <p className="mb-2 text-xs text-muted-foreground">
-              Click the ⓘ on any instrument, or open the guide.
-            </p>
-            <Button
-              size="sm"
-              variant="outline"
-              className="w-full"
-              onClick={() => setInfoOpen(true)}
-            >
-              <BookOpen /> Instrument guide
-            </Button>
-          </div>
-        </aside>
-
-        {/* right: controls */}
-        <aside
-          className="min-w-0 space-y-4 lg:col-start-2 lg:row-span-2 lg:row-start-1 xl:col-start-3"
-          aria-label="Panels"
-        >
-          {display !== "autopilot" ? <AutopilotPanel /> : null}
-          <RadiosPanel />
-          <Annunciators />
-          <SwitchPanel />
-          {display !== "glass" ? <EngineGauges /> : null}
+          <Tabs value={panel} onValueChange={(v) => setPanel(v as SidePanel)}>
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="autopilot">Autopilot</TabsTrigger>
+              <TabsTrigger value="radios">Radios</TabsTrigger>
+              <TabsTrigger value="systems">Systems</TabsTrigger>
+            </TabsList>
+            <TabsContent value="autopilot" className="space-y-3">
+              {display !== "autopilot" ? <AutopilotPanel /> : null}
+              <ModeGuide open={display === "autopilot"} />
+            </TabsContent>
+            <TabsContent value="radios">
+              <RadiosPanel />
+            </TabsContent>
+            <TabsContent value="systems" className="space-y-3">
+              <Annunciators />
+              <SwitchPanel />
+              {display !== "glass" ? <EngineGauges /> : null}
+            </TabsContent>
+          </Tabs>
         </aside>
       </div>
       <InstrumentInfoSheet
@@ -276,24 +291,75 @@ function LabBody({ engine }: { engine: SimEngine }) {
   );
 }
 
+const DISPLAY_INFO: Record<LabDisplay, InstrumentId> = {
+  glass: "pfd",
+  sixpack: "ai",
+  nav: "vor",
+  gps: "gps",
+  autopilot: "autopilot",
+};
+
+/** One-line list of active annunciations; renders nothing when all is quiet. */
+function AlertStrip({ onOpen }: { onOpen: () => void }) {
+  const key = useSimSelector((s) => s.alerts.map((a) => `${a.level}:${a.text}`).join("|"));
+  if (!key) return null;
+  const alerts = key.split("|").map((k) => {
+    const i = k.indexOf(":");
+    return { level: k.slice(0, i), text: k.slice(i + 1) };
+  });
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      className="flex min-w-0 flex-wrap items-center gap-1 sm:ml-auto"
+      aria-label="Active annunciations — open Systems"
+      title="Open the Systems panel"
+    >
+      {alerts.map((a) => (
+        <span
+          key={a.text}
+          className={cn(
+            "rounded-[3px] px-1.5 py-0.5 font-mono text-[10px] font-bold text-black",
+            a.level === "warning"
+              ? "animate-annunciator bg-warning"
+              : a.level === "caution"
+                ? "bg-caution"
+                : "bg-white/85",
+          )}
+        >
+          {a.text}
+        </span>
+      ))}
+    </button>
+  );
+}
+
 /** Runs the live task evaluator (all tasks) and shows the selected task. Kept separate so its
  *  5 Hz status updates don't re-render the whole lab. */
 function TaskCardHost({
   task,
   engine,
   onShowDisplay,
+  onSelect,
 }: {
   task: AvionicsTask;
   engine: SimEngine;
   onShowDisplay: (d: LabDisplay) => void;
+  onSelect: (id: string) => void;
 }) {
   const runner = useTaskRunner(engine, task.id);
   return (
-    <CurrentTaskCard task={task} runner={runner} engine={engine} onShowDisplay={onShowDisplay} />
+    <CurrentTaskCard
+      task={task}
+      runner={runner}
+      engine={engine}
+      onShowDisplay={onShowDisplay}
+      onSelect={onSelect}
+    />
   );
 }
 
-function ModeGuide() {
+function ModeGuide({ open }: { open: boolean }) {
   const rows: [string, string][] = [
     ["HDG", AP_HELP["HDG"]!],
     ["NAV", AP_HELP["NAV"]!],
@@ -303,14 +369,17 @@ function ModeGuide() {
     ["FLC", AP_HELP["FLC"]!],
   ];
   return (
-    <div className="panel p-3">
-      <p className="label-caps mb-2">Mode guide</p>
-      <p className="mb-2 text-xs text-muted-foreground">
+    <details className="group px-1" open={open}>
+      <summary className="flex cursor-pointer list-none items-center gap-1.5 text-xs font-semibold text-muted-foreground select-none hover:text-foreground [&::-webkit-details-marker]:hidden">
+        <BookOpen className="size-3.5" /> Mode guide
+        <ChevronDown className="size-3.5 transition-transform group-open:rotate-180" />
+      </summary>
+      <p className="mt-2 text-xs text-muted-foreground">
         <span className="font-semibold text-ok">Green</span> = active ·{" "}
-        <span className="font-semibold text-foreground">White</span> = armed (waits to capture).
-        Always confirm the PFD annunciation after pressing a button.
+        <span className="font-semibold text-foreground">White</span> = armed. Always confirm the PFD
+        annunciation.
       </p>
-      <dl className="space-y-1.5 text-xs">
+      <dl className="mt-2 space-y-1.5 text-xs">
         {rows.map(([k, v]) => (
           <div key={k} className="grid grid-cols-[2.5rem_1fr] gap-2">
             <dt className="font-mono font-bold text-ok">{k}</dt>
@@ -318,6 +387,6 @@ function ModeGuide() {
           </div>
         ))}
       </dl>
-    </div>
+    </details>
   );
 }

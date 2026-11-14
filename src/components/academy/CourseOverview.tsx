@@ -1,16 +1,7 @@
 /** Shared academy overview used by /vfr and /ifr. */
 import { Link } from "@tanstack/react-router";
-import {
-  ArrowRight,
-  BookOpen,
-  CheckCircle2,
-  Clock,
-  GraduationCap,
-  Layers,
-  Trophy,
-  type LucideIcon,
-} from "lucide-react";
-import { Meter, Notice, Page, PageHeader, Pill, Section, Stat } from "@/components/app/page";
+import { ArrowRight, CheckCircle2, type LucideIcon } from "lucide-react";
+import { Meter, Notice, Page, PageHeader, Section } from "@/components/app/page";
 import { getCourse } from "@/lib/content";
 import type { Course, Module } from "@/lib/content/types";
 import { useHydrated, useStore, type QuizAttempt } from "@/lib/store";
@@ -89,12 +80,11 @@ export function CourseOverview({
   const passed = bests.filter((b) => b && b.pct >= 70).length;
   const taken = bests.filter((b): b is NonNullable<typeof b> => !!b);
   const avg = taken.length ? Math.round(taken.reduce((s, b) => s + b.pct, 0) / taken.length) : null;
-  const modulesDone = course.modules.filter((m) => moduleCompletion(m, lessons).pct >= 100).length;
   const next = nextLesson(course, lessons);
   const started = done > 0;
 
   return (
-    <Page>
+    <Page className="max-w-5xl">
       <PageHeader
         eyebrow={eyebrow}
         title={course.title}
@@ -115,147 +105,116 @@ export function CourseOverview({
         }
       />
 
-      <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Stat
-          label="Lessons complete"
-          value={hydrated ? `${done}/${allL.length}` : `—/${allL.length}`}
-          sub={`${Math.round(pct)}% of the course`}
-          icon={BookOpen}
-          tone={pct >= 100 ? "ok" : "default"}
-        />
-        <Stat
-          label="Modules complete"
-          value={`${modulesDone}/${course.modules.length}`}
-          sub="All lessons finished"
-          icon={Layers}
-        />
-        <Stat
-          label="Module exams passed"
-          value={`${passed}/${course.modules.length}`}
-          sub={avg !== null ? `Average best score ${avg}%` : "No module exams taken yet"}
-          icon={Trophy}
-          tone={passed === course.modules.length ? "ok" : "default"}
-        />
-        <Stat
-          label="Study time left"
-          value={`${Math.floor(minutesLeft / 60)}h ${minutesLeft % 60}m`}
-          sub={`of ${Math.round(totalMinutes / 60)} h estimated`}
-          icon={Clock}
-        />
-      </div>
-
-      <Meter value={pct} label="Course progress" className="mb-6" />
-
-      {next ? (
-        <div className="panel mb-8 flex flex-col gap-4 border-primary/30 p-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="min-w-0">
-            <p className="label-caps text-primary">
-              {started ? "Continue where you left off" : "Start here"}
-            </p>
-            <p className="mt-1 truncate text-base font-semibold">{next.lesson.title}</p>
-            <p className="text-xs text-muted-foreground">
-              Module {next.mod.number} · {next.mod.title} · Lesson {next.n} of{" "}
-              {next.mod.lessons.length} · {next.lesson.minutes} min
-            </p>
-          </div>
-          <Link
-            to="/academy/$course/$module"
-            params={{ course: course.id, module: next.mod.id }}
-            search={{ lesson: next.n }}
-            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
-          >
-            {started ? "Resume lesson" : "Begin lesson"}
-            <ArrowRight className="size-4" />
-          </Link>
+      {/* One compact progress line instead of four stat cards + a "start here" panel. */}
+      <div className="mb-8">
+        <div className="mb-2 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 text-sm">
+          <span className="text-muted-foreground">
+            <span className="font-mono font-semibold text-foreground tabular">
+              {hydrated ? done : "—"}/{allL.length}
+            </span>{" "}
+            lessons ·{" "}
+            <span className="font-mono font-semibold text-foreground tabular">
+              {passed}/{course.modules.length}
+            </span>{" "}
+            module exams passed
+            {avg !== null ? ` (avg ${avg}%)` : ""} · {Math.floor(minutesLeft / 60)}h{" "}
+            {minutesLeft % 60}m left
+          </span>
+          {next ? (
+            <span className="min-w-0 truncate text-xs text-muted-foreground">
+              Up next:{" "}
+              <Link
+                to="/academy/$course/$module"
+                params={{ course: course.id, module: next.mod.id }}
+                search={{ lesson: next.n }}
+                className="font-medium text-foreground hover:text-primary"
+              >
+                {next.lesson.title}
+              </Link>{" "}
+              · Module {next.mod.number}
+            </span>
+          ) : (
+            <span className="flex items-center gap-1.5 text-xs text-ok">
+              <CheckCircle2 className="size-3.5" />
+              Course complete — retake module exams to lift your best scores.
+            </span>
+          )}
         </div>
-      ) : (
-        <Notice title="Course complete." className="mb-8">
-          You have completed every lesson in this course. Retake module exams to lift your best
-          scores, or continue with the practice tests and simulator.
-        </Notice>
-      )}
+        <Meter value={pct} />
+      </div>
 
       <Section
         title="Modules"
-        description={`${course.modules.length} modules · ${allL.length} lessons · each ends with a graded module exam`}
+        description={`${course.modules.length} modules · ${Math.round(totalMinutes / 60)} h · each ends with a graded module exam`}
       >
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+        <ol className="divide-y border-y">
           {course.modules.map((m, i) => {
             const c = moduleCompletion(m, lessons);
             const b = bests[i] ?? null;
             const minutes = m.lessons.reduce((s, l) => s + l.minutes, 0);
             const firstOpen = m.lessons.findIndex((l) => !lessons[l.id]);
+            const complete = c.pct >= 100;
             return (
-              <Link
-                key={m.id}
-                to="/academy/$course/$module"
-                params={{ course: course.id, module: m.id }}
-                search={{ lesson: firstOpen >= 0 ? firstOpen + 1 : 1 }}
-                className={cn(
-                  "panel group flex flex-col p-4 transition-colors hover:border-primary/50",
-                  c.pct >= 100 && "border-ok/30",
-                )}
-              >
-                <div className="flex items-start gap-3">
+              <li key={m.id}>
+                <Link
+                  to="/academy/$course/$module"
+                  params={{ course: course.id, module: m.id }}
+                  search={{ lesson: firstOpen >= 0 ? firstOpen + 1 : 1 }}
+                  className="group flex items-center gap-3 py-3 sm:gap-4"
+                >
                   <span
                     className={cn(
-                      "flex size-9 shrink-0 items-center justify-center rounded-md font-mono text-sm font-bold",
-                      c.pct >= 100 ? "bg-ok/15 text-ok" : "bg-primary/15 text-primary",
+                      "flex w-7 shrink-0 justify-center font-mono text-sm",
+                      complete ? "text-ok" : "text-muted-foreground",
                     )}
                   >
-                    {c.pct >= 100 ? (
+                    {complete ? (
                       <CheckCircle2 className="size-4.5" />
                     ) : (
                       String(m.number).padStart(2, "0")
                     )}
                   </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="font-semibold leading-tight group-hover:text-primary">
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-medium leading-snug group-hover:text-primary">
                       {m.title}
-                    </p>
-                    <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-muted-foreground">
+                    </span>
+                    <span className="hidden truncate text-xs text-muted-foreground sm:block">
                       {m.summary}
-                    </p>
-                  </div>
-                </div>
-                <div className="mt-auto pt-4">
-                  <div className="mb-2 flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
-                    <span>
-                      {m.lessons.length} lessons · {minutes} min
                     </span>
-                    <span className="ml-auto">
-                      {b ? (
-                        <Pill tone={b.pct >= 70 ? "ok" : "caution"}>
-                          <GraduationCap className="size-3" /> Exam {b.pct}%
-                        </Pill>
-                      ) : (
-                        <Pill>Exam not taken</Pill>
-                      )}
-                    </span>
-                  </div>
-                  <Meter value={c.pct} />
-                  <p className="mt-1 text-[11px] text-muted-foreground">
-                    {c.done}/{c.total} lessons complete
-                  </p>
-                </div>
-              </Link>
+                  </span>
+                  <span className="hidden shrink-0 text-xs text-muted-foreground tabular md:block">
+                    {c.done}/{c.total} lessons · {minutes} min
+                  </span>
+                  <span className="w-16 shrink-0 text-right font-mono text-xs tabular">
+                    {b ? (
+                      <span className={b.pct >= 70 ? "text-ok" : "text-caution"}>
+                        Exam {b.pct}%
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground md:hidden">
+                        {c.done}/{c.total}
+                      </span>
+                    )}
+                  </span>
+                  <Meter value={c.pct} className="hidden w-20 shrink-0 sm:block" />
+                </Link>
+              </li>
             );
           })}
-        </div>
+        </ol>
       </Section>
 
-      <Section
-        title="Hands-on practice"
-        description="Apply what you learn in the simulator, labs and radio trainers."
-      >
-        <div className="grid gap-3 md:grid-cols-3">
+      <Section title="Hands-on practice">
+        <ul className="grid gap-x-6 gap-y-1 sm:grid-cols-3">
           {related.map((r) => (
-            <PracticeCard key={r.to} to={r.to} label={r.label} text={r.text} />
+            <li key={r.to}>
+              <PracticeCard to={r.to} label={r.label} text={r.text} compact />
+            </li>
           ))}
-        </div>
+        </ul>
       </Section>
 
-      <Notice tone="caution" title="Educational content.">
+      <Notice tone="caution" title="Educational content — not a substitute for instruction.">
         Lessons are based on FAA handbooks (PHAK, AFH, IFH), the AIM and 14 CFR, and are intended to
         supplement — not replace — training with an authorized flight instructor and current
         official FAA publications.
