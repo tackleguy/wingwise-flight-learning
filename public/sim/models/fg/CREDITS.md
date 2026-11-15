@@ -89,3 +89,53 @@ repository.
 - Source: https://sourceforge.net/p/flightgear/fgaddon/HEAD/tree/trunk/Aircraft/Beechcraft-T6-Texan-II/
 - Version: r21799 (folder last changed in r18616)
 - Converted to glTF (textures resized, exterior only) by the SkyReady project.
+
+# Extra models (no JSBSim flight model; Scenario Simulator)
+
+## da40.glb — Diamond DA40 NG (FlightGear DA40, default livery OE-DWS)
+
+- Authors: Bea Wolf (3D, textures, FDM, systems), Sascha Reissner, Joshua Davidson, Emmanuel Baranger (original Diamond-Da40), Maik Justus, Torsten Dreyer, the c172p authors, onox, Benedikt Hallinger, Philip Zakharov, Noah Ryu
+- Licence: GPL-2.0 (COPYING file in the aircraft folder)
+- Source: https://sourceforge.net/p/flightgear/fgaddon/HEAD/tree/trunk/Aircraft/DA40/
+- Version: r21799 (folder last changed in r20292)
+- Converted to glTF (textures resized, exterior only) by the SkyReady project.
+
+## sr22.glb — Cirrus SR22 (FlightGear Cirrus-SR22)
+
+- Authors: Emmanuel Baranger (3D, FDM)
+- Licence: GPL-2.0 (COPYING file in the aircraft folder)
+- Source: https://sourceforge.net/p/flightgear/fgaddon/HEAD/tree/trunk/Aircraft/Cirrus-SR22/
+- Version: r21799 (folder last changed in r19658)
+- Converted to glTF (textures resized, exterior only) by the SkyReady project.
+
+## pa34.glb — Piper PA-34-200T Seneca II (FlightGear SenecaII)
+
+- Authors: Torsten Dreyer
+- Licence: GPL-2.0-or-later (stated in the aircraft's model files, (C) 2009 Torsten Dreyer; no separate licence file)
+- Source: https://sourceforge.net/p/flightgear/fgaddon/HEAD/tree/trunk/Aircraft/SenecaII/
+- Version: r21799 (folder last changed in r19328)
+- Converted to glTF (textures resized, exterior only) by the SkyReady project.
+
+## be350.glb — Beechcraft King Air 350 (FlightGear Beechcraft-King-Air, Securite Civile livery F-ZBFJ)
+
+- Authors: Emmanuel Baranger (3D, FDM)
+- Licence: GPL-2.0 (COPYING file in the aircraft folder)
+- Source: https://sourceforge.net/p/flightgear/fgaddon/HEAD/tree/trunk/Aircraft/Beechcraft-King-Air/
+- Version: r21799 (folder last changed in r21192)
+- Converted to glTF (textures resized, exterior only) by the SkyReady project.
+
+## b738.glb — Boeing 737-800 (FlightGear 737-800)
+
+- Authors: David Culp (FDM), Syd Adams (glass instruments), Innis Cunningham (3D and panel), Michael Soitanen (current development)
+- Licence: GPL-2.0 (LICENSE file in the aircraft folder)
+- Source: https://sourceforge.net/p/flightgear/fgaddon/HEAD/tree/trunk/Aircraft/737-800/
+- Version: r21799 (folder last changed in r15164)
+- Converted to glTF (textures resized, exterior only) by the SkyReady project.
+
+## be36.glb — Mooney M20M (FlightGear Mooney-M-20) - stand-in for the Beechcraft Bonanza A36
+
+- Authors: Emmanuel Baranger (3D, FDM)
+- Licence: GPL-2.0 (COPYING file in the aircraft folder)
+- Source: https://sourceforge.net/p/flightgear/fgaddon/HEAD/tree/trunk/Aircraft/Mooney-M-20/
+- Version: r21799 (folder last changed in r21291)
+- Converted to glTF (textures resized, exterior only) by the SkyReady project.
