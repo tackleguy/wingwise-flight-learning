@@ -1,4 +1,15 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAccount } from "@/lib/account";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useEffect, useState, type ReactNode } from "react";
 import { ChevronDown, ChevronRight, ShieldCheck, UserCircle2 } from "lucide-react";
 
@@ -192,6 +203,47 @@ function ProfileChip() {
   );
 }
 
+function AccountButton() {
+  const { data } = useAccount();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const navigate = useNavigate();
+  const qc = useQueryClient();
+  const user = data?.user;
+  // Signed-in pilots who haven't added their ratings, endorsements and hours go to setup first.
+  useEffect(() => {
+    if (user && data?.profile && !data.profile.onboarded && pathname !== "/setup") {
+      navigate({ to: "/setup", replace: true });
+    }
+  }, [user, data?.profile, pathname, navigate]);
+  if (pathname === "/auth") return null;
+  if (!user) {
+    return (
+      <Link to="/auth" className="btn-ghost-glass inline-flex h-9 items-center rounded-lg px-3 text-xs font-semibold">
+        Sign in
+      </Link>
+    );
+  }
+  const signOut = async () => {
+    await qc.cancelQueries();
+    qc.clear();
+    await supabase.auth.signOut();
+    navigate({ to: "/auth", replace: true });
+  };
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger className="btn-ghost-glass inline-flex h-9 items-center rounded-lg px-3 text-xs font-semibold">
+        Account
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">{user.email}</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onSelect={() => navigate({ to: "/setup" })}>Edit ratings, hours & focus</DropdownMenuItem>
+        <DropdownMenuItem onSelect={signOut}>Sign out</DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 /** Thin brand-colored bar under the top bar while a route is loading. */
 function RouteProgress() {
   const loading = useRouterState({ select: (s) => s.status === "pending" || s.isLoading });
@@ -242,6 +294,7 @@ function TopBar() {
       </nav>
       <div className="ml-auto flex items-center gap-2">
         <CommandMenu />
+        <AccountButton />
         <ProfileChip />
       </div>
       <RouteProgress />

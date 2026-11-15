@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { Page, formatDate, formatDuration } from "@/components/app/page";
 import { FlightHero } from "@/components/brand/FlightHero";
+import { TrainingPlan } from "@/components/app/TrainingPlan";
 import { useCountUp } from "@/hooks/use-count-up";
 import { AIRCRAFT_PERF } from "@/lib/data/aircraft-perf";
 import { useHydrated, useStore, type TrainingState } from "@/lib/store";
@@ -444,6 +445,8 @@ function Dashboard() {
           )}
         </div>
       </FlightHero>
+
+      <TrainingPlan />
 
       {/* Quick start */}
       <section className="mb-10">
