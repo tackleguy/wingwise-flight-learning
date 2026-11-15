@@ -151,7 +151,7 @@ export const FG_MODELS: Record<"c172p"|"c182"|"pa28"|"J3Cub"|"c310"|"DHC6"|"p51d
     parts: ["body", "aileron_left", "aileron_right", "elevator", "propeller_blades", "propeller_disc", "propeller", "rudder"],
     retractableGear: false,
     triangles: 38054,
-    bytes: 2303376,
+    bytes: 2303348,
     notes: "Aligned on the JSBSim main-gear contact points; the tail wheel then differs from the JSBSim tail contact by +7 cm fore/aft (+ = aft) and -7 cm vertically (+ = model tyre higher)."
   },
   c310: {
@@ -188,7 +188,7 @@ export const FG_MODELS: Record<"c172p"|"c182"|"pa28"|"J3Cub"|"c310"|"DHC6"|"p51d
     parts: ["body", "gear_retract", "aileron_left", "aileron_right", "elevator", "flap_left", "flap_right", "propeller_blades", "propeller_disc", "propeller", "propeller_blades_2", "propeller_disc_2", "propeller_2", "rudder"],
     retractableGear: true,
     triangles: 1487,
-    bytes: 188508,
+    bytes: 188712,
     notes: "Aligned on the JSBSim main-gear contact points; the nose wheel then differs from the JSBSim nose contact by +44 cm fore/aft (+ = aft) and -12 cm vertically (+ = model tyre higher)."
   },
   DHC6: {
@@ -225,7 +225,7 @@ export const FG_MODELS: Record<"c172p"|"c182"|"pa28"|"J3Cub"|"c310"|"DHC6"|"p51d
     parts: ["body", "aileron_left", "aileron_right", "elevator", "flap_left", "flap_right", "propeller_blades", "propeller_disc", "propeller", "propeller_blades_2", "propeller_disc_2", "propeller_2", "rudder"],
     retractableGear: false,
     triangles: 21237,
-    bytes: 854616,
+    bytes: 854620,
     notes: "Aligned on the JSBSim main-gear contact points; the nose wheel then differs from the JSBSim nose contact by -22 cm fore/aft (+ = aft) and +6 cm vertically (+ = model tyre higher)."
   },
   p51d: {
@@ -257,7 +257,7 @@ export const FG_MODELS: Record<"c172p"|"c182"|"pa28"|"J3Cub"|"c310"|"DHC6"|"p51d
     parts: ["body", "gear_retract", "aileron_left", "aileron_right", "elevator", "flap_left", "flap_right", "propeller_blades", "propeller_disc", "propeller", "rudder"],
     retractableGear: true,
     triangles: 122745,
-    bytes: 4569292,
+    bytes: 4569288,
     notes: "Aligned on the JSBSim main-gear contact points; the tail wheel then differs from the JSBSim tail contact by -23 cm fore/aft (+ = aft) and +22 cm vertically (+ = model tyre higher). Textures not available (surfaces drawn in their plain material colour): ..\\..\\Models\\propDiskSpinner.png."
   },
   A320: {

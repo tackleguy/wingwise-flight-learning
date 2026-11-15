@@ -768,8 +768,11 @@ def build(aid, tex_max=None, quiet=False):
             clusters.sort(key=lambda c_: -c_[2])
             main = clusters[0]
             keep_c = [main]
+            def wheelish(c_):
+                return any(re.search(r"wheel|tire|tyre|strut|axle", p.mesh.name, re.I) or
+                           any(re.search(r"compression|steer|rollspeed|gear/", a.prop or "", re.I) for a in p.mesh.anims) for p in c_[1])
             for c_ in clusters[1:]:
-                if abs(c_[0].axis @ main[0].axis) > 0.5 and c_[2] >= 0.15 * main[2]:
+                if abs(c_[0].axis @ main[0].axis) > 0.5 and c_[2] >= 0.15 * main[2] and not wheelish(c_):
                     keep_c.append(c_)
                 else:
                     left.extend(c_[1])

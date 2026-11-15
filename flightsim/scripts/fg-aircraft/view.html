@@ -67,17 +67,56 @@ if (deflect) {
   // expected: elevator/ailerons/flaps up (+Y), rudder to the pilot's right (-X).
   const d = THREE.MathUtils.degToRad(20);
   root.updateMatrixWorld(true);
-  for (const name of ["elevator", "rudder", "aileron_left", "aileron_right", "flap_left", "flap_right"]) {
-    const n = root.getObjectByName(name);
-    if (!n) continue;
-    const before = new THREE.Box3().setFromObject(n).getCenter(new THREE.Vector3());
+  // trailing edge = the 5 % most-aft vertices (glTF -Z is aft) of everything under the node
+  const trailingEdge = (n) => {
+    const pts = [];
+    n.updateMatrixWorld(true);
+    n.traverse((o) => {
+      if (!o.isMesh) return;
+      const pa = o.geometry.attributes.position;
+      for (let i = 0; i < pa.count; i++) pts.push(new THREE.Vector3().fromBufferAttribute(pa, i).applyMatrix4(o.matrixWorld));
+    });
+    pts.sort((a, b) => a.z - b.z);
+    const k = Math.max(1, Math.round(pts.length * 0.05));
+    return pts.slice(0, k);
+  };
+  const nodesToCheck = [];
+  root.traverse((o) => {
+    if (/^(elevator|rudder|aileron_left|aileron_right|flap_left|flap_right)(_(left|right|\d+))?$/.test(o.name)) nodesToCheck.push(o);
+  });
+  for (const n of nodesToCheck) {
+    const q0 = n.quaternion.clone();
+    const te0 = trailingEdge(n);
+    const before = te0.reduce((a, p) => a.add(p), new THREE.Vector3()).divideScalar(te0.length);
     n.quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), d));
     root.updateMatrixWorld(true);
-    const after = new THREE.Box3().setFromObject(n).getCenter(new THREE.Vector3());
+    // same vertices after the turn: recompute in the same order by tracking the world matrix change
+    const te1 = [];
+    n.traverse((o) => {
+      if (!o.isMesh) return;
+      const pa = o.geometry.attributes.position;
+      for (let i = 0; i < pa.count; i++) te1.push(new THREE.Vector3().fromBufferAttribute(pa, i).applyMatrix4(o.matrixWorld));
+    });
+    // match by the pre-turn order: rebuild pre-turn list unsorted to pair indices
+    n.quaternion.copy(q0);
+    root.updateMatrixWorld(true);
+    const pre = [];
+    n.traverse((o) => {
+      if (!o.isMesh) return;
+      const pa = o.geometry.attributes.position;
+      for (let i = 0; i < pa.count; i++) pre.push(new THREE.Vector3().fromBufferAttribute(pa, i).applyMatrix4(o.matrixWorld));
+    });
+    const idx = pre.map((p, i) => i).sort((a, b) => pre[a].z - pre[b].z).slice(0, te0.length);
+    const after = idx.reduce((a, i) => a.add(te1[i]), new THREE.Vector3()).divideScalar(idx.length);
     const dv = after.sub(before);
-    const ok = name === "rudder" ? dv.x < 0 && Math.abs(dv.x) > Math.abs(dv.y) : dv.y > 0;
-    checks[name] = { dx: +dv.x.toFixed(3), dy: +dv.y.toFixed(3), dz: +dv.z.toFixed(3), ok };
+    const ok = n.name.startsWith("rudder") ? dv.x < 0 && Math.abs(dv.x) > Math.abs(dv.y) : dv.y > 0;
+    checks[n.name] = { dx: +dv.x.toFixed(3), dy: +dv.y.toFixed(3), dz: +dv.z.toFixed(3), ok };
   }
+  for (const name of ["elevator", "rudder", "aileron_left", "aileron_right", "flap_left", "flap_right"]) {
+    const n = root.getObjectByName(name);
+    if (n) n.quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), d));
+  }
+  root.updateMatrixWorld(true);
   const p = root.getObjectByName("propeller");
   if (p) {
     // propeller: local +X must point forward (+Z)
