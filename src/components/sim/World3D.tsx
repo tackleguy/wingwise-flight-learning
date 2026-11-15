@@ -11,6 +11,7 @@ import { terrainElevationFt } from "@/sim/environment";
 import type { SimEngine } from "@/sim/engine";
 import type { Landmark } from "@/sim/scenarios";
 import type { SimSnapshot } from "@/sim/types";
+import { animateFgAircraft, loadFgAircraft, type FgAircraft } from "./fg-aircraft";
 
 export type CameraMode = "cockpit" | "chase" | "orbit" | "tower";
 
@@ -387,8 +388,14 @@ function buildAirport(origin: { lat: number; lon: number }, ap: Airport, taxiTex
   return { group, papis, lightPoints };
 }
 
+/**
+ * The aircraft: a simple shape drawn at once, replaced by the FlightGear 3D model of the aircraft
+ * as soon as that has loaded (see ./fg-aircraft.ts). Lights stay part of the group either way.
+ */
 function buildAircraftModel(perfId: string, spanFt: number) {
   const g = new THREE.Group();
+  const outer = new THREE.Group();
+  outer.add(g);
   const span = spanFt * M;
   const highWing = perfId === "c152" || perfId === "c172";
   const jet = perfId === "b738" || perfId === "a320";
@@ -517,7 +524,20 @@ function buildAircraftModel(perfId: string, spanFt: number) {
   target.position.set(0, -10, -200);
   g.add(landingLight, target);
   landingLight.target = target;
-  return { group: g, props, gear, navL, navR, beacon, landingLight, gearDrop: rad * 1.6 + 0.3 };
+  // lights belong to the outer group so they stay when the simple shape is hidden
+  outer.add(navL, navR, beacon, landingLight, target);
+  return {
+    group: outer,
+    simple: g,
+    props,
+    gear,
+    navL,
+    navR,
+    beacon,
+    landingLight,
+    gearDrop: rad * 1.6 + 0.3,
+    fg: null as FgAircraft | null,
+  };
 }
 
 function buildClouds(snap: SimSnapshot, center: THREE.Vector3) {
@@ -655,6 +675,17 @@ export function World3D({
     const perf = engine.perf;
     const model = buildAircraftModel(perf.id, perf.wingSpanFt);
     scene.add(model.group);
+    let disposed = false;
+    void loadFgAircraft(perf.id, perf.wingSpanFt * M).then((fg) => {
+      if (!fg || disposed) return;
+      model.fg = fg;
+      model.simple.visible = false;
+      model.group.add(fg.root);
+      model.gearDrop = fg.gearDrop;
+      // wing-tip lights at the model's wing tips
+      model.navL.position.x = -fg.spanM / 2;
+      model.navR.position.x = fg.spanM / 2;
+    });
 
     // Far ground plane beyond the terrain mesh
     const far = new THREE.Mesh(
@@ -820,12 +851,16 @@ export function World3D({
       model.group.position.copy(pos).setY(pos.y + model.gearDrop);
       euler.set(toRad(a.pitch), -toRad(a.heading), -toRad(a.bank), "YXZ");
       model.group.setRotationFromEuler(euler);
-      const propSpeed = a.rpm / 60;
-      for (const p of model.props) {
-        p.rotation.z += propSpeed * dt * 6;
-        (p.material as THREE.MeshBasicMaterial).opacity = a.rpm > 300 ? 0.28 : 0.9;
+      if (model.fg) {
+        animateFgAircraft(model.fg, a.rpm, s.aircraft.gearPosition > 0.15, dt);
+      } else {
+        const propSpeed = a.rpm / 60;
+        for (const p of model.props) {
+          p.rotation.z += propSpeed * dt * 6;
+          (p.material as THREE.MeshBasicMaterial).opacity = a.rpm > 300 ? 0.28 : 0.9;
+        }
+        model.gear.visible = s.aircraft.gearPosition > 0.15;
       }
-      model.gear.visible = s.aircraft.gearPosition > 0.15;
       const blink = Math.floor(t / 600) % 2 === 0;
       model.beacon.visible = s.controls.lights.beacon && blink;
       model.navL.visible = model.navR.visible = s.controls.lights.nav;
@@ -972,6 +1007,7 @@ export function World3D({
     raf = requestAnimationFrame(frame);
 
     return () => {
+      disposed = true;
       cancelAnimationFrame(raf);
       ro.disconnect();
       window.removeEventListener("pointerup", onUp);
