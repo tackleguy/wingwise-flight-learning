@@ -861,7 +861,7 @@ def build(aid, tex_max=None, quiet=False):
     mat_index = {}
     tex_index = {}
     glass_re = cfg.get("glass")
-    double_all = cfg.get("double_all", False)
+    double_all = cfg.get("double_all", True)  # no see-through holes into the empty cabin
     tex_bytes = 0
 
     def material_for(mesh, mi, dbl, disc=False):
@@ -894,6 +894,11 @@ def build(aid, tex_max=None, quiet=False):
             rgb = [min(c, 0.75) for c in rgb]
         if alpha < 0.99 or kind == "blend" or glass:
             mode = "BLEND"
+            nm = ((acm.name if acm else "") + " " + " ".join(mesh.names[:2])).lower()
+            if not disc and re.search(r"glas|window|canopy|windshield|windscreen|vitre|cristal|transp|screen", nm) and "inside" not in nm and "interior" not in nm:
+                # FG draws glass with a reflection shader; with no shader, nearly invisible glass would leave
+                # holes into the empty cabin, so keep it at least lightly tinted
+                alpha = max(alpha, cfg.get("glass_min_alpha", 0.25))
         elif kind == "mask":
             mode = "MASK"
         else:

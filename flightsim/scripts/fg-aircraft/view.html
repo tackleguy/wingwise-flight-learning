@@ -138,11 +138,12 @@ let c = new THREE.Vector3((lo[0] + hi[0]) / 2, (lo[1] + hi[1]) / 2, (lo[2] + hi[
 let D = size * 1.25;
 if (view === "deflectTail") { c = new THREE.Vector3(0, (lo[1] + hi[1]) / 2, lo[2] + (hi[2] - lo[2]) * 0.12); D = size * 0.45; }
 if (view === "deflectWing") { c = new THREE.Vector3(hi[0] * 0.5, 0, 0); D = size * 0.6; }
+if (view === "nose" && meta.eye) { c = new THREE.Vector3(...meta.eye); D = size * 0.22; }
 const cam = new THREE.PerspectiveCamera(30, W / H, 0.05, 1000);
 const dirs = {
   left: [1, 0.02, 0], front: [0.75, 0.38, 1], top: [0, 1, 0.0001], rear: [0, 0.18, -1],
   deflect: [0.8, 0.65, -0.9], deflectRear: [0, 0.25, -1], right: [-1, 0.02, 0], below: [0.3, -0.6, 0.6],
-  deflectTail: [0.9, 0.35, -0.8], deflectWing: [0.35, 0.12, -1], flapsDown: [0.55, -0.35, -1],
+  deflectTail: [0.9, 0.35, -0.8], deflectWing: [0.35, 0.12, -1], flapsDown: [0.55, -0.35, -1], nose: [0.8, 0.45, 1],
 };
 const dv = new THREE.Vector3(...(dirs[view] || dirs.left)).normalize();
 cam.position.copy(c).addScaledVector(dv, D * (view === "top" ? 1.55 : view === "left" || view === "right" ? 1.45 : 1.3));
