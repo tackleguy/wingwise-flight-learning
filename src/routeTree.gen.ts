@@ -10,9 +10,11 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AchievementsRouteImport } from './routes/achievements'
 import { Route as AiAtcRouteImport } from './routes/ai-atc'
 import { Route as AtcRouteImport } from './routes/atc'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AvionicsRouteImport } from './routes/avionics'
 import { Route as CheckridesRouteImport } from './routes/checkrides'
 import { Route as FlightgearRouteImport } from './routes/flightgear'
@@ -30,6 +32,7 @@ import { Route as SimulatorRouteImport } from './routes/simulator'
 import { Route as VfrRouteImport } from './routes/vfr'
 import { Route as WeatherRouteImport } from './routes/weather'
 import { Route as WrittenExamsRouteImport } from './routes/written-exams'
+import { Route as AuthenticatedSetupRouteImport } from './routes/_authenticated/setup'
 import { Route as AircraftIndexRouteImport } from './routes/aircraft.index'
 import { Route as AircraftIdRouteImport } from './routes/aircraft.$id'
 import { Route as AirportsIndexRouteImport } from './routes/airports.index'
@@ -46,6 +49,10 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AchievementsRoute = AchievementsRouteImport.update({
   id: '/achievements',
   path: '/achievements',
@@ -59,6 +66,11 @@ const AiAtcRoute = AiAtcRouteImport.update({
 const AtcRoute = AtcRouteImport.update({
   id: '/atc',
   path: '/atc',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AvionicsRoute = AvionicsRouteImport.update({
@@ -146,6 +158,11 @@ const WrittenExamsRoute = WrittenExamsRouteImport.update({
   path: '/written-exams',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedSetupRoute = AuthenticatedSetupRouteImport.update({
+  id: '/setup',
+  path: '/setup',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AircraftIndexRoute = AircraftIndexRouteImport.update({
   id: '/aircraft/',
   path: '/aircraft/',
@@ -202,6 +219,7 @@ export interface FileRoutesByFullPath {
   '/achievements': typeof AchievementsRoute
   '/ai-atc': typeof AiAtcRoute
   '/atc': typeof AtcRoute
+  '/auth': typeof AuthRoute
   '/avionics': typeof AvionicsRoute
   '/checkrides': typeof CheckridesRoute
   '/flightgear': typeof FlightgearRoute
@@ -219,6 +237,7 @@ export interface FileRoutesByFullPath {
   '/vfr': typeof VfrRoute
   '/weather': typeof WeatherRoute
   '/written-exams': typeof WrittenExamsRoute
+  '/setup': typeof AuthenticatedSetupRoute
   '/aircraft/$id': typeof AircraftIdRoute
   '/airports/$icao': typeof AirportsIcaoRoute
   '/cockpits/$id': typeof CockpitsIdRoute
@@ -235,6 +254,7 @@ export interface FileRoutesByTo {
   '/achievements': typeof AchievementsRoute
   '/ai-atc': typeof AiAtcRoute
   '/atc': typeof AtcRoute
+  '/auth': typeof AuthRoute
   '/avionics': typeof AvionicsRoute
   '/checkrides': typeof CheckridesRoute
   '/flightgear': typeof FlightgearRoute
@@ -252,6 +272,7 @@ export interface FileRoutesByTo {
   '/vfr': typeof VfrRoute
   '/weather': typeof WeatherRoute
   '/written-exams': typeof WrittenExamsRoute
+  '/setup': typeof AuthenticatedSetupRoute
   '/aircraft/$id': typeof AircraftIdRoute
   '/airports/$icao': typeof AirportsIcaoRoute
   '/cockpits/$id': typeof CockpitsIdRoute
@@ -266,9 +287,11 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/achievements': typeof AchievementsRoute
   '/ai-atc': typeof AiAtcRoute
   '/atc': typeof AtcRoute
+  '/auth': typeof AuthRoute
   '/avionics': typeof AvionicsRoute
   '/checkrides': typeof CheckridesRoute
   '/flightgear': typeof FlightgearRoute
@@ -286,6 +309,7 @@ export interface FileRoutesById {
   '/vfr': typeof VfrRoute
   '/weather': typeof WeatherRoute
   '/written-exams': typeof WrittenExamsRoute
+  '/_authenticated/setup': typeof AuthenticatedSetupRoute
   '/aircraft/$id': typeof AircraftIdRoute
   '/airports/$icao': typeof AirportsIcaoRoute
   '/cockpits/$id': typeof CockpitsIdRoute
@@ -304,6 +328,7 @@ export interface FileRouteTypes {
     | '/achievements'
     | '/ai-atc'
     | '/atc'
+    | '/auth'
     | '/avionics'
     | '/checkrides'
     | '/flightgear'
@@ -321,6 +346,7 @@ export interface FileRouteTypes {
     | '/vfr'
     | '/weather'
     | '/written-exams'
+    | '/setup'
     | '/aircraft/$id'
     | '/airports/$icao'
     | '/cockpits/$id'
@@ -337,6 +363,7 @@ export interface FileRouteTypes {
     | '/achievements'
     | '/ai-atc'
     | '/atc'
+    | '/auth'
     | '/avionics'
     | '/checkrides'
     | '/flightgear'
@@ -354,6 +381,7 @@ export interface FileRouteTypes {
     | '/vfr'
     | '/weather'
     | '/written-exams'
+    | '/setup'
     | '/aircraft/$id'
     | '/airports/$icao'
     | '/cockpits/$id'
@@ -367,9 +395,11 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/_authenticated'
     | '/achievements'
     | '/ai-atc'
     | '/atc'
+    | '/auth'
     | '/avionics'
     | '/checkrides'
     | '/flightgear'
@@ -387,6 +417,7 @@ export interface FileRouteTypes {
     | '/vfr'
     | '/weather'
     | '/written-exams'
+    | '/_authenticated/setup'
     | '/aircraft/$id'
     | '/airports/$icao'
     | '/cockpits/$id'
@@ -401,9 +432,11 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AchievementsRoute: typeof AchievementsRoute
   AiAtcRoute: typeof AiAtcRoute
   AtcRoute: typeof AtcRoute
+  AuthRoute: typeof AuthRoute
   AvionicsRoute: typeof AvionicsRoute
   CheckridesRoute: typeof CheckridesRoute
   FlightgearRoute: typeof FlightgearRoute
@@ -442,6 +475,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/achievements': {
       id: '/achievements'
       path: '/achievements'
@@ -461,6 +501,13 @@ declare module '@tanstack/react-router' {
       path: '/atc'
       fullPath: '/atc'
       preLoaderRoute: typeof AtcRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/avionics': {
@@ -582,6 +629,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WrittenExamsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/setup': {
+      id: '/_authenticated/setup'
+      path: '/setup'
+      fullPath: '/setup'
+      preLoaderRoute: typeof AuthenticatedSetupRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/aircraft/': {
       id: '/aircraft/'
       path: '/aircraft'
@@ -655,11 +709,24 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedSetupRoute: typeof AuthenticatedSetupRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedSetupRoute: AuthenticatedSetupRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AchievementsRoute: AchievementsRoute,
   AiAtcRoute: AiAtcRoute,
   AtcRoute: AtcRoute,
+  AuthRoute: AuthRoute,
   AvionicsRoute: AvionicsRoute,
   CheckridesRoute: CheckridesRoute,
   FlightgearRoute: FlightgearRoute,
