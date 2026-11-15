@@ -97,14 +97,14 @@ function AuthPage() {
           </p>
         ) : (
           <>
-            <Button
+            <button
               type="button"
               onClick={google}
-              className="mt-6 h-11 w-full gap-2.5 border border-[#747775] bg-[#FFFFFF] text-[#1F1F1F] hover:bg-[#F2F2F2]"
+              className="mt-6 inline-flex h-11 w-full items-center justify-center gap-2.5 rounded-xl border border-[#8E918F] bg-[#131314] text-sm font-medium text-[#E3E3E3] hover:opacity-90"
             >
               <GoogleG />
               Continue with Google
-            </Button>
+            </button>
             <div className="my-5 flex items-center gap-3 text-xs text-muted-foreground">
               <span className="h-px flex-1 bg-border" /> or <span className="h-px flex-1 bg-border" />
             </div>
