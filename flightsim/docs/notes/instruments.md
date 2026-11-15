@@ -80,7 +80,7 @@ being painted on.
   rudder.
 - **Tachometer** 0.3 s lag (mechanical). **Hour meter** counts while the engine runs and belongs to
   the aircraft: it is not reset by a reposition and is remembered in the browser
-  (`localStorage` key `teachx.sim.hobbs`). **Fuel gauges** electric, 5 s damping, a per-flight
+  (`localStorage` key `skyready.sim.hobbs`). **Fuel gauges** electric, 5 s damping, a per-flight
   calibration error of up to about ±2 gal that is zero at empty, fuel slosh with lateral/fore-aft
   acceleration (largest with half-full tanks), needle falls to E without power. **Oil temperature**
   electric (6 s, rests at the bottom of the scale, 75 °F, when cold or unpowered). **Oil pressure**

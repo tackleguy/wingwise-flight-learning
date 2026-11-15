@@ -258,7 +258,7 @@ const pts = (...a: number[]): P2[] => {
 export const PA28: LowSingleSpec = {
   id: "pa28",
   label: "Piper PA-28-181 Archer (representative)",
-  reg: "TX-P28",
+  reg: "SR-P28",
   dims: { lengthM: 7.25, spanM: 10.8, heightM: 2.22 },
   fuselage: [
     S(0.0, 0.24, 0.2, -0.25, 2.3),
@@ -372,7 +372,7 @@ export const PA28: LowSingleSpec = {
 export const DA40: LowSingleSpec = {
   id: "da40",
   label: "Diamond DA40 (representative)",
-  reg: "TX-D40",
+  reg: "SR-D40",
   dims: { lengthM: 8.06, spanM: 11.94, heightM: 1.97 },
   fuselage: [
     S(0.0, 0.21, 0.17, -0.23, 2.3),
@@ -494,7 +494,7 @@ export const DA40: LowSingleSpec = {
 export const BE36: LowSingleSpec = {
   id: "be36",
   label: "Beechcraft G36 Bonanza (representative)",
-  reg: "TX-B36",
+  reg: "SR-B36",
   dims: { lengthM: 8.38, spanM: 10.21, heightM: 2.62 },
   fuselage: [
     S(0.0, 0.22, 0.2, -0.26, 2.2),
@@ -612,7 +612,7 @@ function cirrus(id: "sr20" | "sr22"): LowSingleSpec {
   return {
     id,
     label: sr22 ? "Cirrus SR22 (representative)" : "Cirrus SR20 (representative)",
-    reg: sr22 ? "TX-S22" : "TX-S20",
+    reg: sr22 ? "SR-S22" : "SR-S20",
     dims: { lengthM: 7.92, spanM: 11.68, heightM: 2.71 },
     fuselage: [
       S(0.0, 0.21, 0.19, -0.25, 2.2),

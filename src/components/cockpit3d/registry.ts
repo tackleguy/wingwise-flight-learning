@@ -75,7 +75,7 @@ export async function loadCockpit(id: string): Promise<CockpitDefinition | undef
   }
 }
 
-/** Best cockpit for a TeachX aircraft perf id. */
+/** Best cockpit for a SkyReady aircraft perf id. */
 export function cockpitForAircraft(perfId: string): string {
   switch (perfId) {
     case "c152":

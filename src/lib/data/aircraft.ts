@@ -74,7 +74,7 @@ export const CATEGORY_LABELS: Record<AircraftCategory, string> = {
 };
 
 export const SIMULATION_ASSUMPTIONS =
-  "Simulation assumptions: every number on this page is a rounded educational approximation for a representative variant, tuned for TeachX's simplified flight model. Weights, speeds, fuel capacities and system details vary by model year, serial number and installed equipment. This is NOT Pilot's Operating Handbook (POH) or Airplane Flight Manual (AFM) data — always use the approved documents for the specific aircraft you fly.";
+  "Simulation assumptions: every number on this page is a rounded educational approximation for a representative variant, tuned for SkyReady's simplified flight model. Weights, speeds, fuel capacities and system details vary by model year, serial number and installed equipment. This is NOT Pilot's Operating Handbook (POH) or Airplane Flight Manual (AFM) data — always use the approved documents for the specific aircraft you fly.";
 
 export const AIRCRAFT: AircraftInfo[] = [
   {
@@ -202,7 +202,7 @@ export const AIRCRAFT: AircraftInfo[] = [
     firstFlight: "1955 (172S: 1998)",
     seats: 4,
     overview: [
-      "The Skyhawk is the most-produced aircraft in history and the default airplane in TeachX. It is stable, predictable and capable of real cross-country flights, which is why it is used for everything from first lessons to the instrument rating.",
+      "The Skyhawk is the most-produced aircraft in history and the default airplane in SkyReady. It is stable, predictable and capable of real cross-country flights, which is why it is used for everything from first lessons to the instrument rating.",
       "The 172S has a fuel-injected 180-hp engine and, in modern examples, a Garmin G1000 NXi integrated flight deck with an optional GFC 700 autopilot — making it the standard aircraft for learning glass-cockpit and instrument procedures.",
     ],
     cockpit: {
@@ -639,7 +639,7 @@ export const AIRCRAFT: AircraftInfo[] = [
     seats: 4,
     overview: [
       "The SR20 is a composite, fixed-gear four/five-seater known for introducing a whole-airframe ballistic parachute — the Cirrus Airframe Parachute System (CAPS) — as standard equipment.",
-      "It is widely used by flight schools and airline academies because it combines fixed-gear simplicity with cruise speeds above 150 KTAS, side-stick controls and a large Perspective flight deck. Earlier generations used a 200-hp Lycoming IO-360-ES; the current G6 uses a 215-hp IO-390. TeachX models a 200-hp variant.",
+      "It is widely used by flight schools and airline academies because it combines fixed-gear simplicity with cruise speeds above 150 KTAS, side-stick controls and a large Perspective flight deck. Earlier generations used a 200-hp Lycoming IO-360-ES; the current G6 uses a 215-hp IO-390. SkyReady models a 200-hp variant.",
     ],
     cockpit: {
       layout:
@@ -889,7 +889,7 @@ export const AIRCRAFT: AircraftInfo[] = [
     limitations: [
       "Requires a multi-engine class rating; high-performance endorsement.",
       "Vmc (red radial) is the minimum control speed with the critical engine inoperative — never fly slower than Vmc with asymmetric thrust.",
-      "Vyse (blue line) is the best single-engine rate-of-climb speed. TeachX uses the model's Vy as an approximation of Vyse.",
+      "Vyse (blue line) is the best single-engine rate-of-climb speed. SkyReady uses the model's Vy as an approximation of Vyse.",
       "Single-engine service ceiling is much lower than the all-engine ceiling.",
     ],
     training: [
@@ -1082,7 +1082,7 @@ export const AIRCRAFT: AircraftInfo[] = [
     limitations: [
       "Requires a multi-engine rating and, because maximum takeoff weight exceeds 12,500 lb, a BE-300 type rating (14 CFR 61.31(a)).",
       "Maximum operating altitude 35,000 ft; RVSM-capable variants for flight levels.",
-      "Vmo/Mmo replaces Vne on turbine aircraft; TeachX uses the model's Vne value as a stand-in.",
+      "Vmo/Mmo replaces Vne on turbine aircraft; SkyReady uses the model's Vne value as a stand-in.",
     ],
     training: [
       {
@@ -1178,7 +1178,7 @@ export const AIRCRAFT: AircraftInfo[] = [
       summary:
         "Hydraulically powered ailerons, elevators and rudder (systems A, B and standby), with manual reversion for ailerons and elevators; spoilers/speedbrakes; leading-edge slats/Krueger flaps and triple-slotted trailing-edge flaps.",
       details: [
-        "Flap positions 1, 2, 5, 10, 15, 25, 30, 40 (TeachX models a subset).",
+        "Flap positions 1, 2, 5, 10, 15, 25, 30, 40 (SkyReady models a subset).",
         "Stabilizer trim with main electric, autopilot and manual trim wheels.",
       ],
     },

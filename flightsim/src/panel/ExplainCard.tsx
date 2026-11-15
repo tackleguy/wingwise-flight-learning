@@ -56,7 +56,7 @@ export function ExplainCard({ id, sim, onClose }: ExplainCardProps) {
           onClose();
         }
       }}
-      className="pointer-events-auto absolute left-2 right-2 top-2 z-30 mx-auto max-h-[max(calc(100%-var(--teachx-panel-height,0px)-16px),min(62%,24rem))] min-h-40 max-w-xl overflow-y-auto overscroll-contain rounded-xl border border-white/15 bg-slate-950/92 p-4 text-slate-100 shadow-2xl backdrop-blur sm:left-4 sm:right-auto sm:top-4 sm:mx-0 sm:w-[30rem]"
+      className="pointer-events-auto absolute left-2 right-2 top-2 z-30 mx-auto max-h-[max(calc(100%-var(--skyready-panel-height,0px)-16px),min(62%,24rem))] min-h-40 max-w-xl overflow-y-auto overscroll-contain rounded-xl border border-white/15 bg-slate-950/92 p-4 text-slate-100 shadow-2xl backdrop-blur sm:left-4 sm:right-auto sm:top-4 sm:mx-0 sm:w-[30rem]"
     >
       <div className="flex items-start gap-3">
         <div className="min-w-0 flex-1">

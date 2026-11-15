@@ -99,7 +99,7 @@ export interface AudioDebugInfo {
   played: Record<string, number>;
 }
 
-/** Extras offered by the TeachX audio module on top of the contract above. */
+/** Extras offered by the SkyReady audio module on top of the contract above. */
 export interface AudioModule extends AudioApi {
   /** False when the browser has no Web Audio (the module then stays silent and harmless). */
   readonly available: boolean;

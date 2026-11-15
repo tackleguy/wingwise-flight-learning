@@ -6,15 +6,15 @@
  * shipped unmodified (plus one documented data fix, see tools/jsbsim-wasm/build.sh) as a separate
  * module that is loaded at runtime, so it can be replaced as the LGPL requires.
  *
- * This file only maps TeachX conventions onto JSBSim properties:
- *   TeachX elevator + = pull (nose up)      → JSBSim fcs/elevator-cmd-norm − = nose up
- *   TeachX aileron  + = roll right          → JSBSim fcs/aileron-cmd-norm  + = roll right
- *   TeachX rudder   + = yaw right           → JSBSim fcs/rudder-cmd-norm   − = yaw right
- *   TeachX trim     + = nose up             → JSBSim fcs/pitch-trim-cmd-norm − = nose up
+ * This file only maps SkyReady conventions onto JSBSim properties:
+ *   SkyReady elevator + = pull (nose up)      → JSBSim fcs/elevator-cmd-norm − = nose up
+ *   SkyReady aileron  + = roll right          → JSBSim fcs/aileron-cmd-norm  + = roll right
+ *   SkyReady rudder   + = yaw right           → JSBSim fcs/rudder-cmd-norm   − = yaw right
+ *   SkyReady trim     + = nose up             → JSBSim fcs/pitch-trim-cmd-norm − = nose up
  * (signs verified by headless flight tests.)
  */
 
-/** TeachX aircraft that have a matching JSBSim model shipped with TeachX. */
+/** SkyReady aircraft that have a matching JSBSim model shipped with SkyReady. */
 export const JSBSIM_MODELS: Readonly<Record<string, string>> = {
   c172: "c172p",
   pa28: "pa28",
@@ -288,7 +288,7 @@ export class JsbsimFdm {
     }
     fdm.setDt(1 / 120);
     const inst = new JsbsimFdm(m, fdm, model);
-    // Variable-pitch propellers: full forward (TeachX has no propeller lever).
+    // Variable-pitch propellers: full forward (SkyReady has no propeller lever).
     inst.write("fcs/advance-cmd-norm", 1);
     inst.write("fcs/advance-cmd-norm[1]", 1);
     return inst;

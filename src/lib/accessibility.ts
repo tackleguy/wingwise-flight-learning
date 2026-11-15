@@ -16,9 +16,10 @@
  */
 import { useEffect, useSyncExternalStore } from "react";
 import { useStore, type Settings } from "@/lib/store";
+import { LEGACY_KEYS, migrateLegacyKey } from "@/lib/legacy-storage";
 
-const NIGHT_KEY = "teachx-night-lighting";
-const STYLE_ID = "teachx-a11y-styles";
+const [LEGACY_NIGHT_KEY, NIGHT_KEY] = LEGACY_KEYS.nightLighting;
+const STYLE_ID = "skyready-a11y-styles";
 
 const CSS = `
 html.tx-large-text { font-size: 112.5%; }
@@ -66,6 +67,7 @@ const nightListeners = new Set<() => void>();
 
 export function getNightLighting(): boolean {
   if (typeof window === "undefined") return false;
+  migrateLegacyKey(LEGACY_NIGHT_KEY, NIGHT_KEY);
   try {
     return window.localStorage.getItem(NIGHT_KEY) === "1";
   } catch {

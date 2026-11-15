@@ -10,7 +10,7 @@ import { useHydrated, useStore, type ExamAttempt } from "@/lib/store";
 export const Route = createFileRoute("/written-exams")({
   head: () => ({
     meta: [
-      { title: "Written Exams — TeachX" },
+      { title: "Written Exams — SkyReady" },
       {
         name: "description",
         content:
@@ -66,7 +66,7 @@ function WrittenExams() {
         title="Unofficial study material — not actual FAA knowledge test questions."
         className="-mt-2 mb-6"
       >
-        These exams mirror the format of the FAA knowledge tests but use original TeachX questions.
+        These exams mirror the format of the FAA knowledge tests but use original SkyReady questions.
         A passing practice score does not guarantee a passing FAA result, and does not satisfy any
         FAA requirement or endorsement.
       </Notice>
@@ -110,7 +110,7 @@ function WrittenExams() {
               preceding 24 calendar months when you take the practical test (14 CFR 61.39).
             </li>
             <li>
-              TeachX readiness estimates weight your most recent attempts most heavily and count
+              SkyReady readiness estimates weight your most recent attempts most heavily and count
               study-mode attempts at half weight because answers are revealed as you go.
             </li>
           </ul>
@@ -177,7 +177,7 @@ function ExamRow({
           {def.faa && capped ? (
             <span
               className="ml-1 cursor-help underline decoration-dotted underline-offset-2"
-              title={`FAA test format: ${def.faa.questions} questions · ${hours(def.faa.minutes)} · 70% to pass. The TeachX bank currently provides ${def.questionCount} questions for this exam; the time limit is scaled to match.`}
+              title={`FAA test format: ${def.faa.questions} questions · ${hours(def.faa.minutes)} · 70% to pass. The SkyReady bank currently provides ${def.questionCount} questions for this exam; the time limit is scaled to match.`}
             >
               (scaled)
             </span>

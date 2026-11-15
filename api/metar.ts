@@ -1,5 +1,5 @@
 /**
- * TeachX Flight Simulator — weather relay (Vercel Edge Function, served at /api/metar).
+ * SkyReady Flight Simulator — weather relay (Vercel Edge Function, served at /api/metar).
  *
  * Why it exists: aviationweather.gov (the US Aviation Weather Center, free, no key) publishes the
  * airport weather reports (METAR) of the whole world, but its Data API sends no CORS header, so a
@@ -21,7 +21,7 @@
 export const config = { runtime: "edge" };
 
 const UPSTREAM = "https://aviationweather.gov/api/data/metar";
-const USER_AGENT = "TeachX-Flight-Simulator (educational; contact via site)";
+const USER_AGENT = "SkyReady-Flight-Simulator (educational; contact via site)";
 const CACHE_OK = "public, s-maxage=600, stale-while-revalidate=1800";
 const UPSTREAM_TIMEOUT_MS = 8000;
 /** Half-size of the search box, degrees of latitude: first try, then one wider try. */

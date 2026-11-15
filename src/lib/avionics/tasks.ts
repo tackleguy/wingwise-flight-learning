@@ -311,7 +311,7 @@ export const AVIONICS_TASKS: AvionicsTask[] = [
     category: "gps",
     display: "gps",
     instructions: [
-      "Press D→ on the TX-750, type KHAF and ACTIVATE.",
+      "Press D→ on the SR-750, type KHAF and ACTIVATE.",
       "Make sure the CDI shows GPS (magenta).",
       "Engage AP and press NAV — 'GPS' green on the PFD.",
       "The aircraft turns onto the magenta line to KHAF.",
@@ -334,7 +334,7 @@ export const AVIONICS_TASKS: AvionicsTask[] = [
     category: "gps",
     display: "gps",
     instructions: [
-      "Open FPL on the TX-750.",
+      "Open FPL on the SR-750.",
       "Type identifiers to add waypoints, for example OAK → OSI → KHAF.",
       "Use ↑/↓ to reorder, ✕ to delete, ACT to activate a leg.",
       "Check the active leg (magenta) on the map.",
@@ -352,7 +352,7 @@ export const AVIONICS_TASKS: AvionicsTask[] = [
     category: "gps",
     display: "gps",
     instructions: [
-      "On the TX-750, open PROC. Choose an airport and press RNAV on a runway.",
+      "On the SR-750, open PROC. Choose an airport and press RNAV on a runway.",
       "Keep the CDI on GPS.",
       "Press APR on the autopilot: the GPS lateral mode arms (white) together with the glidepath (GP).",
     ],
@@ -373,7 +373,7 @@ export const AVIONICS_TASKS: AvionicsTask[] = [
     category: "gps",
     display: "gps",
     instructions: [
-      "TX-750 → PROC → KSFO → ILS on runway 28R. NAV1 is tuned to the localizer and the course is set automatically.",
+      "SR-750 → PROC → KSFO → ILS on runway 28R. NAV1 is tuned to the localizer and the course is set automatically.",
       "Press the CDI button until the source is VLOC/LOC1 (green).",
       "Press APR: 'LOC' and 'GS' arm (white).",
     ],

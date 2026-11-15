@@ -4,7 +4,7 @@
  * Cessna 172P data files in flightsim/jsbsim/; see README.md and CHANGES.md there).
  *
  * JSBSim is © the JSBSim developers, LGPL-2.1. It is shipped as a separate, replaceable module.
- * This file is TeachX's thin adapter: it converts TeachX conventions to JSBSim properties.
+ * This file is SkyReady's thin adapter: it converts SkyReady conventions to JSBSim properties.
  *
  * Useful extra properties of the tuned aircraft (read with `getProperty`):
  *   aero/stall-hyst-norm                 1 while the wing is deeply stalled (set above 26° angle of attack, cleared below 12°)
@@ -13,10 +13,10 @@
  *   fcs/steer-pos-deg[0]                 nose-wheel steering angle (rudder pedals, plus differential brake at taxi speed)
  * Related modules: ./constants.ts (stall angles, airspeed calibration), ./weight-balance.ts.
  *
- *   TeachX elevator + = pull (nose up)   → fcs/elevator-cmd-norm   − = nose up
- *   TeachX aileron  + = roll right       → fcs/aileron-cmd-norm    + = roll right
- *   TeachX rudder   + = yaw right        → fcs/rudder-cmd-norm     − = yaw right
- *   TeachX trim     + = nose up          → fcs/pitch-trim-cmd-norm − = nose up
+ *   SkyReady elevator + = pull (nose up)   → fcs/elevator-cmd-norm   − = nose up
+ *   SkyReady aileron  + = roll right       → fcs/aileron-cmd-norm    + = roll right
+ *   SkyReady rudder   + = yaw right        → fcs/rudder-cmd-norm     − = yaw right
+ *   SkyReady trim     + = nose up          → fcs/pitch-trim-cmd-norm − = nose up
  * (verified by flight tests in tests/physics.)
  */
 import { FPS_PER_KT, KT_PER_FPS, LB_PER_GAL_AVGAS, R2D } from "@/core/math";
@@ -132,7 +132,7 @@ export interface FdmInputs {
   qnhInHg: number;
 }
 
-/** Raw truth values read back from JSBSim (already in TeachX units and signs). */
+/** Raw truth values read back from JSBSim (already in SkyReady units and signs). */
 export interface FdmOutputs {
   lat: number;
   lon: number;
@@ -305,7 +305,7 @@ export class FlightModel {
   private readonly writeHandles = new Map<WritePath, number>();
   private readonly buf: number;
   private disposed = false;
-  /** Throttle and pitch-trim positions (TeachX conventions) for steady hands-off flight, found for airborne starts. */
+  /** Throttle and pitch-trim positions (SkyReady conventions) for steady hands-off flight, found for airborne starts. */
   initialTrim: { throttle: number; trim: number } | null = null;
   private readonly out: FdmOutputs;
   /** The engine's normal volumetric efficiency (cylinder filling), read from the engine file at creation. */

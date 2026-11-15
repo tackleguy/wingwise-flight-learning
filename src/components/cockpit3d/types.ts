@@ -169,7 +169,7 @@ export interface CockpitMeta {
   era: CockpitEra;
   years: string;
   represents: string;
-  /** TeachX perf id driving live instruments */
+  /** SkyReady perf id driving live instruments */
   perfId: string;
   /** force steam or glass instrument behaviour regardless of perf */
   panel: "steam" | "glass";

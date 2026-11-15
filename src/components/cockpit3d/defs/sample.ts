@@ -136,7 +136,7 @@ function build(): CockpitBuild {
       label,
       category: "flight-instruments",
       what: `${label} (live).`,
-      how: "Rendered by the TeachX avionics library.",
+      how: "Rendered by the SkyReady avionics library.",
       object: bz,
     });
   };

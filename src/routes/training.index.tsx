@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/training/")({
   head: () => ({
     meta: [
-      { title: "Flight Training Pathway — TeachX" },
+      { title: "Flight Training Pathway — SkyReady" },
       {
         name: "description",
         content:
@@ -251,7 +251,7 @@ function TrainingHub() {
       </details>
 
       <Notice tone="caution" title="Training aid only — no FAA certificate or loggable time.">
-        Completing TeachX training does not grant any FAA certificate, rating, endorsement, or
+        Completing SkyReady training does not grant any FAA certificate, rating, endorsement, or
         loggable flight time. Simulator sessions here are not FAA-approved training devices. Train
         with an authorized instructor and verify requirements in the current 14 CFR and ACS.
       </Notice>

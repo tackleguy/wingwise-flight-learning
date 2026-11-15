@@ -32,4 +32,5 @@ dist-ssr
 *.sw?
 
 # local backups of unpushed work
+skyready-unpushed-work.*
 teachx-unpushed-work.*

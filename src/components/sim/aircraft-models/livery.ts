@@ -4,7 +4,7 @@
  * aircraft side-view coordinates (metres). A second canvas carries roughness (G) and
  * metalness (B) so painted glass is glossy and reflective while paint stays satin.
  *
- * All artwork is generic and original (white + accent stripes, fictional "TX-" marks). No
+ * All artwork is generic and original (white + accent stripes, fictional "SR-" marks). No
  * airline liveries or manufacturer logos.
  */
 import type { V3 } from "./math";

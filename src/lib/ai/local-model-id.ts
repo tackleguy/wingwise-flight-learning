@@ -1,5 +1,5 @@
 /**
- * On-device (in-browser) language model used by every AI feature on TeachX.
+ * On-device (in-browser) language model used by every AI feature on SkyReady.
  * Runs with WebLLM on the visitor's GPU (WebGPU) — no server, no API keys, nothing sent to the cloud.
  * Llama 3.2 3B is the most capable option that still fits typical desktop WebGPU memory.
  */

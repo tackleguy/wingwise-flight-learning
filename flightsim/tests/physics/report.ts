@@ -60,7 +60,7 @@ function table(group: ValidationRow["group"], firstHeader: string): string {
 
 export function markdown(): string {
   const failed = rows.filter((r) => !r.pass).length;
-  return `# Flight-model validation — TeachX Flight Simulator
+  return `# Flight-model validation — SkyReady Flight Simulator
 
 This page is **written by an automated test** (\`tests/physics/validation.test.ts\`). To regenerate it:
 

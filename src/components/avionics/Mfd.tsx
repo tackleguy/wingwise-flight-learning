@@ -1,5 +1,5 @@
 /**
- * TeachX Flight Display — MFD: moving map, nearest airports, flight plan and engine/systems pages,
+ * SkyReady Flight Display — MFD: moving map, nearest airports, flight plan and engine/systems pages,
  * with an always-visible engine indication strip on the left.
  */
 import { useState } from "react";
@@ -101,7 +101,7 @@ export function Mfd({ className, initialPage = "MAP", hideEngineStrip }: MfdProp
 
   return (
     <DisplayBezel
-      title="TeachX Flight Display · MFD"
+      title="SkyReady Flight Display · MFD"
       explainId="mfd"
       className={className}
       footer={softKeys}
@@ -258,7 +258,7 @@ function FlightPlanPage({ s }: { s: SimSnapshot }) {
     <div className="h-full overflow-auto font-mono text-[11px]">
       <div className="flex items-center justify-between border-b border-white/10 px-2 py-1 text-[10px] text-white/55">
         <span>ACTIVE FLIGHT PLAN{s.gps.approach ? ` · ${s.gps.approach.label}` : ""}</span>
-        <span className="text-white/40">Edit on the TX-750 Navigator</span>
+        <span className="text-white/40">Edit on the SR-750 Navigator</span>
       </div>
       {fp.length === 0 ? (
         <p className="p-3 text-white/45">

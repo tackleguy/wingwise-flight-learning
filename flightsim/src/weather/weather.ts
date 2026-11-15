@@ -124,7 +124,7 @@ class Weather implements WeatherApi {
       try {
         fn();
       } catch (err) {
-        console.error("[TeachX] weather listener failed", err);
+        console.error("[SkyReady] weather listener failed", err);
       }
     }
   }
@@ -199,7 +199,7 @@ class Weather implements WeatherApi {
       this.reanchor(plan);
       this.anchoredPlan = plan;
     } catch (err) {
-      console.error("[TeachX] weather could not be moved to the new airport", err);
+      console.error("[SkyReady] weather could not be moved to the new airport", err);
     }
   }
 
@@ -210,7 +210,7 @@ class Weather implements WeatherApi {
       try {
         this.reanchor(sim.lastPlan);
       } catch (err) {
-        console.error("[TeachX] weather could not be moved to the new airport", err);
+        console.error("[SkyReady] weather could not be moved to the new airport", err);
       }
     }
     this.anchoredPlan = null;
@@ -384,7 +384,7 @@ class Weather implements WeatherApi {
       if (ageMinutes !== undefined) result.ageMinutes = ageMinutes;
       return result;
     } catch (err) {
-      console.error("[TeachX] real weather failed", err);
+      console.error("[SkyReady] real weather failed", err);
       return { ok: false, source: this.env.source, message: "Real weather could not be loaded because of an unexpected error." + keep };
     }
   }

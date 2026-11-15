@@ -104,13 +104,13 @@ void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {
 `;
 
 const SHADOW_FABRIC = /* glsl */ `
-float teachxBox(vec2 p, vec2 b) { vec2 d = abs(p) - b; return length(max(d, 0.0)) + min(max(d.x, d.y), 0.0); }
+float skyreadyBox(vec2 p, vec2 b) { vec2 d = abs(p) - b; return length(max(d, 0.0)) + min(max(d.x, d.y), 0.0); }
 czm_material czm_getMaterial(czm_materialInput materialInput) {
   czm_material m = czm_getDefaultMaterial(materialInput);
   vec2 p = (materialInput.st * 2.0 - 1.0) * halfSize; // metres: x toward the nose, y toward the left wing
-  float d = teachxBox(p - vec2(-1.85, 0.0), vec2(4.0, 0.38)) - 0.14; // fuselage
-  d = min(d, teachxBox(p - vec2(-0.4, 0.0), vec2(0.72, 5.42)) - 0.08); // wing
-  d = min(d, teachxBox(p - vec2(-4.88, 0.0), vec2(0.55, 1.68)) - 0.05); // tailplane
+  float d = skyreadyBox(p - vec2(-1.85, 0.0), vec2(4.0, 0.38)) - 0.14; // fuselage
+  d = min(d, skyreadyBox(p - vec2(-0.4, 0.0), vec2(0.72, 5.42)) - 0.08); // wing
+  d = min(d, skyreadyBox(p - vec2(-4.88, 0.0), vec2(0.55, 1.68)) - 0.05); // tailplane
   float edge = max(length(materialInput.st * 2.0 - 1.0) - 0.9, 0.0) * 10.0;
   m.diffuse = vec3(0.0);
   m.alpha = opacity * (1.0 - smoothstep(-soft, soft, d)) * (1.0 - clamp(edge, 0.0, 1.0));
@@ -334,8 +334,8 @@ export class AircraftVisual {
         }),
       );
     }
-    this.shadow = new GroundPatch(world, "TeachxAircraftShadow", SHADOW_FABRIC, { opacity: 0.5, soft: 0.2, halfSize: new Cartesian2(9, 9) });
-    this.pool = new GroundPatch(world, "TeachxLandingLightPool", POOL_FABRIC, { intensity: 0.5, tint: new Color(1, 0.95, 0.82, 1) });
+    this.shadow = new GroundPatch(world, "SkyreadyAircraftShadow", SHADOW_FABRIC, { opacity: 0.5, soft: 0.2, halfSize: new Cartesian2(9, 9) });
+    this.pool = new GroundPatch(world, "SkyreadyLandingLightPool", POOL_FABRIC, { intensity: 0.5, tint: new Color(1, 0.95, 0.82, 1) });
     void this.load();
   }
 
@@ -360,11 +360,11 @@ export class AircraftVisual {
       }
       this.model = model;
       this.world.scene.primitives.add(model);
-      model.errorEvent.addEventListener((e: unknown) => console.error("[TeachX] aircraft model error", e));
+      model.errorEvent.addEventListener((e: unknown) => console.error("[SkyReady] aircraft model error", e));
       model.readyEvent.addEventListener(() => this.onReady(model));
     } catch (err) {
       this.failed = true;
-      console.error("[TeachX] the aircraft model could not be loaded", err);
+      console.error("[SkyReady] the aircraft model could not be loaded", err);
     }
   }
 

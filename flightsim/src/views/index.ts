@@ -39,7 +39,7 @@ export function createViews(world: World): ViewsModule {
       try {
         fn();
       } catch (err) {
-        console.error("[TeachX] views listener failed", err);
+        console.error("[SkyReady] views listener failed", err);
       }
     }
   };

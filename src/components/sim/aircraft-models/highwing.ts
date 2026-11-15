@@ -36,7 +36,7 @@ interface CessnaVariant {
 const C172: CessnaVariant = {
   id: "c172",
   label: "Cessna 172S Skyhawk (representative)",
-  reg: "TX-172",
+  reg: "SR-172",
   zs: 1,
   ws: 1,
   hs: 1,
@@ -58,7 +58,7 @@ const C172: CessnaVariant = {
 const C152: CessnaVariant = {
   id: "c152",
   label: "Cessna 152 (representative)",
-  reg: "TX-152",
+  reg: "SR-152",
   zs: 0.885,
   ws: 0.93,
   hs: 0.95,
@@ -547,7 +547,7 @@ export function buildJ3(kit: AirframeKit) {
       0.01,
     );
   });
-  kit.registration("TX-J3", fus, 4.3, 0.15, 0.2, "#141414");
+  kit.registration("SR-J3", fus, 4.3, 0.15, 0.2, "#141414");
 
   kit.setCg([0, 0.1, 2.05]);
   return {

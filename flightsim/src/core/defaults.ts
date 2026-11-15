@@ -6,7 +6,7 @@ import type { AircraftSpec, ControlState, Environment, Settings, SimState, VorRe
  */
 export const AIRCRAFT: AircraftSpec = {
   id: "c172p",
-  name: "TeachX Trainer (Cessna 172P-class)",
+  name: "SkyReady Trainer (Cessna 172P-class)",
   flapDetentsDeg: [0, 10, 20, 30],
   v: { s0: 33, s1: 44, r: 55, x: 59, y: 76, glide: 65, fe: 85, a: 99, no: 127, ne: 158, approach: 65 },
   usableFuelGal: 40,

@@ -35,7 +35,7 @@ export const Route = createFileRoute("/exam/$examId")({
       : "Practice Exam";
     return {
       meta: [
-        { title: `${name} — TeachX` },
+        { title: `${name} — SkyReady` },
         {
           name: "description",
           content:

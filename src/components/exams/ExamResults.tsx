@@ -270,7 +270,7 @@ export function ExamResults({
       )}
 
       <p className="mt-8 text-xs text-muted-foreground">
-        Unofficial study material — original TeachX questions, not actual FAA knowledge test
+        Unofficial study material — original SkyReady questions, not actual FAA knowledge test
         questions.
       </p>
     </div>

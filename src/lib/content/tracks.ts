@@ -1,9 +1,9 @@
 /**
  * Certification tracks: FAA certificates, ratings, endorsements and additional training
- * pathways, mapped onto TeachX ground modules, exams, simulator scenarios and ATC practice.
+ * pathways, mapped onto SkyReady ground modules, exams, simulator scenarios and ATC practice.
  *
  * Requirement summaries are paraphrased from 14 CFR Part 61/91 for study purposes. Always check
- * the current eCFR text and ACS. Completing TeachX training does not grant any FAA certificate,
+ * the current eCFR text and ACS. Completing SkyReady training does not grant any FAA certificate,
  * rating, endorsement or loggable flight time.
  */
 import type { TrackId, TrainingState } from "@/lib/store";

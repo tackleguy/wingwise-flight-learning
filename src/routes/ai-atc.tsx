@@ -80,13 +80,13 @@ export const Route = createFileRoute("/ai-atc")({
   },
   head: () => ({
     meta: [
-      { title: "AI ATC Practice — TeachX" },
+      { title: "AI ATC Practice — SkyReady" },
       {
         name: "description",
         content:
           "Free-form radio practice with a simulated AI air traffic controller that tracks your position, altitude, runway, frequency and clearance — with a full scripted fallback when no AI is configured.",
       },
-      { property: "og:title", content: "AI ATC Practice — TeachX" },
+      { property: "og:title", content: "AI ATC Practice — SkyReady" },
       {
         property: "og:description",
         content:

@@ -1,5 +1,5 @@
 /**
- * Shared building blocks for the TeachX avionics library: the "explain this instrument" context,
+ * Shared building blocks for the SkyReady avionics library: the "explain this instrument" context,
  * bezels, soft keys, red-X failure overlays and small SVG helpers.
  */
 import { createContext, useContext, type ReactNode } from "react";

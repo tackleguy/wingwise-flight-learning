@@ -1,5 +1,5 @@
 /**
- * TeachX Flight Display — PFD.
+ * SkyReady Flight Display — PFD.
  *
  * Every value is bound to the SimEngine snapshot: `indicated.*` for air data, attitude and heading
  * (so failures show the way a real display would), `nav.*` for the HSI and `ap` for the flight
@@ -72,7 +72,7 @@ export function Pfd({ className, hideSoftKeys }: PfdProps) {
 
   return (
     <DisplayBezel
-      title="TeachX Flight Display · PFD"
+      title="SkyReady Flight Display · PFD"
       explainId="pfd"
       className={className}
       footer={softKeys}

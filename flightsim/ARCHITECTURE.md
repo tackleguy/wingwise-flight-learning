@@ -1,4 +1,4 @@
-# TeachX Flight Simulator — architecture and rules for contributors
+# SkyReady Flight Simulator — architecture and rules for contributors
 
 Read this file completely before changing anything. It is the contract that lets several people
 (and AI agents) build modules in parallel without breaking each other.
@@ -32,7 +32,7 @@ CesiumJS 1.147 (globe), JSBSim → WebAssembly (flight physics), `geomagnetism` 
 Installed and available: `three` (devDependency — offline model authoring only, do not ship it in
 the app bundle), `@mapbox/vector-tile` + `pbf` (OSM vector tiles), `lucide-react` (icons).
 Do **not** add other dependencies unless truly necessary; if you must, use
-`flock /tmp/teachx-npm.lock npm install <pkg>` and record licence + reason in your notes.
+`flock /tmp/skyready-npm.lock npm install <pkg>` and record licence + reason in your notes.
 
 Path alias: `@/…` → `src/…`. The site is built with `base: "./"` — **never use absolute URLs
 like `/data/x.json`**; use `import.meta.env.BASE_URL` (see `loadWorldData`, `loadJsbsim`).
@@ -180,13 +180,13 @@ surveyed position in the open data (drawn through the airport reference point) �
 
 ### 4.7 Persistence
 
-`core/storage.ts` (`loadJson`, `saveJson`, `removeKey`; keys are prefixed `teachx.sim.`). No
+`core/storage.ts` (`loadJson`, `saveJson`, `removeKey`; keys are prefixed `skyready.sim.`; values saved under the old `teachx.sim.` prefix are moved over on first read). No
 accounts, no server storage.
 
 ## 5. Verified facts about the flight model (JSBSim c172p)
 
 - Adapter conventions are documented at the top of `src/physics/jsbsim.ts` (JSBSim elevator/rudder/
-  pitch-trim signs are opposite to TeachX's; the adapter converts).
+  pitch-trim signs are opposite to SkyReady's; the adapter converts).
 - Gear/contact units: 0 nose wheel, 1 left main, 2 right main, 3 nose skid, 4 tail skid,
   5 left wing tip, 6 right wing tip (`gear/unit[n]/WOW`).
 - Point masses `inertia/pointmass-weight-lbs[0..4]`: pilot, co-pilot, left passenger, right

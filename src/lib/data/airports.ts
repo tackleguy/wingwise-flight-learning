@@ -13,7 +13,7 @@ import type { Airport, Frequency, FrequencyType, Navaid, Runway, RunwayEnd } fro
  */
 export const AIRPORT_DATA_NOTICE = {
   source:
-    "TeachX educational dataset — compiled from public FAA publications, simplified for simulation",
+    "SkyReady educational dataset — compiled from public FAA publications, simplified for simulation",
   currency:
     "Static snapshot (not updated from live sources). Frequencies, runways and procedures may have changed.",
   disclaimer:

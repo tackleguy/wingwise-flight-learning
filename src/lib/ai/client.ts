@@ -1,7 +1,7 @@
 /**
  * Client entry point used by AI ATC, the AI Instructor and the Oral Examiner.
  *
- * ALL AI ON TEACHX IS LOCAL — nothing is sent to a cloud AI service and no API keys exist.
+ * ALL AI ON SKYREADY IS LOCAL — nothing is sent to a cloud AI service and no API keys exist.
  *
  * Contract (do not change the signatures — several features depend on them):
  *   aiChat(req)      -> { ok: true, text, provider } | { ok: false, reason }

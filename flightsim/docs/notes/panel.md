@@ -81,7 +81,7 @@ const panelStats: { updaters: number; frames: number; frameMs: number }; // deve
   `controls.dgAdjustDeg`); the audio/nav module on `nav1-ident-toggle` (Morse ident).
 - Horizon placement: use the `onCoverage` callback (exact, includes drawer and hidden states) or
   `panelHeightFraction(width, height)`. The panel also sets the CSS variable
-  `--teachx-panel-height` on `<html>` (pixels, 0 when hidden) so the HUD and other overlays can
+  `--skyready-panel-height` on `<html>` (pixels, 0 when hidden) so the HUD and other overlays can
   stay clear of it; `ExplainCard` uses it.
 - The panel reads `state.ind`, `state.nav`, `state.sys`, `controls`. It needs from the other
   modules: `sys.busVolts` (> 10 V = "powered"), `sys.avionicsPowered`, `sys.stallHorn`, all of
@@ -187,7 +187,7 @@ phrases, and a render-to-markup of all layouts (every id present exactly once in
 | night, lights 0.7 / lights 0 | — | warm readable markings / almost black panel with only the radios glowing |
 | no bus power (`power=0`) + forced gyro flags | — | radios dark, TC flag + level, fuel / oil-temp at rest, VOR striped flag, GYRO and OFF flags |
 | explain mode | airspeed (desktop), VOR (tablet), altimeter by click (phone) | dashed outlines, card with "You are indicating 76 knots — that is VY (76)…", "Course 090° selected, flag TO. The needle is 2.0 dots to the right…", "It reads about 3,450 ft…" |
-| hidden | `hidden=1` | only the "Instruments" tab remains; coverage 0; `--teachx-panel-height: 0px` |
+| hidden | `hidden=1` | only the "Instruments" tab remains; coverage 0; `--skyready-panel-height: 0px` |
 | 3D mode, day | KSFO 28R short final, real physics + stub | panel over the 3D view; IAS 65 / ALT 513 / HDG 281 M matched the truth HUD; stub VOR tuned 115.80 → "SFO", 2.2 NM |
 | 3D mode, night, lights 0.7 | scripted take-off from KSFO 28R, paused at 300 ft | truth 87.4 kt / 316 ft / +1,028 fpm / 2,506 rpm; needle angles read back from the page: airspeed 150.6° (= 87 kt on the scale), altimeter 113.6° / 11.4° / 1.1° (= 316 ft), VSI 2.9° past 12 o'clock (= about +1,000), tachometer 418.4° (= 2,506 rpm); 22–32 fps reported by the dev HUD under software rendering |
 

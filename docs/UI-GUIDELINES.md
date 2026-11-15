@@ -1,4 +1,4 @@
-# TeachX UI guidelines — keep it uncluttered
+# SkyReady UI guidelines — keep it uncluttered
 
 The owner asked for a **less cluttered UI throughout**. Apply these rules on every page.
 
@@ -23,8 +23,16 @@ The owner asked for a **less cluttered UI throughout**. Apply these rules on eve
 
 ## Brand & motion
 
-- **Logo:** `<Logo />` / `<LogoMark />` from `@/components/brand/Logo` — a paper plane whose contrail forms
-  the X. Never redraw it inline; favicons live in `public/favicon.svg`, `favicon.ico`, `apple-touch-icon.png`.
+- **Name:** the product is **SkyReady** (one word, capital S and R). In the wordmark "Ready" carries the
+  brand gradient. Short code for fictional product names and tail marks: `SR-` (e.g. SR-750 Navigator,
+  SR-172).
+- **Logo:** `<Logo />` / `<LogoMark />` from `@/components/brand/Logo` — a check mark ("ready") whose long
+  stroke becomes a takeoff climb, with an aircraft lifting off its tip. Never redraw it inline; favicons
+  live in `public/favicon.svg`, `favicon.ico`, `apple-touch-icon.png` (and `flightsim/public/favicon.svg`,
+  `public/sim/favicon.svg` for the simulator).
+- **Saved data:** browser storage keys start with `skyready-` (site) and `skyready.sim.` (simulator).
+  Values saved under the old TeachX names are moved over automatically (`src/lib/legacy-storage.ts`,
+  `flightsim/src/core/storage.ts`); keep those helpers until old visitors have had time to return.
 - **Fonts:** headings (`h1`, `h2`) use Sora (`font-display`); body text Inter; numbers JetBrains Mono.
 - **Primary actions:** `<Button>` (default variant) or the `btn-glow` class on a link. Secondary on imagery:
   `btn-ghost-glass`. One glowing button per area.

@@ -6,7 +6,7 @@
  * src/Instrumentation) as an engineering reference: gyro spin-up/spin-down, attitude-indicator
  * tumble and re-erection, heading-indicator precession, the magnetic compass dip/turning/
  * acceleration errors and the canted turn-coordinator gyro. This is an independent TypeScript
- * implementation for TeachX — no FlightGear source code is included.
+ * implementation for SkyReady — no FlightGear source code is included.
  */
 import { clamp, norm180, norm360, toDeg, toRad } from "@/lib/geo";
 

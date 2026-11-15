@@ -1,5 +1,5 @@
 /**
- * TeachX Flight Simulator — the app shell: start screen (airport search, where to start, weather,
+ * SkyReady Flight Simulator — the app shell: start screen (airport search, where to start, weather,
  * time of day), the 3D world with the cockpit panel, and a small in-flight toolbar.
  */
 import { useEffect, useRef, useState } from "react";
@@ -108,7 +108,7 @@ export function App() {
         offs.push(sim.events.on("crash", () => setToast("The aircraft was damaged. Press R to restart on short final, or M for the menu.")));
         offs.push(sim.events.on("stall", () => setToast("STALL — lower the nose, add full power, level the wings.")));
         mods.current = { rt, weather, sky, views };
-        (window as unknown as { teachx: unknown }).teachx = { rt, sim, world, weather, sky, views };
+        (window as unknown as { skyready: unknown }).skyready = { rt, sim, world, weather, sky, views };
         const apt = sim.data.getAirport(new URLSearchParams(location.search).get("apt") ?? "KPAO");
         if (apt) setAirport(apt);
         setReady(true);
@@ -227,7 +227,10 @@ export function App() {
       {menu && (
         <div className="absolute inset-0 z-40 grid place-items-center overflow-y-auto bg-slate-950/80 p-4 select-text">
           <div className="w-full max-w-xl rounded-2xl border border-slate-700 bg-slate-900 p-5 shadow-2xl">
-            <h1 className="text-2xl font-semibold">TeachX Flight Simulator</h1>
+            <h1 className="flex items-center gap-2.5 text-2xl font-semibold">
+              <img src="./favicon.svg" alt="" width={32} height={32} className="shrink-0" />
+              SkyReady Flight Simulator
+            </h1>
             <p className="mt-1 text-sm text-slate-300">Fly a Cessna 172-style trainer from any airport in the world. Free, in your browser.</p>
             <p className="mt-3 rounded-md border border-amber-500/50 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">{DISCLAIMER}</p>
 
@@ -305,7 +308,7 @@ export function App() {
               </>
             ) : (
               <>
-                <h2 className="text-lg font-semibold">TeachX Flight Simulator — credits</h2>
+                <h2 className="text-lg font-semibold">SkyReady Flight Simulator — credits</h2>
                 <p className="mt-2 text-amber-200">{DISCLAIMER}</p>
                 <ul className="mt-2 list-disc space-y-1 pl-5 text-slate-300">
                   <li>Flight physics: JSBSim (LGPL-2.1), c172p flight model</li>

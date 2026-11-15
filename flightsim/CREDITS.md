@@ -1,6 +1,6 @@
 # Credits and licences
 
-The TeachX Flight Simulator uses only open-source software and open data. No paid services, no
+The SkyReady Flight Simulator uses only open-source software and open data. No paid services, no
 API keys, no accounts. (This list is completed from `docs/notes/` as modules are finished.)
 
 ## Software
@@ -48,4 +48,4 @@ the U.S. Geological Survey.
 
 ## Original work
 The aircraft 3D model, instrument panel artwork, runway textures, sounds, lessons and all
-simulator code outside the items above are original to TeachX.
+simulator code outside the items above are original to SkyReady.

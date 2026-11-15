@@ -111,24 +111,25 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
-    // Replace these placeholders with the app's name and description when first building the app.
-    // Each content route, / included, must still set its own head(). Never add og:image or
-    // twitter:image here: every page without its own would inherit the root's preview image.
+    // Site-wide defaults. Each content route, / included, must still set its own head(). Never add
+    // og:image or twitter:image here: every page without its own would inherit the root's preview image.
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "TeachX — Flight Simulator & Pilot Training Platform" },
+      { title: "SkyReady — Flight Simulator & Pilot Training Platform" },
       {
         name: "description",
         content:
-          "Flight simulator, avionics lab, AI ATC practice, ground school, practice exams and mock checkrides in one training platform.",
+          "Get sky-ready before you leave the ground: flight simulator, avionics lab, AI ATC practice, ground school, practice exams and mock checkrides in one training platform.",
       },
       { name: "theme-color", content: "#0c1424" },
-      { name: "author", content: "Lovable" },
+      { name: "application-name", content: "SkyReady" },
+      { name: "apple-mobile-web-app-title", content: "SkyReady" },
+      { name: "author", content: "SkyReady" },
 
       { property: "og:type", content: "website" },
+      { property: "og:site_name", content: "SkyReady" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@Lovable" },
     ],
     links: [
       {

@@ -1,4 +1,4 @@
-# TeachX Flight Simulator
+# SkyReady Flight Simulator
 
 A free flight simulator that runs in the web browser — no install, no account. It is a learning
 aid for student pilots built around one aircraft (a Cessna 172-class trainer), real terrain and

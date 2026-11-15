@@ -3,7 +3,7 @@ import { useStore } from "@/lib/store";
 
 /**
  * True when motion should be kept to a minimum: the OS asks for reduced motion, or the user turned
- * on "Reduce motion" in TeachX settings. JS-driven animations (canvas/SVG loops, count-ups) should
+ * on "Reduce motion" in SkyReady settings. JS-driven animations (canvas/SVG loops, count-ups) should
  * check this; CSS animations are already handled in styles.css.
  */
 export function useReducedMotion(): boolean {

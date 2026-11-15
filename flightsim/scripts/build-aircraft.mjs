@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Builds the TeachX trainer aircraft model:  public/models/trainer.glb  (+ src/views/trainer-meta.ts)
+ * Builds the SkyReady trainer aircraft model:  public/models/trainer.glb  (+ src/views/trainer-meta.ts)
  *
  *   node scripts/build-aircraft.mjs
  *
@@ -168,7 +168,7 @@ const uvStab = (xa, y) => uvRegion(REG.H, (Math.abs(y) - H_MAP.y0) / (H_MAP.y1 -
 const COL = {
   white: [243, 244, 245],
   navy: [17, 44, 88],
-  sky: [56, 161, 230], // the TeachX accent colour
+  sky: [56, 161, 230], // the SkyReady accent colour
   glass: [16, 22, 31],
   seal: [12, 12, 14],
   line: [168, 173, 180],
@@ -630,6 +630,8 @@ function stripeAt(xa, zg) {
 
 // Registration-style marking, block letters drawn as strokes in a 0.6 × 1 box.
 const GLYPHS = {
+  S: [[[0.58, 0.85], [0.48, 0.96], [0.3, 1], [0.12, 0.96], [0.03, 0.84], [0.05, 0.68], [0.18, 0.57], [0.42, 0.45], [0.55, 0.33], [0.57, 0.16], [0.48, 0.04], [0.3, 0], [0.12, 0.04], [0.02, 0.15]]],
+  R: [[[0, 0], [0, 1], [0.38, 1], [0.53, 0.94], [0.6, 0.79], [0.53, 0.63], [0.38, 0.56], [0, 0.56]], [[0.3, 0.56], [0.6, 0]]],
   T: [[[0, 1], [0.6, 1]], [[0.3, 1], [0.3, 0]]],
   X: [[[0, 0], [0.6, 1]], [[0, 1], [0.6, 0]]],
   "-": [[[0.1, 0.5], [0.5, 0.5]]],
@@ -637,7 +639,7 @@ const GLYPHS = {
   7: [[[0, 1], [0.6, 1], [0.24, 0]]],
   2: [[[0.02, 0.76], [0.08, 0.91], [0.2, 1], [0.4, 1], [0.53, 0.92], [0.6, 0.76], [0.56, 0.6], [0.0, 0.0], [0.6, 0.0]]],
 };
-const REG_TEXT = "TX-172";
+const REG_TEXT = "SR-172"; // SR = SkyReady (fictional mark)
 const TEXT = { xa0: 3.34, zg0: 1.345, h: 0.215, adv: 0.76, stroke: 0.15 };
 const TEXT_LEN = TEXT.h * (TEXT.adv * (REG_TEXT.length - 1) + 0.6);
 /** True where the registration is painted. `s` runs along the text in the reading direction, metres. */
@@ -1662,10 +1664,10 @@ function buildGlb(textures) {
     groupIdx[name] = nodes.length - 1;
   }
   nodes.push({
-    name: "TeachX_Trainer",
+    name: "SkyReady_Trainer",
     children: Object.values(groupIdx),
     extras: {
-      about: "TeachX trainer — original procedural model built by scripts/build-aircraft.mjs. Not a model of any specific real aircraft.",
+      about: "SkyReady trainer — original procedural model built by scripts/build-aircraft.mjs. Not a model of any specific real aircraft.",
       axes: "glTF +Z nose, +Y up, +X left wing. Origin = centre of gravity. Metres.",
       movingParts: "Every moving node turns about its own local +X axis (see each node's extras).",
       registration: REG_TEXT,
@@ -1683,9 +1685,9 @@ function buildGlb(textures) {
   pushImage("cabin_interior", textures.interior);
 
   const gltf = {
-    asset: { version: "2.0", generator: "TeachX scripts/build-aircraft.mjs", copyright: "TeachX — original work (procedurally generated)" },
+    asset: { version: "2.0", generator: "SkyReady scripts/build-aircraft.mjs", copyright: "SkyReady — original work (procedurally generated)" },
     scene: 0,
-    scenes: [{ name: "TeachX trainer", nodes: [rootIndex] }],
+    scenes: [{ name: "SkyReady trainer", nodes: [rootIndex] }],
     nodes,
     meshes,
     materials,

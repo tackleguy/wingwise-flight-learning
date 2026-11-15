@@ -24,6 +24,7 @@ import { CommandMenu } from "@/components/app/CommandMenu";
 import { NAV, navItemFor } from "@/lib/nav";
 import { useStore } from "@/lib/store";
 import { useApplyAccessibility } from "@/lib/accessibility";
+import { LEGACY_KEYS, migrateLegacyKey } from "@/lib/legacy-storage";
 import { cn } from "@/lib/utils";
 
 function isActive(pathname: string, to: string) {
@@ -35,7 +36,7 @@ function Brand() {
   return (
     <Link
       to="/"
-      aria-label="TeachX home"
+      aria-label="SkyReady home"
       className="flex items-center rounded-lg px-1 py-1.5 outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring group-data-[collapsible=icon]:px-0"
     >
       <Logo size={34} className="group-data-[collapsible=icon]:[&_svg]:size-8" />
@@ -43,7 +44,7 @@ function Brand() {
   );
 }
 
-const NAV_OPEN_KEY = "teachx-nav-open";
+const [LEGACY_NAV_OPEN_KEY, NAV_OPEN_KEY] = LEGACY_KEYS.navOpen;
 
 function NavMenu() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -53,6 +54,7 @@ function NavMenu() {
   // Only the current section (and Overview) start expanded; the user's choices are remembered.
   const [manual, setManual] = useState<Record<string, boolean>>({});
   useEffect(() => {
+    migrateLegacyKey(LEGACY_NAV_OPEN_KEY, NAV_OPEN_KEY);
     try {
       const raw = window.localStorage.getItem(NAV_OPEN_KEY);
       if (raw) setManual(JSON.parse(raw) as Record<string, boolean>);
@@ -234,7 +236,7 @@ function TopBar() {
         <span key={pathname} className="animate-fade-in-up flex min-w-0 items-center gap-2">
           {item ? <item.icon className="size-4 shrink-0 text-primary" /> : null}
           <span className="truncate font-semibold">
-            {item?.label ?? (pathname === "/onboarding" ? "Pilot profile" : "TeachX")}
+            {item?.label ?? (pathname === "/onboarding" ? "Pilot profile" : "SkyReady")}
           </span>
         </span>
       </nav>

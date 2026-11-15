@@ -1,4 +1,4 @@
-# Flight-model validation — TeachX Flight Simulator
+# Flight-model validation — SkyReady Flight Simulator
 
 This page is **written by an automated test** (`tests/physics/validation.test.ts`). To regenerate it:
 

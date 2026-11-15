@@ -1,5 +1,5 @@
 /**
- * TeachX avionics component library. Every component reads the SimEngine from <SimProvider>
+ * SkyReady avionics component library. Every component reads the SimEngine from <SimProvider>
  * (useSimSnapshot / useSimEngine) and takes only optional sizing/config props.
  */
 export { Pfd, type PfdProps } from "./Pfd";

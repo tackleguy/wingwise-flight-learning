@@ -99,13 +99,13 @@ export const Route = createFileRoute("/atc")({
   },
   head: () => ({
     meta: [
-      { title: "ATC Simulator — TeachX" },
+      { title: "ATC Simulator — SkyReady" },
       {
         name: "description",
         content:
           "Practise FAA radio phraseology with 15 simulated ATC scenarios — taxi, takeoff, flight following, Class D entry, IFR clearances, approaches and emergencies — scored on readbacks, phraseology and timing.",
       },
-      { property: "og:title", content: "ATC Simulator — TeachX" },
+      { property: "og:title", content: "ATC Simulator — SkyReady" },
       {
         property: "og:description",
         content:

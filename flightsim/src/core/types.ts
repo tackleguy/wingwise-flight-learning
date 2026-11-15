@@ -1,5 +1,5 @@
 /**
- * TeachX Flight Simulator — shared state contract.
+ * SkyReady Flight Simulator — shared state contract.
  *
  * ONE `Sim` owns ONE `SimState`. Physics writes the "truth" part; the instrument, systems and nav
  * modules write their own sections; the panel, views, training and UI only READ it.

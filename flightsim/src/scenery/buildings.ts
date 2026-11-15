@@ -154,7 +154,7 @@ export class Buildings {
       try {
         done = this.job.gen.next().done === true;
       } catch (err) {
-        console.warn("[TeachX] scenery: a building tile could not be built", err);
+        console.warn("[SkyReady] scenery: a building tile could not be built", err);
         this.job.tile.state = "failed";
       }
       if (done) {
@@ -206,7 +206,7 @@ export class Buildings {
         this.templateState = "none";
       })
       .catch((err) => {
-        console.warn("[TeachX] scenery: buildings are unavailable (OpenFreeMap could not be reached)", err);
+        console.warn("[SkyReady] scenery: buildings are unavailable (OpenFreeMap could not be reached)", err);
         this.templateState = "failed";
         this.templateRetryAt = performance.now() / 1000 + 120;
       });

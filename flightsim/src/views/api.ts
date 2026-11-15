@@ -43,7 +43,7 @@ export interface TowerSite {
   synthetic: true;
 }
 
-/** Extras offered by the TeachX views module on top of the contract above. */
+/** Extras offered by the SkyReady views module on top of the contract above. */
 export interface ViewsModule extends ViewsApi {
   /**
    * Free view: false (default) = the camera orbits the aircraft; true = the camera stays where it

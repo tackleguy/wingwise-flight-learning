@@ -77,9 +77,9 @@ export function aircraftMatrix(lat: number, lon: number, altFt: number, headingD
 
 /** The few CSS rules CesiumJS needs (its full widget stylesheet is not used). */
 function injectStyle(): void {
-  if (typeof document === "undefined" || document.getElementById("teachx-cesium-style")) return;
+  if (typeof document === "undefined" || document.getElementById("skyready-cesium-style")) return;
   const style = document.createElement("style");
-  style.id = "teachx-cesium-style";
+  style.id = "skyready-cesium-style";
   style.textContent =
     ".cesium-widget{position:relative;width:100%;height:100%;overflow:hidden}" +
     ".cesium-widget canvas{display:block;width:100%;height:100%;touch-action:none;outline:none}" +

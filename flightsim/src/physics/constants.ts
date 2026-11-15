@@ -5,7 +5,7 @@
  * (normal static source). They are educational reference numbers, not approved data — always use
  * the handbook of the real aircraft.
  *
- * The stall angles of attack are measured from TeachX's own tuned flight model by the tests in
+ * The stall angles of attack are measured from SkyReady's own tuned flight model by the tests in
  * tests/physics (see docs/PHYSICS-VALIDATION.md); they are properties of the simulation.
  */
 

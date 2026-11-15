@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Globe2 } from "lucide-react";
 import { Page, PageHeader, Notice } from "@/components/app/page";
 
-/** The standalone TeachX Flight Simulator (built from /flightsim) is served as static files under /sim/. */
+/** The standalone SkyReady Flight Simulator (built from /flightsim) is served as static files under /sim/. */
 const SIM_URL = "/sim/index.html";
 
 function WorldSimulator() {
@@ -11,7 +11,7 @@ function WorldSimulator() {
       <PageHeader
         eyebrow="Fly"
         icon={Globe2}
-        title="TeachX Flight Simulator"
+        title="SkyReady Flight Simulator"
         description="Fly a Cessna 172-style trainer from any airport in the world, over real terrain, with real weather."
         actions={
           <a
@@ -30,7 +30,7 @@ function WorldSimulator() {
       </Notice>
       <iframe
         src={`${SIM_URL}?embed=1`}
-        title="TeachX Flight Simulator"
+        title="SkyReady Flight Simulator"
         className="h-[78dvh] min-h-[480px] w-full rounded-xl border bg-black"
         allow="fullscreen; gamepad"
       />

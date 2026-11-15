@@ -339,7 +339,7 @@ const pts = (...a: number[]): P2[] => {
 const B738: AirlinerSpec = {
   id: "b738",
   label: "Boeing 737-800 (representative, generic livery)",
-  reg: "TX-738",
+  reg: "SR-738",
   dims: { lengthM: 39.47, spanM: 35.79, heightM: 12.55 },
   fuselage: [
     S(0.0, 0.1, -0.3, -0.48),
@@ -476,7 +476,7 @@ const B738: AirlinerSpec = {
 const A320: AirlinerSpec = {
   id: "a320",
   label: "Airbus A320 (representative, generic livery)",
-  reg: "TX-320",
+  reg: "SR-320",
   dims: { lengthM: 37.57, spanM: 35.8, heightM: 11.76 },
   fuselage: [
     S(0.0, 0.12, -0.32, -0.58),

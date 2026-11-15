@@ -39,7 +39,7 @@ export const Route = createFileRoute("/simulator")({
   },
   head: () => ({
     meta: [
-      { title: "Flight Simulator — TeachX" },
+      { title: "Flight Simulator — SkyReady" },
       {
         name: "description",
         content:

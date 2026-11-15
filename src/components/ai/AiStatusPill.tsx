@@ -1,5 +1,5 @@
 /**
- * Local AI status + controls. All AI on TeachX runs locally (on this device, or on the user's
+ * Local AI status + controls. All AI on SkyReady runs locally (on this device, or on the user's
  * own model server). Shows which is active and lets the user turn the on-device model on.
  */
 import { useCallback, useEffect, useState } from "react";

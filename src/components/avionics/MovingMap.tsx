@@ -1,5 +1,5 @@
 /**
- * Moving map shared by the MFD and the TX-750 Navigator: aircraft symbol, flight plan
+ * Moving map shared by the MFD and the SR-750 Navigator: aircraft symbol, flight plan
  * (active leg magenta), airports, VORs, relative terrain, simulated weather and traffic.
  */
 import { memo, useEffect, useId, useRef, useState } from "react";

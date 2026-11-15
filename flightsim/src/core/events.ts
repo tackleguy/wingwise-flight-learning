@@ -21,7 +21,7 @@ export class EventBus<E extends object> {
       try {
         (fn as (p: E[K]) => void)(payload);
       } catch (err) {
-        console.error(`[TeachX] event handler for "${String(type)}" failed`, err);
+        console.error(`[SkyReady] event handler for "${String(type)}" failed`, err);
       }
     }
   }

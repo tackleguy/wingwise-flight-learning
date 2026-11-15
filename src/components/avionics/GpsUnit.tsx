@@ -1,5 +1,5 @@
 /**
- * TX-750 Navigator — interactive panel-mount GPS navigator (touch-screen style).
+ * SR-750 Navigator — interactive panel-mount GPS navigator (touch-screen style).
  *
  * Pages: MAP, NAV, FPL (build/edit flight plan), D→ (direct-to), NRST, WPT (airport/navaid info),
  * PROC (training approaches). CDI source toggle (GPS ↔ VLOC) and a dual concentric knob
@@ -76,9 +76,9 @@ export function GpsUnit({ className, initialPage = "MAP" }: GpsUnitProps) {
     >
       <div className="mb-2 flex items-center justify-between px-1">
         <span className="font-mono text-[11px] font-bold tracking-[0.25em] text-white/70">
-          TX-750 <span className="font-normal text-white/40">NAVIGATOR</span>
+          SR-750 <span className="font-normal text-white/40">NAVIGATOR</span>
         </span>
-        <ExplainButton id="gps" label="TX-750 Navigator" />
+        <ExplainButton id="gps" label="SR-750 Navigator" />
       </div>
       <div className="flex flex-col gap-3 md:flex-row">
         {/* screen */}

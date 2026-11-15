@@ -290,7 +290,7 @@ const pistonNacelle = (front: number, back: number, s = 1): Station[] => [
 const SENECA: TwinSpec = {
   id: "pa34",
   label: "Piper PA-34-220T Seneca V (representative)",
-  reg: "TX-P34",
+  reg: "SR-P34",
   dims: { lengthM: 8.72, spanM: 11.86, heightM: 3.02 },
   fuselage: [
     S(0.0, 0.06, 0.06, -0.08, 2.0),
@@ -405,7 +405,7 @@ const SENECA: TwinSpec = {
 const BARON: TwinSpec = {
   id: "be58",
   label: "Beechcraft Baron G58 (representative)",
-  reg: "TX-B58",
+  reg: "SR-B58",
   dims: { lengthM: 9.09, spanM: 11.53, heightM: 2.97 },
   fuselage: [
     S(0.0, 0.05, 0.04, -0.06, 2.0),
@@ -519,7 +519,7 @@ const BARON: TwinSpec = {
 const KINGAIR: TwinSpec = {
   id: "be350",
   label: "Beechcraft King Air 350 (representative)",
-  reg: "TX-K35",
+  reg: "SR-K35",
   dims: { lengthM: 14.22, spanM: 17.65, heightM: 4.37 },
   fuselage: [
     S(0.0, 0.05, 0.0, -0.12, 2.0),

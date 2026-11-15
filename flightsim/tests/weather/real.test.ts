@@ -377,7 +377,7 @@ describe("loadRealWeather — cache and usage limits", () => {
     });
     const first = setup(allGood, { persist: true });
     expect((await first.weather.loadRealWeather(37.6196, -122.3656, "KSFO")).ok).toBe(true);
-    expect([...store.keys()]).toEqual(["teachx.sim.weather.cache.v1"]);
+    expect([...store.keys()]).toEqual(["skyready.sim.weather.cache.v1"]);
 
     const reloaded = setup(() => "offline", { persist: true });
     reloaded.clock.t = T0 + 4 * MIN;

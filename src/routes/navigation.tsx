@@ -36,7 +36,7 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/navigation")({
   head: () => ({
     meta: [
-      { title: "Navigation & Charts — TeachX" },
+      { title: "Navigation & Charts — SkyReady" },
       {
         name: "description",
         content:
@@ -69,10 +69,10 @@ function NavigationPage() {
         description="Plot a route, work the numbers with an E6B, and practice reading charts."
       />
       <Notice tone="caution" title="Educational chart — not for navigation." className="mb-4">
-        The chart is a stylized drawing built from TeachX's educational airport and navaid dataset.
+        The chart is a stylized drawing built from SkyReady's educational airport and navaid dataset.
         Airspace shapes are simplified rings, the coastline is approximate, and the restricted area,
         MOA, some obstacles and the GPS waypoints are fictional examples for symbol training. The
-        approach plate is a schematic layout only — TeachX does not reproduce approach charts.{" "}
+        approach plate is a schematic layout only — SkyReady does not reproduce approach charts.{" "}
         {AIRPORT_DATA_NOTICE.disclaimer} Always use current FAA charts for flight.
       </Notice>
       <Tabs defaultValue="workspace">

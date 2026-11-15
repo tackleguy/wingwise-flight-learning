@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/airports/")({
   head: () => ({
     meta: [
-      { title: "Airport Database — TeachX" },
+      { title: "Airport Database — SkyReady" },
       {
         name: "description",
         content:
@@ -58,7 +58,7 @@ function AirportsIndex() {
         eyebrow="Fly"
         icon={Building2}
         title="Airport Database"
-        description="Runways, frequencies, airspace and diagrams for TeachX training airports."
+        description="Runways, frequencies, airspace and diagrams for SkyReady training airports."
       />
       <Notice tone="caution" title="Educational dataset." className="mb-4">
         {AIRPORT_DATA_NOTICE.source}. {AIRPORT_DATA_NOTICE.currency}{" "}
