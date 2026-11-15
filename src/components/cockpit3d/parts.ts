@@ -2427,8 +2427,8 @@ export function yoke(
   }
   column.add(wheel);
   g.add(column);
-  const hit = hitBox(0.36, 0.17, 0.08);
-  hit.position.z = 0.02;
+  const hit = hitBox(0.34, 0.12, 0.05);
+  hit.position.set(0, 0.02, 0.02);
   wheel.add(hit);
   return {
     group: g,
@@ -3338,7 +3338,11 @@ export function mergeStatic(source: THREE.Object3D): THREE.Group {
         return;
       }
       const mat = m.material as THREE.Material;
-      if (mat.transparent) {
+      let hide = false;
+      for (let p: THREE.Object3D | null = o; p && p !== source; p = p.parent)
+        if (p.userData["hideInInspect"]) hide = true;
+      if (mat.transparent || hide) {
+        if (hide) o.userData["hideInInspect"] = true;
         keep.push(o);
         return;
       }

@@ -80,4 +80,18 @@ export interface AircraftModel {
   dimensions: AircraftModelDimensions;
   /** Total triangle count (all meshes). */
   triangles: number;
+  /** What the airframe has, so UIs can explain / demo it. */
+  features: AircraftModelFeatures;
+}
+
+export interface AircraftModelFeatures {
+  retractableGear: boolean;
+  tailwheel: boolean;
+  /** All-moving horizontal tail (stabilator) instead of an elevator. */
+  stabilator: boolean;
+  tTail: boolean;
+  /** Max visual flap deflection, deg (0 = no flaps). */
+  flapMaxDeg: number;
+  engines: number;
+  jet: boolean;
 }

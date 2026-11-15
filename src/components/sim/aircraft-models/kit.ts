@@ -29,6 +29,7 @@ import { propeller, spinner, wheel, type BladeSpec } from "./parts";
 import type {
   AircraftModel,
   AircraftModelDimensions,
+  AircraftModelFeatures,
   AircraftModelState,
   ModelQuality,
 } from "./types";
@@ -166,10 +167,18 @@ export class AirframeKit {
   private propDefs: PropDef[] = [];
   private wheels: { y: number; z: number; tail: boolean }[] = [];
   private paintFn: ((p: LiveryPainter) => void) | null = null;
-  private regs: { text: string; shape: BodyShape; z: number; y: number; h: number; color: string }[] =
-    [];
+  private regs: {
+    text: string;
+    shape: BodyShape;
+    z: number;
+    y: number;
+    h: number;
+    color: string;
+  }[] = [];
   private lightsDef: LightsDef | null = null;
   private cg: V3 = [0, 0, 0];
+  /** Set by builders with a T-tail (informational). */
+  tTail = false;
 
   constructor(quality: ModelQuality, pal: Palette, q: QualitySettings) {
     this.quality = quality;
@@ -289,6 +298,15 @@ export class AirframeKit {
     dims: AircraftModelDimensions;
     tailwheel?: boolean;
   }): AircraftModel {
+    const features: AircraftModelFeatures = {
+      retractableGear: this.legs.length > 0,
+      tailwheel: !!meta.tailwheel,
+      stabilator: this.movs.some((m) => m.kind === "stabilator"),
+      tTail: this.tTail,
+      flapMaxDeg: this.movs.some((m) => m.kind === "flap") ? this.limits.flapMax : 0,
+      engines: this.propDefs.length,
+      jet: this.propDefs.some((p) => p.fan),
+    };
     const disposables: { dispose(): void }[] = [];
     const hasDom = typeof document !== "undefined";
     const pal = this.pal;
@@ -709,7 +727,8 @@ export class AirframeKit {
       cur.e += (clamp(s.elevator, -1, 1) - cur.e) * k;
       cur.a += (clamp(s.aileron, -1, 1) - cur.a) * k;
       cur.r += (clamp(s.rudder, -1, 1) - cur.r) * k;
-      cur.f += (clamp(s.flapsDeg, 0, lim.flapMax) - cur.f) * (dt > 0 ? 1 - Math.exp(-dt / 0.15) : 0);
+      cur.f +=
+        (clamp(s.flapsDeg, 0, lim.flapMax) - cur.f) * (dt > 0 ? 1 - Math.exp(-dt / 0.15) : 0);
       const elevAng = (cur.e > 0 ? -cur.e * lim.elevator[0] : -cur.e * lim.elevator[1]) * DEG;
       for (const m of movObjs) {
         let ang = 0;
@@ -792,6 +811,7 @@ export class AirframeKit {
       groundPitchDeg,
       dimensions: meta.dims,
       triangles,
+      features,
     };
   }
 }
@@ -814,7 +834,10 @@ function normalize(geos: THREE.BufferGeometry[]): THREE.BufferGeometry[] {
     if (!out.getAttribute("uv")) {
       out.setAttribute(
         "uv",
-        new THREE.Float32BufferAttribute(new Float32Array(out.getAttribute("position").count * 2), 2),
+        new THREE.Float32BufferAttribute(
+          new Float32Array(out.getAttribute("position").count * 2),
+          2,
+        ),
       );
     }
     if (out.getAttribute("color")) {

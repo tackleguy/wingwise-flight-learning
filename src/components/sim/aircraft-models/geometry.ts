@@ -313,14 +313,14 @@ export interface RevolveOptions {
   segments: number;
   cx?: number;
   cy?: number;
-  /** Radius multiplier by section angle θ (0 = right, +90° = top). */
-  rScale?: (theta: number) => number;
+  /** Radius multiplier by section angle θ (0 = right, +90° = top) and axial position z. */
+  rScale?: (theta: number, z: number) => number;
 }
 
 /**
  * Revolves a profile of [radius, z] points about an axis parallel to z. Author the profile so the
- * solid is on the left when walking along it with +z to the right and +r up (e.g. a spinner goes
- * tip → base → back to the axis).
+ * solid is on the RIGHT when walking along it with +z to the right and +r up (e.g. a spinner goes
+ * tip → base → back to the axis; an outer skin is walked nose → tail).
  */
 export function revolve(profile: readonly [number, number][], o: RevolveOptions): MeshBuilder {
   const mb = new MeshBuilder();
@@ -332,7 +332,7 @@ export function revolve(profile: readonly [number, number][], o: RevolveOptions)
     const ids: number[] = [];
     for (let j = 0; j < N; j++) {
       const th = (2 * Math.PI * j) / N;
-      const rr = r * (o.rScale ? o.rScale(th) : 1);
+      const rr = r * (o.rScale ? o.rScale(th, z) : 1);
       ids.push(mb.v([cx + rr * Math.cos(th), cy + rr * Math.sin(th), z]));
     }
     cols.push(ids);

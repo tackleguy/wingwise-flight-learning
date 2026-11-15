@@ -164,7 +164,10 @@ function buildCessna(kit: AirframeKit, v: CessnaVariant) {
     const b: V3 = [side * w[0], w[1] - 0.01, w[2]];
     kit.add(tube(a, b, 0.11, 0.09, { ratio: 0.32, seg: 8 }), "paint");
     // fairing cuff at the wing end
-    kit.add(tube(b, [b[0] * 0.98, b[1] + 0.04, b[2]], 0.13, 0.13, { ratio: 0.35, seg: 8 }), "paint");
+    kit.add(
+      tube(b, [b[0] * 0.98, b[1] + 0.04, b[2]], 0.13, 0.13, { ratio: 0.35, seg: 8 }),
+      "paint",
+    );
     // step
     kit.add(
       tube([side * W(0.52), H(-0.48), Z(2.3)], [side * W(0.72), H(-0.62), Z(2.3)], 0.025, 0.025, {
@@ -250,9 +253,15 @@ function buildCessna(kit: AirframeKit, v: CessnaVariant) {
     for (const side of [1, -1]) {
       const c = mainC(side);
       leg.add(
-        tube([side * W(0.46), H(-0.53), Z(2.76)], [c[0] - side * 0.08, c[1] + 0.1, c[2]], 0.075, 0.05, {
-          seg: 8,
-        }),
+        tube(
+          [side * W(0.46), H(-0.53), Z(2.76)],
+          [c[0] - side * 0.08, c[1] + 0.1, c[2]],
+          0.075,
+          0.05,
+          {
+            seg: 8,
+          },
+        ),
         "gear",
       );
       leg.wheel(c, tireM, 0.15);
@@ -328,18 +337,19 @@ function paintCessna(p: LiveryPainter, v: CessnaVariant) {
   );
   p.band(
     [pt(-0.1, 0.035), pt(1.4, 0.025), pt(3.2, 0.005), pt(4.8, 0.085), pt(6.3, 0.2), pt(7.7, 0.29)],
-    [pt(-0.1, 0.005), pt(1.4, -0.005), pt(3.2, -0.025), pt(4.8, 0.055), pt(6.3, 0.17), pt(7.7, 0.26)],
+    [
+      pt(-0.1, 0.005),
+      pt(1.4, -0.005),
+      pt(3.2, -0.025),
+      pt(4.8, 0.055),
+      pt(6.3, 0.17),
+      pt(7.7, 0.26),
+    ],
     v.accent,
   );
   // fin sweep
-  p.fill(
-    [pt(6.45, 0.62), pt(8.2, 0.86), pt(8.2, 1.06), pt(6.75, 0.86)],
-    v.stripe,
-  );
-  p.fill(
-    [pt(6.62, 0.95), pt(8.2, 1.13), pt(8.2, 1.19), pt(6.7, 1.02)],
-    v.accent,
-  );
+  p.fill([pt(6.45, 0.62), pt(8.2, 0.86), pt(8.2, 1.06), pt(6.75, 0.86)], v.stripe);
+  p.fill([pt(6.62, 0.95), pt(8.2, 1.13), pt(8.2, 1.19), pt(6.7, 1.02)], v.accent);
   // windows
   p.glass([pt(1.4, 0.36), pt(1.97, 0.4), pt(2.1, 0.86), pt(1.3, 0.86)], false);
   p.glass([pt(2.04, 0.18), pt(2.8, 0.18), pt(2.8, 0.73), pt(2.17, 0.73)]);
@@ -470,7 +480,10 @@ export function buildJ3(kit: AirframeKit) {
       leg.add(tube([side * 0.32, -0.44, 1.15], c, 0.045, 0.04, { seg: 6 }), "gear");
       leg.add(tube([side * 0.32, -0.44, 1.85], c, 0.045, 0.04, { seg: 6 }), "gear");
       leg.add(tube([side * 0.06, -0.58, 1.46], c, 0.04, 0.04, { seg: 6 }), "gear");
-      leg.add(tube([side * 0.36, -0.15, 1.3], [side * 0.6, -0.6, 1.4], 0.06, 0.06, { seg: 6 }), "paint");
+      leg.add(
+        tube([side * 0.36, -0.15, 1.3], [side * 0.6, -0.6, 1.4], 0.06, 0.06, { seg: 6 }),
+        "paint",
+      );
       leg.wheel(c, tire, 0.19, { hub: "gear" });
     }
     leg.add(tube([0, 0.06, 6.15], [0, -0.12, 6.3], 0.03, 0.025, { seg: 6 }), "dark");

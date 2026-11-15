@@ -15,10 +15,11 @@ import {
   Move3d,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 
 import { EmptyState, Notice, Page, PageHeader, Panel } from "@/components/app/page";
 import { HrefLink, buildHref } from "@/components/app/xlink";
+import { AircraftViewer3D } from "@/components/sim/AircraftViewer3D";
 import {
   AircraftSilhouette,
   AirspeedIndicator,
@@ -85,6 +86,7 @@ function Detail({ a }: { a: AircraftInfo }) {
   const prev = AIRCRAFT[(idx - 1 + AIRCRAFT.length) % AIRCRAFT.length];
   const next = AIRCRAFT[(idx + 1) % AIRCRAFT.length];
   const vs = vSpeeds(p);
+  const [figure, setFigure] = useState<"3d" | "drawings">("3d");
 
   return (
     <Page>
@@ -131,27 +133,44 @@ function Detail({ a }: { a: AircraftInfo }) {
         {a.firstFlight}
       </p>
 
-      <div className="mb-2 grid gap-4 sm:grid-cols-2">
-        <div className="avionics-screen grid-backdrop hidden p-2 sm:block">
-          <AircraftSilhouette
-            spec={a.silhouette}
-            spanFt={p.wingSpanFt}
-            view="top"
-            className="h-40 w-full"
-          />
-        </div>
-        <div className="avionics-screen grid-backdrop p-2">
-          <AircraftSilhouette
-            spec={a.silhouette}
-            spanFt={p.wingSpanFt}
-            view="side"
-            className="h-40 w-full"
-          />
-        </div>
-      </div>
-      <p className="mb-5 text-[11px] text-muted-foreground">
-        Schematic drawings to scale — not manufacturer drawings.
-      </p>
+      <figure className="mb-6">
+        {figure === "3d" ? (
+          <AircraftViewer3D perfId={a.id} className="h-64 sm:h-80 lg:h-[380px]" />
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="avionics-screen grid-backdrop hidden p-2 sm:block">
+              <AircraftSilhouette
+                spec={a.silhouette}
+                spanFt={p.wingSpanFt}
+                view="top"
+                className="h-40 w-full"
+              />
+            </div>
+            <div className="avionics-screen grid-backdrop p-2">
+              <AircraftSilhouette
+                spec={a.silhouette}
+                spanFt={p.wingSpanFt}
+                view="side"
+                className="h-40 w-full"
+              />
+            </div>
+          </div>
+        )}
+        <figcaption className="mt-1.5 flex items-center justify-between gap-3 text-[11px] text-muted-foreground">
+          <span>
+            {figure === "3d"
+              ? "Representative 3D model — not a manufacturer drawing."
+              : "Schematic drawings to scale — not manufacturer drawings."}
+          </span>
+          <button
+            type="button"
+            onClick={() => setFigure(figure === "3d" ? "drawings" : "3d")}
+            className="shrink-0 underline-offset-2 hover:text-foreground hover:underline"
+          >
+            {figure === "3d" ? "2D drawings" : "3D model"}
+          </button>
+        </figcaption>
+      </figure>
 
       <dl className="mb-6 grid grid-cols-2 gap-y-3 rounded-lg border px-4 py-3 sm:grid-cols-4">
         <Fact

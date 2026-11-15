@@ -249,6 +249,7 @@ export class CockpitRuntime {
     this.baseYaw = Math.atan2(d.x, -d.z) / DEG;
     this.basePitch = Math.atan2(d.y, Math.hypot(d.x, d.z)) / DEG;
     if (o.look) this.look = { ...o.look };
+    this.resize();
     this.applyView(o.view, true);
 
     // ---- events
@@ -510,11 +511,12 @@ export class CockpitRuntime {
     const r = this.byId.get(id);
     if (!r) return;
     if (this.o.view === "inspect") {
+      // Look at it from the pilot's side so the camera stays inside the cabin.
       const t = r.center;
-      const dir = this.tmpV2.copy(this.camera.position).sub(this.orbit.target);
-      const dist = clamp(dir.length(), 0.3, 0.7);
+      const dir = this.tmpV2.copy(this.build.eye.position).sub(t);
+      if (dir.lengthSq() < 1e-6) dir.set(0, 0, 1);
       this.orbit.target.copy(t);
-      this.camera.position.copy(t).add(dir.normalize().multiplyScalar(dist));
+      this.camera.position.copy(t).add(dir.normalize().multiplyScalar(0.38));
       return;
     }
     const d = this.tmpV.copy(r.center).sub(this.build.eye.position);
@@ -537,9 +539,12 @@ export class CockpitRuntime {
       const ip = this.build.inspect;
       const target = ip?.target ?? this.build.eye.target;
       const pos = ip?.position ?? target.clone().add(new THREE.Vector3(0, 0.08, 0.8));
+      // Portrait screens: pull back so the panel width still fits.
+      const aspect = this.width / Math.max(1, this.height);
+      const k = aspect < 1 ? Math.min(1.35, 0.8 / aspect) : 1;
       this.orbit.target.copy(target);
-      this.camera.position.copy(pos);
-      this.camera.fov = 50;
+      this.camera.position.copy(pos).sub(target).multiplyScalar(Math.max(1, k)).add(target);
+      this.camera.fov = aspect < 1 ? 68 : 50;
       this.camera.updateProjectionMatrix();
       this.orbit.update();
     } else {
@@ -962,7 +967,7 @@ export class CockpitRuntime {
       const sm = v as THREE.MeshStandardMaterial;
       if (sm.emissive) {
         sm.emissive = color.clone();
-        sm.emissiveIntensity = state === "hover" ? 0.45 : state === "selected" ? 0.6 : 0.4;
+        sm.emissiveIntensity = state === "hover" ? 0.3 : state === "selected" ? 0.38 : 0.3;
       } else if ((v as THREE.MeshBasicMaterial).color) {
         (v as THREE.MeshBasicMaterial).color.lerp(color, 0.35);
       }
@@ -972,7 +977,7 @@ export class CockpitRuntime {
   }
 
   private updateHighlights(t: number) {
-    const pulseI = this.reducedMotion ? 0.45 : 0.2 + 0.5 * (0.5 + 0.5 * Math.sin(t / 220));
+    const pulseI = this.reducedMotion ? 0.3 : 0.12 + 0.36 * (0.5 + 0.5 * Math.sin(t / 220));
     for (const v of this.variants.pulse.values()) {
       const sm = v as THREE.MeshStandardMaterial;
       if (sm.emissive) sm.emissiveIntensity = pulseI;
