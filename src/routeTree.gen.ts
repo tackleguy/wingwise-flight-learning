@@ -15,6 +15,7 @@ import { Route as AiAtcRouteImport } from './routes/ai-atc'
 import { Route as AtcRouteImport } from './routes/atc'
 import { Route as AvionicsRouteImport } from './routes/avionics'
 import { Route as CheckridesRouteImport } from './routes/checkrides'
+import { Route as FlightgearRouteImport } from './routes/flightgear'
 import { Route as IfrRouteImport } from './routes/ifr'
 import { Route as InstructorRouteImport } from './routes/instructor'
 import { Route as LogbookRouteImport } from './routes/logbook'
@@ -33,6 +34,8 @@ import { Route as AircraftIndexRouteImport } from './routes/aircraft.index'
 import { Route as AircraftIdRouteImport } from './routes/aircraft.$id'
 import { Route as AirportsIndexRouteImport } from './routes/airports.index'
 import { Route as AirportsIcaoRouteImport } from './routes/airports.$icao'
+import { Route as CockpitsIndexRouteImport } from './routes/cockpits.index'
+import { Route as CockpitsIdRouteImport } from './routes/cockpits.$id'
 import { Route as ExamExamIdRouteImport } from './routes/exam.$examId'
 import { Route as TrainingIndexRouteImport } from './routes/training.index'
 import { Route as TrainingTrackRouteImport } from './routes/training.$track'
@@ -66,6 +69,11 @@ const AvionicsRoute = AvionicsRouteImport.update({
 const CheckridesRoute = CheckridesRouteImport.update({
   id: '/checkrides',
   path: '/checkrides',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FlightgearRoute = FlightgearRouteImport.update({
+  id: '/flightgear',
+  path: '/flightgear',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IfrRoute = IfrRouteImport.update({
@@ -158,6 +166,16 @@ const AirportsIcaoRoute = AirportsIcaoRouteImport.update({
   path: '/airports/$icao',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CockpitsIndexRoute = CockpitsIndexRouteImport.update({
+  id: '/cockpits/',
+  path: '/cockpits/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CockpitsIdRoute = CockpitsIdRouteImport.update({
+  id: '/cockpits/$id',
+  path: '/cockpits/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ExamExamIdRoute = ExamExamIdRouteImport.update({
   id: '/exam/$examId',
   path: '/exam/$examId',
@@ -186,6 +204,7 @@ export interface FileRoutesByFullPath {
   '/atc': typeof AtcRoute
   '/avionics': typeof AvionicsRoute
   '/checkrides': typeof CheckridesRoute
+  '/flightgear': typeof FlightgearRoute
   '/ifr': typeof IfrRoute
   '/instructor': typeof InstructorRoute
   '/logbook': typeof LogbookRoute
@@ -202,10 +221,12 @@ export interface FileRoutesByFullPath {
   '/written-exams': typeof WrittenExamsRoute
   '/aircraft/$id': typeof AircraftIdRoute
   '/airports/$icao': typeof AirportsIcaoRoute
+  '/cockpits/$id': typeof CockpitsIdRoute
   '/exam/$examId': typeof ExamExamIdRoute
   '/training/$track': typeof TrainingTrackRoute
   '/aircraft/': typeof AircraftIndexRoute
   '/airports/': typeof AirportsIndexRoute
+  '/cockpits/': typeof CockpitsIndexRoute
   '/training/': typeof TrainingIndexRoute
   '/academy/$course/$module': typeof AcademyCourseModuleRoute
 }
@@ -216,6 +237,7 @@ export interface FileRoutesByTo {
   '/atc': typeof AtcRoute
   '/avionics': typeof AvionicsRoute
   '/checkrides': typeof CheckridesRoute
+  '/flightgear': typeof FlightgearRoute
   '/ifr': typeof IfrRoute
   '/instructor': typeof InstructorRoute
   '/logbook': typeof LogbookRoute
@@ -232,10 +254,12 @@ export interface FileRoutesByTo {
   '/written-exams': typeof WrittenExamsRoute
   '/aircraft/$id': typeof AircraftIdRoute
   '/airports/$icao': typeof AirportsIcaoRoute
+  '/cockpits/$id': typeof CockpitsIdRoute
   '/exam/$examId': typeof ExamExamIdRoute
   '/training/$track': typeof TrainingTrackRoute
   '/aircraft': typeof AircraftIndexRoute
   '/airports': typeof AirportsIndexRoute
+  '/cockpits': typeof CockpitsIndexRoute
   '/training': typeof TrainingIndexRoute
   '/academy/$course/$module': typeof AcademyCourseModuleRoute
 }
@@ -247,6 +271,7 @@ export interface FileRoutesById {
   '/atc': typeof AtcRoute
   '/avionics': typeof AvionicsRoute
   '/checkrides': typeof CheckridesRoute
+  '/flightgear': typeof FlightgearRoute
   '/ifr': typeof IfrRoute
   '/instructor': typeof InstructorRoute
   '/logbook': typeof LogbookRoute
@@ -263,10 +288,12 @@ export interface FileRoutesById {
   '/written-exams': typeof WrittenExamsRoute
   '/aircraft/$id': typeof AircraftIdRoute
   '/airports/$icao': typeof AirportsIcaoRoute
+  '/cockpits/$id': typeof CockpitsIdRoute
   '/exam/$examId': typeof ExamExamIdRoute
   '/training/$track': typeof TrainingTrackRoute
   '/aircraft/': typeof AircraftIndexRoute
   '/airports/': typeof AirportsIndexRoute
+  '/cockpits/': typeof CockpitsIndexRoute
   '/training/': typeof TrainingIndexRoute
   '/academy/$course/$module': typeof AcademyCourseModuleRoute
 }
@@ -279,6 +306,7 @@ export interface FileRouteTypes {
     | '/atc'
     | '/avionics'
     | '/checkrides'
+    | '/flightgear'
     | '/ifr'
     | '/instructor'
     | '/logbook'
@@ -295,10 +323,12 @@ export interface FileRouteTypes {
     | '/written-exams'
     | '/aircraft/$id'
     | '/airports/$icao'
+    | '/cockpits/$id'
     | '/exam/$examId'
     | '/training/$track'
     | '/aircraft/'
     | '/airports/'
+    | '/cockpits/'
     | '/training/'
     | '/academy/$course/$module'
   fileRoutesByTo: FileRoutesByTo
@@ -309,6 +339,7 @@ export interface FileRouteTypes {
     | '/atc'
     | '/avionics'
     | '/checkrides'
+    | '/flightgear'
     | '/ifr'
     | '/instructor'
     | '/logbook'
@@ -325,10 +356,12 @@ export interface FileRouteTypes {
     | '/written-exams'
     | '/aircraft/$id'
     | '/airports/$icao'
+    | '/cockpits/$id'
     | '/exam/$examId'
     | '/training/$track'
     | '/aircraft'
     | '/airports'
+    | '/cockpits'
     | '/training'
     | '/academy/$course/$module'
   id:
@@ -339,6 +372,7 @@ export interface FileRouteTypes {
     | '/atc'
     | '/avionics'
     | '/checkrides'
+    | '/flightgear'
     | '/ifr'
     | '/instructor'
     | '/logbook'
@@ -355,10 +389,12 @@ export interface FileRouteTypes {
     | '/written-exams'
     | '/aircraft/$id'
     | '/airports/$icao'
+    | '/cockpits/$id'
     | '/exam/$examId'
     | '/training/$track'
     | '/aircraft/'
     | '/airports/'
+    | '/cockpits/'
     | '/training/'
     | '/academy/$course/$module'
   fileRoutesById: FileRoutesById
@@ -370,6 +406,7 @@ export interface RootRouteChildren {
   AtcRoute: typeof AtcRoute
   AvionicsRoute: typeof AvionicsRoute
   CheckridesRoute: typeof CheckridesRoute
+  FlightgearRoute: typeof FlightgearRoute
   IfrRoute: typeof IfrRoute
   InstructorRoute: typeof InstructorRoute
   LogbookRoute: typeof LogbookRoute
@@ -386,10 +423,12 @@ export interface RootRouteChildren {
   WrittenExamsRoute: typeof WrittenExamsRoute
   AircraftIdRoute: typeof AircraftIdRoute
   AirportsIcaoRoute: typeof AirportsIcaoRoute
+  CockpitsIdRoute: typeof CockpitsIdRoute
   ExamExamIdRoute: typeof ExamExamIdRoute
   TrainingTrackRoute: typeof TrainingTrackRoute
   AircraftIndexRoute: typeof AircraftIndexRoute
   AirportsIndexRoute: typeof AirportsIndexRoute
+  CockpitsIndexRoute: typeof CockpitsIndexRoute
   TrainingIndexRoute: typeof TrainingIndexRoute
   AcademyCourseModuleRoute: typeof AcademyCourseModuleRoute
 }
@@ -436,6 +475,13 @@ declare module '@tanstack/react-router' {
       path: '/checkrides'
       fullPath: '/checkrides'
       preLoaderRoute: typeof CheckridesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/flightgear': {
+      id: '/flightgear'
+      path: '/flightgear'
+      fullPath: '/flightgear'
+      preLoaderRoute: typeof FlightgearRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ifr': {
@@ -564,6 +610,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AirportsIcaoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/cockpits/': {
+      id: '/cockpits/'
+      path: '/cockpits'
+      fullPath: '/cockpits/'
+      preLoaderRoute: typeof CockpitsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cockpits/$id': {
+      id: '/cockpits/$id'
+      path: '/cockpits/$id'
+      fullPath: '/cockpits/$id'
+      preLoaderRoute: typeof CockpitsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/exam/$examId': {
       id: '/exam/$examId'
       path: '/exam/$examId'
@@ -602,6 +662,7 @@ const rootRouteChildren: RootRouteChildren = {
   AtcRoute: AtcRoute,
   AvionicsRoute: AvionicsRoute,
   CheckridesRoute: CheckridesRoute,
+  FlightgearRoute: FlightgearRoute,
   IfrRoute: IfrRoute,
   InstructorRoute: InstructorRoute,
   LogbookRoute: LogbookRoute,
@@ -618,10 +679,12 @@ const rootRouteChildren: RootRouteChildren = {
   WrittenExamsRoute: WrittenExamsRoute,
   AircraftIdRoute: AircraftIdRoute,
   AirportsIcaoRoute: AirportsIcaoRoute,
+  CockpitsIdRoute: CockpitsIdRoute,
   ExamExamIdRoute: ExamExamIdRoute,
   TrainingTrackRoute: TrainingTrackRoute,
   AircraftIndexRoute: AircraftIndexRoute,
   AirportsIndexRoute: AirportsIndexRoute,
+  CockpitsIndexRoute: CockpitsIndexRoute,
   TrainingIndexRoute: TrainingIndexRoute,
   AcademyCourseModuleRoute: AcademyCourseModuleRoute,
 }

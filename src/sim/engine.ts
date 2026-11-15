@@ -50,6 +50,7 @@ import type {
   Failures,
   GpsState,
   Indicated,
+  PanelKind,
   LateralMode,
   Radios,
   SimEvent,
@@ -70,6 +71,11 @@ export interface SimOptions {
   magVar: number;
   radios?: Partial<Radios>;
   ndbs?: TrainingNdb[];
+  /**
+   * Force steam-gauge or glass (AHRS / air-data computer) instrument behaviour regardless of
+   * `perf.avionics` — e.g. a 1970s-style steam panel driven by C172 performance numbers.
+   */
+  panel?: PanelKind;
 }
 
 export const DEFAULT_CONTROLS: Controls = {
@@ -125,6 +131,8 @@ const aspect = (p: AircraftPerf) => (p.wingSpanFt * p.wingSpanFt) / p.wingAreaSq
 
 export class SimEngine {
   readonly perf: AircraftPerf;
+  /** Effective instrument behaviour: `opts.panel` if given, otherwise derived from `perf.avionics`. */
+  readonly panel: PanelKind;
   private ac: AircraftState;
   private controls: Controls;
   private radios: Radios;
@@ -143,9 +151,9 @@ export class SimEngine {
   private magVar: number;
   private ndbs: TrainingNdb[];
   private paused = false;
-  private snapshot: SimSnapshot;
-  private listeners = new Set<() => void>();
-  private eventListeners = new Set<(e: SimEvent) => void>();
+  protected snapshot: SimSnapshot;
+  protected listeners = new Set<() => void>();
+  protected eventListeners = new Set<(e: SimEvent) => void>();
   private raf = 0;
   private lastT = 0;
   private acc = 0;
@@ -169,6 +177,7 @@ export class SimEngine {
 
   constructor(opts: SimOptions) {
     this.perf = getPerf(opts.perfId);
+    this.panel = opts.panel ?? (this.perf.avionics === "steam" ? "steam" : "glass");
     this.weather = { ...opts.weather };
     this.magVar = opts.magVar;
     this.ndbs = opts.ndbs ?? [];
@@ -318,7 +327,7 @@ export class SimEngine {
     };
   }
 
-  private emit(type: SimEvent["type"], message: string, data?: SimEvent["data"]) {
+  protected emit(type: SimEvent["type"], message: string, data?: SimEvent["data"]) {
     const e: SimEvent = { t: this.ac.simTimeSec, type, message };
     if (data) e.data = data;
     this.eventListeners.forEach((l) => l(e));
@@ -1252,7 +1261,7 @@ export class SimEngine {
     const f = this.failures;
     const avionicsPowered =
       this.controls.masterBattery && this.controls.avionicsMaster && a.busVolts > 20;
-    const glass = p.avionics !== "steam";
+    const glass = this.panel === "glass";
     let ias = a.iasKt < 20 ? 0 : a.iasKt;
     const trueIndicatedAlt = a.altMslFt + (this.radios.altimeterInHg - this.weather.qnhInHg) * 1000;
     let alt = trueIndicatedAlt;
@@ -1338,7 +1347,7 @@ export class SimEngine {
     if (a.busVolts < 25 && this.controls.masterBattery)
       out.push({ text: "LOW VOLTS", level: "caution" });
     if (this.failures.alternator) out.push({ text: "ALT FAIL", level: "caution" });
-    if (this.failures.vacuum && this.perf.avionics === "steam")
+    if (this.failures.vacuum && this.panel === "steam")
       out.push({ text: "VACUUM", level: "caution" });
     if (this.failures.ahrs) out.push({ text: "AHRS FAIL", level: "caution" });
     if (this.failures.pitot) out.push({ text: "PITOT", level: "caution" });
@@ -1419,7 +1428,7 @@ export class SimEngine {
     if (mode !== this.gps.mode) this.gps = { ...this.gps, mode };
   }
 
-  private publish() {
+  protected publish() {
     this.snapshot = this.buildSnapshot();
     this.listeners.forEach((l) => l());
   }

@@ -1,0 +1,1 @@
+JSBSim source: https://github.com/JSBSim-Team/jsbsim commit f80b9df8de8c2a0b7835dbbeb708c8ce37a28d96

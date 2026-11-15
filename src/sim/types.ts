@@ -9,6 +9,12 @@
  * (the true physical state), except where there is no instrument error to model.
  */
 
+/**
+ * Instrument behaviour: "steam" = vacuum/mechanical gyros & pneumatic air-data instruments,
+ * "glass" = AHRS + air-data computer (red X's on failure). See SimOptions.panel.
+ */
+export type PanelKind = "steam" | "glass";
+
 export interface Controls {
   /** −1..1, + = pull (nose up). Includes pilot input only; trim is separate. */
   elevator: number;
