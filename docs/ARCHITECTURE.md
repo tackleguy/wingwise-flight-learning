@@ -32,6 +32,13 @@ SkyReady is a TanStack Start (React 19 + TypeScript) application styled with Tai
 - **Autopilot / flight director** (`autopilot.ts`) — ROL/HDG/NAV/APR, PIT/ALT/VS/FLC/GS.
 - **Failures** — engine, alternator, vacuum, AHRS, pitot, static, radios, GPS.
 
+The 3D view (`src/components/sim/World3D.tsx`) draws each aircraft with its FlightGear 3D model
+(`src/components/sim/fg-aircraft.ts` loads `/sim/models/fg/<file>.glb` — the World Flight
+Simulator's files, built from `flightsim/` — scaled to the aircraft's wingspan; the Bonanza and
+Baron use the closest FlightGear look-alike, the SR20 the SR22 airframe and the 152 the 172). These
+models are GPL; authors and sources are in `public/sim/models/fg/CREDITS.md`. A simple drawn shape
+is shown while a model loads, or if it cannot be loaded.
+
 Every instrument and the 3D view subscribe to the same immutable `SimSnapshot`, so all displays stay
 synchronised. Instruments read `snapshot.indicated.*` so failures (e.g. a blocked pitot tube) show up
 realistically.
