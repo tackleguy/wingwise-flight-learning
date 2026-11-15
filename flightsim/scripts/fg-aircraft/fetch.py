@@ -96,6 +96,22 @@ def list_dir(fgdir, sub=""):
     return out, (max(int(r) for r in rev) if rev else None)
 
 
+def folder_revision(fgdir):
+    """(revision, date) of the last change to Aircraft/<fgdir>, from the Aircraft/ listing page (cached)."""
+    lp = os.path.join(CACHE, "aircraft.html")
+    if not os.path.exists(lp):
+        data = http_get(BASE)
+        if data is None:
+            return None
+        with open(lp, "wb") as f:
+            f.write(data)
+    s = open(lp, encoding="utf-8", errors="replace").read()
+    for m in re.finditer(r'<a class="icon" href="([^"]+)" rel="nofollow" title="[^"]*">.*?<span title="([^"]+)">.*?\[r(\d+)\]', s, flags=re.S):
+        if m.group(1) == fgdir:
+            return int(m.group(3)), m.group(2)
+    return None
+
+
 def local_path(fgdir, path):
     p = os.path.normpath(os.path.join(CACHE, fgdir, path))
     if not p.startswith(os.path.normpath(os.path.join(CACHE, fgdir)) + os.sep):
@@ -305,10 +321,13 @@ class Crawler:
     def run(self):
         cfg = self.cfg
         listing, rev = list_dir(self.fgdir)
+        drev = folder_revision(self.fgdir)
         if listing is None:
             raise RuntimeError(f"aircraft directory {self.fgdir} not found on SourceForge")
         os.makedirs(os.path.join(CACHE, self.fgdir), exist_ok=True)
         meta = {"dir": self.fgdir, "revision": rev, "root": [n for n, _ in listing], "fetched": time.strftime("%Y-%m-%d")}
+        if drev:
+            meta["dir_revision"], meta["dir_date"] = drev
         for name, is_dir in listing:
             if not is_dir and re.match(r"(licen[cs]e|copying|readme|thanks|authors|credits)", name, re.I):
                 get(self.fgdir, name)
@@ -359,6 +378,18 @@ def main(argv):
         print(f"[r{rev}]")
         for n, d in items or []:
             print(("D " if d else "  ") + n)
+        return 0
+    if argv[0] == "--revisions":
+        for aid, cfg in AIRCRAFT.items():
+            fj = os.path.join(CACHE, cfg["fgdir"], "_fetch.json")
+            if cfg.get("local") or not os.path.exists(fj):
+                continue
+            meta = json.load(open(fj))
+            drev = folder_revision(cfg["fgdir"])
+            if drev:
+                meta["dir_revision"], meta["dir_date"] = drev
+                json.dump(meta, open(fj, "w"), indent=1)
+                print(aid, cfg["fgdir"], meta["revision"], drev)
         return 0
     if argv[0] == "--get":
         for p in argv[2:]:

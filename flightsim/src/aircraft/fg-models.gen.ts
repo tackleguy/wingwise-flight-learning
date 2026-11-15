@@ -29,11 +29,11 @@ export const FG_MODELS: Record<"c172p"|"c182"|"pa28"|"J3Cub"|"c310"|"DHC6"|"p51d
   c172p: {
     url: "models/fg/c172p.glb",
     source: {
-      aircraft: "c172p",
-      revision: "FGData",
-      licence: "GPL-2.0-or-later",
-      authors: "see the aircraft's files",
-      page: ""
+      aircraft: "Cessna 172P Skyhawk (FlightGear c172p, default livery 4X-CHV)",
+      revision: "FGData branch release/2024.1 (commit 11c6545, 2024.1.8-rc1)",
+      licence: "GPL-2.0 (LICENSE file in the aircraft folder)",
+      authors: "David Megginson (original), Gilberto Agostinho, Wayne Bragg, Juan Vera del Campo, onox, thevirtualfer, Daniel Dubreuil, Jonathan Redpath, Jonathan Schellhase, Tuomas Kuosmanen, Anders Gidenstam, Waldo Kitty, algefaen, Horacio, D-ECHO, Jarl Arntzen, Benedikt Hallinger, Sascha Reissner, Josh Davidson (the c172p team)",
+      page: "https://gitlab.com/flightgear/fgdata/-/tree/release/2024.1/Aircraft/c172p"
     },
     lengthM: 8.168,
     spanM: 11.32,
@@ -55,16 +55,16 @@ export const FG_MODELS: Record<"c172p"|"c182"|"pa28"|"J3Cub"|"c310"|"DHC6"|"p51d
     parts: ["body", "aileron_left", "aileron_right", "elevator", "flap_left", "flap_right", "propeller_blades", "propeller_disc", "propeller", "rudder"],
     retractableGear: false,
     triangles: 28368,
-    bytes: 1344392,
-    notes: "Aligned on the JSBSim main-gear contact points; the nose wheel then differs from the JSBSim nose contact by +1 cm fore/aft (+ = aft) and -3 cm vertically (+ = model tyre higher)."
+    bytes: 1341540,
+    notes: "Aligned on the JSBSim main-gear contact points; the nose wheel then differs from the JSBSim nose contact by +1 cm fore/aft (+ = model wheel further aft) and -3 cm vertically (+ = model tyre higher). No wheel fairings (FlightGear's default for this model). Flaps: FlightGear moves them with a rotation plus a translation (Fowler-type); the flap nodes use the single pivot that gives FG's position at full flap (in between it is approximate)."
   },
   c182: {
     url: "models/fg/c182.glb",
     source: {
-      aircraft: "c182s",
-      revision: "r21799",
-      licence: "GPL-2.0-or-later",
-      authors: "see the aircraft's files",
+      aircraft: "Cessna 182S (FlightGear c182s)",
+      revision: "r21799 (folder last changed in r15312)",
+      licence: "GPL-2.0 (LICENSE file in the aircraft folder)",
+      authors: "Heiko Schulz, Gilberto Agostinho, Benedikt Hallinger, onox, Wayne Bragg, Ron Jensen, Stuart Buchanan, David Megginson, Sascha Reissner",
       page: "https://sourceforge.net/p/flightgear/fgaddon/HEAD/tree/trunk/Aircraft/c182s/"
     },
     lengthM: 8.501,
@@ -87,16 +87,16 @@ export const FG_MODELS: Record<"c172p"|"c182"|"pa28"|"J3Cub"|"c310"|"DHC6"|"p51d
     parts: ["body", "aileron_left", "aileron_right", "elevator", "flap_left", "flap_right", "propeller_blades", "propeller_disc", "propeller", "rudder"],
     retractableGear: false,
     triangles: 28359,
-    bytes: 1091108,
-    notes: "Aligned on the JSBSim main-gear contact points; the nose wheel then differs from the JSBSim nose contact by +2 cm fore/aft (+ = aft) and -8 cm vertically (+ = model tyre higher). Main-gear track: model 2.62 m, JSBSim 2.18 m."
+    bytes: 1091676,
+    notes: "Aligned on the JSBSim main-gear contact points; the nose wheel then differs from the JSBSim nose contact by +2 cm fore/aft (+ = model wheel further aft) and -8 cm vertically (+ = model tyre higher). The spinner is static (it is not part of the propeller node; it is round, so this does not show). Main-gear track: model 2.62 m, JSBSim 2.18 m. Flaps: FlightGear moves them with a rotation plus a translation (Fowler-type); the flap nodes use the single pivot that gives FG's position at full flap (in between it is approximate)."
   },
   pa28: {
     url: "models/fg/pa28.glb",
     source: {
-      aircraft: "PA28",
-      revision: "r21799",
-      licence: "GPL-2.0-or-later",
-      authors: "see the aircraft's files",
+      aircraft: "Piper PA-28-161 Warrior II (FlightGear PA28)",
+      revision: "r21799 (folder last changed in r18092)",
+      licence: "GPL-2.0 (LICENSE file in the aircraft folder)",
+      authors: "Bea Wolf / D-ECHO (3D model, textures), Josh Davidson (FDM, systems), Niels Krenz (FDM), Sascha Reissner (KAP140)",
       page: "https://sourceforge.net/p/flightgear/fgaddon/HEAD/tree/trunk/Aircraft/PA28/"
     },
     lengthM: 7.33,
@@ -119,16 +119,16 @@ export const FG_MODELS: Record<"c172p"|"c182"|"pa28"|"J3Cub"|"c310"|"DHC6"|"p51d
     parts: ["body", "aileron_left", "aileron_right", "elevator", "flap_left", "flap_right", "propeller_blades", "propeller_disc", "propeller", "rudder"],
     retractableGear: false,
     triangles: 40789,
-    bytes: 2040608,
-    notes: "Aligned on the JSBSim main-gear contact points; the nose wheel then differs from the JSBSim nose contact by +8 cm fore/aft (+ = aft) and +19 cm vertically (+ = model tyre higher). model span 10.69 m vs JSBSim wingspan 9.14 m (+17%)"
+    bytes: 2041200,
+    notes: "Aligned on the JSBSim main-gear contact points; the nose wheel then differs from the JSBSim nose contact by +8 cm fore/aft (+ = model wheel further aft) and +19 cm vertically (+ = model tyre higher). The model is a PA-28-161 Warrior (tapered 35 ft wing) while the JSBSim pa28 is a PA-28-180 Cherokee (30 ft constant-chord wing). Not rescaled (that would shrink the fuselage too). The JSBSim nose contact is 19 cm lower than the model's nose tyre when the main wheels match: the JSBSim aircraft rests about 5.6 degrees nose-up, the model is drawn level. Model span 10.69 m vs JSBSim wingspan 9.14 m (+17%)."
   },
   J3Cub: {
     url: "models/fg/J3Cub.glb",
     source: {
-      aircraft: "J3Cub",
-      revision: "r21799",
-      licence: "GPL-2.0-or-later",
-      authors: "see the aircraft's files",
+      aircraft: "Piper J-3 Cub (FlightGear J3Cub)",
+      revision: "r21799 (folder last changed in r20587)",
+      licence: "GPL (README: 'License: GPL'; the folder ships the GPL version 3 text, copying.txt)",
+      authors: "David Megginson (original 3D, FDM), Jim Wilson (instruments), Don Lavelle (3D remodel), Erik Hofman (JSBSim FDM), Anders Gidenstam (hydrodynamics), Gilberto Agostinho (livery), Wayne Bragg (3D, systems, variants)",
       page: "https://sourceforge.net/p/flightgear/fgaddon/HEAD/tree/trunk/Aircraft/J3Cub/"
     },
     lengthM: 6.861,
@@ -151,16 +151,16 @@ export const FG_MODELS: Record<"c172p"|"c182"|"pa28"|"J3Cub"|"c310"|"DHC6"|"p51d
     parts: ["body", "aileron_left", "aileron_right", "elevator", "propeller_blades", "propeller_disc", "propeller", "rudder"],
     retractableGear: false,
     triangles: 38054,
-    bytes: 2303348,
-    notes: "Aligned on the JSBSim main-gear contact points; the tail wheel then differs from the JSBSim tail contact by +7 cm fore/aft (+ = aft) and -7 cm vertically (+ = model tyre higher)."
+    bytes: 2300308,
+    notes: "Aligned on the JSBSim main-gear contact points; the tail wheel then differs from the JSBSim tail contact by +7 cm fore/aft (+ = model wheel further aft) and -7 cm vertically (+ = model tyre higher). No flaps (the real J-3 Cub has none). The steerable tail wheel is static (FG turns it with the rudder). Tail-dragger: in the level structural attitude the tail wheel is 1.1 m above the main-wheel contact height (as in JSBSim)."
   },
   c310: {
     url: "models/fg/c310.glb",
     source: {
-      aircraft: "c310",
-      revision: "r21799",
-      licence: "GPL-2.0-or-later",
-      authors: "see the aircraft's files",
+      aircraft: "Cessna 310 (FlightGear c310, model c310-dpm)",
+      revision: "r21799 (folder last changed in r2171)",
+      licence: "no licence file in the aircraft folder; distributed in FlightGear's FGAddon repository under the GNU GPL",
+      authors: "not stated in the aircraft's files (the 3D model file is named c310-dpm)",
       page: "https://sourceforge.net/p/flightgear/fgaddon/HEAD/tree/trunk/Aircraft/c310/"
     },
     lengthM: 9.65,
@@ -188,16 +188,16 @@ export const FG_MODELS: Record<"c172p"|"c182"|"pa28"|"J3Cub"|"c310"|"DHC6"|"p51d
     parts: ["body", "gear_retract", "aileron_left", "aileron_right", "elevator", "flap_left", "flap_right", "propeller_blades", "propeller_disc", "propeller", "propeller_blades_2", "propeller_disc_2", "propeller_2", "rudder"],
     retractableGear: true,
     triangles: 1487,
-    bytes: 188712,
-    notes: "Aligned on the JSBSim main-gear contact points; the nose wheel then differs from the JSBSim nose contact by +44 cm fore/aft (+ = aft) and -12 cm vertically (+ = model tyre higher)."
+    bytes: 188464,
+    notes: "Aligned on the JSBSim main-gear contact points; the nose wheel then differs from the JSBSim nose contact by +44 cm fore/aft (+ = model wheel further aft) and -12 cm vertically (+ = model tyre higher). Old, very simple model (about 1,500 triangles). Model wheelbase 2.38 m vs JSBSim 2.82 m, so the nose wheel is 44 cm behind the JSBSim nose contact. propeller = engine 0 = LEFT engine, propeller_2 = engine 1 = RIGHT engine. gear_retract also holds the nose-gear doors and the boarding step (FG retracts both with the gear)."
   },
   DHC6: {
     url: "models/fg/DHC6.glb",
     source: {
-      aircraft: "dhc6",
-      revision: "r21799",
-      licence: "GPL-2.0-or-later",
-      authors: "see the aircraft's files",
+      aircraft: "de Havilland Canada DHC-6-300 Twin Otter, wheels (FlightGear dhc6)",
+      revision: "r21799 (folder last changed in r18298)",
+      licence: "no licence file in the aircraft folder; files that state one use GPL-2.0-or-later (e.g. Config/dhc6-mice.xml, onox 2015)",
+      authors: "Syd Adams (initial model), Christian Thiriot (3D, textures), Bo Lan (Nasal, FDM, systems), Jonathan Schellhase (3D, Nasal, systems, sound), Tim Dicus (engine), Simworld2020 (radios), Sascha Reissner (lights, radios)",
       page: "https://sourceforge.net/p/flightgear/fgaddon/HEAD/tree/trunk/Aircraft/dhc6/"
     },
     lengthM: 15.745,
@@ -225,16 +225,16 @@ export const FG_MODELS: Record<"c172p"|"c182"|"pa28"|"J3Cub"|"c310"|"DHC6"|"p51d
     parts: ["body", "aileron_left", "aileron_right", "elevator", "flap_left", "flap_right", "propeller_blades", "propeller_disc", "propeller", "propeller_blades_2", "propeller_disc_2", "propeller_2", "rudder"],
     retractableGear: false,
     triangles: 21237,
-    bytes: 853808,
-    notes: "Aligned on the JSBSim main-gear contact points; the nose wheel then differs from the JSBSim nose contact by -22 cm fore/aft (+ = aft) and +6 cm vertically (+ = model tyre higher)."
+    bytes: 854740,
+    notes: "Aligned on the JSBSim main-gear contact points; the nose wheel then differs from the JSBSim nose contact by -22 cm fore/aft (+ = model wheel further aft) and +6 cm vertically (+ = model tyre higher). Default paint = the texture the 3D model itself uses (paint2-R.png); FG's livery default 'paint2.png' does not exist. In FG the ailerons also droop with the flaps; here the aileron nodes only carry the aileron hinge (the app may add a flap-dependent droop). flap_left/flap_right hold the flap vane and the main flap of the double-slotted flap on one hinge. propeller = engine 0 = LEFT engine, propeller_2 = RIGHT engine."
   },
   p51d: {
     url: "models/fg/p51d.glb",
     source: {
-      aircraft: "p51d",
-      revision: "r21799",
-      licence: "GPL-2.0-or-later",
-      authors: "see the aircraft's files",
+      aircraft: "North American P-51D-25-NA Mustang (FlightGear p51d, default livery 'Delivery Day - March 1944')",
+      revision: "r21799 (folder last changed in r15368)",
+      licence: "GPL-2.0 (COPYING file in the aircraft folder)",
+      authors: "Jim Wilson, Jon Berndt, Hal V. Engel, onox",
       page: "https://sourceforge.net/p/flightgear/fgaddon/HEAD/tree/trunk/Aircraft/p51d/"
     },
     lengthM: 9.867,
@@ -257,16 +257,16 @@ export const FG_MODELS: Record<"c172p"|"c182"|"pa28"|"J3Cub"|"c310"|"DHC6"|"p51d
     parts: ["body", "gear_retract", "aileron_left", "aileron_right", "elevator", "flap_left", "flap_right", "propeller_blades", "propeller_disc", "propeller", "rudder"],
     retractableGear: true,
     triangles: 122745,
-    bytes: 4569288,
-    notes: "Aligned on the JSBSim main-gear contact points; the tail wheel then differs from the JSBSim tail contact by -23 cm fore/aft (+ = aft) and +22 cm vertically (+ = model tyre higher). Textures not available (surfaces drawn in their plain material colour): ..\\..\\Models\\propDiskSpinner.png."
+    bytes: 4564916,
+    notes: "Aligned on the JSBSim main-gear contact points; the tail wheel then differs from the JSBSim tail contact by -23 cm fore/aft (+ = model wheel further aft) and +22 cm vertically (+ = model tyre higher). The blurred propeller disc's texture is outside the aircraft folder in FG; it is drawn as a plain translucent disc. The inner main-gear doors (FG moves them with a separate property) are static and shown closed. Tail-dragger with a retractable tail wheel (in gear_retract). Textures not available (surfaces drawn in their plain material colour): propDiskSpinner.png."
   },
   A320: {
     url: "models/fg/A320.glb",
     source: {
-      aircraft: "A320-family",
-      revision: "r21799",
-      licence: "GPL-2.0-or-later",
-      authors: "see the aircraft's files",
+      aircraft: "Airbus A320-214 CFM56-5B (FlightGear A320-family, default livery Swiss HB-JLS)",
+      revision: "r21799 (folder last changed in r20377)",
+      licence: "GPL-2.0-only (README.copyright.md: 'version 2 of the GNU General Public License')",
+      authors: "Josh Davidson, Jonathan Redpath, merspieler, Matthew Maring, Thorsten Herrmann, Semir Gebran (3D, textures)",
       page: "https://sourceforge.net/p/flightgear/fgaddon/HEAD/tree/trunk/Aircraft/A320-family/"
     },
     lengthM: 37.606,
@@ -284,15 +284,15 @@ export const FG_MODELS: Record<"c172p"|"c182"|"pa28"|"J3Cub"|"c310"|"DHC6"|"p51d
     retractableGear: true,
     triangles: 101847,
     bytes: 7001792,
-    notes: "Aligned on the JSBSim main-gear contact points; the nose wheel then differs from the JSBSim nose contact by -1 cm fore/aft (+ = aft) and -4 cm vertically (+ = model tyre higher). Main-gear track: model 7.72 m, JSBSim 7.34 m. elevator: two halves with swept hinges: turning this node moves both about one lateral axis (approximate); elevator_left / elevator_right have the exact hinges. flap_left: several segments: turning this node moves them all about the hinge of flap_left_1 (exact for it, approximate for the others); the children have exact hinges. flap_right: several segments: turning this node moves them all about the hinge of flap_right_1 (exact for it, approximate for the others); the children have exact hinges."
+    notes: "Aligned on the JSBSim main-gear contact points; the nose wheel then differs from the JSBSim nose contact by -1 cm fore/aft (+ = model wheel further aft) and -4 cm vertically (+ = model tyre higher). Jet: no propeller nodes (engine fans and the ram-air turbine are static). Spoilers, slats, the trimmable stabiliser and thrust reversers are static. gear_retract also holds the gear-bay doors: hiding it with the gear up leaves the wheel-bay openings visible. Main-gear track: model 7.72 m, JSBSim 7.34 m. elevator: two halves with swept hinges: turning this node moves both about one lateral axis (approximate); elevator_left / elevator_right have the exact hinges. Flaps: FlightGear moves them with a rotation plus a translation (Fowler-type); the flap nodes use the single pivot that gives FG's position at full flap (in between it is approximate). flap_left: several segments: turning this node moves them all about the hinge of flap_left_1 (exact for it, approximate for the others); the children have exact hinges. flap_right: several segments: turning this node moves them all about the hinge of flap_right_1 (exact for it, approximate for the others); the children have exact hinges."
   },
   f16: {
     url: "models/fg/f16.glb",
     source: {
-      aircraft: "f16",
-      revision: "r21799",
-      licence: "GPL-2.0-or-later",
-      authors: "see the aircraft's files",
+      aircraft: "General Dynamics F-16CJ Block 52 Fighting Falcon (FlightGear f16), clean (no stores)",
+      revision: "r21799 (folder last changed in r8379)",
+      licence: "GPL-2.0 (LICENSE file in the aircraft folder)",
+      authors: "Erik Hofman (main author), Martin 'Pegasus' Schmitt, Prohm 'Rama' Snitwong, Pensacola, Nikolai V. Chr., J Maverick 16, Richard Harrison, Josh Davidson, Martien Van Der P., Jonathan Redpath, Gary Brown, Justin Nicholson, Enrico Castaldi, Timi, Barszczisbad, PH-JAKE, Bat Campion, LJQCN101 (authors.txt)",
       page: "https://sourceforge.net/p/flightgear/fgaddon/HEAD/tree/trunk/Aircraft/f16/"
     },
     lengthM: 14.307,
@@ -309,16 +309,16 @@ export const FG_MODELS: Record<"c172p"|"c182"|"pa28"|"J3Cub"|"c310"|"DHC6"|"p51d
     parts: ["body", "gear_retract", "aileron_left", "aileron_right", "elevator", "rudder"],
     retractableGear: true,
     triangles: 20171,
-    bytes: 1546604,
-    notes: "Aligned on the JSBSim main-gear contact points; the nose wheel then differs from the JSBSim nose contact by -0 cm fore/aft (+ = aft) and -10 cm vertically (+ = model tyre higher)."
+    bytes: 1541308,
+    notes: "Aligned on the JSBSim main-gear contact points; the nose wheel then differs from the JSBSim nose contact by 0 cm fore/aft (+ = model wheel further aft) and -10 cm vertically (+ = model tyre higher). No flap nodes: the F-16 has flaperons; they are exported as aileron_left / aileron_right (the app may add the flap deflection to them). Leading-edge flaps, speed brakes and the engine fan are static. elevator = both all-moving tail halves turned about one averaged axis (the real halves have about 10 degrees of anhedral each). Fairly low-detail model (about 20,000 triangles). gear_retract also holds the gear doors: hiding it with the gear up leaves the wheel-bay openings visible."
   },
   t6texan2: {
     url: "models/fg/t6texan2.glb",
     source: {
-      aircraft: "Beechcraft-T6-Texan-II",
-      revision: "r21799",
-      licence: "GPL-2.0-or-later",
-      authors: "see the aircraft's files",
+      aircraft: "Beechcraft T-6 Texan II (FlightGear Beechcraft-T6-Texan-II, US Navy livery)",
+      revision: "r21799 (folder last changed in r18616)",
+      licence: "GPL-2.0 (COPYING file in the aircraft folder)",
+      authors: "Emmanuel Baranger (3D, FDM)",
       page: "https://sourceforge.net/p/flightgear/fgaddon/HEAD/tree/trunk/Aircraft/Beechcraft-T6-Texan-II/"
     },
     lengthM: 9.782,
@@ -341,7 +341,7 @@ export const FG_MODELS: Record<"c172p"|"c182"|"pa28"|"J3Cub"|"c310"|"DHC6"|"p51d
     parts: ["body", "gear_retract", "aileron_left", "aileron_right", "elevator", "flap_left_1", "flap_left_2", "flap_left", "flap_right_1", "flap_right_2", "flap_right", "propeller_blades", "propeller_disc", "propeller", "rudder"],
     retractableGear: true,
     triangles: 30290,
-    bytes: 1203148,
-    notes: "Aligned on the JSBSim main-gear contact points; the nose wheel then differs from the JSBSim nose contact by +125 cm fore/aft (+ = aft) and -8 cm vertically (+ = model tyre higher). Main-gear track: model 2.53 m, JSBSim 4.14 m. flap_left: several segments: turning this node moves them all about the hinge of flap_left_1 (exact for it, approximate for the others); the children have exact hinges. flap_right: several segments: turning this node moves them all about the hinge of flap_right_1 (exact for it, approximate for the others); the children have exact hinges."
+    bytes: 1203912,
+    notes: "Aligned on the JSBSim main-gear contact points; the nose wheel then differs from the JSBSim nose contact by +125 cm fore/aft (+ = model wheel further aft) and -8 cm vertically (+ = model tyre higher). The JSBSim t6texan2 gear geometry does not match this model: JSBSim main-gear track 4.14 m vs 2.53 m in the model, wheelbase 3.58 m vs 2.33 m (the JSBSim nose contact is 1.25 m ahead of the model's nose wheel), and the JSBSim CG is 2.03 m above the wheels, which puts it near the front cockpit of this model. Aligned on the main wheels anyway. flap_left / flap_right: the outer flap plus one half of the centre flap under the fuselage, as child nodes with their own hinges. gear_retract also holds the gear doors: hiding it with the gear up leaves the wheel-bay openings visible. Main-gear track: model 2.53 m, JSBSim 4.14 m. flap_left: several segments: turning this node moves them all about the hinge of flap_left_1 (exact for it, approximate for the others); the children have exact hinges. flap_right: several segments: turning this node moves them all about the hinge of flap_right_1 (exact for it, approximate for the others); the children have exact hinges."
   },
 };

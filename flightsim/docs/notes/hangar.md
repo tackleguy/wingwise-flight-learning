@@ -41,8 +41,10 @@
   height change), and starts on short final.
 - Measured with that test pilot (lift-off speed, KCAS): C172 70, C182 72, PA-28 80, Cub 43, C310 100,
   Twin Otter 98, P-51D about 119 (with take-off trim), A320 about 186, F-16 about 200, T-6 132.
-- Headless Chrome (`scripts/shot.cjs`): picked aircraft, pressed Fly, checked engine running, the
-  model loaded and no console errors; looked at the screenshots (chase and cockpit views).
+- Headless Chrome (`scripts/shot.cjs`): for each of the ten aircraft picked it, pressed Fly,
+  checked engine running, the FlightGear model loaded and no console errors; looked at the
+  screenshots (chase view, and the cockpit view of the Cessna and A320). Also loaded the built copy
+  from the main site's `public/sim/` folder.
 
 ## Known limitations — what is still unrealistic
 - Only the Cessna 172P is tuned and checked against a handbook. The others fly as JSBSim's authors
@@ -57,7 +59,15 @@
   Mixture, carburettor heat and propeller levers are the Cessna's; the propeller lever is kept full
   forward on governed propellers; turbines use the mixture lever as the fuel cut-off.
 - No cockpit interiors in the FlightGear models; light positions are estimated from the model size;
-  retractable gear simply disappears when fully up (no folding animation).
+  retractable gear (with its doors) simply disappears when fully up, leaving the open wheel bays
+  visible (no folding animation); wheels do not steer.
+- Model vs flight-model mismatches (the models are aligned on the main wheels): the FlightGear PA-28
+  is a tapered-wing Warrior, 17 % wider than JSBSim's Cherokee 180; JSBSim's T-6 has a very
+  different gear layout from the model (its nose wheel is 1.25 m apart); the old, simple FlightGear
+  Cessna 310 model's nose wheel is 44 cm off. Split flaps/elevators (A320, T-6) and Fowler flaps
+  (Cessnas, A320) are moved as one part, so their in-between positions are approximate.
+- The FlightGear Cessna 310 folder names no author and has no licence file (FGAddon as a whole is
+  GPL); see public/models/fg/CREDITS.md.
 - Lessons/training (when added) should stay on the Cessna 172P.
 
 ## Shared-file changes

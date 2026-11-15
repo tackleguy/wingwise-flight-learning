@@ -800,6 +800,10 @@ def build(aid, tex_max=None, quiet=False):
                     cF = cc if abs(cc[1]) < abs(cF[1]) else cF
                 piv = equivalent_pivot(prim, cp)
                 if piv is not None:
+                    fowler_note = ("Flaps: FlightGear moves them with a rotation plus a translation (Fowler-type); the flap nodes "
+                                   "use the single pivot that gives FG's position at full flap (in between it is approximate).")
+                    if fowler_note not in notes:
+                        notes.append(fowler_note)
                     if not quiet:
                         log(f"   {node}: rotate+translate in FG -> equivalent pivot {fmt(piv)} (FG centre {fmt(prim.center)})")
                     cF = piv
@@ -1003,7 +1007,7 @@ def build(aid, tex_max=None, quiet=False):
     wheels_g = {k: [round(float(x), 3) for x in to_gltf(v[None])[0]] for k, v in wb.items()}
     data = builder.bytes()
     if abs(span / jsb["span"] - 1) > 0.10:
-        notes.append(f"model span {span:.2f} m vs JSBSim wingspan {jsb['span']:.2f} m ({(span/jsb['span']-1)*100:+.0f}%)")
+        notes.append(f"Model span {span:.2f} m vs JSBSim wingspan {jsb['span']:.2f} m ({(span/jsb['span']-1)*100:+.0f}%).")
     info = {
         "aid": aid, "data": data, "tris": total_tris, "bounds": [lo, hi], "span": span, "eye": eye,
         "wheels": wheels_g, "props": prop_info, "parts": parts, "retract": bool(gear), "notes": notes,
@@ -1028,13 +1032,14 @@ def meta_of(aid, info):
     notes = list(cfg.get("notes", []))
     ae = info["aux_err"]
     if ae is not None:
-        notes.insert(0, f"Aligned on the JSBSim main-gear contact points; the {info['aux_kind']} wheel then differs from the JSBSim {info['aux_kind']} contact by {ae[0]*100:+.0f} cm fore/aft (+ = aft) and {ae[2]*100:+.0f} cm vertically (+ = model tyre higher).")
+        cm = lambda v: f"{round(v * 100):+d}".replace("+0", "0")  # noqa: E731
+        notes.insert(0, f"Aligned on the JSBSim main-gear contact points; the {info['aux_kind']} wheel then differs from the JSBSim {info['aux_kind']} contact by {cm(ae[0])} cm fore/aft (+ = model wheel further aft) and {cm(ae[2])} cm vertically (+ = model tyre higher).")
     tm, tj = info["track"]
     if abs(tm - tj) > 0.15:
         notes.append(f"Main-gear track: model {tm:.2f} m, JSBSim {tj:.2f} m.")
     notes += info["notes"]
     if info["missing_tex"]:
-        notes.append("Textures not available (surfaces drawn in their plain material colour): " + ", ".join(sorted(info["missing_tex"])) + ".")
+        notes.append("Textures not available (surfaces drawn in their plain material colour): " + ", ".join(sorted({re.split(r"[\\\\/]", t)[-1] for t in info["missing_tex"]})) + ".")
     src = credits_of(aid)
     return {
         "url": f"models/fg/{aid}.glb",

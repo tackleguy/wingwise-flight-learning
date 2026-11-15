@@ -628,7 +628,8 @@ export class AircraftVisual {
       const bladesNode = this.nodes.propellerBlades;
       if (bladesNode && bladesNode.show !== blades) bladesNode.show = blades;
       this.hinge("propeller", this.propAngle, 0.0001);
-      if (blades) this.hinge("propellerBlades", this.propAngle, 0.0001);
+      // (in the FlightGear models the blades and disc hang under the spinning propeller node: only show/hide them)
+      if (blades && !this.spec.fg) this.hinge("propellerBlades", this.propAngle, 0.0001);
       const disc = smoothstep(350, 900, rpm);
       if (this.discNode && this.discNode.show !== disc > 0.01) this.discNode.show = disc > 0.01;
       sh.setUniform("u_disc", disc);
@@ -639,7 +640,7 @@ export class AircraftVisual {
         if (p.blades && p.blades.show !== blades) p.blades.show = blades;
         if (p.disc && p.disc.show !== disc > 0.01) p.disc.show = disc > 0.01;
         if (p.spin) this.spin(p.spin, ang);
-        if (p.blades && blades) this.spin(p.blades, ang);
+        if (p.blades && blades && !this.spec.fg) this.spin(p.blades, ang);
       }
     }
 

@@ -60,7 +60,7 @@ function freePort() {
         await page.screenshot({ path: file });
         const checks = await page.evaluate(() => window.__checks);
         const bad = Object.entries(checks || {}).filter(([, v]) => !v.ok);
-        console.log(file + (checks && Object.keys(checks).length ? (bad.length ? "  CHECK FAILED: " + JSON.stringify(Object.fromEntries(bad)) : "  hinge directions OK") : ""));
+        console.log(file + (checks && Object.keys(checks).length ? (bad.length ? "  CHECK FAILED: " + JSON.stringify(Object.fromEntries(bad)) : "  hinge directions OK (" + Object.keys(checks).join(" ") + ")") : ""));
       }
     }
   } finally {

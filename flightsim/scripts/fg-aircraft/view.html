@@ -80,9 +80,12 @@ if (deflect) {
     const k = Math.max(1, Math.round(pts.length * 0.05));
     return pts.slice(0, k);
   };
+  // only real glTF nodes (three.js also names per-material sub-meshes "<node>_1", "<node>_2", ...)
+  const gltfNodeNames = new Set(json.nodes.map((n) => n.name));
   const nodesToCheck = [];
   root.traverse((o) => {
-    if (/^(elevator|rudder|aileron_left|aileron_right|flap_left|flap_right)(_(left|right|\d+))?$/.test(o.name)) nodesToCheck.push(o);
+    if (o.isMesh && o.parent && o.parent.name !== o.name && !gltfNodeNames.has(o.name)) return;
+    if (gltfNodeNames.has(o.name) && /^(elevator|rudder|aileron_left|aileron_right|flap_left|flap_right)(_(left|right|\d+))?$/.test(o.name) && !nodesToCheck.some((x) => x.name === o.name)) nodesToCheck.push(o);
   });
   for (const n of nodesToCheck) {
     const q0 = n.quaternion.clone();
