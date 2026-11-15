@@ -198,13 +198,63 @@ ORDER = ["c172p", "c182", "pa28", "J3Cub", "c310", "DHC6", "p51d", "A320", "f16"
 # box in x/z, y = 0 at the bottom of the main tyres (gear down). Listed in public/models/fg/extra.json.
 NO_FDM = "no JSBSim model: origin at the bounding-box centre (x, z), y = 0 at the main-tyre bottoms"
 AIRCRAFT.update({
-    "da40": {"fgdir": "DA40", "set": "da40ng-jsb-club-set.xml", "retractable": False},
-    "da40_eb": {"fgdir": "Diamond-Da40", "set": "da40-set.xml", "retractable": False, "candidate": True},
-    "sr22": {"fgdir": "Cirrus-SR22", "set": "sr22-set.xml", "retractable": False},
-    "sr22t": {"fgdir": "SR22T", "set": "SR22T-set.xml", "retractable": False, "candidate": True},
-    "pa34": {"fgdir": "SenecaII", "set": "SenecaII-set.xml"},
-    "be350": {"fgdir": "Beechcraft-King-Air", "set": "kingair-set.xml"},
-    "b738": {"fgdir": "737-800", "set": "738-set.xml", "budget": 10e6, "no_propellers": True},
-    "be36": {"fgdir": "Mooney-M-20", "set": "m20-set.xml"},
+    # DA40: FGAddon "DA40" (DA40 NG) chosen over "Diamond-Da40" (both fine; DA40 is more detailed and newer)
+    "da40": {
+        "fgdir": "DA40", "set": "da40ng-jsb-club-set.xml", "retractable": False,
+        "title": "Diamond DA40 NG (FlightGear DA40, default livery OE-DWS)",
+        "authors": "Bea Wolf (3D, textures, FDM, systems), Sascha Reissner, Joshua Davidson, Emmanuel Baranger (original "
+                   "Diamond-Da40), Maik Justus, Torsten Dreyer, the c172p authors, onox, Benedikt Hallinger, Philip Zakharov, Noah Ryu",
+        "licence": "GPL-2.0 (COPYING file in the aircraft folder)",
+        "notes": ["Diamond DA40 NG (diesel version of the DA40, same airframe). Fixed gear (no gear_retract)."],
+    },
+    # SR22: FGAddon "Cirrus-SR22" chosen over "SR22T" (SR22T is less detailed and includes a tow tractor)
+    "sr22": {
+        "fgdir": "Cirrus-SR22", "set": "sr22-set.xml", "retractable": False, "wheels": {"mainLeft": "^roueG$", "mainRight": "^roueD$", "nose": "^roueA$"}, "hub_re": r"^bol$",
+        "title": "Cirrus SR22 (FlightGear Cirrus-SR22)",
+        "authors": "Emmanuel Baranger (3D, FDM)",
+        "licence": "GPL-2.0 (COPYING file in the aircraft folder)",
+        "notes": ["Fixed gear (no gear_retract)."],
+    },
+    "pa34": {
+        "fgdir": "SenecaII", "set": "SenecaII-set.xml",
+        "title": "Piper PA-34-200T Seneca II (FlightGear SenecaII)",
+        "authors": "Torsten Dreyer",
+        "licence": "GPL-2.0-or-later (stated in the aircraft's model files, (C) 2009 Torsten Dreyer; no separate licence file)",
+        "wheels": {"mainLeft": r"^GearLeft\.Wheel$", "mainRight": r"^GearRight\.Wheel$", "nose": r"^NLG_Wheel$"},
+        # cockpit and cabin details are top-level objects of the main model
+        "skip_box": [[[-1.35, -0.56, 0.75], [2.1, 0.56, 2.0]]],
+        "skip_tex": r"panel|placard|primer|interior|cockpit|instrument|gauge|pilot|seat|yoke|carpet|velour|glareshield|quadrant|trimwheel|circuitbreaker",
+        "skip": [r"headset", r"^Dashboard", r"Overhead"],
+        "notes": ["Older, simple model (about 10,000 triangles). propeller = left engine (engine 0), propeller_2 = right engine."],
+    },
+    "be350": {
+        "fgdir": "Beechcraft-King-Air", "set": "kingair-set.xml", "wheels": {"mainLeft": "^roueG$", "mainRight": "^roueD$", "nose": "^roueA$"}, "hub_re": r"^bol$",
+        "title": "Beechcraft King Air 350 (FlightGear Beechcraft-King-Air, Securite Civile livery F-ZBFJ)",
+        "authors": "Emmanuel Baranger (3D, FDM)",
+        "licence": "GPL-2.0 (COPYING file in the aircraft folder)",
+        "notes": ["propeller = left engine (engine 0), propeller_2 = right engine."],
+    },
+    "b738": {
+        "fgdir": "737-800", "set": "738-set.xml", "budget": 10e6, "no_propellers": True,
+        "title": "Boeing 737-800 (FlightGear 737-800)",
+        "authors": "David Culp (FDM), Syd Adams (glass instruments), Innis Cunningham (3D and panel), Michael Soitanen (current development)",
+        "licence": "GPL-2.0 (LICENSE file in the aircraft folder)",
+        # slats and Krueger flaps move with the flap property but hinge at the leading edge: static
+        "parts_by_name": {"static": [r"^slat\d", r"^flap[1-4]$"]},
+        "skip": [r"^a-light"],
+        "notes": [
+            "FlightGear's default 737-800 paint is plain white (airline liveries are optional); the wings are untextured.",
+            "This FG model does not animate elevator, rudder or ailerons, so those nodes are absent; slats and engine fans are static.",
+        ],
+    },
+    # be36: FGAddon has no Beechcraft Bonanza; the Mooney M20 is the closest low-wing, retractable, four-seat
+    # single with a conventional tail (the Beechcraft T-34 Mentor is a tandem-seat trainer)
+    "be36": {
+        "fgdir": "Mooney-M-20", "set": "m20-set.xml", "wheels": {"mainLeft": "^roueG$", "mainRight": "^roueD$", "nose": "^roueA$"}, "hub_re": r"^bol$",
+        "title": "Mooney M20M (FlightGear Mooney-M-20) - stand-in for the Beechcraft Bonanza A36",
+        "authors": "Emmanuel Baranger (3D, FDM)",
+        "licence": "GPL-2.0 (COPYING file in the aircraft folder)",
+        "notes": ["Stand-in: FlightGear has no Bonanza; this is a Mooney M20M (also low-wing, retractable gear, four seats)."],
+    },
 })
 EXTRA = ["da40", "sr22", "pa34", "be350", "b738", "be36"]

@@ -1,0 +1,44 @@
+{
+  "da40": {
+    "url": "models/fg/da40.glb",
+    "source": "DA40",
+    "spanM": 11.528,
+    "lengthM": 8.065,
+    "notes": "Origin: centre of the bounding box left/right and fore/aft; y = 0 at the bottom of the main tyres (gear down). Diamond DA40 NG (diesel version of the DA40, same airframe). Fixed gear (no gear_retract)."
+  },
+  "sr22": {
+    "url": "models/fg/sr22.glb",
+    "source": "Cirrus-SR22",
+    "spanM": 11.582,
+    "lengthM": 7.915,
+    "notes": "Origin: centre of the bounding box left/right and fore/aft; y = 0 at the bottom of the main tyres (gear down). Fixed gear (no gear_retract)."
+  },
+  "pa34": {
+    "url": "models/fg/pa34.glb",
+    "source": "SenecaII",
+    "spanM": 11.706,
+    "lengthM": 8.581,
+    "notes": "Origin: centre of the bounding box left/right and fore/aft; y = 0 at the bottom of the main tyres (gear down). Older, simple model (about 10,000 triangles). propeller = left engine (engine 0), propeller_2 = right engine."
+  },
+  "be350": {
+    "url": "models/fg/be350.glb",
+    "source": "Beechcraft-King-Air",
+    "spanM": 17.657,
+    "lengthM": 14.143,
+    "notes": "Origin: centre of the bounding box left/right and fore/aft; y = 0 at the bottom of the main tyres (gear down). propeller = left engine (engine 0), propeller_2 = right engine. Flaps: FlightGear moves them with a rotation plus a translation (Fowler-type); the flap nodes use the single pivot that gives FG's position at full flap (in between it is approximate). flap_left: several segments: turning this node moves them all about the hinge of flap_left_1 (exact for it, approximate for the others); the children have exact hinges."
+  },
+  "b738": {
+    "url": "models/fg/b738.glb",
+    "source": "737-800",
+    "spanM": 35.691,
+    "lengthM": 39.421,
+    "notes": "Origin: centre of the bounding box left/right and fore/aft; y = 0 at the bottom of the main tyres (gear down). FlightGear's default 737-800 paint is plain white (airline liveries are optional); the wings are untextured. This FG model does not animate elevator, rudder or ailerons, so those nodes are absent; slats and engine fans are static. Flaps: FlightGear moves them with a rotation plus a translation (Fowler-type); the flap nodes use the single pivot that gives FG's position at full flap (in between it is approximate)."
+  },
+  "be36": {
+    "url": "models/fg/be36.glb",
+    "source": "Mooney-M-20",
+    "spanM": 10.984,
+    "lengthM": 8.982,
+    "notes": "Origin: centre of the bounding box left/right and fore/aft; y = 0 at the bottom of the main tyres (gear down). Stand-in: FlightGear has no Bonanza; this is a Mooney M20M (also low-wing, retractable gear, four seats). elevator: two halves with swept hinges: turning this node moves both about one lateral axis (approximate); elevator_left / elevator_right have the exact hinges."
+  }
+}

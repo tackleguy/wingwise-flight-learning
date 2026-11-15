@@ -483,6 +483,12 @@ def texture_overrides(ml, files, props, cfg):
                 found = ml.find_texture(a.fgdir, a.cur_dir, tex)
                 if found:
                     m.tex = found
+    for m in ml.meshes:
+        for a in m.anims:
+            if a.type == "material" and a.el.find("transparency") is not None:
+                al = a.el.find("transparency").findtext("alpha")
+                if al and al.strip():
+                    m.alpha_mul = min(getattr(m, "alpha_mul", 1.0), max(0.0, min(1.0, fnum(al, 1.0))))
     for pat, ref in cfg.get("texture_map", {}).items():
         d, p = files.resolve(cfg["fgdir"], "", ref)
         lp = files.local(d, p) if d else None
@@ -886,7 +892,7 @@ def build(aid, tex_max=None, quiet=False):
         nonlocal tex_bytes
         acm = ml.ac_materials[mesh.src][mi] if mi < len(ml.ac_materials[mesh.src]) else None
         rgb = list(acm.rgb) if acm else [0.8, 0.8, 0.8]
-        alpha = 1.0 - (acm.trans if acm else 0.0)
+        alpha = (1.0 - (acm.trans if acm else 0.0)) * getattr(mesh, "alpha_mul", 1.0)
         shi = acm.shi if acm else 0
         glass = bool(glass_re and any_match([glass_re], mesh.names))
         if glass and alpha > 0.6:
@@ -1206,7 +1212,9 @@ def write_extra_json():
         if not os.path.exists(path):
             continue
         m = read_glb_meta(path)
-        out[aid] = {"url": m["url"], "source": AIRCRAFT[aid]["fgdir"], "spanM": m["spanM"], "lengthM": m["lengthM"], "notes": m["notes"]}
+        note = ("Origin: centre of the bounding box left/right and fore/aft; y = 0 at the bottom of the main tyres (gear down). "
+                + m["notes"]).strip()
+        out[aid] = {"url": m["url"], "source": AIRCRAFT[aid]["fgdir"], "spanM": m["spanM"], "lengthM": m["lengthM"], "notes": note}
     with open(os.path.join(OUT_DIR, "extra.json"), "w") as f:
         json.dump(out, f, indent=2, ensure_ascii=False)
         f.write("\n")

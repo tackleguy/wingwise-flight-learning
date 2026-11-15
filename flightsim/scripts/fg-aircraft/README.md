@@ -6,6 +6,11 @@ Turns the exterior 3D models of ten FlightGear aircraft into `public/models/fg/<
 The models are **GPL** (FlightGear aircraft). This is a change from the "no GPL assets" rule in
 `ARCHITECTURE.md` §1 and must stay clearly credited (CREDITS.md) — the decision is the owner's.
 
+Six more aircraft without a JSBSim model (`EXTRA` in `aircraft_config.py`: da40, sr22, pa34, be350,
+b738, be36) are converted the same way for the Scenario Simulator, but with origin at the centre of
+the bounding box (left/right, fore/aft) and y = 0 at the bottom of the main tyres (gear down). They are
+listed in `public/models/fg/extra.json` (not in `fg-models.gen.ts`) and credited in CREDITS.md.
+
 ## Files
 
 | file | what it does |
@@ -21,8 +26,8 @@ The models are **GPL** (FlightGear aircraft). This is a change from the "no GPL 
 
 ```sh
 cd flightsim
-python3 -I scripts/fg-aircraft/fetch.py c182 pa28 J3Cub c310 DHC6 p51d A320 f16 t6texan2   # once; ~90 MB
-python3 -I scripts/fg-aircraft/convert.py                 # all ten (about 20 s), or: convert.py c182 p51d
+python3 -I scripts/fg-aircraft/fetch.py c182 pa28 J3Cub c310 DHC6 p51d A320 f16 t6texan2 da40 sr22 pa34 be350 b738 be36
+python3 -I scripts/fg-aircraft/convert.py                 # all sixteen (about 25 s), or: convert.py c182 p51d
 node scripts/fg-aircraft/view.cjs                         # PNGs in the scratchpad fg-shots folder
 python3 -I scripts/fg-aircraft/convert.py --inspect c182  # list objects, animations and what happens to them
 ```
@@ -66,7 +71,10 @@ python3 -I scripts/fg-aircraft/convert.py --inspect c182  # list objects, animat
    angle smoothing; all materials double-sided (the cabins are empty); glass at least lightly tinted;
    blurred propeller discs without a usable texture drawn translucent.
 7. **Write** the GLB (metadata also stored in the root node's `extras.teachx`, debug data in
-   `extras.teachxDebug`), then regenerate `fg-models.gen.ts` and `CREDITS.md` from all GLBs present.
+   `extras.teachxDebug`), then regenerate `fg-models.gen.ts`, `extra.json` and `CREDITS.md` from all GLBs present.
+
+Also handled: `<model><overlay>` (one shared sub-model re-targeted per engine, e.g. the Seneca's prop
+discs) and material `<transparency>` animations (blurred discs fade).
 
 ## Checking
 

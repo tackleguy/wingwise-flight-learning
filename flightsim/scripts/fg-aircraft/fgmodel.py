@@ -108,6 +108,34 @@ def _find_path(root, path):
     return el
 
 
+def merge_overlay(dst, src):
+    """FG <overlay>: copy values over the sub-model's own property tree (same tag / same index)."""
+    seen = {}
+    for ch in src:
+        if not isinstance(ch.tag, str):
+            continue
+        n = ch.get("n")
+        idx = int(n) if n is not None else seen.get(ch.tag, 0)
+        seen[ch.tag] = idx + 1
+        same = [c for c in dst if c.tag == ch.tag]
+        tgt = None
+        for k, c in enumerate(same):
+            ci = int(c.get("n")) if c.get("n") is not None else k
+            if ci == idx:
+                tgt = c
+                break
+        if tgt is None:
+            tgt = ET.SubElement(dst, ch.tag)
+            if n is not None:
+                tgt.set("n", n)
+        if len(ch):
+            merge_overlay(tgt, ch)
+        else:
+            tgt.text = ch.text
+            for k, v in ch.attrib.items():
+                tgt.set(k, v)
+
+
 def resolve_aliases(root):
     """<property alias="/params/x"/> or alias="../../params/x" -> the text found there in the same file."""
     parent = {c: p for p in root.iter() for c in p}
@@ -602,7 +630,7 @@ class Mesh:
 
     __slots__ = (
         "name", "names", "src", "pos", "nrm", "uv", "mat", "tex", "double", "anims", "effects",
-        "hidden_by", "levels", "submodel_paths",
+        "hidden_by", "levels", "submodel_paths", "alpha_mul",
     )
 
 
@@ -620,10 +648,14 @@ class ModelLoader:
         self.missing_textures = set()
         self.submodels_skipped = []
 
-    def load(self, fgdir, path, M=None, parent_level=None, skip_submodel=None, depth=0, subname=None):
+    def load(self, fgdir, path, M=None, parent_level=None, skip_submodel=None, depth=0, subname=None, overlay=None):
         if M is None:
             M = np.eye(4)
-        root = load_xml_includes(self.files, fgdir, path)
+        root = load_xml_includes(self.files, fgdir, path, aliases=False)
+        if root is not None:
+            if overlay is not None:
+                merge_overlay(root, overlay)  # <model><overlay>: per-instance values (e.g. which engine)
+            resolve_aliases(root)
         if root is None:
             self.log(f"   !! model file missing: {fgdir}/{path}")
             return
@@ -663,7 +695,7 @@ class ModelLoader:
                 self.levels.append((f"{d}/{p}", lv, level, nm))
                 self.load_ac(d, p, Ms, lv)
             else:
-                self.load(d, p, Ms, level, skip_submodel, depth + 1, nm)
+                self.load(d, p, Ms, level, skip_submodel, depth + 1, nm, overlay=sub.find("overlay"))
             for m in self.meshes[n0:]:
                 if nm:
                     m.names.append(nm)
