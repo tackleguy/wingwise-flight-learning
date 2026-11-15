@@ -67,10 +67,42 @@ export class LiveryPainter {
     return (this.b.y1 - y) * this.ppm;
   }
 
-  private trace(ctx: CanvasRenderingContext2D, pts: readonly P2[], smooth: boolean, close = true) {
+  private trace(
+    ctx: CanvasRenderingContext2D,
+    pts: readonly P2[],
+    smooth: boolean | number,
+    close = true,
+  ) {
     ctx.beginPath();
     const n = pts.length;
     if (n === 0) return;
+    if (typeof smooth === "number" && smooth > 0 && close && n >= 3) {
+      // polygon with corners rounded by `smooth` metres
+      const r = smooth;
+      const corner = (i: number) => {
+        const p = pts[((i % n) + n) % n] ?? [0, 0];
+        const a = pts[(((i - 1) % n) + n) % n] ?? p;
+        const b = pts[(i + 1) % n] ?? p;
+        const la = Math.hypot(a[0] - p[0], a[1] - p[1]) || 1;
+        const lb = Math.hypot(b[0] - p[0], b[1] - p[1]) || 1;
+        const ra = Math.min(r, la / 2);
+        const rb = Math.min(r, lb / 2);
+        return {
+          p,
+          i: [p[0] + ((a[0] - p[0]) * ra) / la, p[1] + ((a[1] - p[1]) * ra) / la] as P2,
+          o: [p[0] + ((b[0] - p[0]) * rb) / lb, p[1] + ((b[1] - p[1]) * rb) / lb] as P2,
+        };
+      };
+      const c0 = corner(0);
+      ctx.moveTo(this.X(c0.o[0]), this.Y(c0.o[1]));
+      for (let i = 1; i <= n; i++) {
+        const c = corner(i);
+        ctx.lineTo(this.X(c.i[0]), this.Y(c.i[1]));
+        ctx.quadraticCurveTo(this.X(c.p[0]), this.Y(c.p[1]), this.X(c.o[0]), this.Y(c.o[1]));
+      }
+      ctx.closePath();
+      return;
+    }
     const P = (i: number): [number, number] => {
       const q = pts[((i % n) + n) % n] ?? [0, 0];
       return [this.X(q[0]), this.Y(q[1])];
@@ -109,7 +141,12 @@ export class LiveryPainter {
   }
 
   /** Filled polygon in (z, y) metres. */
-  fill(pts: readonly P2[], color: string, opts: { smooth?: boolean; surface?: Surface } = {}) {
+  /** `smooth`: true = spline through mid-points, number = corner radius in metres. */
+  fill(
+    pts: readonly P2[],
+    color: string,
+    opts: { smooth?: boolean | number; surface?: Surface } = {},
+  ) {
     this.trace(this.c, pts, opts.smooth ?? false);
     this.c.fillStyle = color;
     this.c.fill();
@@ -138,8 +175,8 @@ export class LiveryPainter {
     );
   }
 
-  /** Tinted window glass with a soft sky-reflection gradient. */
-  glass(pts: readonly P2[], smooth = true) {
+  /** Tinted window glass with a soft sky-reflection gradient. `smooth` as in {@link fill}. */
+  glass(pts: readonly P2[], smooth: boolean | number = 0.05) {
     let yMin = Infinity;
     let yMax = -Infinity;
     for (const [, y] of pts) {

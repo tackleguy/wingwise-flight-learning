@@ -141,7 +141,7 @@ function weaveTexture() {
     for (let y = 0; y < 128; y += 4) {
       for (let x = 0; x < 128; x += 4) {
         const odd = ((x + y) / 4) % 2 === 0;
-        ctx.fillStyle = odd ? "#f2f2f2" : "#a9a9a9";
+        ctx.fillStyle = odd ? "#ececec" : "#c8c8c8";
         ctx.fillRect(x, y, odd ? 4 : 3, odd ? 3 : 4);
       }
     }
@@ -2988,7 +2988,7 @@ export function cabinShell(o: {
         .rotateX(Math.PI / 2)
         .rotateZ(Math.PI),
       cachedMat(`headliner:${col}`, () => {
-        const t = withRepeat(weaveTexture(), 10, "weave");
+        const t = withRepeat(weaveTexture(), 48, "weave");
         return std({ color: col, roughness: 0.95, map: t, side: THREE.DoubleSide });
       }),
       "headliner",

@@ -37,6 +37,9 @@ function TmpTest() {
           highlightIds={["throttle"]}
           onSelect={setSel}
           className="h-[80vh]"
+          ref={(h) => {
+            (window as unknown as Record<string, unknown>)["__viewer"] = h;
+          }}
         />
       ) : null}
     </div>

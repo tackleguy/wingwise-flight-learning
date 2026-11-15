@@ -50,7 +50,7 @@ const C172: CessnaVariant = {
   noseZ: 1.12,
   flapMax: 30,
   hstabSemi: 1.73,
-  finH: 1.34,
+  finH: 1.29,
   stripe: "#1d3557",
   accent: "#2a9d8f",
 };
@@ -131,7 +131,7 @@ function buildCessna(kit: AirframeKit, v: CessnaVariant) {
       S(7.48, 0.03, 0.21, 0.08, 2.0),
     ],
     "livery",
-    { tailCap: 0.02 },
+    { tailCap: 0.02, noseCap: 0.015 },
   );
 
   // --- wing (high, strut braced) -------------------------------------------------------------
@@ -202,23 +202,20 @@ function buildCessna(kit: AirframeKit, v: CessnaVariant) {
     },
     "livery",
   );
-  // dorsal fillet
+  // dorsal fillet, blending into the fin leading edge
   kit.surface(
     {
-      root: [0, H(0.3), Z(4.85)],
+      root: [0, H(0.3), Z(4.9)],
       roll: 90,
       stations: [
-        { s: 0, le: 0, c: 1.45 * zs, t: 0.06 },
-        { s: 0.3, le: 1.25 * zs, c: 0.3 * zs, t: 0.06 },
+        { s: 0, le: 0, c: 1.6 * zs, t: 0.07 },
+        { s: 0.34, le: 1.5 * zs, c: 0.35 * zs, t: 0.07 },
       ],
     },
     "livery",
   );
   // tail tie-down stinger
-  kit.add(
-    tube([0, H(0.06), Z(7.4)], [0, H(0.0), Z(7.75)], 0.07, 0.03, { seg: 8 }),
-    "paint",
-  );
+  kit.add(tube([0, H(0.07), Z(7.35)], [0, H(0.03), Z(7.6)], 0.06, 0.03, { seg: 8 }), "paint");
 
   // --- engine & prop -------------------------------------------------------------------------
   kit.prop({
@@ -230,6 +227,7 @@ function buildCessna(kit: AirframeKit, v: CessnaVariant) {
     pitch: 1.45,
     spinnerLen: 0.38 * zs,
     spinnerR: 0.18 * ws,
+    bluntness: 0.8,
   });
   inlet(kit, [W(0.165), H(0.04), -0.004], W(0.072), H(0.07), q.seg);
   inlet(kit, [-W(0.165), H(0.04), -0.004], W(0.072), H(0.07), q.seg);
@@ -237,8 +235,8 @@ function buildCessna(kit: AirframeKit, v: CessnaVariant) {
 
   // antennas on the cabin roof / wing centre section
   const roofTop = wing.point(0.0, 0.45, 1);
-  kit.add(blade([0, roofTop[1], roofTop[2] + 0.2], 0.28, 0.12, 0.12), "dark");
-  kit.add(blade([0, roofTop[1], roofTop[2] - 0.35], 0.22, 0.1, 0.1), "dark");
+  kit.add(blade([0, roofTop[1], roofTop[2] + 0.2], 0.22, 0.1, 0.1), "dark");
+  kit.add(blade([0, roofTop[1], roofTop[2] - 0.35], 0.18, 0.09, 0.08), "dark");
   // belly antenna
   kit.add(blade([0, H(-0.5), Z(4.0)], -0.18, 0.08, 0.06), "dark");
 
@@ -344,12 +342,12 @@ function paintCessna(p: LiveryPainter, v: CessnaVariant) {
   );
   // windows
   p.glass([pt(1.4, 0.36), pt(1.97, 0.4), pt(2.1, 0.86), pt(1.3, 0.86)], false);
-  p.glass([pt(2.02, 0.2), pt(2.8, 0.2), pt(2.8, 0.72), pt(2.13, 0.72)]);
+  p.glass([pt(2.04, 0.18), pt(2.8, 0.18), pt(2.8, 0.73), pt(2.17, 0.73)]);
   if (v.id === "c172") {
-    p.glass([pt(2.88, 0.22), pt(3.5, 0.3), pt(3.6, 0.7), pt(2.88, 0.72)]);
+    p.glass([pt(2.88, 0.2), pt(3.45, 0.27), pt(3.6, 0.72), pt(2.88, 0.73)]);
     p.glass([pt(3.8, 0.5), pt(4.36, 0.47), pt(4.36, 0.95), pt(3.8, 0.95)], false);
   } else {
-    p.glass([pt(2.88, 0.25), pt(3.3, 0.36), pt(3.38, 0.7), pt(2.88, 0.72)]);
+    p.glass([pt(2.88, 0.24), pt(3.28, 0.34), pt(3.38, 0.71), pt(2.88, 0.73)]);
     p.glass([pt(3.6, 0.5), pt(4.1, 0.47), pt(4.1, 0.95), pt(3.6, 0.95)], false);
   }
   // seams: door, cowling, baggage door

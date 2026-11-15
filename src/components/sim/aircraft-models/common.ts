@@ -12,20 +12,22 @@ export function wheelPant(
   o: { len: number; hw: number; top: number; bot: number; radial: number; rings?: number },
   mat: MatKey = "paint",
 ) {
+  const L = o.len;
   const st: Station[] = [
-    { z: c[2] - o.len * 0.42, hw: o.hw * 0.25, top: o.top * 0.35, bot: o.bot * 0.4 },
-    { z: c[2] - o.len * 0.34, hw: o.hw * 0.75, top: o.top * 0.8, bot: o.bot * 0.85 },
-    { z: c[2] - o.len * 0.12, hw: o.hw, top: o.top, bot: o.bot },
-    { z: c[2] + o.len * 0.2, hw: o.hw * 0.92, top: o.top * 0.92, bot: o.bot * 0.95 },
-    { z: c[2] + o.len * 0.5, hw: o.hw * 0.25, top: o.top * 0.3, bot: o.bot * 0.15 },
+    { z: c[2] - L * 0.45, hw: o.hw * 0.2, top: o.top * 0.25, bot: o.bot * 0.3 },
+    { z: c[2] - L * 0.4, hw: o.hw * 0.68, top: o.top * 0.66, bot: o.bot * 0.72 },
+    { z: c[2] - L * 0.26, hw: o.hw * 0.96, top: o.top * 0.95, bot: o.bot * 0.97 },
+    { z: c[2] + L * 0.02, hw: o.hw, top: o.top, bot: o.bot },
+    { z: c[2] + L * 0.3, hw: o.hw * 0.62, top: o.top * 0.7, bot: o.bot * 0.75 },
+    { z: c[2] + L * 0.55, hw: o.hw * 0.1, top: o.top * 0.3, bot: o.bot * 0.1 },
   ];
   const mb = loftBody(st, {
     radial: o.radial,
     rings: o.rings ?? 10,
     cx: c[0],
     cy: c[1],
-    noseCap: o.len * 0.06,
-    tailCap: o.len * 0.04,
+    noseCap: o.len * 0.03,
+    tailCap: o.len * 0.01,
   });
   leg.add(mb, mat);
 }

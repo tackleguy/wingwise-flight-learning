@@ -1,5 +1,4 @@
 import {
-  Armchair,
   Award,
   BarChart3,
   BookOpen,
@@ -15,7 +14,6 @@ import {
   Map,
   MessageSquareText,
   Mic,
-  MonitorPlay,
   Notebook,
   Plane,
   PlaneTakeoff,
@@ -76,18 +74,6 @@ export const NAV: NavGroup[] = [
         label: "Flight Simulator",
         icon: PlaneTakeoff,
         description: "3D flight simulation",
-      },
-      {
-        to: "/cockpits",
-        label: "3D Cockpits",
-        icon: Armchair,
-        description: "Old & new cockpits, explained",
-      },
-      {
-        to: "/flightgear",
-        label: "FlightGear Live",
-        icon: MonitorPlay,
-        description: "Train in real FlightGear",
       },
       {
         to: "/avionics",
