@@ -28,3 +28,4 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+- Pilot account data (ratings, endorsements, hours, focus areas) lives in the Cloud profiles table, read via useAccount() in src/lib/account.ts; local store keeps per-device training progress. Why: accounts sync across devices without rewriting the local progress engine.
