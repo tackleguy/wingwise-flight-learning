@@ -1,9 +1,17 @@
 /**
  * Flight dynamics: JSBSim — the open-source flight model used by the FlightGear simulator —
- * compiled to WebAssembly (public/jsbsim/, built by tools/jsbsim-wasm in the repository root).
+ * compiled to WebAssembly (public/jsbsim/, built by flightsim/jsbsim/build.sh from the tuned
+ * Cessna 172P data files in flightsim/jsbsim/; see README.md and CHANGES.md there).
  *
  * JSBSim is © the JSBSim developers, LGPL-2.1. It is shipped as a separate, replaceable module.
  * This file is TeachX's thin adapter: it converts TeachX conventions to JSBSim properties.
+ *
+ * Useful extra properties of the tuned aircraft (read with `getProperty`):
+ *   aero/stall-hyst-norm                 1 while the wing is deeply stalled (set above 26° angle of attack, cleared below 12°)
+ *   aero/function/slipstream-immersion   0.1…1, how much of the fin is in the propeller slipstream
+ *   aero/function/engine-torque-ftlb     engine torque (drives the left-turning tendencies)
+ *   fcs/steer-pos-deg[0]                 nose-wheel steering angle (rudder pedals, plus differential brake at taxi speed)
+ * Related modules: ./constants.ts (stall angles, airspeed calibration), ./weight-balance.ts.
  *
  *   TeachX elevator + = pull (nose up)   → fcs/elevator-cmd-norm   − = nose up
  *   TeachX aileron  + = roll right       → fcs/aileron-cmd-norm    + = roll right
@@ -19,6 +27,8 @@ interface FdmHandle {
   runIC(): boolean;
   setDt(dt: number): void;
   run(steps: number): boolean;
+  /** Present in the flight simulator's own build (flightsim/jsbsim/wrapper.cpp); absent in older builds. */
+  startEngines?(throttle: number, mixture: number): boolean;
   bind(path: string, create: boolean): number;
   get(handle: number): number;
   set(handle: number, value: number): void;
@@ -249,11 +259,42 @@ const WRITE = [
   "atmosphere/turbulence/milspec/severity",
   "atmosphere/delta-T",
   "atmosphere/P-sl-psf",
+  "propulsion/engine/volumetric-efficiency",
 ] as const;
 type WritePath = (typeof WRITE)[number];
+/** Positions in READ (= bind handles, they are bound first) that are checked for NaN after every step. */
+const HEALTH_HANDLES = [READ.indexOf("position/lat-geod-deg"), READ.indexOf("position/h-sl-ft"), READ.indexOf("attitude/theta-deg"), READ.indexOf("velocities/vc-kts"), READ.indexOf("propulsion/engine/power-hp")];
 
 const clamp = (v: number, lo: number, hi: number) => (v < lo ? lo : v > hi ? hi : v);
 const PSF_PER_INHG = 70.7262;
+
+/** A finite number, or `fallback` when the value is NaN / infinite / not a number. */
+const fin = (v: number, fallback: number) => (Number.isFinite(v) ? v : fallback);
+/** Largest wind component passed to the flight model, ft/s (about 150 kt). */
+const MAX_WIND_FPS = 250;
+
+/**
+ * How `FdmInputs.powerLoss` is turned into engine behaviour.
+ *
+ * Carburettor ice, carburettor heat and most "partial power" failures all do the same thing to a
+ * piston engine: less air (and with it less fuel) gets into the cylinders. JSBSim's piston engine
+ * has one number for exactly that — its volumetric efficiency ("how well the cylinders fill") — so
+ * the adapter scales it. Air flow, fuel flow, manifold pressure and exhaust temperature all follow
+ * naturally, and on the fixed-pitch propeller the rpm drops as it does in the real aircraft.
+ *
+ * Part of the engine's power always goes into its own friction, so removing x % of the air removes
+ * a little more than x % of the power that reaches the propeller. The curve below corrects for that
+ * at high power (so powerLoss 0.1 ≈ 10 % less shaft power at full throttle) and reaches zero air
+ * flow — a dead, windmilling engine — at powerLoss 1.
+ */
+export function airflowFractionForPowerLoss(powerLoss: number): number {
+  const l = Number.isFinite(powerLoss) ? clamp(powerLoss, 0, 1) : 0;
+  return clamp(1 - l * (POWER_LOSS_SHAFT_SHARE + (1 - POWER_LOSS_SHAFT_SHARE) * l * l * l), 0, 1);
+}
+/** Below this share of normal air flow the engine cannot run at all: the adapter then also cuts the fuel. */
+const MIN_AIRFLOW_FRACTION = 0.05;
+/** Share of the power made in the cylinders that reaches the propeller at full throttle (the rest is friction). */
+const POWER_LOSS_SHAFT_SHARE = 0.63;
 
 /** One JSBSim aircraft instance (the C172P). Create a new one for every (re)spawn. */
 export class FlightModel {
@@ -267,6 +308,8 @@ export class FlightModel {
   /** Throttle and pitch-trim positions (TeachX conventions) for steady hands-off flight, found for airborne starts. */
   initialTrim: { throttle: number; trim: number } | null = null;
   private readonly out: FdmOutputs;
+  /** The engine's normal volumetric efficiency (cylinder filling), read from the engine file at creation. */
+  private readonly baseVolumetricEfficiency: number;
 
   private constructor(m: JsbsimModule, fdm: FdmHandle) {
     this.m = m;
@@ -275,6 +318,8 @@ export class FlightModel {
     for (const p of WRITE) this.writeHandles.set(p, fdm.bind(p, true));
     this.buf = m._malloc(READ.length * 8);
     this.out = {} as FdmOutputs;
+    const ve = fdm.getByName("propulsion/engine/volumetric-efficiency");
+    this.baseVolumetricEfficiency = Number.isFinite(ve) && ve > 0 ? ve : 0.85;
   }
 
   static async create(init: FdmInit, moduleUrl?: string): Promise<FlightModel> {
@@ -314,6 +359,14 @@ export class FlightModel {
       if (!init.engineRunning) return;
       fdm.setByName("fcs/mixture-cmd-norm", 1);
       fdm.setByName("propulsion/magneto_cmd", 3);
+      // On the ground the engine should be idling from the first moment (JSBSim's own instant start
+      // settles at full throttle, so the engine would begin at high rpm and wind down).
+      if (init.onGround && fdm.startEngines) {
+        if (fdm.startEngines(0, 1)) {
+          fdm.setByName("fcs/throttle-cmd-norm", 0);
+          return;
+        }
+      }
       fdm.setByName("propulsion/set-running", -1);
     };
     startEngine();
@@ -373,36 +426,47 @@ export class FlightModel {
   }
 
   setInputs(i: FdmInputs) {
-    this.w("fcs/elevator-cmd-norm", -clamp(i.elevator, -1, 1));
-    this.w("fcs/aileron-cmd-norm", clamp(i.aileron, -1, 1));
-    this.w("fcs/rudder-cmd-norm", -clamp(i.rudder, -1, 1));
-    this.w("fcs/pitch-trim-cmd-norm", -clamp(i.trim, -1, 1));
-    this.w("fcs/throttle-cmd-norm", clamp(i.throttle, 0, 1));
-    this.w("fcs/mixture-cmd-norm", clamp(i.mixture, 0, 1));
-    this.w("fcs/flap-cmd-norm", clamp(i.flapNorm, 0, 1));
-    this.w("fcs/left-brake-cmd-norm", clamp(i.brakeLeft, 0, 1));
-    this.w("fcs/right-brake-cmd-norm", clamp(i.brakeRight, 0, 1));
+    // Every number is checked first: a NaN or infinity from a misbehaving input device or module must
+    // never reach the flight model (it would poison the whole state). `fin` replaces such a value.
+    this.w("fcs/elevator-cmd-norm", -clamp(fin(i.elevator, 0), -1, 1));
+    this.w("fcs/aileron-cmd-norm", clamp(fin(i.aileron, 0), -1, 1));
+    this.w("fcs/rudder-cmd-norm", -clamp(fin(i.rudder, 0), -1, 1));
+    this.w("fcs/pitch-trim-cmd-norm", -clamp(fin(i.trim, 0), -1, 1));
+    this.w("fcs/throttle-cmd-norm", clamp(fin(i.throttle, 0), 0, 1));
+    this.w("fcs/mixture-cmd-norm", clamp(fin(i.mixture, 1), 0, 1));
+    this.w("fcs/flap-cmd-norm", clamp(fin(i.flapNorm, 0), 0, 1));
+    this.w("fcs/left-brake-cmd-norm", clamp(fin(i.brakeLeft, 0), 0, 1));
+    this.w("fcs/right-brake-cmd-norm", clamp(fin(i.brakeRight, 0), 0, 1));
     this.w("fcs/center-brake-cmd-norm", 0);
-    this.w("propulsion/magneto_cmd", i.magnetos);
+    this.w("propulsion/magneto_cmd", i.magnetos === 1 || i.magnetos === 2 || i.magnetos === 3 ? i.magnetos : 0);
     this.w("propulsion/starter_cmd", i.starter ? 1 : 0);
     this.w("propulsion/tank[0]/priority", i.feedLeft ? 1 : 0);
     this.w("propulsion/tank[1]/priority", i.feedRight ? 1 : 0);
-    this.w("position/terrain-elevation-asl-ft", i.terrainFt);
-    this.w("atmosphere/wind-north-fps", i.windNorthFps);
-    this.w("atmosphere/wind-east-fps", i.windEastFps);
-    this.w("atmosphere/wind-down-fps", i.windDownFps);
-    const turb = clamp(i.turbulence, 0, 1);
+    if (Number.isFinite(i.terrainFt)) this.w("position/terrain-elevation-asl-ft", i.terrainFt);
+    this.w("atmosphere/wind-north-fps", clamp(fin(i.windNorthFps, 0), -MAX_WIND_FPS, MAX_WIND_FPS));
+    this.w("atmosphere/wind-east-fps", clamp(fin(i.windEastFps, 0), -MAX_WIND_FPS, MAX_WIND_FPS));
+    this.w("atmosphere/wind-down-fps", clamp(fin(i.windDownFps, 0), -MAX_WIND_FPS, MAX_WIND_FPS));
+    const turb = clamp(fin(i.turbulence, 0), 0, 1);
     this.w("atmosphere/turb-type", turb > 0.001 ? 3 : 0);
     this.w("atmosphere/turbulence/milspec/windspeed_at_20ft_AGL-fps", turb * 45 * FPS_PER_KT * 0.5);
     this.w("atmosphere/turbulence/milspec/severity", Math.round(turb * 6));
-    this.w("atmosphere/delta-T", i.isaDeviationC * 1.8);
-    this.w("atmosphere/P-sl-psf", i.qnhInHg * PSF_PER_INHG);
+    this.w("atmosphere/delta-T", clamp(fin(i.isaDeviationC, 0), -60, 60) * 1.8);
+    this.w("atmosphere/P-sl-psf", clamp(fin(i.qnhInHg, 29.92126), 25, 33) * PSF_PER_INHG);
+    // Partial power loss (carburettor ice / heat / failures): less air into the cylinders.
+    // JSBSim divides by the air flow, so it is never set to exactly zero; a total loss also cuts the fuel.
+    const air = airflowFractionForPowerLoss(i.powerLoss);
+    this.w("propulsion/engine/volumetric-efficiency", this.baseVolumetricEfficiency * Math.max(MIN_AIRFLOW_FRACTION, air));
+    if (air < MIN_AIRFLOW_FRACTION) this.w("fcs/mixture-cmd-norm", 0);
   }
 
   /** Advance by whole physics steps. Returns false if the model failed (NaN / terminated). */
   step(steps = 1): boolean {
     if (this.disposed) return false;
-    return this.fdm.run(Math.max(1, Math.round(steps)));
+    if (!this.fdm.run(Math.max(1, Math.round(steps)))) return false;
+    // `read()` hides NaN (it reports 0 instead) so that nothing downstream can be poisoned; here the raw
+    // numbers are checked so that a numerical failure is reported instead of silently flying on zeros.
+    for (const h of HEALTH_HANDLES) if (!Number.isFinite(this.fdm.get(h))) return false;
+    return true;
   }
 
   /** Read the current truth values. The returned object is reused between calls. */
@@ -476,6 +540,11 @@ export class FlightModel {
 
   /** Instantly start or stop the engine (lessons / instructor actions). */
   setEngineRunning(on: boolean) {
+    if (on && this.fdm.startEngines) {
+      // settle at the present throttle (JSBSim's own instant start settles at full throttle)
+      const throttle = clamp(fin(this.fdm.getByName("fcs/throttle-cmd-norm"), 0), 0, 1);
+      if (this.fdm.startEngines(throttle, 1)) return;
+    }
     this.fdm.setByName("propulsion/set-running", on ? -1 : 0);
     if (!on) this.fdm.setByName("propulsion/engine/set-running", 0);
   }

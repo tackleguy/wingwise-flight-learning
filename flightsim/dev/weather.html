@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TeachX sim — weather lab (developer page)</title>
+    <style>
+      html, body { margin: 0; min-height: 100%; background: #101418; color: #e8eef4; font: 14px/1.45 system-ui, sans-serif; }
+      main { max-width: 1100px; margin: 0 auto; padding: 14px 16px 40px; }
+      h1 { font-size: 18px; margin: 0 0 4px; }
+      h2 { font-size: 14px; margin: 18px 0 6px; color: #9fc4e8; text-transform: uppercase; letter-spacing: .04em; }
+      p.note { margin: 0 0 10px; color: #9aa7b4; font-size: 12px; }
+      .row { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: center; }
+      button, select, input { font: inherit; padding: 8px 10px; min-height: 44px; border-radius: 6px; border: 1px solid #44505c; background: #1b232b; color: #fff; }
+      button { cursor: pointer; }
+      button:hover { background: #26313c; }
+      input[type=text] { width: 7em; text-transform: uppercase; }
+      .box { background: #171d23; border: 1px solid #2a343e; border-radius: 8px; padding: 10px 12px; margin-top: 8px; }
+      #describe { font-size: 16px; }
+      #category { display: inline-block; padding: 2px 10px; border-radius: 999px; font-weight: 600; margin-left: 8px; }
+      .VFR { background: #1f7a3a; } .MVFR { background: #1f5fae; } .IFR { background: #b3261e; } .LIFR { background: #9b2fae; }
+      pre { margin: 0; white-space: pre-wrap; word-break: break-word; font: 12px/1.45 ui-monospace, monospace; }
+      table { border-collapse: collapse; font: 12px/1.4 ui-monospace, monospace; }
+      td, th { padding: 2px 10px 2px 0; text-align: right; }
+      th { color: #9aa7b4; font-weight: 500; }
+      .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 10px; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Weather lab</h1>
+      <p class="note">Developer page for the weather module: no 3D world, just the numbers. The aircraft stands on the runway (or flies) in the weather shown. Not for real-world flight planning.</p>
+      <div class="row">
+        <label>Airport <input id="apt" type="text" maxlength="7" /></label>
+        <button id="spawn">Go there</button>
+        <button id="real">Load real weather</button>
+        <select id="preset" aria-label="Weather preset"></select>
+      </div>
+      <div class="box"><span id="describe">starting…</span><span id="category"></span></div>
+      <div class="box"><pre id="result">No real weather loaded yet.</pre></div>
+      <div class="cols">
+        <div>
+          <h2>Wind with height (mean, no gusts)</h2>
+          <div class="box"><table id="profile"></table></div>
+        </div>
+        <div>
+          <h2>At the aircraft right now</h2>
+          <div class="box"><pre id="live">–</pre></div>
+        </div>
+      </div>
+      <h2>Environment (sim.env)</h2>
+      <div class="box"><pre id="env"></pre></div>
+    </main>
+    <script type="module" src="./weather.ts"></script>
+  </body>
+</html>

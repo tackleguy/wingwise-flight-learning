@@ -29,3 +29,34 @@ npm run dev        # http://127.0.0.1:5173  (dev pages under /dev/*.html)
 npm test           # physics and logic tests
 npm run build      # static site in flightsim/dist
 ```
+
+## Wrap-up status (2026-11-15) — connected and shipped in a reduced form
+
+The owner asked to stop the large build-out, connect what exists and ship it.
+
+**Wired into the app (`src/ui/App.tsx`) and checked in a browser:** core physics (JSBSim c172p),
+world terrain + imagery, airports/runways/lights (scenery), sky/clouds/night (sky), weather
+(real + presets), instruments with errors, cockpit panel with "explain this instrument",
+views (cockpit / chase / tower / free) with the 3D aircraft, keyboard controls, start screen
+(airport search; runway / short final / in the air / parked), pause, reset to short final,
+controls help, credits, disclaimer.
+
+**NOT built or not wired (helpers were stopped before finishing):**
+- `training` (lessons, coaching, scoring, replay, checklists, tolerances config) — not started.
+- `systems` (engine start/failures, carb ice, electrical model) — not started; `App.tsx` has a
+  tiny "basic-electrics" stand-in.
+- `nav` (VOR/radio tuning logic) — not started; the radio stack is drawn but does not navigate.
+- `input` (mouse yoke, gamepad/joystick, touch controls) — not started; keyboard only
+  (`src/dev/basic.ts`).
+- `audio` — sound engine parts exist (`src/audio/*`) but there is no `index.ts`; not wired, no sound.
+- Physics tuning was in progress: `jsbsim/CHANGES.md` and `jsbsim/README.md` mentioned in
+  `public/jsbsim/JSBSIM-SOURCE.txt` were not written yet; `docs/PHYSICS-VALIDATION.md` is a draft.
+- Custom weather sliders, graphics quality setting UI, weight & balance UI, save progress.
+
+**Tests:** `npx vitest run` → 364 pass, 4 fail (compass acceleration-error size, slip/skid ball
+size, attitude-indicator tumble, and a random-control-input robustness run that produced a
+non-finite state after 66 s).
+
+**Main TeachX site:** a built copy of the simulator lives in the repo root `public/sim/` and is shown
+at the `/flightgear` page (menu: Fly → World Flight Simulator). To refresh it after changing the
+simulator: `cd flightsim && npm run build && rm -rf ../public/sim && cp -r dist ../public/sim`.

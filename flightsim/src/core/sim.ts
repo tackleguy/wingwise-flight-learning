@@ -21,6 +21,12 @@ import type { ControlState, Environment, Settings, SimEvents, SimState, SpawnReq
 /** A feature module plugged into the simulator. Every hook is optional. */
 export interface SimModule {
   readonly name: string;
+  /**
+   * Just before every (re)positioning: the plan (airport, runway, start position) is known but the
+   * flight model has not been created yet. A module may adjust `sim.env` here — the weather module
+   * turns a "crosswind" preset to the new runway — so the aircraft starts in its final weather.
+   */
+  beforeSpawn?(sim: Sim, plan: SpawnPlan): void;
   /** After every (re)positioning of the aircraft, before the first physics step. */
   onSpawn?(sim: Sim, result: SpawnResult): void;
   /** Fixed step, BEFORE physics: may adjust `sim.fdmIn` (what is sent to the flight model). */
@@ -201,6 +207,7 @@ export class Sim {
       await Promise.all([this.preload(), this.elevation.ensure(plan.lat, plan.lon, 1.5).catch(() => undefined)]);
       if (plan.refLat !== plan.lat || plan.refLon !== plan.lon) await this.elevation.ensure(plan.refLat, plan.refLon, 0.5).catch(() => undefined);
       if (token !== this.spawnToken) throw new Error("Superseded by a newer spawn request.");
+      for (const m of this.modules) m.beforeSpawn?.(this, plan);
       const jsb = this.jsb!;
 
       const ground = this.elevation.groundFt(plan.lat, plan.lon) ?? plan.fallbackElevFt;

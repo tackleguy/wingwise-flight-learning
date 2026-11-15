@@ -17,6 +17,7 @@ import {
   Notebook,
   Plane,
   PlaneTakeoff,
+  Globe2,
   Radio,
   Route,
   Settings,
@@ -70,10 +71,16 @@ export const NAV: NavGroup[] = [
     label: "Fly",
     items: [
       {
+        to: "/flightgear",
+        label: "World Flight Simulator",
+        icon: Globe2,
+        description: "Any airport, real terrain & weather",
+      },
+      {
         to: "/simulator",
-        label: "Flight Simulator",
+        label: "Scenario Simulator",
         icon: PlaneTakeoff,
-        description: "3D flight simulation",
+        description: "Guided 3D training scenarios",
       },
       {
         to: "/avionics",

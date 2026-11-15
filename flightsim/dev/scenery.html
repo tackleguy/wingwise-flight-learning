@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TeachX sim — scenery (developer page)</title>
+    <style>
+      html, body { margin: 0; height: 100%; background: #000; color: #fff; font: 13px/1.4 system-ui, sans-serif; overflow: hidden; }
+      #view { position: fixed; inset: 0; }
+      #hud { position: fixed; left: 8px; top: 8px; background: rgba(0,0,0,.55); padding: 8px 10px; border-radius: 6px; white-space: pre; font-family: ui-monospace, monospace; font-size: 12px; pointer-events: none; }
+      #bar { position: fixed; left: 8px; bottom: 26px; display: flex; flex-wrap: wrap; gap: 6px; max-width: 96vw; }
+      #bar button { min-height: 34px; padding: 4px 10px; border: 1px solid #567; border-radius: 6px; background: rgba(20,30,40,.8); color: #fff; font: inherit; cursor: pointer; }
+      #bar button:hover { background: rgba(50,70,90,.9); }
+      #credits { position: fixed; right: 6px; bottom: 4px; font-size: 10px; opacity: .8; max-width: 70vw; text-align: right; }
+      #credits a { color: #9cf; }
+      body.clean #hud, body.clean #bar { display: none; }
+    </style>
+  </head>
+  <body>
+    <div id="view"></div>
+    <div id="hud">starting…</div>
+    <div id="bar"></div>
+    <div id="credits"></div>
+    <script type="module" src="./scenery.ts"></script>
+  </body>
+</html>

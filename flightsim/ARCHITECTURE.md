@@ -107,6 +107,8 @@ A **module** is a plain object implementing `SimModule` (all hooks optional):
 interface SimModule {
   readonly name: string;                       // unique: "systems", "instruments", "nav", "weather", "sky",
                                                // "scenery", "views", "audio", "input", "training"
+  beforeSpawn?(sim, plan): void;               // just before a reposition (SpawnPlan known, flight model not yet
+                                               // created) — may adjust sim.env; added by [weather]
   onSpawn?(sim, result): void;                 // after every reposition — reset your internal state here
   preStep?(sim, dt): void;                     // fixed 1/120 s step, BEFORE physics (adjust sim.fdmIn)
   postStep?(sim, dt): void;                    // fixed step, AFTER physics (derive state)

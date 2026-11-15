@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TeachX sim — views: aircraft model and cameras (developer page)</title>
+    <style>
+      html, body { margin: 0; height: 100%; background: #000; color: #fff; font: 13px/1.4 system-ui, sans-serif; overflow: hidden; }
+      #view { position: fixed; inset: 0; }
+      #hud { position: fixed; left: 8px; top: 8px; background: rgba(0,0,0,.55); padding: 8px 10px; border-radius: 6px; white-space: pre; font-family: ui-monospace, monospace; pointer-events: none; }
+      #bar { position: fixed; left: 8px; bottom: 26px; display: flex; gap: 6px; flex-wrap: wrap; max-width: 96vw; }
+      #bar button { min-width: 44px; min-height: 44px; padding: 0 12px; border-radius: 8px; border: 1px solid #456; background: rgba(10,20,35,.8); color: #fff; font: inherit; cursor: pointer; }
+      #bar button.on { background: #38a1e6; border-color: #38a1e6; color: #001; }
+      #panelmock { position: fixed; left: 0; right: 0; bottom: 0; height: 46%; background: linear-gradient(#14161a, #0c0d10); border-top: 2px solid #333; display: none; pointer-events: none; opacity: .92; }
+      #horizonline { position: fixed; left: 0; right: 0; height: 0; border-top: 1px dashed rgba(255,80,80,.9); display: none; pointer-events: none; }
+      #credits { position: fixed; right: 6px; bottom: 4px; font-size: 10px; opacity: .8; max-width: 70vw; text-align: right; }
+      #credits a { color: #9cf; }
+    </style>
+  </head>
+  <body>
+    <div id="view"></div>
+    <div id="panelmock"></div>
+    <div id="horizonline"></div>
+    <div id="hud">starting…</div>
+    <div id="bar"></div>
+    <div id="credits"></div>
+    <script type="module" src="./views.ts"></script>
+  </body>
+</html>

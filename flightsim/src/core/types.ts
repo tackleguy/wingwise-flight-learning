@@ -206,6 +206,11 @@ export interface SystemsState {
   batteryPct: number;
   alternatorOnline: boolean;
   avionicsPowered: boolean;
+  /**
+   * Optional: current flowing into (+, charging) or out of (−, discharging) the battery, amperes.
+   * When the systems module writes it, the ammeter shows it; otherwise the instruments module estimates one.
+   */
+  batteryAmps?: number;
   vacuumInHg: number;
   /** 0 clean … 1 fully iced carburettor */
   carbIce: number;
@@ -372,7 +377,9 @@ export type CommandId =
   | "view-reset"
   | "reset-short-final"
   | "restart"
-  | "dg-align";
+  | "dg-align"
+  /** [panel] The NAV 1 "ID" button: listen (or stop listening) to the tuned station's Morse identifier. */
+  | "nav1-ident-toggle";
 
 export interface SimEvents {
   spawn: SpawnResult;

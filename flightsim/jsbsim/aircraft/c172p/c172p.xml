@@ -1,0 +1,2360 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="http://jsbsim.sourceforge.net/JSBSim.xsl"?>
+<fdm_config name="c172" version="2.0" release="BETA"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="http://jsbsim.sourceforge.net/JSBSim.xsd">
+
+    <fileheader>
+        <author> Unknown </author>
+        <filecreationdate>2002-01-01</filecreationdate>
+        <version> $Id: c172p.xml,v 1.29 2013/10/25 15:32:49 jentron Exp $ </version>
+        <description> Cessna C-172 (modified for the TeachX Flight Simulator) </description>
+      <note>
+        This model was created using publicly available data, publicly available
+        technical reports, textbooks, and guesses. It contains no proprietary or
+        restricted data. If this model has been validated at all, it would be
+        only to the extent that it seems to "fly right", and that it possibly
+        complies with published, publicly known, performance data (maximum speed,
+        endurance, etc.). Thus, this model is meant for educational and entertainment
+        purposes only.
+
+        This simulation model is not endorsed by the manufacturer. This model is not
+        to be sold.
+      </note>
+      <note>
+        MODIFIED FILE. This is JSBSim's aircraft/c172p/c172p.xml changed by the TeachX Flight
+        Simulator project (2026) to match Cessna 172P handbook-class performance and to teach
+        correct handling habits (rigging, left-turning tendencies, stalls, spins, ground handling).
+        Every change is listed in flightsim/jsbsim/CHANGES.md; the unmodified original is kept in
+        flightsim/jsbsim/upstream/. The tables between the TEACHX-GENERATED markers are written by
+        flightsim/jsbsim/tools/gen_model.py (edit the parameters there, not the numbers here).
+        It is a learning aid, not validated flight-training data.
+      </note>
+    </fileheader>
+
+    <metrics>
+        <wingarea unit="FT2"> 174 </wingarea>
+        <wingspan unit="FT"> 35.8 </wingspan>
+        <chord unit="FT"> 4.9 </chord>
+        <htailarea unit="FT2"> 21.9 </htailarea>
+        <htailarm unit="FT"> 15.7 </htailarm>
+        <vtailarea unit="FT2"> 16.5 </vtailarea>
+        <vtailarm unit="FT"> 0 </vtailarm>
+        <location name="AERORP" unit="IN">
+            <x> 43.2 </x>
+            <y> 0 </y>
+            <z> 59.4 </z>
+        </location>
+        <location name="EYEPOINT" unit="IN">
+            <x> 37 </x>
+            <y> 0 </y>
+            <z> 48 </z>
+        </location>
+        <location name="VRP" unit="IN">
+            <x> 42.6 </x>
+            <y> 0 </y>
+            <z> 38.5 </z>
+        </location>
+    </metrics>
+
+    <mass_balance>
+        <ixx unit="SLUG*FT2"> 948 </ixx>
+        <iyy unit="SLUG*FT2"> 1346 </iyy>
+        <izz unit="SLUG*FT2"> 1967 </izz>
+        <ixy unit="SLUG*FT2"> -0 </ixy>
+        <ixz unit="SLUG*FT2"> -0 </ixz>
+        <iyz unit="SLUG*FT2"> -0 </iyz>
+        <emptywt unit="LBS"> 1454 </emptywt>   <!-- TeachX: was 1500 -->
+        <location name="CG" unit="IN">
+            <x> 39.6 </x>   <!-- TeachX: was 41 (handbook-class empty arm) -->
+            <y> 0 </y>
+            <z> 36.5 </z>
+        </location>
+        <pointmass name="Pilot">
+            <weight unit="LBS"> 170 </weight>
+            <location unit="IN">
+                <x> 37 </x>
+                <y> -14 </y>
+                <z> 24 </z>
+            </location>
+        </pointmass>
+        <pointmass name="Co-Pilot">
+            <weight unit="LBS"> 0 </weight>
+            <location unit="IN">
+                <x> 37 </x>
+                <y> 14 </y>
+                <z> 24 </z>
+            </location>
+        </pointmass>
+        <pointmass name="Left Passenger">
+            <weight unit="LBS"> 0 </weight>
+            <location unit="IN">
+                <x> 73 </x>
+                <y> -14 </y>
+                <z> 24 </z>
+            </location>
+        </pointmass>
+        <pointmass name="Right Passenger">
+            <weight unit="LBS"> 0 </weight>
+            <location unit="IN">
+                <x> 73 </x>
+                <y> 14 </y>
+                <z> 24 </z>
+            </location>
+        </pointmass>
+        <pointmass name="Baggage">
+            <weight unit="LBS"> 0 </weight>
+            <location unit="IN">
+                <x> 95 </x>
+                <y>  0 </y>
+                <z> 24 </z>
+            </location>
+        </pointmass>
+    </mass_balance>
+
+    <ground_reactions>
+        <contact type="BOGEY" name="NOSE">
+            <location unit="IN">
+                <x> -6.8 </x>
+                <y> 0 </y>
+                <z> -19.5</z>
+            </location>
+            <static_friction> 0.8 </static_friction>
+            <dynamic_friction> 0.5 </dynamic_friction>
+            <rolling_friction> 0.02 </rolling_friction>
+            <spring_coeff unit="LBS/FT"> 1800 </spring_coeff>
+            <damping_coeff unit="LBS/FT/SEC"> 600 </damping_coeff>
+            <max_steer unit="DEG"> 30 </max_steer>   <!-- TeachX: was 10 (see the Nose Wheel Steering channel) -->
+            <brake_group> NONE </brake_group>
+            <retractable>0</retractable>
+            <!-- TeachX: side grip of the tyre vs slip angle (deg). Same shape as JSBSim's built-in
+                 curve with a peak of 0.8; given explicitly so that static_friction (which JSBSim
+                 also uses as the brake friction) can be set for realistic braking. -->
+            <table name="CORNERING_COEFF" type="internal">
+                <tableData>
+                     -90.0   -0.4608
+                     -60.0   -0.4865
+                     -40.0   -0.5514
+                     -30.0   -0.6193
+                     -20.0   -0.7278
+                     -15.0   -0.7855
+                     -10.0   -0.7860
+                      -7.0   -0.6971
+                      -5.0   -0.5702
+                      -3.0   -0.3788
+                      -2.0   -0.2613
+                      -1.0   -0.1334
+                       0.0    0.0000
+                       1.0    0.1334
+                       2.0    0.2613
+                       3.0    0.3788
+                       5.0    0.5702
+                       7.0    0.6971
+                      10.0    0.7860
+                      15.0    0.7855
+                      20.0    0.7278
+                      30.0    0.6193
+                      40.0    0.5514
+                      60.0    0.4865
+                      90.0    0.4608
+                </tableData>
+            </table>
+        </contact>
+        <contact type="BOGEY" name="LEFT_MAIN">
+            <location unit="IN">
+                <x> 58.2 </x>
+                <y> -43 </y>
+                <z> -15.5 </z>
+            </location>
+            <static_friction> 0.29 </static_friction>   <!-- TeachX: was 0.8; this is the full-brake friction -->
+            <dynamic_friction> 0.5 </dynamic_friction>
+            <rolling_friction> 0.02 </rolling_friction>
+            <spring_coeff unit="LBS/FT"> 5400 </spring_coeff>
+            <damping_coeff unit="LBS/FT/SEC"> 1600 </damping_coeff>
+            <max_steer unit="DEG"> 0.0 </max_steer>
+            <brake_group> LEFT </brake_group>
+            <retractable>0</retractable>
+            <!-- TeachX: side grip of the tyre vs slip angle (deg). Same shape as JSBSim's built-in
+                 curve with a peak of 0.8; given explicitly so that static_friction (which JSBSim
+                 also uses as the brake friction) can be set for realistic braking. -->
+            <table name="CORNERING_COEFF" type="internal">
+                <tableData>
+                     -90.0   -0.4608
+                     -60.0   -0.4865
+                     -40.0   -0.5514
+                     -30.0   -0.6193
+                     -20.0   -0.7278
+                     -15.0   -0.7855
+                     -10.0   -0.7860
+                      -7.0   -0.6971
+                      -5.0   -0.5702
+                      -3.0   -0.3788
+                      -2.0   -0.2613
+                      -1.0   -0.1334
+                       0.0    0.0000
+                       1.0    0.1334
+                       2.0    0.2613
+                       3.0    0.3788
+                       5.0    0.5702
+                       7.0    0.6971
+                      10.0    0.7860
+                      15.0    0.7855
+                      20.0    0.7278
+                      30.0    0.6193
+                      40.0    0.5514
+                      60.0    0.4865
+                      90.0    0.4608
+                </tableData>
+            </table>
+        </contact>
+        <contact type="BOGEY" name="RIGHT_MAIN">
+            <location unit="IN">
+                <x> 58.2 </x>
+                <y> 43 </y>
+                <z> -15.5 </z>
+            </location>
+            <static_friction> 0.29 </static_friction>   <!-- TeachX: was 0.8; this is the full-brake friction -->
+            <dynamic_friction> 0.5 </dynamic_friction>
+            <rolling_friction> 0.02 </rolling_friction>
+            <spring_coeff unit="LBS/FT"> 5400 </spring_coeff>
+            <damping_coeff unit="LBS/FT/SEC"> 1600 </damping_coeff>
+            <max_steer unit="DEG"> 0.0 </max_steer>
+            <brake_group> RIGHT </brake_group>
+            <retractable>0</retractable>
+            <!-- TeachX: side grip of the tyre vs slip angle (deg). Same shape as JSBSim's built-in
+                 curve with a peak of 0.8; given explicitly so that static_friction (which JSBSim
+                 also uses as the brake friction) can be set for realistic braking. -->
+            <table name="CORNERING_COEFF" type="internal">
+                <tableData>
+                     -90.0   -0.4608
+                     -60.0   -0.4865
+                     -40.0   -0.5514
+                     -30.0   -0.6193
+                     -20.0   -0.7278
+                     -15.0   -0.7855
+                     -10.0   -0.7860
+                      -7.0   -0.6971
+                      -5.0   -0.5702
+                      -3.0   -0.3788
+                      -2.0   -0.2613
+                      -1.0   -0.1334
+                       0.0    0.0000
+                       1.0    0.1334
+                       2.0    0.2613
+                       3.0    0.3788
+                       5.0    0.5702
+                       7.0    0.6971
+                      10.0    0.7860
+                      15.0    0.7855
+                      20.0    0.7278
+                      30.0    0.6193
+                      40.0    0.5514
+                      60.0    0.4865
+                      90.0    0.4608
+                </tableData>
+            </table>
+        </contact>
+        <contact type="STRUCTURE" name="NOSE_SKID">
+            <location unit="IN">
+                <x> -37.7 </x>
+                <y> 0 </y>
+                <z> 26.6 </z>
+            </location>
+            <static_friction> 0.2 </static_friction>
+            <dynamic_friction> 0.2 </dynamic_friction>
+            <rolling_friction> 0.2 </rolling_friction>
+            <spring_coeff unit="LBS/FT"> 20000 </spring_coeff>
+            <damping_coeff unit="LBS/FT/SEC"> 2000 </damping_coeff>
+        </contact>
+        <contact type="STRUCTURE" name="TAIL_SKID">
+            <location unit="IN">
+                <x> 188 </x>
+                <y> 0 </y>
+                <z> 8 </z>
+            </location>
+            <static_friction> 0.2 </static_friction>
+            <dynamic_friction> 0.2 </dynamic_friction>
+            <rolling_friction> 0.2 </rolling_friction>
+            <spring_coeff unit="LBS/FT"> 20000 </spring_coeff>
+            <damping_coeff unit="LBS/FT/SEC"> 2000 </damping_coeff>
+        </contact>
+        <contact type="STRUCTURE" name="LEFT_TIP">
+            <location unit="IN">
+                <x> 43.2 </x>
+                <y> -214.8 </y>
+                <z> 59.4 </z>
+            </location>
+            <static_friction> 0.2 </static_friction>
+            <dynamic_friction> 0.2 </dynamic_friction>
+            <rolling_friction> 0.2 </rolling_friction>
+            <spring_coeff unit="LBS/FT"> 20000 </spring_coeff>
+            <damping_coeff unit="LBS/FT/SEC"> 2000 </damping_coeff>
+        </contact>
+        <contact type="STRUCTURE" name="RIGHT_TIP">
+            <location unit="IN">
+                <x> 43.2 </x>
+                <y> 214.8 </y>
+                <z> 59.4 </z>
+            </location>
+            <static_friction> 0.2 </static_friction>
+            <dynamic_friction> 0.2 </dynamic_friction>
+            <rolling_friction> 0.2 </rolling_friction>
+            <spring_coeff unit="LBS/FT"> 20000 </spring_coeff>
+            <damping_coeff unit="LBS/FT/SEC"> 2000 </damping_coeff>
+        </contact>
+    </ground_reactions>
+    <propulsion>
+        <engine file="eng_io320">
+            <feed>0</feed>
+            <feed>1</feed>
+            <thruster file="prop_75in2f">
+                <location unit="IN">
+                    <x> -37.7 </x>
+                    <y> 0 </y>
+                    <z> 26.6 </z>
+                </location>
+                <orient unit="DEG">
+                    <roll> 0.0 </roll>
+                    <pitch> 0.0 </pitch>
+                    <yaw> 0.0 </yaw>
+                </orient>
+                <sense> 1 </sense>
+                <p_factor> 40.0 </p_factor>   <!-- TeachX: was 5 -->
+            </thruster>
+        </engine>
+        <tank type="FUEL">    <!-- Tank number 0 -->
+            <location unit="IN">
+                <x> 48 </x>
+                <y> -55 </y>
+                <z> 59.4 </z>
+            </location>
+            <capacity unit="LBS"> 120 </capacity>   <!-- TeachX: 20 US gal usable per tank -->
+            <contents unit="LBS"> 120 </contents>
+        </tank>
+        <tank type="FUEL">    <!-- Tank number 1 -->
+            <location unit="IN">
+                <x> 48 </x>
+                <y> 55 </y>
+                <z> 59.4 </z>
+            </location>
+            <capacity unit="LBS"> 120 </capacity>   <!-- TeachX: 20 US gal usable per tank -->
+            <contents unit="LBS"> 120 </contents>
+        </tank>
+    </propulsion>
+    <flight_control name="FCS: c172">
+        <channel name="Pitch">
+            <!-- TeachX: the trim wheel moves the elevator's hands-off position over a limited part of
+                 its travel (was: the full elevator travel, far more than a real trim tab). -->
+            <pure_gain name="fcs/pitch-trim-scaled">
+                <input>fcs/pitch-trim-cmd-norm</input>
+                <gain> 0.400 </gain>
+            </pure_gain>
+
+            <summer name="Pitch Trim Sum">
+                <input>fcs/elevator-cmd-norm</input>
+                <input>fcs/pitch-trim-scaled</input>
+                <clipto>
+                    <min>-1</min>
+                    <max>1</max>
+                </clipto>
+            </summer>
+
+            <aerosurface_scale name="Elevator Control">
+                <input>fcs/pitch-trim-sum</input>
+                <gain>0.01745</gain>
+                <range>
+                    <min>-28</min>
+                    <max>23</max>
+                </range>
+                <output>fcs/elevator-pos-rad</output>
+            </aerosurface_scale>
+
+            <aerosurface_scale name="Elevator Position Normalized">
+                <input>fcs/elevator-pos-deg</input>
+                <domain>
+                    <min>-28</min>
+                    <max>23</max>
+                </domain>
+                <range>
+                    <min>-1</min>
+                    <max>1</max>
+                </range>
+                <output>fcs/elevator-pos-norm</output>
+            </aerosurface_scale>
+        </channel>
+        <channel name="Roll">
+            <summer name="Roll Trim Sum">
+                <input>fcs/aileron-cmd-norm</input>
+                <input>fcs/roll-trim-cmd-norm</input>
+                <clipto>
+                    <min>-1</min>
+                    <max>1</max>
+                </clipto>
+            </summer>
+
+            <aerosurface_scale name="Left Aileron Control">
+                <input>fcs/roll-trim-sum</input>
+                <gain>0.01745</gain>
+                <range>
+                    <min>-20</min>
+                    <max>15</max>
+                </range>
+                <output>fcs/left-aileron-pos-rad</output>
+            </aerosurface_scale>
+
+            <aerosurface_scale name="Left Aileron Position Normalized">
+                <input>fcs/left-aileron-pos-deg</input>
+                <domain>
+                    <min>-20</min>
+                    <max>15</max>
+                </domain>
+                <range>
+                    <min>-1</min>
+                    <max>1</max>
+                </range>
+                <output>fcs/left-aileron-pos-norm</output>
+            </aerosurface_scale>
+
+            <aerosurface_scale name="Right Aileron Control">
+                <input>fcs/roll-trim-sum</input>
+                <gain>-0.01745</gain>
+                <range>
+                    <min>-20</min>
+                    <max>15</max>
+                </range>
+                <output>fcs/right-aileron-pos-rad</output>
+            </aerosurface_scale>
+
+            <aerosurface_scale name="Right Aileron Position Normalized">
+                <input>fcs/right-aileron-pos-deg</input>
+                <domain>
+                    <min>-15</min>
+                    <max>20</max>
+                </domain>
+                <range>
+                    <min>1</min>
+                    <max>-1</max>
+                </range>
+                <output>fcs/right-aileron-pos-norm</output>
+            </aerosurface_scale>
+        </channel>
+        <channel name="Yaw">
+            <summer name="Yaw Trim Sum">
+                <input>fcs/rudder-cmd-norm</input>
+                <input>fcs/yaw-trim-cmd-norm</input>
+                <clipto>
+                    <min>-1</min>
+                    <max>1</max>
+                </clipto>
+            </summer>
+
+            <aerosurface_scale name="Rudder Control">
+                <input>fcs/yaw-trim-sum</input>
+                <gain>0.01745</gain>
+                <range>
+                    <min>-16</min>
+                    <max>16</max>
+                </range>
+                <output>fcs/rudder-pos-rad</output>
+            </aerosurface_scale>
+
+            <aerosurface_scale name="Rudder Position Normalized">
+                <input>fcs/rudder-pos-deg</input>
+                <domain>
+                    <min>-16</min>
+                    <max>16</max>
+                </domain>
+                <range>
+                    <min>-1</min>
+                    <max>1</max>
+                </range>
+                <output>fcs/rudder-pos-norm</output>
+            </aerosurface_scale>
+        </channel>
+        <channel name="Flaps">
+            <kinematic name="Flaps Control">
+                <input>fcs/flap-cmd-norm</input>
+                <traverse>
+                    <setting>
+                        <position>0</position>
+                        <time>0</time>
+                    </setting>
+                    <!-- TeachX: electric flap motor, about 3 s per 10 degrees (was 2 s, 1 s, 1 s) -->
+                    <setting>
+                        <position>10</position>
+                        <time>3</time>
+                    </setting>
+                    <setting>
+                        <position>20</position>
+                        <time>3</time>
+                    </setting>
+                    <setting>
+                        <position>30</position>
+                        <time>3</time>
+                    </setting>
+                </traverse>
+                <output>fcs/flap-pos-deg</output>
+            </kinematic>
+            <aerosurface_scale name="Flap Position Normalizer">
+              <input>fcs/flap-pos-deg</input>
+              <domain>
+                <min>0</min>  <!-- Flaps actual minimum position -->
+                <max>30</max>  <!-- Flaps actual maximum position -->
+              </domain>
+              <range>
+                <min>0</min>  <!-- Flaps normalized minimum position -->
+                <max>1</max>  <!-- Flaps normalized maximum position -->
+              </range>
+              <output>fcs/flap-pos-norm</output>
+            </aerosurface_scale>
+        </channel>
+        <!-- TeachX: the rudder pedals steer the nose wheel up to 10 degrees either way (through springs
+             on the real aircraft, so the wheel follows the pedals less and less as speed builds), and
+             at taxi speed a brake held on one side lets the wheel swivel further, to 30 degrees, for
+             tight turns. JSBSim's rudder command is positive for nose-left and steering is positive
+             for nose-right, hence the minus sign. 1.0 here = the nose wheel's 30 degree limit. -->
+        <channel name="Nose Wheel Steering">
+            <fcs_function name="fcs/nose-wheel-steer-cmd">
+                <function>
+                    <sum>
+                        <product>
+                            <value>-0.3333</value>
+                            <property>fcs/rudder-cmd-norm</property>
+                            <table>
+                                <independentVar>velocities/vg-fps</independentVar>
+                                <tableData>
+                                      0   1.00
+                                     17   1.00
+                                     51   0.50
+                                     85   0.30
+                                    120   0.25
+                                </tableData>
+                            </table>
+                        </product>
+                        <product>
+                            <value>0.6667</value>
+                            <difference>
+                                <property>fcs/right-brake-cmd-norm</property>
+                                <property>fcs/left-brake-cmd-norm</property>
+                            </difference>
+                            <table>
+                                <independentVar>velocities/vg-fps</independentVar>
+                                <tableData>
+                                      0   1.00
+                                     25   1.00
+                                     50   0.00
+                                </tableData>
+                            </table>
+                        </product>
+                    </sum>
+                </function>
+                <clipto>
+                    <min>-1</min>
+                    <max>1</max>
+                </clipto>
+                <output>fcs/steer-cmd-norm</output>
+            </fcs_function>
+        </channel>
+    </flight_control>
+    <!-- TEACHX-GENERATED-BEGIN aerodynamics -->
+    <aerodynamics>
+
+        <!-- TeachX: this whole section is generated by flightsim/jsbsim/tools/gen_model.py.
+             It keeps the structure and most stability derivatives of JSBSim's c172p (which are
+             textbook values for this aircraft type) and changes what is listed in CHANGES.md:
+             lift, drag and pitching moment cover every angle of attack; roll comes from a
+             four-panel wing so that a stalled wing drops and can autorotate; propeller slipstream,
+             rigging and fin blanking are added. -->
+
+        <alphalimits unit="RAD">
+            <min>-0.087</min>
+            <max>0.288</max>
+        </alphalimits>
+
+        <!-- TeachX: aero/stall-hyst-norm becomes 1 above the upper angle and returns to 0 below the lower one -->
+        <hysteresis_limits unit="RAD">
+            <min>0.2094</min>
+            <max>0.4538</max>
+        </hysteresis_limits>
+
+        <function name="aero/function/kCDge">
+            <description>Change_in_drag_due_to_ground_effect</description>
+            <table>
+                <independentVar>aero/h_b-mac-ft</independentVar>
+                <tableData>
+                       0.0000     0.4800
+                       0.1000     0.5150
+                       0.1500     0.6290
+                       0.2000     0.7090
+                       0.3000     0.8150
+                       0.4000     0.8820
+                       0.5000     0.9280
+                       0.6000     0.9620
+                       0.7000     0.9880
+                       0.8000     1.0000
+                       0.9000     1.0000
+                       1.0000     1.0000
+                       1.1000     1.0000
+                </tableData>
+            </table>
+        </function>
+        <function name="aero/function/kCLge">
+            <description>Change_in_lift_due_to_ground_effect</description>
+            <table>
+                <independentVar>aero/h_b-mac-ft</independentVar>
+                <tableData>
+                       0.0000     1.2030
+                       0.1000     1.1270
+                       0.1500     1.0900
+                       0.2000     1.0730
+                       0.3000     1.0460
+                       0.4000     1.0550
+                       0.5000     1.0190
+                       0.6000     1.0130
+                       0.7000     1.0080
+                       0.8000     1.0060
+                       0.9000     1.0030
+                       1.0000     1.0020
+                       1.1000     1.0000
+                </tableData>
+            </table>
+        </function>
+        <function name="aero/function/velocity-induced-fps">
+            <description>velocity including the propulsion induced velocity.</description>
+            <sum>
+                <property>velocities/u-aero-fps</property>
+                <property>propulsion/engine/prop-induced-velocity_fps</property>
+                <property>propulsion/engine/prop-induced-velocity_fps</property>
+            </sum>
+        </function>
+        <function name="aero/function/qbar-induced-psf">
+            <description>q bar including the propulsion induced velocity.</description>
+            <product>
+                <property>aero/function/velocity-induced-fps</property>
+                <property>aero/function/velocity-induced-fps</property>
+                <property>atmosphere/rho-slugs_ft3</property>
+                <value>0.5</value>
+            </product>
+        </function>
+        <function name="aero/function/tail-slipstream-share">
+            <description>TeachX: share of the tail that feels the propeller slipstream. At high angle of attack the slipstream passes above the tail.</description>
+            <table>
+                <independentVar>aero/alpha-rad</independentVar>
+                <tableData>
+                      -1.5708     0.0000
+                      -0.3491     0.0000
+                      -0.1396     0.5000
+                       0.1745     0.5000
+                       0.3491     0.0000
+                       1.5708     0.0000
+                </tableData>
+            </table>
+        </function>
+        <function name="aero/function/qbar-tail-psf">
+            <description>TeachX: dynamic pressure at the tail. Only part of the tail sits in the propeller slipstream, so blend free stream and slipstream.</description>
+            <sum>
+                <property>aero/qbar-psf</property>
+                <product>
+                    <property>aero/function/tail-slipstream-share</property>
+                    <difference>
+                        <property>aero/function/qbar-induced-psf</property>
+                        <property>aero/qbar-psf</property>
+                    </difference>
+                </product>
+            </sum>
+        </function>
+        <function name="aero/function/engine-torque-ftlb">
+            <description>TeachX: engine torque on the propeller shaft (power / shaft speed), kept finite when the propeller is nearly stopped.</description>
+            <quotient>
+                <product>
+                    <property>propulsion/engine/power-hp</property>
+                    <value>5252.0</value>
+                </product>
+                <max>
+                    <property>propulsion/engine/engine-rpm</property>
+                    <value>600.0</value>
+                </max>
+            </quotient>
+        </function>
+        <function name="aero/function/slipstream-immersion">
+            <description>TeachX: how much of the fin sits inside the propeller slipstream (0.1 to 1). The slipstream narrows most when the aircraft is standing still at high power (radius ratio = sqrt((V+w)/(V+2w)), w = induced velocity), and the fin root is about 0.68 propeller radii above the thrust line, so the fin is hardly touched at the start of the take-off roll and well inside by climb speed.</description>
+            <max>
+                <value>0.1</value>
+                <min>
+                    <value>1.0</value>
+                    <quotient>
+                        <difference>
+                            <pow>
+                                <quotient>
+                                    <max>
+                                        <sum>
+                                            <property>velocities/u-aero-fps</property>
+                                            <property>propulsion/engine/prop-induced-velocity_fps</property>
+                                        </sum>
+                                        <value>0.5</value>
+                                    </max>
+                                    <max>
+                                        <sum>
+                                            <property>velocities/u-aero-fps</property>
+                                            <property>propulsion/engine/prop-induced-velocity_fps</property>
+                                            <property>propulsion/engine/prop-induced-velocity_fps</property>
+                                        </sum>
+                                        <value>1.0</value>
+                                    </max>
+                                </quotient>
+                                <value>0.5</value>
+                            </pow>
+                            <value>0.68</value>
+                        </difference>
+                        <value>0.32</value>
+                    </quotient>
+                </min>
+            </max>
+        </function>
+        <function name="aero/function/elevator-effective-rad">
+            <description>TeachX: elevator deflection that counts for pitching moment. Linear to 15 degrees; the last part of the travel does a little less (a strongly deflected elevator loses effectiveness).</description>
+            <table>
+                <independentVar>fcs/elevator-pos-rad</independentVar>
+                <tableData>
+                      -0.4887    -0.4538
+                      -0.2618    -0.2618
+                       0.0000     0.0000
+                       0.2618     0.2618
+                       0.4014     0.3578
+                </tableData>
+            </table>
+        </function>
+        <function name="aero/function/krig">
+            <description>TeachX: the rigging (wing wash-in, rudder tab) works in attached flow; it fades out as the wing stalls.</description>
+            <table>
+                <independentVar>aero/alpha-rad</independentVar>
+                <tableData>
+                      -0.5236     0.0000
+                      -0.2618     1.0000
+                       0.2793     1.0000
+                       0.4538     0.0000
+                </tableData>
+            </table>
+        </function>
+        <function name="aero/function/kelevator">
+            <description>TeachX: share of elevator power left at high angle of attack (the tailplane itself stalls when the air meets it at a steep angle)</description>
+            <table>
+                <independentVar>aero/alpha-rad</independentVar>
+                <tableData>
+                      -3.1416     0.3000
+                      -1.0472     0.3500
+                      -0.4363     1.0000
+                       0.3840     1.0000
+                       0.6109     0.8500
+                       0.7854     0.6000
+                       1.0472     0.4000
+                       1.5708     0.3000
+                       3.1416     0.3000
+                </tableData>
+            </table>
+        </function>
+        <function name="aero/function/kfin">
+            <description>TeachX: share of fin and rudder effectiveness left at high angle of attack (the stalled wing and the tailplane blank the fin).</description>
+            <table>
+                <independentVar>aero/alpha-rad</independentVar>
+                <tableData>
+                      -3.1416     0.5000
+                      -1.5708     0.5000
+                      -0.5236     1.0000
+                       0.2618     1.0000
+                       0.4363     0.8500
+                       0.6981     0.7500
+                       1.5708     0.5000
+                       3.1416     0.5000
+                </tableData>
+            </table>
+        </function>
+        <function name="aero/function/kfin-damping">
+            <description>TeachX: share of the fin's weathercock stability and yaw damping left at high angle of attack (the fin sits in the wake of the stalled wing and tailplane; the rudder, lower and further aft, keeps more of its power).</description>
+            <table>
+                <independentVar>aero/alpha-rad</independentVar>
+                <tableData>
+                      -3.1416     0.3000
+                      -1.5708     0.3000
+                      -0.5236     1.0000
+                       0.2618     1.0000
+                       0.4363     0.4000
+                       0.6109     0.0500
+                       1.5708     0.0500
+                       3.1416     0.3000
+                </tableData>
+            </table>
+        </function>
+        <function name="aero/function/aileron-mean-rad">
+            <description>TeachX: mean aileron deflection, positive = roll right (left aileron down, right aileron up).</description>
+            <product>
+                <value>0.5</value>
+                <difference>
+                    <property>fcs/left-aileron-pos-rad</property>
+                    <property>fcs/right-aileron-pos-rad</property>
+                </difference>
+            </product>
+        </function>
+        <function name="aero/function/v-safe-fps">
+            <description>TeachX: true airspeed, never below 30 ft/s (keeps the ratios below finite).</description>
+            <max>
+                <property>velocities/vt-fps</property>
+                <value>30.0</value>
+            </max>
+        </function>
+        <function name="aero/function/panel-dihedral-rad">
+            <description>TeachX: sideslip raises the angle of attack of the windward wing (dihedral and high-wing effect); this is the change for the RIGHT wing.</description>
+            <product>
+                <value>0.1050</value>
+                <sin><property>aero/beta-rad</property></sin>
+            </product>
+        </function>
+        <function name="aero/function/inner-dalpha-rad">
+            <description>TeachX: how much rolling, sideslip change the angle of attack of the RIGHT inner wing panel (3.45 ft from the centreline); the left panel gets the opposite.</description>
+            <sum>
+                <atan2>
+                    <product>
+                        <property>velocities/p-aero-rad_sec</property>
+                        <value>3.455</value>
+                    </product>
+                    <property>aero/function/v-safe-fps</property>
+                </atan2>
+                <property>aero/function/panel-dihedral-rad</property>
+            </sum>
+        </function>
+        <function name="aero/function/inner-dv">
+            <description>TeachX: yawing makes the left inner panel faster and the right one slower by this fraction of the airspeed.</description>
+            <max>
+                <value>-0.6</value>
+                <min>
+                    <value>0.6</value>
+                    <quotient>
+                        <product>
+                            <property>velocities/r-aero-rad_sec</property>
+                            <value>3.455</value>
+                        </product>
+                        <property>aero/function/v-safe-fps</property>
+                    </quotient>
+                </min>
+            </max>
+        </function>
+        <function name="aero/function/alpha-inner-right-rad">
+            <description>TeachX: angle of attack of the right inner wing panel.</description>
+            <sum>
+                <property>aero/alpha-rad</property>
+                <property>aero/function/inner-dalpha-rad</property>
+            </sum>
+        </function>
+        <function name="aero/function/alpha-inner-left-rad">
+            <description>TeachX: angle of attack of the left inner wing panel.</description>
+            <difference>
+                <property>aero/alpha-rad</property>
+                <property>aero/function/inner-dalpha-rad</property>
+            </difference>
+        </function>
+        <function name="aero/function/normal-inner-right">
+            <description>TeachX: force coefficient perpendicular to the chord of the right inner wing panel, times its dynamic-pressure ratio.</description>
+            <product>
+                <pow>
+                    <difference>
+                        <value>1.0</value>
+                        <property>aero/function/inner-dv</property>
+                    </difference>
+                    <value>2.0</value>
+                </pow>
+                <table>
+                    <independentVar lookup="row">aero/function/alpha-inner-right-rad</independentVar>
+                    <independentVar lookup="column">aero/stall-hyst-norm</independentVar>
+                    <tableData>
+                                         0.0        1.0
+                          -3.1416     0.0000     0.0000
+                          -2.6180    -1.0306    -1.0306
+                          -2.0944    -1.4811    -1.4811
+                          -1.5708    -1.6100    -1.6100
+                          -1.0472    -1.4811    -1.4811
+                          -0.7854    -1.3058    -1.3058
+                          -0.5236    -1.0306    -1.0306
+                          -0.4363    -0.8949    -0.8949
+                          -0.3491    -0.7629    -0.7701
+                          -0.2793    -0.8230    -0.6501
+                          -0.2269    -0.9446    -0.5484
+                          -0.1745    -0.7687    -0.5238
+                          -0.1396    -0.4551    -0.4330
+                          -0.0698    -0.0937    -0.0937
+                           0.0000     0.2700     0.2700
+                           0.0698     0.6341     0.6341
+                           0.1396     0.9967     0.9967
+                           0.1745     1.1768     1.0294
+                           0.1920     1.2663     0.9509
+                           0.2094     1.3519     0.8494
+                           0.2269     1.4290     0.7254
+                           0.2443     1.4927     0.5832
+                           0.2618     1.5385     0.6171
+                           0.2705     1.5534     0.6337
+                           0.2793     1.5621     0.6501
+                           0.2880     1.5643     0.6663
+                           0.2967     1.5483     0.6822
+                           0.3054     1.5326     0.6980
+                           0.3142     1.4829     0.7135
+                           0.3316     1.3665     0.7440
+                           0.3491     1.2544     0.7736
+                           0.3840     1.1009     0.8307
+                           0.4363     0.9818     0.9107
+                           0.5236     0.8849     0.8849
+                           0.6109     1.1354     1.1354
+                           0.6981     1.2267     1.2267
+                           0.7854     1.3058     1.3058
+                           0.8727     1.3740     1.3740
+                           1.0472     1.4811     1.4811
+                           1.2217     1.5539     1.5539
+                           1.3963     1.5961     1.5961
+                           1.5708     1.6100     1.6100
+                           2.0944     1.4811     1.4811
+                           2.6180     1.0306     1.0306
+                           3.1416     0.0000     0.0000
+                    </tableData>
+                </table>
+            </product>
+        </function>
+        <function name="aero/function/axial-inner-right">
+            <description>TeachX: force coefficient along the chord (positive = backwards) of the right inner wing panel, times its dynamic-pressure ratio.</description>
+            <product>
+                <pow>
+                    <difference>
+                        <value>1.0</value>
+                        <property>aero/function/inner-dv</property>
+                    </difference>
+                    <value>2.0</value>
+                </pow>
+                <table>
+                    <independentVar lookup="row">aero/function/alpha-inner-right-rad</independentVar>
+                    <independentVar lookup="column">aero/stall-hyst-norm</independentVar>
+                    <tableData>
+                                         0.0        1.0
+                          -3.1416    -0.0100    -0.0100
+                          -2.6180    -0.0087    -0.0087
+                          -2.0944    -0.0050    -0.0050
+                          -1.5708     0.0000     0.0000
+                          -1.0472     0.0050     0.0050
+                          -0.7854     0.0071     0.0071
+                          -0.5236     0.0087     0.0087
+                          -0.4363     0.0164     0.0164
+                          -0.3491    -0.0091     0.0107
+                          -0.2793    -0.1046     0.0096
+                          -0.2269    -0.1317     0.0097
+                          -0.1745    -0.0878    -0.0209
+                          -0.1396    -0.0408    -0.0301
+                          -0.0698     0.0040     0.0040
+                           0.0000     0.0145     0.0145
+                           0.0698    -0.0094    -0.0094
+                           0.1396    -0.0678    -0.0678
+                           0.1745    -0.1100    -0.0840
+                           0.1920    -0.1343    -0.0730
+                           0.2094    -0.1606    -0.0538
+                           0.2269    -0.1887    -0.0262
+                           0.2443    -0.2179     0.0097
+                           0.2618    -0.2463     0.0097
+                           0.2705    -0.2595     0.0096
+                           0.2793    -0.2715     0.0096
+                           0.2880    -0.2820     0.0096
+                           0.2967    -0.2886     0.0096
+                           0.3054    -0.2937     0.0095
+                           0.3142    -0.2902     0.0095
+                           0.3316    -0.2700     0.0095
+                           0.3491    -0.2374     0.0094
+                           0.3840    -0.1581     0.0093
+                           0.4363    -0.0241     0.0091
+                           0.5236     0.0928     0.0928
+                           0.6109     0.0082     0.0082
+                           0.6981     0.0077     0.0077
+                           0.7854     0.0071     0.0071
+                           0.8727     0.0064     0.0064
+                           1.0472     0.0050     0.0050
+                           1.2217     0.0034     0.0034
+                           1.3963     0.0017     0.0017
+                           1.5708     0.0000     0.0000
+                           2.0944    -0.0050    -0.0050
+                           2.6180    -0.0087    -0.0087
+                           3.1416    -0.0100    -0.0100
+                    </tableData>
+                </table>
+            </product>
+        </function>
+        <function name="aero/function/normal-inner-left">
+            <description>TeachX: force coefficient perpendicular to the chord of the left inner wing panel, times its dynamic-pressure ratio.</description>
+            <product>
+                <pow>
+                    <sum>
+                        <value>1.0</value>
+                        <property>aero/function/inner-dv</property>
+                    </sum>
+                    <value>2.0</value>
+                </pow>
+                <table>
+                    <independentVar lookup="row">aero/function/alpha-inner-left-rad</independentVar>
+                    <independentVar lookup="column">aero/stall-hyst-norm</independentVar>
+                    <tableData>
+                                         0.0        1.0
+                          -3.1416     0.0000     0.0000
+                          -2.6180    -1.0306    -1.0306
+                          -2.0944    -1.4811    -1.4811
+                          -1.5708    -1.6100    -1.6100
+                          -1.0472    -1.4811    -1.4811
+                          -0.7854    -1.3058    -1.3058
+                          -0.5236    -1.0306    -1.0306
+                          -0.4363    -0.8949    -0.8949
+                          -0.3491    -0.7629    -0.7701
+                          -0.2793    -0.8230    -0.6501
+                          -0.2269    -0.9446    -0.5484
+                          -0.1745    -0.7687    -0.5238
+                          -0.1396    -0.4551    -0.4330
+                          -0.0698    -0.0937    -0.0937
+                           0.0000     0.2700     0.2700
+                           0.0698     0.6341     0.6341
+                           0.1396     0.9967     0.9967
+                           0.1745     1.1768     1.0294
+                           0.1920     1.2663     0.9509
+                           0.2094     1.3519     0.8494
+                           0.2269     1.4290     0.7254
+                           0.2443     1.4927     0.5832
+                           0.2618     1.5385     0.6171
+                           0.2705     1.5534     0.6337
+                           0.2793     1.5621     0.6501
+                           0.2880     1.5643     0.6663
+                           0.2967     1.5483     0.6822
+                           0.3054     1.5326     0.6980
+                           0.3142     1.4829     0.7135
+                           0.3316     1.3665     0.7440
+                           0.3491     1.2544     0.7736
+                           0.3840     1.1009     0.8307
+                           0.4363     0.9818     0.9107
+                           0.5236     0.8849     0.8849
+                           0.6109     1.1354     1.1354
+                           0.6981     1.2267     1.2267
+                           0.7854     1.3058     1.3058
+                           0.8727     1.3740     1.3740
+                           1.0472     1.4811     1.4811
+                           1.2217     1.5539     1.5539
+                           1.3963     1.5961     1.5961
+                           1.5708     1.6100     1.6100
+                           2.0944     1.4811     1.4811
+                           2.6180     1.0306     1.0306
+                           3.1416     0.0000     0.0000
+                    </tableData>
+                </table>
+            </product>
+        </function>
+        <function name="aero/function/axial-inner-left">
+            <description>TeachX: force coefficient along the chord (positive = backwards) of the left inner wing panel, times its dynamic-pressure ratio.</description>
+            <product>
+                <pow>
+                    <sum>
+                        <value>1.0</value>
+                        <property>aero/function/inner-dv</property>
+                    </sum>
+                    <value>2.0</value>
+                </pow>
+                <table>
+                    <independentVar lookup="row">aero/function/alpha-inner-left-rad</independentVar>
+                    <independentVar lookup="column">aero/stall-hyst-norm</independentVar>
+                    <tableData>
+                                         0.0        1.0
+                          -3.1416    -0.0100    -0.0100
+                          -2.6180    -0.0087    -0.0087
+                          -2.0944    -0.0050    -0.0050
+                          -1.5708     0.0000     0.0000
+                          -1.0472     0.0050     0.0050
+                          -0.7854     0.0071     0.0071
+                          -0.5236     0.0087     0.0087
+                          -0.4363     0.0164     0.0164
+                          -0.3491    -0.0091     0.0107
+                          -0.2793    -0.1046     0.0096
+                          -0.2269    -0.1317     0.0097
+                          -0.1745    -0.0878    -0.0209
+                          -0.1396    -0.0408    -0.0301
+                          -0.0698     0.0040     0.0040
+                           0.0000     0.0145     0.0145
+                           0.0698    -0.0094    -0.0094
+                           0.1396    -0.0678    -0.0678
+                           0.1745    -0.1100    -0.0840
+                           0.1920    -0.1343    -0.0730
+                           0.2094    -0.1606    -0.0538
+                           0.2269    -0.1887    -0.0262
+                           0.2443    -0.2179     0.0097
+                           0.2618    -0.2463     0.0097
+                           0.2705    -0.2595     0.0096
+                           0.2793    -0.2715     0.0096
+                           0.2880    -0.2820     0.0096
+                           0.2967    -0.2886     0.0096
+                           0.3054    -0.2937     0.0095
+                           0.3142    -0.2902     0.0095
+                           0.3316    -0.2700     0.0095
+                           0.3491    -0.2374     0.0094
+                           0.3840    -0.1581     0.0093
+                           0.4363    -0.0241     0.0091
+                           0.5236     0.0928     0.0928
+                           0.6109     0.0082     0.0082
+                           0.6981     0.0077     0.0077
+                           0.7854     0.0071     0.0071
+                           0.8727     0.0064     0.0064
+                           1.0472     0.0050     0.0050
+                           1.2217     0.0034     0.0034
+                           1.3963     0.0017     0.0017
+                           1.5708     0.0000     0.0000
+                           2.0944    -0.0050    -0.0050
+                           2.6180    -0.0087    -0.0087
+                           3.1416    -0.0100    -0.0100
+                    </tableData>
+                </table>
+            </product>
+        </function>
+        <function name="aero/function/outer-dalpha-rad">
+            <description>TeachX: how much rolling, sideslip and aileron change the angle of attack of the RIGHT outer wing panel (10.36 ft from the centreline); the left panel gets the opposite.</description>
+            <sum>
+                <atan2>
+                    <product>
+                        <property>velocities/p-aero-rad_sec</property>
+                        <value>10.364</value>
+                    </product>
+                    <property>aero/function/v-safe-fps</property>
+                </atan2>
+                <property>aero/function/panel-dihedral-rad</property>
+                <product>
+                    <value>-0.2000</value>
+                    <property>aero/function/aileron-mean-rad</property>
+                </product>
+            </sum>
+        </function>
+        <function name="aero/function/outer-dv">
+            <description>TeachX: yawing makes the left outer panel faster and the right one slower by this fraction of the airspeed.</description>
+            <max>
+                <value>-0.6</value>
+                <min>
+                    <value>0.6</value>
+                    <quotient>
+                        <product>
+                            <property>velocities/r-aero-rad_sec</property>
+                            <value>10.364</value>
+                        </product>
+                        <property>aero/function/v-safe-fps</property>
+                    </quotient>
+                </min>
+            </max>
+        </function>
+        <function name="aero/function/alpha-outer-right-rad">
+            <description>TeachX: angle of attack of the right outer wing panel.</description>
+            <sum>
+                <property>aero/alpha-rad</property>
+                <property>aero/function/outer-dalpha-rad</property>
+            </sum>
+        </function>
+        <function name="aero/function/alpha-outer-left-rad">
+            <description>TeachX: angle of attack of the left outer wing panel.</description>
+            <difference>
+                <property>aero/alpha-rad</property>
+                <property>aero/function/outer-dalpha-rad</property>
+            </difference>
+        </function>
+        <function name="aero/function/normal-outer-right">
+            <description>TeachX: force coefficient perpendicular to the chord of the right outer wing panel, times its dynamic-pressure ratio.</description>
+            <product>
+                <pow>
+                    <difference>
+                        <value>1.0</value>
+                        <property>aero/function/outer-dv</property>
+                    </difference>
+                    <value>2.0</value>
+                </pow>
+                <table>
+                    <independentVar lookup="row">aero/function/alpha-outer-right-rad</independentVar>
+                    <independentVar lookup="column">aero/stall-hyst-norm</independentVar>
+                    <tableData>
+                                         0.0        1.0
+                          -3.1416     0.0000     0.0000
+                          -2.6180    -1.0306    -1.0306
+                          -2.0944    -1.4811    -1.4811
+                          -1.5708    -1.6100    -1.6100
+                          -1.0472    -1.4811    -1.4811
+                          -0.7854    -1.3058    -1.3058
+                          -0.5236    -1.0306    -1.0306
+                          -0.4363    -0.8949    -0.8949
+                          -0.3491    -0.7629    -0.7701
+                          -0.2793    -0.8230    -0.6501
+                          -0.2269    -0.9446    -0.5484
+                          -0.1745    -0.7687    -0.5238
+                          -0.1396    -0.4551    -0.4330
+                          -0.0698    -0.0937    -0.0937
+                           0.0000     0.2700     0.2700
+                           0.0698     0.6341     0.6341
+                           0.1396     0.9967     0.9967
+                           0.2094     1.3558     0.8510
+                           0.2269     1.4448     0.7291
+                           0.2443     1.5257     0.5845
+                           0.2618     1.5916     0.6171
+                           0.2793     1.6438     0.6501
+                           0.2967     1.6836     0.6822
+                           0.3142     1.7124     0.7135
+                           0.3316     1.7315     0.7440
+                           0.3491     1.7422     0.7736
+                           0.3665     1.7461     0.8025
+                           0.3840     1.7482     0.8307
+                           0.4014     1.7481     0.8581
+                           0.4102     1.7478     0.8715
+                           0.4189     1.7476     0.8847
+                           0.4363     1.7195     0.9107
+                           0.4538     1.6566     0.9360
+                           0.4800     1.5204     0.9727
+                           0.5061     1.3720     1.0079
+                           0.5411     1.2042     1.0528
+                           0.5760     0.9829     0.9829
+                           0.6109     1.1354     1.1354
+                           0.6981     1.2267     1.2267
+                           0.7854     1.3058     1.3058
+                           0.8727     1.3740     1.3740
+                           1.0472     1.4811     1.4811
+                           1.2217     1.5539     1.5539
+                           1.3963     1.5961     1.5961
+                           1.5708     1.6100     1.6100
+                           2.0944     1.4811     1.4811
+                           2.6180     1.0306     1.0306
+                           3.1416     0.0000     0.0000
+                    </tableData>
+                </table>
+            </product>
+        </function>
+        <function name="aero/function/axial-outer-right">
+            <description>TeachX: force coefficient along the chord (positive = backwards) of the right outer wing panel, times its dynamic-pressure ratio.</description>
+            <product>
+                <pow>
+                    <difference>
+                        <value>1.0</value>
+                        <property>aero/function/outer-dv</property>
+                    </difference>
+                    <value>2.0</value>
+                </pow>
+                <table>
+                    <independentVar lookup="row">aero/function/alpha-outer-right-rad</independentVar>
+                    <independentVar lookup="column">aero/stall-hyst-norm</independentVar>
+                    <tableData>
+                                         0.0        1.0
+                          -3.1416    -0.0100    -0.0100
+                          -2.6180    -0.0087    -0.0087
+                          -2.0944    -0.0050    -0.0050
+                          -1.5708     0.0000     0.0000
+                          -1.0472     0.0050     0.0050
+                          -0.7854     0.0071     0.0071
+                          -0.5236     0.0087     0.0087
+                          -0.4363     0.0164     0.0164
+                          -0.3491    -0.0091     0.0107
+                          -0.2793    -0.1046     0.0096
+                          -0.2269    -0.1317     0.0097
+                          -0.1745    -0.0878    -0.0209
+                          -0.1396    -0.0408    -0.0301
+                          -0.0698     0.0040     0.0040
+                           0.0000     0.0145     0.0145
+                           0.0698    -0.0094    -0.0094
+                           0.1396    -0.0678    -0.0678
+                           0.2094    -0.1608    -0.0535
+                           0.2269    -0.1894    -0.0242
+                           0.2443    -0.2198     0.0149
+                           0.2618    -0.2513     0.0098
+                           0.2793    -0.2836     0.0096
+                           0.2967    -0.3163     0.0096
+                           0.3142    -0.3493     0.0095
+                           0.3316    -0.3821     0.0095
+                           0.3491    -0.4147     0.0094
+                           0.3665    -0.4467     0.0093
+                           0.3840    -0.4689     0.0093
+                           0.4014    -0.4868     0.0092
+                           0.4102    -0.4941     0.0092
+                           0.4189    -0.5003     0.0091
+                           0.4363    -0.5007     0.0091
+                           0.4538    -0.4816     0.0090
+                           0.4800    -0.4146     0.0089
+                           0.5061    -0.3095     0.0087
+                           0.5411    -0.1317     0.0086
+                           0.5760     0.0813     0.0813
+                           0.6109     0.0082     0.0082
+                           0.6981     0.0077     0.0077
+                           0.7854     0.0071     0.0071
+                           0.8727     0.0064     0.0064
+                           1.0472     0.0050     0.0050
+                           1.2217     0.0034     0.0034
+                           1.3963     0.0017     0.0017
+                           1.5708     0.0000     0.0000
+                           2.0944    -0.0050    -0.0050
+                           2.6180    -0.0087    -0.0087
+                           3.1416    -0.0100    -0.0100
+                    </tableData>
+                </table>
+            </product>
+        </function>
+        <function name="aero/function/normal-outer-left">
+            <description>TeachX: force coefficient perpendicular to the chord of the left outer wing panel, times its dynamic-pressure ratio.</description>
+            <product>
+                <pow>
+                    <sum>
+                        <value>1.0</value>
+                        <property>aero/function/outer-dv</property>
+                    </sum>
+                    <value>2.0</value>
+                </pow>
+                <table>
+                    <independentVar lookup="row">aero/function/alpha-outer-left-rad</independentVar>
+                    <independentVar lookup="column">aero/stall-hyst-norm</independentVar>
+                    <tableData>
+                                         0.0        1.0
+                          -3.1416     0.0000     0.0000
+                          -2.6180    -1.0306    -1.0306
+                          -2.0944    -1.4811    -1.4811
+                          -1.5708    -1.6100    -1.6100
+                          -1.0472    -1.4811    -1.4811
+                          -0.7854    -1.3058    -1.3058
+                          -0.5236    -1.0306    -1.0306
+                          -0.4363    -0.8949    -0.8949
+                          -0.3491    -0.7629    -0.7701
+                          -0.2793    -0.8230    -0.6501
+                          -0.2269    -0.9446    -0.5484
+                          -0.1745    -0.7687    -0.5238
+                          -0.1396    -0.4551    -0.4330
+                          -0.0698    -0.0937    -0.0937
+                           0.0000     0.2700     0.2700
+                           0.0698     0.6341     0.6341
+                           0.1396     0.9967     0.9967
+                           0.2094     1.3558     0.8510
+                           0.2269     1.4448     0.7291
+                           0.2443     1.5257     0.5845
+                           0.2618     1.5916     0.6171
+                           0.2793     1.6438     0.6501
+                           0.2967     1.6836     0.6822
+                           0.3142     1.7124     0.7135
+                           0.3316     1.7315     0.7440
+                           0.3491     1.7422     0.7736
+                           0.3665     1.7461     0.8025
+                           0.3840     1.7482     0.8307
+                           0.4014     1.7481     0.8581
+                           0.4102     1.7478     0.8715
+                           0.4189     1.7476     0.8847
+                           0.4363     1.7195     0.9107
+                           0.4538     1.6566     0.9360
+                           0.4800     1.5204     0.9727
+                           0.5061     1.3720     1.0079
+                           0.5411     1.2042     1.0528
+                           0.5760     0.9829     0.9829
+                           0.6109     1.1354     1.1354
+                           0.6981     1.2267     1.2267
+                           0.7854     1.3058     1.3058
+                           0.8727     1.3740     1.3740
+                           1.0472     1.4811     1.4811
+                           1.2217     1.5539     1.5539
+                           1.3963     1.5961     1.5961
+                           1.5708     1.6100     1.6100
+                           2.0944     1.4811     1.4811
+                           2.6180     1.0306     1.0306
+                           3.1416     0.0000     0.0000
+                    </tableData>
+                </table>
+            </product>
+        </function>
+        <function name="aero/function/axial-outer-left">
+            <description>TeachX: force coefficient along the chord (positive = backwards) of the left outer wing panel, times its dynamic-pressure ratio.</description>
+            <product>
+                <pow>
+                    <sum>
+                        <value>1.0</value>
+                        <property>aero/function/outer-dv</property>
+                    </sum>
+                    <value>2.0</value>
+                </pow>
+                <table>
+                    <independentVar lookup="row">aero/function/alpha-outer-left-rad</independentVar>
+                    <independentVar lookup="column">aero/stall-hyst-norm</independentVar>
+                    <tableData>
+                                         0.0        1.0
+                          -3.1416    -0.0100    -0.0100
+                          -2.6180    -0.0087    -0.0087
+                          -2.0944    -0.0050    -0.0050
+                          -1.5708     0.0000     0.0000
+                          -1.0472     0.0050     0.0050
+                          -0.7854     0.0071     0.0071
+                          -0.5236     0.0087     0.0087
+                          -0.4363     0.0164     0.0164
+                          -0.3491    -0.0091     0.0107
+                          -0.2793    -0.1046     0.0096
+                          -0.2269    -0.1317     0.0097
+                          -0.1745    -0.0878    -0.0209
+                          -0.1396    -0.0408    -0.0301
+                          -0.0698     0.0040     0.0040
+                           0.0000     0.0145     0.0145
+                           0.0698    -0.0094    -0.0094
+                           0.1396    -0.0678    -0.0678
+                           0.2094    -0.1608    -0.0535
+                           0.2269    -0.1894    -0.0242
+                           0.2443    -0.2198     0.0149
+                           0.2618    -0.2513     0.0098
+                           0.2793    -0.2836     0.0096
+                           0.2967    -0.3163     0.0096
+                           0.3142    -0.3493     0.0095
+                           0.3316    -0.3821     0.0095
+                           0.3491    -0.4147     0.0094
+                           0.3665    -0.4467     0.0093
+                           0.3840    -0.4689     0.0093
+                           0.4014    -0.4868     0.0092
+                           0.4102    -0.4941     0.0092
+                           0.4189    -0.5003     0.0091
+                           0.4363    -0.5007     0.0091
+                           0.4538    -0.4816     0.0090
+                           0.4800    -0.4146     0.0089
+                           0.5061    -0.3095     0.0087
+                           0.5411    -0.1317     0.0086
+                           0.5760     0.0813     0.0813
+                           0.6109     0.0082     0.0082
+                           0.6981     0.0077     0.0077
+                           0.7854     0.0071     0.0071
+                           0.8727     0.0064     0.0064
+                           1.0472     0.0050     0.0050
+                           1.2217     0.0034     0.0034
+                           1.3963     0.0017     0.0017
+                           1.5708     0.0000     0.0000
+                           2.0944    -0.0050    -0.0050
+                           2.6180    -0.0087    -0.0087
+                           3.1416    -0.0100    -0.0100
+                    </tableData>
+                </table>
+            </product>
+        </function>
+
+        <axis name="DRAG">
+            <function name="aero/coefficient/CDo">
+                <description>Drag_at_zero_lift</description>
+                <product>
+                    <property>aero/qbar-psf</property>
+                    <property>metrics/Sw-sqft</property>
+                    <value>0.0294</value>
+                </product>
+            </function>
+            <function name="aero/coefficient/CDDf">
+                <description>Delta_drag_due_to_flap_deflection (profile drag)</description>
+                <product>
+                    <property>aero/qbar-psf</property>
+                    <property>metrics/Sw-sqft</property>
+                    <table>
+                        <independentVar>fcs/flap-pos-deg</independentVar>
+                        <tableData>
+                               0.0000     0.0000
+                              10.0000     0.0100
+                              20.0000     0.0270
+                              30.0000     0.0480
+                        </tableData>
+                    </table>
+                </product>
+            </function>
+            <function name="aero/coefficient/CDwbh">
+                <description>Drag_due_to_lift (induced drag = K x CL^2, reduced close to the ground)</description>
+                <product>
+                    <property>aero/qbar-psf</property>
+                    <property>metrics/Sw-sqft</property>
+                    <property>aero/function/kCDge</property>
+                    <table>
+                        <independentVar lookup="row">aero/alpha-rad</independentVar>
+                        <independentVar lookup="column">fcs/flap-pos-deg</independentVar>
+                        <tableData>
+                                             0.0       10.0       20.0       30.0
+                              -3.1416     0.0000     0.0000     0.0000     0.0000
+                              -2.6180     0.0489     0.0519     0.0548     0.0577
+                              -2.0944     0.0336     0.0356     0.0376     0.0397
+                              -1.5708     0.0000     0.0000     0.0000     0.0000
+                              -1.0472     0.0336     0.0356     0.0376     0.0397
+                              -0.7854     0.0523     0.0554     0.0586     0.0617
+                              -0.5236     0.0489     0.0519     0.0548     0.0577
+                              -0.4363     0.0401     0.0369     0.0339     0.0323
+                              -0.3491     0.0321     0.0245     0.0181     0.0142
+                              -0.2793     0.0417     0.0331     0.0258     0.0213
+                              -0.2269     0.0560     0.0464     0.0380     0.0328
+                              -0.1745     0.0370     0.0255     0.0164     0.0112
+                              -0.1396     0.0129     0.0037     0.0001     0.0008
+                              -0.1047     0.0047     0.0002     0.0015     0.0060
+                              -0.0698     0.0005     0.0011     0.0074     0.0159
+                              -0.0524     0.0000     0.0031     0.0121     0.0227
+                              -0.0349     0.0005     0.0063     0.0179     0.0308
+                              -0.0175     0.0020     0.0105     0.0249     0.0400
+                               0.0000     0.0045     0.0158     0.0331     0.0504
+                               0.0175     0.0081     0.0222     0.0423     0.0620
+                               0.0349     0.0126     0.0296     0.0528     0.0749
+                               0.0524     0.0182     0.0382     0.0643     0.0889
+                               0.0698     0.0249     0.0478     0.0770     0.1042
+                               0.0873     0.0325     0.0586     0.0909     0.1206
+                               0.1047     0.0412     0.0704     0.1059     0.1383
+                               0.1222     0.0508     0.0833     0.1220     0.1571
+                               0.1396     0.0616     0.0972     0.1393     0.1772
+                               0.1571     0.0733     0.1123     0.1577     0.1974
+                               0.1745     0.0860     0.1284     0.1760     0.2161
+                               0.1920     0.0998     0.1448     0.1930     0.2326
+                               0.2094     0.1140     0.1606     0.2079     0.2460
+                               0.2269     0.1276     0.1748     0.2200     0.2556
+                               0.2443     0.1397     0.1863     0.2284     0.2607
+                               0.2531     0.1447     0.1906     0.2309     0.2613
+                               0.2618     0.1489     0.1939     0.2323     0.2572
+                               0.2705     0.1521     0.1960     0.2310     0.2531
+                               0.2793     0.1541     0.1967     0.2272     0.2397
+                               0.2880     0.1548     0.1933     0.2200     0.2241
+                               0.2967     0.1519     0.1899     0.2069     0.2090
+                               0.3054     0.1490     0.1789     0.1927     0.1944
+                               0.3142     0.1395     0.1661     0.1791     0.1803
+                               0.3316     0.1181     0.1420     0.1546     0.1602
+                               0.3491     0.0984     0.1225     0.1365     0.1414
+                               0.3840     0.0723     0.0946     0.1099     0.1180
+                               0.4363     0.0502     0.0700     0.0851     0.0947
+                               0.5236     0.0321     0.0563     0.0628     0.0682
+                               0.6109     0.0531     0.0586     0.0635     0.0680
+                               0.6981     0.0542     0.0574     0.0607     0.0639
+                               0.7854     0.0523     0.0554     0.0586     0.0617
+                               0.8727     0.0478     0.0507     0.0536     0.0564
+                               1.0472     0.0336     0.0356     0.0376     0.0397
+                               1.2217     0.0173     0.0183     0.0194     0.0204
+                               1.3963     0.0047     0.0050     0.0053     0.0056
+                               1.5708     0.0000     0.0000     0.0000     0.0000
+                               2.0944     0.0336     0.0356     0.0376     0.0397
+                               2.6180     0.0489     0.0519     0.0548     0.0577
+                               3.1416     0.0000     0.0000     0.0000     0.0000
+                        </tableData>
+                    </table>
+                </product>
+            </function>
+            <function name="aero/coefficient/CDsep">
+                <description>TeachX: drag of separated flow beyond the stall (rises to a flat plate broadside-on)</description>
+                <product>
+                    <property>aero/qbar-psf</property>
+                    <property>metrics/Sw-sqft</property>
+                    <table>
+                        <independentVar>aero/alpha-rad</independentVar>
+                        <tableData>
+                              -3.1416     0.0000
+                              -2.6180     0.4639
+                              -2.0944     1.2416
+                              -1.5708     1.6000
+                              -1.0472     1.2416
+                              -0.7854     0.8661
+                              -0.5236     0.4639
+                              -0.4363     0.3430
+                              -0.3491     0.2103
+                              -0.2793     0.0746
+                              -0.2269     0.0182
+                              -0.1745     0.0000
+                              -0.1396     0.0000
+                              -0.1047     0.0000
+                              -0.0698     0.0000
+                              -0.0524     0.0000
+                              -0.0349     0.0000
+                              -0.0175     0.0000
+                               0.0000     0.0000
+                               0.0175     0.0000
+                               0.0349     0.0000
+                               0.0524     0.0000
+                               0.0698     0.0000
+                               0.0873     0.0000
+                               0.1047     0.0000
+                               0.1222     0.0000
+                               0.1396     0.0000
+                               0.1571     0.0000
+                               0.1745     0.0000
+                               0.1920     0.0000
+                               0.2094     0.0000
+                               0.2269     0.0000
+                               0.2443     0.0000
+                               0.2531     0.0004
+                               0.2618     0.0014
+                               0.2705     0.0030
+                               0.2793     0.0055
+                               0.2880     0.0092
+                               0.2967     0.0149
+                               0.3054     0.0218
+                               0.3142     0.0327
+                               0.3316     0.0615
+                               0.3491     0.0975
+                               0.3840     0.1835
+                               0.4363     0.3329
+                               0.5236     0.4807
+                               0.6109     0.5949
+                               0.6981     0.7302
+                               0.7854     0.8661
+                               0.8727     0.9988
+                               1.0472     1.2416
+                               1.2217     1.4340
+                               1.3963     1.5575
+                               1.5708     1.6000
+                               2.0944     1.2416
+                               2.6180     0.4639
+                               3.1416     0.0000
+                        </tableData>
+                    </table>
+                </product>
+            </function>
+            <function name="aero/coefficient/CDhyst">
+                <description>TeachX: extra drag while the wing stays stalled (stall hysteresis)</description>
+                <product>
+                    <property>aero/qbar-psf</property>
+                    <property>metrics/Sw-sqft</property>
+                    <property>aero/stall-hyst-norm</property>
+                    <table>
+                        <independentVar>aero/alpha-rad</independentVar>
+                        <tableData>
+                              -3.1416     0.0000
+                              -2.6180     0.0000
+                              -2.0944     0.0000
+                              -1.5708     0.0000
+                              -1.0472     0.0000
+                              -0.7854     0.0000
+                              -0.5236     0.0000
+                              -0.4363     0.0000
+                              -0.3491     0.0210
+                              -0.2793     0.0622
+                              -0.2269     0.0487
+                              -0.1745     0.0234
+                              -0.1396     0.0075
+                              -0.1047     0.0000
+                              -0.0698     0.0000
+                              -0.0524     0.0000
+                              -0.0349     0.0000
+                              -0.0175     0.0000
+                               0.0000     0.0000
+                               0.0175     0.0000
+                               0.0349     0.0000
+                               0.0524     0.0000
+                               0.0698     0.0000
+                               0.0873     0.0000
+                               0.1047     0.0000
+                               0.1222     0.0000
+                               0.1396     0.0000
+                               0.1571     0.0000
+                               0.1745     0.0000
+                               0.1920     0.0000
+                               0.2094     0.0000
+                               0.2269     0.0000
+                               0.2443     0.0008
+                               0.2531     0.0045
+                               0.2618     0.0087
+                               0.2705     0.0135
+                               0.2793     0.0188
+                               0.2880     0.0245
+                               0.2967     0.0319
+                               0.3054     0.0382
+                               0.3142     0.0473
+                               0.3316     0.0615
+                               0.3491     0.0675
+                               0.3840     0.0540
+                               0.4363     0.0000
+                               0.5236     0.0000
+                               0.6109     0.0000
+                               0.6981     0.0000
+                               0.7854     0.0000
+                               0.8727     0.0000
+                               1.0472     0.0000
+                               1.2217     0.0000
+                               1.3963     0.0000
+                               1.5708     0.0000
+                               2.0944     0.0000
+                               2.6180     0.0000
+                               3.1416     0.0000
+                        </tableData>
+                    </table>
+                </product>
+            </function>
+            <function name="aero/coefficient/CDDe">
+                <description>Drag_due_to_Elevator_Deflection</description>
+                <product>
+                    <property>aero/qbar-psf</property>
+                    <property>metrics/Sw-sqft</property>
+                    <property>fcs/mag-elevator-pos-rad</property>
+                    <value>0.0200</value>
+                </product>
+            </function>
+            <function name="aero/coefficient/CDbeta">
+                <description>Drag_due_to_sideslip (TeachX: grows with the square of the sideslip, table to 90 degrees)</description>
+                <product>
+                    <property>aero/qbar-psf</property>
+                    <property>metrics/Sw-sqft</property>
+                    <table>
+                        <independentVar>aero/mag-beta-rad</independentVar>
+                        <tableData>
+                               0.0000     0.0000
+                               0.0436     0.0008
+                               0.0873     0.0030
+                               0.1745     0.0120
+                               0.2618     0.0270
+                               0.3491     0.0480
+                               0.5236     0.1050
+                               0.7854     0.2500
+                               1.5708     0.6000
+                        </tableData>
+                    </table>
+                </product>
+            </function>
+        </axis>
+
+        <axis name="SIDE">
+            <function name="aero/coefficient/CYb">
+                <description>Side_force_due_to_beta (TeachX: extended to 90 degrees of sideslip)</description>
+                <product>
+                    <property>aero/qbar-psf</property>
+                    <property>metrics/Sw-sqft</property>
+                    <table>
+                        <independentVar lookup="row">aero/beta-rad</independentVar>
+                        <independentVar lookup="column">fcs/flap-pos-deg</independentVar>
+                        <tableData>
+                                             0.0       30.0
+                              -1.5708     0.6000     0.4644
+                              -0.7854     0.3600     0.2786
+                              -0.3491     0.1370     0.1061
+                               0.0000     0.0000     0.0000
+                               0.3491    -0.1370    -0.1061
+                               0.7854    -0.3600    -0.2786
+                               1.5708    -0.6000    -0.4644
+                        </tableData>
+                    </table>
+                </product>
+            </function>
+            <function name="aero/coefficient/CYdr">
+                <description>Side_force_due_to_rudder</description>
+                <product>
+                    <property>aero/function/qbar-tail-psf</property>
+                    <property>metrics/Sw-sqft</property>
+                    <property>aero/function/kfin</property>
+                    <property>fcs/rudder-pos-rad</property>
+                    <value>0.1870</value>
+                </product>
+            </function>
+            <function name="aero/coefficient/CYp">
+                <description>Side_force_due_to_roll_rate</description>
+                <product>
+                    <property>aero/qbar-psf</property>
+                    <property>metrics/Sw-sqft</property>
+                    <property>aero/bi2vel</property>
+                    <property>velocities/p-aero-rad_sec</property>
+                    <table>
+                        <independentVar lookup="row">aero/alpha-rad</independentVar>
+                        <independentVar lookup="column">fcs/flap-pos-deg</independentVar>
+                        <tableData>
+                                             0.0       30.0
+                               0.0000    -0.0750    -0.1610
+                               0.0940    -0.1450    -0.2310
+                        </tableData>
+                    </table>
+                </product>
+            </function>
+            <function name="aero/coefficient/CYr">
+                <description>Side_force_due_to_yaw_rate</description>
+                <product>
+                    <property>aero/qbar-psf</property>
+                    <property>metrics/Sw-sqft</property>
+                    <property>aero/bi2vel</property>
+                    <property>velocities/r-aero-rad_sec</property>
+                    <table>
+                        <independentVar lookup="row">aero/alpha-rad</independentVar>
+                        <independentVar lookup="column">fcs/flap-pos-deg</independentVar>
+                        <tableData>
+                                             0.0       30.0
+                               0.0000     0.2140     0.1620
+                               0.0940     0.2670     0.2150
+                        </tableData>
+                    </table>
+                </product>
+            </function>
+            <function name="aero/coefficient/CYswirl">
+                <description>TeachX: the spiralling propeller slipstream pushes the fin to the right (this is the side force that goes with the nose-left yawing moment Cnswirl)</description>
+                <product>
+                    <property>aero/function/engine-torque-ftlb</property>
+                    <property>aero/function/slipstream-immersion</property>
+                    <value>0.12739</value>
+                </product>
+            </function>
+            <function name="aero/coefficient/CYrig">
+                <description>TeachX: side force of the fixed rudder tab (goes with Cnrig)</description>
+                <product>
+                    <property>aero/function/qbar-tail-psf</property>
+                    <property>metrics/Sw-sqft</property>
+                    <property>aero/function/krig</property>
+                    <value>-0.003902</value>
+                </product>
+            </function>
+        </axis>
+
+        <axis name="LIFT">
+            <function name="aero/coefficient/CLwbh">
+                <description>Lift_due_to_alpha (TeachX: all angles of attack, flaps included, clear stall break)</description>
+                <product>
+                    <property>aero/qbar-psf</property>
+                    <property>metrics/Sw-sqft</property>
+                    <property>aero/function/kCLge</property>
+                    <table>
+                        <independentVar lookup="row">aero/alpha-rad</independentVar>
+                        <independentVar lookup="column">fcs/flap-pos-deg</independentVar>
+                        <tableData>
+                                             0.0       10.0       20.0       30.0
+                              -3.1416     0.0000     0.0000     0.0000     0.0000
+                              -2.6180     0.8882     0.8882     0.8882     0.8882
+                              -2.0944     0.7362     0.7362     0.7362     0.7362
+                              -1.5708     0.0000     0.0000     0.0000     0.0000
+                              -1.0472    -0.7362    -0.7362    -0.7362    -0.7362
+                              -0.7854    -0.9184    -0.9184    -0.9184    -0.9184
+                              -0.5236    -0.8882    -0.8882    -0.8882    -0.8882
+                              -0.4363    -0.8041    -0.7491    -0.6991    -0.6641
+                              -0.3491    -0.7200    -0.6100    -0.5100    -0.4400
+                              -0.2793    -0.8200    -0.7100    -0.6100    -0.5400
+                              -0.2269    -0.9500    -0.8400    -0.7400    -0.6700
+                              -0.1745    -0.7723    -0.6227    -0.4867    -0.3915
+                              -0.1396    -0.4564    -0.2364    -0.0364     0.1036
+                              -0.1047    -0.2748    -0.0548     0.1452     0.2852
+                              -0.0698    -0.0932     0.1268     0.3268     0.4668
+                              -0.0524    -0.0024     0.2176     0.4176     0.5576
+                              -0.0349     0.0884     0.3084     0.5084     0.6484
+                              -0.0175     0.1792     0.3992     0.5992     0.7392
+                               0.0000     0.2700     0.4900     0.6900     0.8300
+                               0.0175     0.3608     0.5808     0.7808     0.9208
+                               0.0349     0.4516     0.6716     0.8716     1.0116
+                               0.0524     0.5424     0.7624     0.9624     1.1024
+                               0.0698     0.6332     0.8532     1.0532     1.1932
+                               0.0873     0.7240     0.9440     1.1440     1.2840
+                               0.1047     0.8148     1.0348     1.2348     1.3748
+                               0.1222     0.9056     1.1256     1.3256     1.4656
+                               0.1396     0.9964     1.2164     1.4164     1.5564
+                               0.1571     1.0872     1.3072     1.5070     1.6427
+                               0.1745     1.1780     1.3976     1.5921     1.7188
+                               0.1920     1.2686     1.4842     1.6672     1.7830
+                               0.2094     1.3558     1.5631     1.7305     1.8336
+                               0.2269     1.4348     1.6307     1.7799     1.8691
+                               0.2443     1.5011     1.6835     1.8134     1.8876
+                               0.2531     1.5279     1.7032     1.8236     1.8900
+                               0.2618     1.5498     1.7178     1.8291     1.8750
+                               0.2705     1.5662     1.7269     1.8240     1.8600
+                               0.2793     1.5765     1.7300     1.8090     1.8100
+                               0.2880     1.5800     1.7150     1.7800     1.7500
+                               0.2967     1.5650     1.7000     1.7260     1.6900
+                               0.3054     1.5500     1.6500     1.6660     1.6300
+                               0.3142     1.5000     1.5900     1.6060     1.5700
+                               0.3316     1.3800     1.4700     1.4920     1.4800
+                               0.3491     1.2600     1.3650     1.4020     1.3900
+                               0.3840     1.0800     1.2000     1.2580     1.2700
+                               0.4363     0.9000     1.0320     1.1068     1.1380
+                               0.5236     0.7200     0.9257     0.9507     0.9657
+                               0.6109     0.9254     0.9441     0.9566     0.9641
+                               0.6981     0.9348     0.9348     0.9348     0.9348
+                               0.7854     0.9184     0.9184     0.9184     0.9184
+                               0.8727     0.8783     0.8783     0.8783     0.8783
+                               1.0472     0.7362     0.7362     0.7362     0.7362
+                               1.2217     0.5282     0.5282     0.5282     0.5282
+                               1.3963     0.2755     0.2755     0.2755     0.2755
+                               1.5708     0.0000     0.0000     0.0000     0.0000
+                               2.0944    -0.7362    -0.7362    -0.7362    -0.7362
+                               2.6180    -0.8882    -0.8882    -0.8882    -0.8882
+                               3.1416     0.0000     0.0000     0.0000     0.0000
+                        </tableData>
+                    </table>
+                </product>
+            </function>
+            <function name="aero/coefficient/CLhyst">
+                <description>TeachX: lift lost while the wing stays stalled (stall hysteresis): after a full stall the lift does not come back until the angle of attack is well below the stall angle</description>
+                <product>
+                    <property>aero/qbar-psf</property>
+                    <property>metrics/Sw-sqft</property>
+                    <property>aero/stall-hyst-norm</property>
+                    <table>
+                        <independentVar>aero/alpha-rad</independentVar>
+                        <tableData>
+                              -3.1416     0.0000
+                              -2.6180     0.0000
+                              -2.0944     0.0000
+                              -1.5708     0.0000
+                              -1.0472     0.0000
+                              -0.7854     0.0000
+                              -0.5236     0.0000
+                              -0.4363     0.0000
+                              -0.3491     0.0000
+                              -0.2793     0.1977
+                              -0.2269     0.4178
+                              -0.1745     0.2528
+                              -0.1396     0.0234
+                              -0.1047     0.0000
+                              -0.0698     0.0000
+                              -0.0524     0.0000
+                              -0.0349     0.0000
+                              -0.0175     0.0000
+                               0.0000     0.0000
+                               0.0175     0.0000
+                               0.0349     0.0000
+                               0.0524     0.0000
+                               0.0698     0.0000
+                               0.0873     0.0000
+                               0.1047     0.0000
+                               0.1222     0.0000
+                               0.1396     0.0000
+                               0.1571     0.0000
+                               0.1745    -0.1496
+                               0.1920    -0.3213
+                               0.2094    -0.5138
+                               0.2269    -0.7221
+                               0.2443    -0.9375
+                               0.2531    -0.9492
+                               0.2618    -0.9563
+                               0.2705    -0.9581
+                               0.2793    -0.9542
+                               0.2880    -0.9439
+                               0.2967    -0.9154
+                               0.3054    -0.8872
+                               0.3142    -0.8244
+                               0.3316    -0.6796
+                               0.3491    -0.5362
+                               0.3840    -0.3133
+                               0.4363    -0.0785
+                               0.5236     0.0000
+                               0.6109     0.0000
+                               0.6981     0.0000
+                               0.7854     0.0000
+                               0.8727     0.0000
+                               1.0472     0.0000
+                               1.2217     0.0000
+                               1.3963     0.0000
+                               1.5708     0.0000
+                               2.0944     0.0000
+                               2.6180     0.0000
+                               3.1416     0.0000
+                        </tableData>
+                    </table>
+                </product>
+            </function>
+            <function name="aero/coefficient/CLDe">
+                <description>Lift_due_to_Elevator_Deflection</description>
+                <product>
+                    <property>aero/qbar-psf</property>
+                    <property>metrics/Sw-sqft</property>
+                    <property>fcs/elevator-pos-rad</property>
+                    <value>0.4300</value>
+                </product>
+            </function>
+            <function name="aero/coefficient/CLadot">
+                <description>Lift_due_to_alpha_rate</description>
+                <product>
+                    <property>aero/qbar-psf</property>
+                    <property>metrics/Sw-sqft</property>
+                    <property>aero/alphadot-rad_sec</property>
+                    <property>aero/ci2vel</property>
+                    <value>1.7000</value>
+                </product>
+            </function>
+            <function name="aero/coefficient/CLq">
+                <description>Lift_due_to_pitch_rate</description>
+                <product>
+                    <property>aero/qbar-psf</property>
+                    <property>metrics/Sw-sqft</property>
+                    <property>velocities/q-aero-rad_sec</property>
+                    <property>aero/ci2vel</property>
+                    <value>3.9000</value>
+                </product>
+            </function>
+        </axis>
+
+        <axis name="ROLL">
+            <function name="aero/coefficient/Clwing">
+                <description>TeachX: rolling moment of the four wing panels (left normal force minus right normal force, times each panel's arm). Gives roll damping, dihedral effect, roll due to yaw rate and aileron power in normal flight, and a dropping / autorotating wing beyond the stall.</description>
+                <product>
+                    <property>aero/qbar-psf</property>
+                    <property>metrics/Sw-sqft</property>
+                    <property>metrics/bw-ft</property>
+                    <sum>
+                        <product>
+                            <value>0.02413</value>
+                            <difference>
+                                <property>aero/function/normal-inner-left</property>
+                                <property>aero/function/normal-inner-right</property>
+                            </difference>
+                        </product>
+                        <product>
+                            <value>0.07237</value>
+                            <difference>
+                                <property>aero/function/normal-outer-left</property>
+                                <property>aero/function/normal-outer-right</property>
+                            </difference>
+                        </product>
+                    </sum>
+                </product>
+            </function>
+            <function name="aero/coefficient/Clr">
+                <description>Roll_moment_due_to_yaw_rate (fin part; the wing part is in Clwing)</description>
+                <product>
+                    <property>aero/qbar-psf</property>
+                    <property>metrics/Sw-sqft</property>
+                    <property>metrics/bw-ft</property>
+                    <property>aero/bi2vel</property>
+                    <property>velocities/r-aero-rad_sec</property>
+                    <value>0.0200</value>
+                </product>
+            </function>
+            <function name="aero/coefficient/Cldr">
+                <description>Roll_moment_due_to_rudder</description>
+                <product>
+                    <property>aero/qbar-psf</property>
+                    <property>metrics/Sw-sqft</property>
+                    <property>metrics/bw-ft</property>
+                    <property>fcs/rudder-pos-rad</property>
+                    <value>0.0147</value>
+                </product>
+            </function>
+            <function name="aero/coefficient/Clrig">
+                <description>TeachX: fixed rigging (wing wash-in) that balances engine torque in cruise</description>
+                <product>
+                    <property>aero/qbar-psf</property>
+                    <property>metrics/Sw-sqft</property>
+                    <property>metrics/bw-ft</property>
+                    <property>aero/function/krig</property>
+                    <value>0.000935</value>
+                </product>
+            </function>
+        </axis>
+
+        <axis name="PITCH">
+            <function name="aero/coefficient/Cmo">
+                <description>Pitching_moment_at_zero_alpha</description>
+                <product>
+                    <property>aero/qbar-psf</property>
+                    <property>metrics/Sw-sqft</property>
+                    <property>metrics/cbarw-ft</property>
+                    <value>0.0200</value>
+                </product>
+            </function>
+            <function name="aero/coefficient/Cmalpha">
+                <description>Pitch_moment_due_to_alpha (TeachX: all angles of attack, extra nose-down break at the stall)</description>
+                <product>
+                    <property>aero/qbar-psf</property>
+                    <property>metrics/Sw-sqft</property>
+                    <property>metrics/cbarw-ft</property>
+                    <table>
+                        <independentVar lookup="row">aero/alpha-rad</independentVar>
+                        <independentVar lookup="column">fcs/flap-pos-deg</independentVar>
+                        <tableData>
+                                             0.0       10.0       20.0       30.0
+                              -3.1416     0.0000     0.0000     0.0000     0.0000
+                              -2.6180     0.4000     0.4000     0.4000     0.4000
+                              -2.0944     0.7167     0.7167     0.7167     0.7167
+                              -1.5708     0.9500     0.9500     0.9500     0.9500
+                              -1.0472     0.7833     0.7833     0.7833     0.7833
+                              -0.7854     0.7000     0.7000     0.7000     0.7000
+                              -0.5236     0.5500     0.5500     0.5500     0.5500
+                              -0.4363     0.4750     0.4750     0.4750     0.4750
+                              -0.3491     0.4000     0.4000     0.4000     0.4000
+                              -0.2793     0.3028     0.3028     0.3028     0.3028
+                              -0.2269     0.2300     0.2300     0.2300     0.2300
+                              -0.1745     0.1571     0.1571     0.1571     0.1571
+                              -0.1396     0.1257     0.1257     0.1257     0.1257
+                              -0.1047     0.0942     0.0942     0.0942     0.0942
+                              -0.0698     0.0628     0.0628     0.0628     0.0628
+                              -0.0524     0.0471     0.0471     0.0471     0.0471
+                              -0.0349     0.0314     0.0314     0.0314     0.0314
+                              -0.0175     0.0157     0.0157     0.0157     0.0157
+                               0.0000     0.0000     0.0000     0.0000     0.0000
+                               0.0175    -0.0157    -0.0157    -0.0157    -0.0157
+                               0.0349    -0.0314    -0.0314    -0.0314    -0.0314
+                               0.0524    -0.0471    -0.0471    -0.0471    -0.0471
+                               0.0698    -0.0628    -0.0628    -0.0628    -0.0628
+                               0.0873    -0.0785    -0.0785    -0.0785    -0.0785
+                               0.1047    -0.0942    -0.0942    -0.0942    -0.0942
+                               0.1222    -0.1100    -0.1100    -0.1100    -0.1100
+                               0.1396    -0.1257    -0.1257    -0.1257    -0.1257
+                               0.1571    -0.1414    -0.1414    -0.1414    -0.1414
+                               0.1745    -0.1571    -0.1571    -0.1571    -0.1571
+                               0.1920    -0.1728    -0.1728    -0.1728    -0.1728
+                               0.2094    -0.1885    -0.1885    -0.1885    -0.1885
+                               0.2269    -0.2042    -0.2042    -0.2059    -0.2126
+                               0.2443    -0.2199    -0.2241    -0.2300    -0.2367
+                               0.2531    -0.2320    -0.2362    -0.2420    -0.2488
+                               0.2618    -0.2440    -0.2482    -0.2541    -0.2776
+                               0.2705    -0.2561    -0.2603    -0.2729    -0.3065
+                               0.2793    -0.2681    -0.2723    -0.3017    -0.3353
+                               0.2880    -0.2802    -0.3012    -0.3306    -0.3572
+                               0.2967    -0.3090    -0.3300    -0.3566    -0.3790
+                               0.3054    -0.3379    -0.3589    -0.3785    -0.4009
+                               0.3142    -0.3667    -0.3807    -0.4003    -0.4227
+                               0.3316    -0.4105    -0.4245    -0.4431    -0.4571
+                               0.3491    -0.4542    -0.4690    -0.4821    -0.4914
+                               0.3840    -0.5600    -0.5600    -0.5600    -0.5600
+                               0.4363    -0.6800    -0.6800    -0.6800    -0.6800
+                               0.5236    -0.6833    -0.6833    -0.6833    -0.6833
+                               0.6109    -0.6000    -0.6000    -0.6000    -0.6000
+                               0.6981    -0.6100    -0.6100    -0.6100    -0.6100
+                               0.7854    -0.6200    -0.6200    -0.6200    -0.6200
+                               0.8727    -0.6400    -0.6400    -0.6400    -0.6400
+                               1.0472    -0.6800    -0.6800    -0.6800    -0.6800
+                               1.2217    -0.7200    -0.7200    -0.7200    -0.7200
+                               1.3963    -0.7600    -0.7600    -0.7600    -0.7600
+                               1.5708    -0.8000    -0.8000    -0.8000    -0.8000
+                               2.0944    -0.6667    -0.6667    -0.6667    -0.6667
+                               2.6180    -0.4000    -0.4000    -0.4000    -0.4000
+                               3.1416     0.0000     0.0000     0.0000     0.0000
+                        </tableData>
+                    </table>
+                </product>
+            </function>
+            <function name="aero/coefficient/Cmhyst">
+                <description>TeachX: pitching-moment shift while the wing stays fully stalled (stall hysteresis). Lets a developed spin hold its angle of attack; it disappears as soon as the angle of attack is reduced.</description>
+                <product>
+                    <property>aero/qbar-psf</property>
+                    <property>metrics/Sw-sqft</property>
+                    <property>metrics/cbarw-ft</property>
+                    <property>aero/stall-hyst-norm</property>
+                    <table>
+                        <independentVar>aero/alpha-rad</independentVar>
+                        <tableData>
+                              -1.5708     0.0000
+                               0.4887     0.0000
+                               0.5934     0.1100
+                               1.0472     0.1100
+                               1.5708     0.0000
+                        </tableData>
+                    </table>
+                </product>
+            </function>
+            <function name="aero/coefficient/Cmq">
+                <description>Pitch_moment_due_to_pitch_rate</description>
+                <product>
+                    <property>aero/qbar-psf</property>
+                    <property>metrics/Sw-sqft</property>
+                    <property>metrics/cbarw-ft</property>
+                    <property>aero/ci2vel</property>
+                    <property>velocities/q-aero-rad_sec</property>
+                    <value>-12.4000</value>
+                </product>
+            </function>
+            <function name="aero/coefficient/Cmadot">
+                <description>Pitch_moment_due_to_alpha_rate</description>
+                <product>
+                    <property>aero/qbar-psf</property>
+                    <property>metrics/Sw-sqft</property>
+                    <property>metrics/cbarw-ft</property>
+                    <property>aero/ci2vel</property>
+                    <property>aero/alphadot-rad_sec</property>
+                    <value>-7.2700</value>
+                </product>
+            </function>
+            <function name="aero/coefficient/Cmde">
+                <description>Pitch_moment_due_to_elevator_deflection (TeachX: tail dynamic pressure blends free stream and slipstream)</description>
+                <product>
+                    <property>aero/function/qbar-tail-psf</property>
+                    <property>metrics/Sw-sqft</property>
+                    <property>metrics/cbarw-ft</property>
+                    <property>aero/function/kelevator</property>
+                    <property>aero/function/elevator-effective-rad</property>
+                    <value>-1.1220</value>
+                </product>
+            </function>
+            <function name="aero/coefficient/Cmdf">
+                <description>Delta_pitching_moment_due_to_flap_deflection (TeachX: retuned, see CHANGES.md)</description>
+                <product>
+                    <property>aero/qbar-psf</property>
+                    <property>metrics/Sw-sqft</property>
+                    <property>metrics/cbarw-ft</property>
+                    <table>
+                        <independentVar>fcs/flap-pos-deg</independentVar>
+                        <tableData>
+                               0.0000     0.0000
+                              10.0000    -0.0200
+                              20.0000    -0.0450
+                              30.0000    -0.0650
+                        </tableData>
+                    </table>
+                </product>
+            </function>
+        </axis>
+
+        <axis name="YAW">
+            <function name="aero/coefficient/Cnb">
+                <description>Yaw_moment_due_to_beta (TeachX: extended to 90 degrees of sideslip, fin blanking at high alpha)</description>
+                <product>
+                    <property>aero/qbar-psf</property>
+                    <property>metrics/Sw-sqft</property>
+                    <property>metrics/bw-ft</property>
+                    <property>aero/function/kfin-damping</property>
+                    <table>
+                        <independentVar>aero/beta-rad</independentVar>
+                        <tableData>
+                              -1.5708    -0.0750
+                              -0.7854    -0.0450
+                              -0.3491    -0.0205
+                               0.0000     0.0000
+                               0.3491     0.0205
+                               0.7854     0.0450
+                               1.5708     0.0750
+                        </tableData>
+                    </table>
+                </product>
+            </function>
+            <function name="aero/coefficient/Cnp">
+                <description>Yaw_moment_due_to_roll_rate</description>
+                <product>
+                    <property>aero/qbar-psf</property>
+                    <property>metrics/Sw-sqft</property>
+                    <property>metrics/bw-ft</property>
+                    <property>aero/bi2vel</property>
+                    <property>velocities/p-aero-rad_sec</property>
+                    <value>-0.0100</value>
+                </product>
+            </function>
+            <function name="aero/coefficient/Cnr">
+                <description>Yaw_moment_due_to_yaw_rate</description>
+                <product>
+                    <property>aero/qbar-psf</property>
+                    <property>metrics/Sw-sqft</property>
+                    <property>metrics/bw-ft</property>
+                    <property>aero/function/kfin-damping</property>
+                    <property>aero/bi2vel</property>
+                    <property>velocities/r-aero-rad_sec</property>
+                    <value>-0.1150</value>
+                </product>
+            </function>
+            <function name="aero/coefficient/Cnrfus">
+                <description>TeachX: yaw damping of the fuselage in cross-flow at high angle of attack</description>
+                <product>
+                    <property>aero/qbar-psf</property>
+                    <property>metrics/Sw-sqft</property>
+                    <property>metrics/bw-ft</property>
+                    <property>aero/bi2vel</property>
+                    <property>velocities/r-aero-rad_sec</property>
+                    <table>
+                        <independentVar>aero/alpha-rad</independentVar>
+                        <tableData>
+                              -3.1416     0.0000
+                              -2.3562    -0.0035
+                              -1.5708    -0.0050
+                              -1.0472    -0.0043
+                              -0.5236    -0.0025
+                               0.0000     0.0000
+                               0.5236    -0.0025
+                               1.0472    -0.0043
+                               1.5708    -0.0050
+                               2.3562    -0.0035
+                               3.1416     0.0000
+                        </tableData>
+                    </table>
+                </product>
+            </function>
+            <function name="aero/coefficient/Cnrr">
+                <description>TeachX: cross-flow yaw damping that grows with the square of the yaw rate (matters only in spins)</description>
+                <product>
+                    <property>aero/qbar-psf</property>
+                    <property>metrics/Sw-sqft</property>
+                    <property>metrics/bw-ft</property>
+                    <property>aero/bi2vel</property>
+                    <property>velocities/r-aero-rad_sec</property>
+                    <abs>
+                        <product>
+                            <property>aero/bi2vel</property>
+                            <property>velocities/r-aero-rad_sec</property>
+                        </product>
+                    </abs>
+                    <table>
+                        <independentVar>aero/alpha-rad</independentVar>
+                        <tableData>
+                              -3.1416     0.0000
+                              -2.3562    -0.1768
+                              -1.5708    -0.2500
+                              -1.0472    -0.2165
+                              -0.5236    -0.1250
+                               0.0000     0.0000
+                               0.5236    -0.1250
+                               1.0472    -0.2165
+                               1.5708    -0.2500
+                               2.3562    -0.1768
+                               3.1416     0.0000
+                        </tableData>
+                    </table>
+                </product>
+            </function>
+            <function name="aero/coefficient/Cnda">
+                <description>Yaw_moment_due_to_aileron (adverse yaw)</description>
+                <product>
+                    <property>aero/qbar-psf</property>
+                    <property>metrics/Sw-sqft</property>
+                    <property>metrics/bw-ft</property>
+                    <property>aero/function/aileron-mean-rad</property>
+                    <value>-0.0120</value>
+                </product>
+            </function>
+            <function name="aero/coefficient/Cndr">
+                <description>Yaw_moment_due_to_rudder</description>
+                <product>
+                    <property>aero/function/qbar-tail-psf</property>
+                    <property>metrics/Sw-sqft</property>
+                    <property>metrics/bw-ft</property>
+                    <property>aero/function/kfin</property>
+                    <property>fcs/rudder-pos-rad</property>
+                    <value>-0.0657</value>
+                </product>
+            </function>
+            <function name="aero/coefficient/Cnwing">
+                <description>TeachX: yawing moment from unequal chordwise force of the left and right wing panels (yaw due to roll rate in normal flight; yaw toward a stalled wing)</description>
+                <product>
+                    <property>aero/qbar-psf</property>
+                    <property>metrics/Sw-sqft</property>
+                    <property>metrics/bw-ft</property>
+                    <sum>
+                        <product>
+                            <value>0.02413</value>
+                            <difference>
+                                <property>aero/function/axial-inner-right</property>
+                                <property>aero/function/axial-inner-left</property>
+                            </difference>
+                        </product>
+                        <product>
+                            <value>0.07237</value>
+                            <difference>
+                                <property>aero/function/axial-outer-right</property>
+                                <property>aero/function/axial-outer-left</property>
+                            </difference>
+                        </product>
+                    </sum>
+                </product>
+            </function>
+            <function name="aero/coefficient/Cnswirl">
+                <description>TeachX: spiralling propeller slipstream striking the left side of the fin and rear fuselage: nose-left yawing moment proportional to engine torque</description>
+                <product>
+                    <property>aero/function/engine-torque-ftlb</property>
+                    <property>aero/function/slipstream-immersion</property>
+                    <value>-2.0000</value>
+                </product>
+            </function>
+            <function name="aero/coefficient/Cnrig">
+                <description>TeachX: fixed rudder tab that balances the slipstream in cruise</description>
+                <product>
+                    <property>aero/function/qbar-tail-psf</property>
+                    <property>metrics/Sw-sqft</property>
+                    <property>metrics/bw-ft</property>
+                    <property>aero/function/krig</property>
+                    <value>0.001711</value>
+                </product>
+            </function>
+        </axis>
+    </aerodynamics>
+    <!-- TEACHX-GENERATED-END aerodynamics -->
+<!--
+    <output name="JSBout172C.csv" type="CSV" rate="60">
+      <property> aero/qbar-psf </property>
+      <property> accelerations/udot-ft_sec2 </property>
+      <property> accelerations/vdot-ft_sec2 </property>
+      <property> accelerations/wdot-ft_sec2 </property>
+      <property> accelerations/a-pilot-x-ft_sec2 </property>
+      <property> accelerations/a-pilot-y-ft_sec2 </property>
+      <property> accelerations/a-pilot-z-ft_sec2 </property>
+      <property> accelerations/n-pilot-x-norm    </property>
+      <property> accelerations/n-pilot-y-norm    </property>
+      <property> accelerations/n-pilot-z-norm    </property>
+      <rates> ON </rates>
+      <velocities> ON </velocities>
+      <forces> ON </forces>
+      <moments> ON </moments>
+      <position> ON </position>
+      <fcs> OFF </fcs>
+      <propulsion> OFF </propulsion>
+      <aerosurfaces> OFF </aerosurfaces>
+      <fcs> OFF </fcs>
+      <ground_reactions> OFF </ground_reactions>
+    </output>
+-->
+</fdm_config>

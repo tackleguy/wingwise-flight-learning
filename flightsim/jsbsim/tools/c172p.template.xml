@@ -1,0 +1,513 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="http://jsbsim.sourceforge.net/JSBSim.xsl"?>
+<fdm_config name="c172" version="2.0" release="BETA"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="http://jsbsim.sourceforge.net/JSBSim.xsd">
+
+    <fileheader>
+        <author> Unknown </author>
+        <filecreationdate>2002-01-01</filecreationdate>
+        <version> $Id: c172p.xml,v 1.29 2013/10/25 15:32:49 jentron Exp $ </version>
+        <description> Cessna C-172 (modified for the TeachX Flight Simulator) </description>
+      <note>
+        This model was created using publicly available data, publicly available
+        technical reports, textbooks, and guesses. It contains no proprietary or
+        restricted data. If this model has been validated at all, it would be
+        only to the extent that it seems to "fly right", and that it possibly
+        complies with published, publicly known, performance data (maximum speed,
+        endurance, etc.). Thus, this model is meant for educational and entertainment
+        purposes only.
+
+        This simulation model is not endorsed by the manufacturer. This model is not
+        to be sold.
+      </note>
+      <note>
+        MODIFIED FILE. This is JSBSim's aircraft/c172p/c172p.xml changed by the TeachX Flight
+        Simulator project (2026) to match Cessna 172P handbook-class performance and to teach
+        correct handling habits (rigging, left-turning tendencies, stalls, spins, ground handling).
+        Every change is listed in flightsim/jsbsim/CHANGES.md; the unmodified original is kept in
+        flightsim/jsbsim/upstream/. The tables between the TEACHX-GENERATED markers are written by
+        flightsim/jsbsim/tools/gen_model.py (edit the parameters there, not the numbers here).
+        It is a learning aid, not validated flight-training data.
+      </note>
+    </fileheader>
+
+    <metrics>
+        <wingarea unit="FT2"> 174 </wingarea>
+        <wingspan unit="FT"> 35.8 </wingspan>
+        <chord unit="FT"> 4.9 </chord>
+        <htailarea unit="FT2"> 21.9 </htailarea>
+        <htailarm unit="FT"> 15.7 </htailarm>
+        <vtailarea unit="FT2"> 16.5 </vtailarea>
+        <vtailarm unit="FT"> 0 </vtailarm>
+        <location name="AERORP" unit="IN">
+            <x> 43.2 </x>
+            <y> 0 </y>
+            <z> 59.4 </z>
+        </location>
+        <location name="EYEPOINT" unit="IN">
+            <x> 37 </x>
+            <y> 0 </y>
+            <z> 48 </z>
+        </location>
+        <location name="VRP" unit="IN">
+            <x> 42.6 </x>
+            <y> 0 </y>
+            <z> 38.5 </z>
+        </location>
+    </metrics>
+
+    <mass_balance>
+        <ixx unit="SLUG*FT2"> 948 </ixx>
+        <iyy unit="SLUG*FT2"> 1346 </iyy>
+        <izz unit="SLUG*FT2"> 1967 </izz>
+        <ixy unit="SLUG*FT2"> -0 </ixy>
+        <ixz unit="SLUG*FT2"> -0 </ixz>
+        <iyz unit="SLUG*FT2"> -0 </iyz>
+        <emptywt unit="LBS"> 1454 </emptywt>   <!-- TeachX: was 1500 -->
+        <location name="CG" unit="IN">
+            <x> 39.6 </x>   <!-- TeachX: was 41 (handbook-class empty arm) -->
+            <y> 0 </y>
+            <z> 36.5 </z>
+        </location>
+        <pointmass name="Pilot">
+            <weight unit="LBS"> 170 </weight>
+            <location unit="IN">
+                <x> 37 </x>
+                <y> -14 </y>
+                <z> 24 </z>
+            </location>
+        </pointmass>
+        <pointmass name="Co-Pilot">
+            <weight unit="LBS"> 0 </weight>
+            <location unit="IN">
+                <x> 37 </x>
+                <y> 14 </y>
+                <z> 24 </z>
+            </location>
+        </pointmass>
+        <pointmass name="Left Passenger">
+            <weight unit="LBS"> 0 </weight>
+            <location unit="IN">
+                <x> 73 </x>
+                <y> -14 </y>
+                <z> 24 </z>
+            </location>
+        </pointmass>
+        <pointmass name="Right Passenger">
+            <weight unit="LBS"> 0 </weight>
+            <location unit="IN">
+                <x> 73 </x>
+                <y> 14 </y>
+                <z> 24 </z>
+            </location>
+        </pointmass>
+        <pointmass name="Baggage">
+            <weight unit="LBS"> 0 </weight>
+            <location unit="IN">
+                <x> 95 </x>
+                <y>  0 </y>
+                <z> 24 </z>
+            </location>
+        </pointmass>
+    </mass_balance>
+
+    <ground_reactions>
+        <contact type="BOGEY" name="NOSE">
+            <location unit="IN">
+                <x> -6.8 </x>
+                <y> 0 </y>
+                <z> -19.5</z>
+            </location>
+            <static_friction> 0.8 </static_friction>
+            <dynamic_friction> 0.5 </dynamic_friction>
+            <rolling_friction> 0.02 </rolling_friction>
+            <spring_coeff unit="LBS/FT"> 1800 </spring_coeff>
+            <damping_coeff unit="LBS/FT/SEC"> 600 </damping_coeff>
+            <max_steer unit="DEG"> 30 </max_steer>   <!-- TeachX: was 10 (see the Nose Wheel Steering channel) -->
+            <brake_group> NONE </brake_group>
+            <retractable>0</retractable>
+            <!-- TeachX: side grip of the tyre vs slip angle (deg). Same shape as JSBSim's built-in
+                 curve with a peak of 0.8; given explicitly so that static_friction (which JSBSim
+                 also uses as the brake friction) can be set for realistic braking. -->
+            <table name="CORNERING_COEFF" type="internal">
+                <tableData>
+@CORNERING@
+                </tableData>
+            </table>
+        </contact>
+        <contact type="BOGEY" name="LEFT_MAIN">
+            <location unit="IN">
+                <x> 58.2 </x>
+                <y> -43 </y>
+                <z> -15.5 </z>
+            </location>
+            <static_friction> @BRAKE_MU@ </static_friction>   <!-- TeachX: was 0.8; this is the full-brake friction -->
+            <dynamic_friction> 0.5 </dynamic_friction>
+            <rolling_friction> 0.02 </rolling_friction>
+            <spring_coeff unit="LBS/FT"> 5400 </spring_coeff>
+            <damping_coeff unit="LBS/FT/SEC"> 1600 </damping_coeff>
+            <max_steer unit="DEG"> 0.0 </max_steer>
+            <brake_group> LEFT </brake_group>
+            <retractable>0</retractable>
+            <!-- TeachX: side grip of the tyre vs slip angle (deg). Same shape as JSBSim's built-in
+                 curve with a peak of 0.8; given explicitly so that static_friction (which JSBSim
+                 also uses as the brake friction) can be set for realistic braking. -->
+            <table name="CORNERING_COEFF" type="internal">
+                <tableData>
+@CORNERING@
+                </tableData>
+            </table>
+        </contact>
+        <contact type="BOGEY" name="RIGHT_MAIN">
+            <location unit="IN">
+                <x> 58.2 </x>
+                <y> 43 </y>
+                <z> -15.5 </z>
+            </location>
+            <static_friction> @BRAKE_MU@ </static_friction>   <!-- TeachX: was 0.8; this is the full-brake friction -->
+            <dynamic_friction> 0.5 </dynamic_friction>
+            <rolling_friction> 0.02 </rolling_friction>
+            <spring_coeff unit="LBS/FT"> 5400 </spring_coeff>
+            <damping_coeff unit="LBS/FT/SEC"> 1600 </damping_coeff>
+            <max_steer unit="DEG"> 0.0 </max_steer>
+            <brake_group> RIGHT </brake_group>
+            <retractable>0</retractable>
+            <!-- TeachX: side grip of the tyre vs slip angle (deg). Same shape as JSBSim's built-in
+                 curve with a peak of 0.8; given explicitly so that static_friction (which JSBSim
+                 also uses as the brake friction) can be set for realistic braking. -->
+            <table name="CORNERING_COEFF" type="internal">
+                <tableData>
+@CORNERING@
+                </tableData>
+            </table>
+        </contact>
+        <contact type="STRUCTURE" name="NOSE_SKID">
+            <location unit="IN">
+                <x> -37.7 </x>
+                <y> 0 </y>
+                <z> 26.6 </z>
+            </location>
+            <static_friction> 0.2 </static_friction>
+            <dynamic_friction> 0.2 </dynamic_friction>
+            <rolling_friction> 0.2 </rolling_friction>
+            <spring_coeff unit="LBS/FT"> 20000 </spring_coeff>
+            <damping_coeff unit="LBS/FT/SEC"> 2000 </damping_coeff>
+        </contact>
+        <contact type="STRUCTURE" name="TAIL_SKID">
+            <location unit="IN">
+                <x> 188 </x>
+                <y> 0 </y>
+                <z> 8 </z>
+            </location>
+            <static_friction> 0.2 </static_friction>
+            <dynamic_friction> 0.2 </dynamic_friction>
+            <rolling_friction> 0.2 </rolling_friction>
+            <spring_coeff unit="LBS/FT"> 20000 </spring_coeff>
+            <damping_coeff unit="LBS/FT/SEC"> 2000 </damping_coeff>
+        </contact>
+        <contact type="STRUCTURE" name="LEFT_TIP">
+            <location unit="IN">
+                <x> 43.2 </x>
+                <y> -214.8 </y>
+                <z> 59.4 </z>
+            </location>
+            <static_friction> 0.2 </static_friction>
+            <dynamic_friction> 0.2 </dynamic_friction>
+            <rolling_friction> 0.2 </rolling_friction>
+            <spring_coeff unit="LBS/FT"> 20000 </spring_coeff>
+            <damping_coeff unit="LBS/FT/SEC"> 2000 </damping_coeff>
+        </contact>
+        <contact type="STRUCTURE" name="RIGHT_TIP">
+            <location unit="IN">
+                <x> 43.2 </x>
+                <y> 214.8 </y>
+                <z> 59.4 </z>
+            </location>
+            <static_friction> 0.2 </static_friction>
+            <dynamic_friction> 0.2 </dynamic_friction>
+            <rolling_friction> 0.2 </rolling_friction>
+            <spring_coeff unit="LBS/FT"> 20000 </spring_coeff>
+            <damping_coeff unit="LBS/FT/SEC"> 2000 </damping_coeff>
+        </contact>
+    </ground_reactions>
+    <propulsion>
+        <engine file="eng_io320">
+            <feed>0</feed>
+            <feed>1</feed>
+            <thruster file="prop_75in2f">
+                <location unit="IN">
+                    <x> -37.7 </x>
+                    <y> 0 </y>
+                    <z> 26.6 </z>
+                </location>
+                <orient unit="DEG">
+                    <roll> 0.0 </roll>
+                    <pitch> 0.0 </pitch>
+                    <yaw> 0.0 </yaw>
+                </orient>
+                <sense> 1 </sense>
+                <p_factor> @P_FACTOR@ </p_factor>   <!-- TeachX: was 5 -->
+            </thruster>
+        </engine>
+        <tank type="FUEL">    <!-- Tank number 0 -->
+            <location unit="IN">
+                <x> 48 </x>
+                <y> -55 </y>
+                <z> 59.4 </z>
+            </location>
+            <capacity unit="LBS"> 120 </capacity>   <!-- TeachX: 20 US gal usable per tank -->
+            <contents unit="LBS"> 120 </contents>
+        </tank>
+        <tank type="FUEL">    <!-- Tank number 1 -->
+            <location unit="IN">
+                <x> 48 </x>
+                <y> 55 </y>
+                <z> 59.4 </z>
+            </location>
+            <capacity unit="LBS"> 120 </capacity>   <!-- TeachX: 20 US gal usable per tank -->
+            <contents unit="LBS"> 120 </contents>
+        </tank>
+    </propulsion>
+    <flight_control name="FCS: c172">
+        <channel name="Pitch">
+            <!-- TeachX: the trim wheel moves the elevator's hands-off position over a limited part of
+                 its travel (was: the full elevator travel, far more than a real trim tab). -->
+            <pure_gain name="fcs/pitch-trim-scaled">
+                <input>fcs/pitch-trim-cmd-norm</input>
+                <gain> @TRIM_AUTHORITY@ </gain>
+            </pure_gain>
+
+            <summer name="Pitch Trim Sum">
+                <input>fcs/elevator-cmd-norm</input>
+                <input>fcs/pitch-trim-scaled</input>
+                <clipto>
+                    <min>-1</min>
+                    <max>1</max>
+                </clipto>
+            </summer>
+
+            <aerosurface_scale name="Elevator Control">
+                <input>fcs/pitch-trim-sum</input>
+                <gain>0.01745</gain>
+                <range>
+                    <min>-28</min>
+                    <max>23</max>
+                </range>
+                <output>fcs/elevator-pos-rad</output>
+            </aerosurface_scale>
+
+            <aerosurface_scale name="Elevator Position Normalized">
+                <input>fcs/elevator-pos-deg</input>
+                <domain>
+                    <min>-28</min>
+                    <max>23</max>
+                </domain>
+                <range>
+                    <min>-1</min>
+                    <max>1</max>
+                </range>
+                <output>fcs/elevator-pos-norm</output>
+            </aerosurface_scale>
+        </channel>
+        <channel name="Roll">
+            <summer name="Roll Trim Sum">
+                <input>fcs/aileron-cmd-norm</input>
+                <input>fcs/roll-trim-cmd-norm</input>
+                <clipto>
+                    <min>-1</min>
+                    <max>1</max>
+                </clipto>
+            </summer>
+
+            <aerosurface_scale name="Left Aileron Control">
+                <input>fcs/roll-trim-sum</input>
+                <gain>0.01745</gain>
+                <range>
+                    <min>-20</min>
+                    <max>15</max>
+                </range>
+                <output>fcs/left-aileron-pos-rad</output>
+            </aerosurface_scale>
+
+            <aerosurface_scale name="Left Aileron Position Normalized">
+                <input>fcs/left-aileron-pos-deg</input>
+                <domain>
+                    <min>-20</min>
+                    <max>15</max>
+                </domain>
+                <range>
+                    <min>-1</min>
+                    <max>1</max>
+                </range>
+                <output>fcs/left-aileron-pos-norm</output>
+            </aerosurface_scale>
+
+            <aerosurface_scale name="Right Aileron Control">
+                <input>fcs/roll-trim-sum</input>
+                <gain>-0.01745</gain>
+                <range>
+                    <min>-20</min>
+                    <max>15</max>
+                </range>
+                <output>fcs/right-aileron-pos-rad</output>
+            </aerosurface_scale>
+
+            <aerosurface_scale name="Right Aileron Position Normalized">
+                <input>fcs/right-aileron-pos-deg</input>
+                <domain>
+                    <min>-15</min>
+                    <max>20</max>
+                </domain>
+                <range>
+                    <min>1</min>
+                    <max>-1</max>
+                </range>
+                <output>fcs/right-aileron-pos-norm</output>
+            </aerosurface_scale>
+        </channel>
+        <channel name="Yaw">
+            <summer name="Yaw Trim Sum">
+                <input>fcs/rudder-cmd-norm</input>
+                <input>fcs/yaw-trim-cmd-norm</input>
+                <clipto>
+                    <min>-1</min>
+                    <max>1</max>
+                </clipto>
+            </summer>
+
+            <aerosurface_scale name="Rudder Control">
+                <input>fcs/yaw-trim-sum</input>
+                <gain>0.01745</gain>
+                <range>
+                    <min>-16</min>
+                    <max>16</max>
+                </range>
+                <output>fcs/rudder-pos-rad</output>
+            </aerosurface_scale>
+
+            <aerosurface_scale name="Rudder Position Normalized">
+                <input>fcs/rudder-pos-deg</input>
+                <domain>
+                    <min>-16</min>
+                    <max>16</max>
+                </domain>
+                <range>
+                    <min>-1</min>
+                    <max>1</max>
+                </range>
+                <output>fcs/rudder-pos-norm</output>
+            </aerosurface_scale>
+        </channel>
+        <channel name="Flaps">
+            <kinematic name="Flaps Control">
+                <input>fcs/flap-cmd-norm</input>
+                <traverse>
+                    <setting>
+                        <position>0</position>
+                        <time>0</time>
+                    </setting>
+                    <!-- TeachX: electric flap motor, about 3 s per 10 degrees (was 2 s, 1 s, 1 s) -->
+                    <setting>
+                        <position>10</position>
+                        <time>3</time>
+                    </setting>
+                    <setting>
+                        <position>20</position>
+                        <time>3</time>
+                    </setting>
+                    <setting>
+                        <position>30</position>
+                        <time>3</time>
+                    </setting>
+                </traverse>
+                <output>fcs/flap-pos-deg</output>
+            </kinematic>
+            <aerosurface_scale name="Flap Position Normalizer">
+              <input>fcs/flap-pos-deg</input>
+              <domain>
+                <min>0</min>  <!-- Flaps actual minimum position -->
+                <max>30</max>  <!-- Flaps actual maximum position -->
+              </domain>
+              <range>
+                <min>0</min>  <!-- Flaps normalized minimum position -->
+                <max>1</max>  <!-- Flaps normalized maximum position -->
+              </range>
+              <output>fcs/flap-pos-norm</output>
+            </aerosurface_scale>
+        </channel>
+        <!-- TeachX: the rudder pedals steer the nose wheel up to 10 degrees either way (through springs
+             on the real aircraft, so the wheel follows the pedals less and less as speed builds), and
+             at taxi speed a brake held on one side lets the wheel swivel further, to 30 degrees, for
+             tight turns. JSBSim's rudder command is positive for nose-left and steering is positive
+             for nose-right, hence the minus sign. 1.0 here = the nose wheel's 30 degree limit. -->
+        <channel name="Nose Wheel Steering">
+            <fcs_function name="fcs/nose-wheel-steer-cmd">
+                <function>
+                    <sum>
+                        <product>
+                            <value>-0.3333</value>
+                            <property>fcs/rudder-cmd-norm</property>
+                            <table>
+                                <independentVar>velocities/vg-fps</independentVar>
+                                <tableData>
+                                      0   1.00
+                                     17   1.00
+                                     51   0.50
+                                     85   0.30
+                                    120   0.25
+                                </tableData>
+                            </table>
+                        </product>
+                        <product>
+                            <value>0.6667</value>
+                            <difference>
+                                <property>fcs/right-brake-cmd-norm</property>
+                                <property>fcs/left-brake-cmd-norm</property>
+                            </difference>
+                            <table>
+                                <independentVar>velocities/vg-fps</independentVar>
+                                <tableData>
+                                      0   1.00
+                                     25   1.00
+                                     50   0.00
+                                </tableData>
+                            </table>
+                        </product>
+                    </sum>
+                </function>
+                <clipto>
+                    <min>-1</min>
+                    <max>1</max>
+                </clipto>
+                <output>fcs/steer-cmd-norm</output>
+            </fcs_function>
+        </channel>
+    </flight_control>
+    <!-- TEACHX-GENERATED-BEGIN aerodynamics -->
+    <!-- TEACHX-GENERATED-END aerodynamics -->
+<!--
+    <output name="JSBout172C.csv" type="CSV" rate="60">
+      <property> aero/qbar-psf </property>
+      <property> accelerations/udot-ft_sec2 </property>
+      <property> accelerations/vdot-ft_sec2 </property>
+      <property> accelerations/wdot-ft_sec2 </property>
+      <property> accelerations/a-pilot-x-ft_sec2 </property>
+      <property> accelerations/a-pilot-y-ft_sec2 </property>
+      <property> accelerations/a-pilot-z-ft_sec2 </property>
+      <property> accelerations/n-pilot-x-norm    </property>
+      <property> accelerations/n-pilot-y-norm    </property>
+      <property> accelerations/n-pilot-z-norm    </property>
+      <rates> ON </rates>
+      <velocities> ON </velocities>
+      <forces> ON </forces>
+      <moments> ON </moments>
+      <position> ON </position>
+      <fcs> OFF </fcs>
+      <propulsion> OFF </propulsion>
+      <aerosurfaces> OFF </aerosurfaces>
+      <fcs> OFF </fcs>
+      <ground_reactions> OFF </ground_reactions>
+    </output>
+-->
+</fdm_config>

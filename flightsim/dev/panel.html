@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+    <title>TeachX sim — cockpit panel (developer page)</title>
+    <style>
+      html, body { margin: 0; height: 100%; background: #000; color: #fff; font: 13px/1.4 system-ui, sans-serif; overflow: hidden; }
+      #view { position: fixed; inset: 0; }
+      body.static #view { background: linear-gradient(#5f86b3 0%, #a9c0d6 46%, #cfd8dc 50%, #6f7f62 50.2%, #55654c 100%); }
+      #hud { position: fixed; left: 8px; top: 8px; background: rgba(0,0,0,.55); padding: 6px 9px; border-radius: 6px; white-space: pre; font: 11px/1.35 ui-monospace, monospace; pointer-events: none; z-index: 5; }
+      #credits { position: fixed; right: 6px; top: 4px; font-size: 10px; opacity: .8; max-width: 60vw; text-align: right; }
+      #credits a { color: #9cf; }
+      #ui { position: fixed; inset: 0; pointer-events: none; }
+    </style>
+  </head>
+  <body>
+    <div id="view"></div>
+    <div id="hud">starting…</div>
+    <div id="credits"></div>
+    <div id="ui"></div>
+    <script type="module" src="./panel.ts"></script>
+  </body>
+</html>

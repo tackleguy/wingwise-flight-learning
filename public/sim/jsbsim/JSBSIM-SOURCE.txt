@@ -1,0 +1,7 @@
+JSBSim flight dynamics library (LGPL-2.1), compiled unmodified to WebAssembly.
+Library source: https://github.com/JSBSim-Team/jsbsim commit f80b9df8de8c2a0b7835dbbeb708c8ce37a28d96
+
+Aircraft data in jsbsim.data: JSBSim's c172p (aircraft/c172p/c172p.xml, engine/eng_io320.xml,
+engine/prop_75in2f.xml) MODIFIED by the TeachX Flight Simulator project.
+The modified files, the unmodified originals, the list of every change and the build script are
+in the project repository under flightsim/jsbsim/ (see CHANGES.md and README.md there).
