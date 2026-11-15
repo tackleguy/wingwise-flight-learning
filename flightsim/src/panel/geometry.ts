@@ -69,6 +69,15 @@ export const ASI_TABLE: Table = [
   [210, 356],
 ];
 export const asiAngle = (kias: number) => interpTable(ASI_TABLE, Number.isFinite(kias) ? kias : 0);
+/**
+ * The airspeed dial of an aircraft whose top speed is `maxKt`: the trainer's own dial up to 210 kt;
+ * faster aircraft get the same dial shape stretched to their speed range.
+ */
+export function asiAngleFor(maxKt: number): (kias: number) => number {
+  if (!(maxKt > 210)) return asiAngle;
+  const k = 210 / maxKt;
+  return (kias: number) => interpTable(ASI_TABLE, (Number.isFinite(kias) ? kias : 0) * k);
+}
 
 // ---------------------------------------------------------------- altimeter
 
@@ -103,6 +112,9 @@ export const TACH_SWEEP_DEG = 270;
 export const TACH_MAX_RPM = 3500;
 /** 0 rpm at 7:30, 3,500 rpm at 4:30 (may exceed 360 — fine for a rotate() transform). */
 export const tachAngle = (rpm: number) => TACH_START_DEG + (clamp(Number.isFinite(rpm) ? rpm : 0, 0, TACH_MAX_RPM) / TACH_MAX_RPM) * TACH_SWEEP_DEG;
+/** Jets and turboprops: the same dial reading 0–110 % (N1 / Ng). */
+export const TACH_MAX_PCT = 110;
+export const tachPctAngle = (pct: number) => TACH_START_DEG + (clamp(Number.isFinite(pct) ? pct : 0, 0, TACH_MAX_PCT) / TACH_MAX_PCT) * TACH_SWEEP_DEG;
 
 // ---------------------------------------------------------------- turn coordinator
 

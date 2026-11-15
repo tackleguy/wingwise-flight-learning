@@ -60,7 +60,7 @@ export function basicChaseCamera(world: World, distanceM = 22, heightM = 5): Sim
   };
 }
 
-/** Arrow keys = yoke, A/D or ,/. = rudder, PageUp/PageDown or W/S = throttle, F = flaps, B = brakes, P = pause. */
+/** Arrow keys = yoke, A/D or ,/. = rudder, PageUp/PageDown or W/S = throttle, F = flaps (Shift+F = back one notch), G = landing gear, B = brakes, P = pause. */
 export function basicKeyboard(): SimModule {
   const down = new Set<string>();
   const onDown = (e: KeyboardEvent) => {
@@ -71,6 +71,7 @@ export function basicKeyboard(): SimModule {
   window.addEventListener("keydown", onDown);
   window.addEventListener("keyup", onUp);
   let flapLatch = false;
+  let gearLatch = false;
   let brakeLatch = false;
   let pauseLatch = false;
   return {
@@ -87,8 +88,19 @@ export function basicKeyboard(): SimModule {
       if (down.has("PageUp") || down.has("KeyW")) c.throttle = clamp(c.throttle + 0.6 * dt, 0, 1);
       if (down.has("PageDown") || down.has("KeyS")) c.throttle = clamp(c.throttle - 0.6 * dt, 0, 1);
       const f = down.has("KeyF");
-      if (f && !flapLatch) c.flapIndex = (c.flapIndex + (down.has("ShiftLeft") ? 3 : 1)) % 4;
+      const notches = Math.max(1, sim.aircraft.flapDetentsDeg.length);
+      if (f && !flapLatch) c.flapIndex = (c.flapIndex + (down.has("ShiftLeft") || down.has("ShiftRight") ? notches - 1 : 1)) % notches;
       flapLatch = f;
+      const g = down.has("KeyG");
+      if (g && !gearLatch && sim.aircraft.retractableGear) {
+        // A real gear lever cannot be raised on the ground (squat switch): the simulator does the same.
+        if (c.gearDown && sim.state.onGround) sim.message("The landing gear cannot be raised on the ground.", "warn");
+        else {
+          c.gearDown = !c.gearDown;
+          sim.message(c.gearDown ? "Gear down." : "Gear up.", "info");
+        }
+      }
+      gearLatch = g;
       const b = down.has("KeyB");
       if (b && !brakeLatch) c.parkingBrake = !c.parkingBrake;
       brakeLatch = b;

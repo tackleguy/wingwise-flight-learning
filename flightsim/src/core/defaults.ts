@@ -50,6 +50,7 @@ export function defaultControls(): ControlState {
     altimeterInHg: 29.92,
     headingBugMag: 0,
     dgAdjustDeg: 0,
+    gearDown: true,
   };
 }
 
@@ -133,6 +134,8 @@ export function initialState(): SimState {
     onGround: true,
     flapsDeg: 0,
     rpm: 0,
+    n1Pct: 0,
+    gearPosNorm: 1,
     manifoldInHg: 29.92,
     fuelFlowGph: 0,
     powerHp: 0,

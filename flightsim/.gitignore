@@ -4,3 +4,4 @@ public/cesium
 *.local
 .vercel
 test-results
+__pycache__

@@ -6,8 +6,9 @@ Read this file completely before changing anything. It is the contract that lets
 ## 1. What this is
 
 A free, browser-only flight simulator for student pilots (a learning aid — **not** an
-FAA-approved training device; time in it cannot be logged). One aircraft done well: a Cessna
-172P-class trainer. Whole-earth terrain and imagery, every airport from open data, real weather,
+FAA-approved training device; time in it cannot be logged). The Cessna 172P trainer is the
+aircraft done well (tuned, validated, used by the lessons); since November 2026 nine more aircraft
+are offered with FlightGear's flight physics and 3D models (see §4.8). Whole-earth terrain and imagery, every airport from open data, real weather,
 and a training mode with scored lessons. Teaching value (correct procedures, honest instruments)
 matters more than pretty graphics.
 
@@ -16,8 +17,13 @@ Hard rules from the owner:
 - **Open source / open data only.** No paid services, no API keys, no signups, no Cesium ion.
   Anything new you use (library, data, texture, sound, font) must be permissively licensed
   (MIT/BSD/Apache/ISC/CC0/CC-BY/public domain), and you must record it in your notes file
-  (see §9) with licence + link so it lands in `CREDITS.md`. No GPL code or assets — in particular
-  **do not copy anything from FlightGear** (GPL). JSBSim (LGPL-2.1) is used as a separate,
+  (see §9) with licence + link so it lands in `CREDITS.md`. No GPL **code**. Exception decided by
+  the owner (November 2026): the simulator uses **FlightGear's flight physics and aircraft models** —
+  the physics engine is FlightGear's own copy of JSBSim (LGPL-2.1, `jsbsim/build-flightgear.sh`), and
+  the aircraft 3D models come from FlightGear's hangars (GPL) as separate data files with their
+  licences and sources (`public/models/fg/CREDITS.md`); so do the c310 and f16 flight-model files
+  (GPL). Do not copy any other FlightGear material (code, Nasal scripts, textures, sounds) into
+  the app. JSBSim (LGPL-2.1) is used as a separate,
   replaceable WebAssembly module; its modified data files stay in the repo.
 - **Everything else is original work.** Generate textures, sounds and models procedurally.
 - **Honesty.** Never claim something works unless you ran it. User-facing text must not overstate
@@ -44,6 +50,7 @@ flightsim/
   index.html, src/main.tsx      app entry
   src/core/      types.ts (THE state contract), sim.ts (Sim + SimModule), spawn.ts, defaults.ts,
                  math.ts, magvar.ts, clouds.ts (shared cloud field), events.ts, storage.ts
+  src/aircraft/  catalog.ts — the ten aircraft (speeds, engines, sizes); fg-models.gen.ts (generated)
   src/data/      world-data.ts — airports / runways / frequencies / navaids (OurAirports)
   src/physics/   jsbsim.ts — adapter to the JSBSim WebAssembly module          [physics]
   src/world/     world.ts (CesiumJS globe), elevation.ts (terrain for render AND physics)
@@ -97,6 +104,7 @@ One `Sim` owns everything:
 | `sim.loading` | fuel per tank and cabin load used at the next spawn (weight & balance). |
 | `sim.paused` / `sim.setPaused(b)`, `sim.timeScale`, `sim.spawning` | time control. |
 | `sim.spawn(req)`, `sim.resetToShortFinal(nm?)` | reposition (async: loads terrain first). `sim.lastSpawn`, `sim.lastPlan`. |
+| `sim.aircraft`, `sim.setAircraft(id)` | the aircraft being flown / choose the one for the next spawn (§4.8). |
 | `sim.message(text, level?, speak?)` | short message for the pilot (HUD toast / instructor voice). |
 | `sim.use(module)`, `sim.module<T>(name)` | register / look up a module. |
 | `sim.advance(seconds)` | run physics forward instantly (tests, tools). |
@@ -182,6 +190,25 @@ surveyed position in the open data (drawn through the airport reference point) �
 
 `core/storage.ts` (`loadJson`, `saveJson`, `removeKey`; keys are prefixed `skyready.sim.`; values saved under the old `teachx.sim.` prefix are moved over on first read). No
 accounts, no server storage.
+
+### 4.8 The hangar (multiple aircraft)
+
+`src/aircraft/catalog.ts` lists the ten aircraft (`AIRCRAFT_LIST`, `getAircraft(id)`): JSBSim model
+name, engine kind and count, reference speeds (`v`), flap notches, the measured height of the centre
+of gravity on the ground (`cgHeightFt`), which ground-contact units are wing tips / nose / tail, and
+FlightGear-only inputs some models need (`fgMirror`). `sim.aircraft` is the aircraft being flown;
+`sim.setAircraft(id)` chooses the one used at the next spawn (remembered in the settings).
+Everything that used to assume the Cessna reads `sim.aircraft` (`AIRCRAFT` in `core/defaults.ts` is
+still the Cessna's own spec, used by its tests and the Cessna-specific teaching text).
+
+The physics adapter keeps the Cessna 172P on its original, validated code path; the other aircraft
+use `FlightModel.createOther` / `setInputsOther` (all engines move together, governed propellers
+stay at full fine pitch, nose-wheel steering follows the rudder, gear lever, engine start with the
+starter when JSBSim's instant start fails, and a "fly it level" fallback when JSBSim cannot trim).
+Their 3D models are FlightGear's (`public/models/fg/`, converted by `scripts/fg-aircraft/`);
+`src/views/model-spec.ts` turns the generated numbers into what the views need.
+`tests/aircraft/hangar.test.ts` checks every aircraft: standing, take-off and climb, hands-off
+flight after an air start, short-final start.
 
 ## 5. Verified facts about the flight model (JSBSim c172p)
 

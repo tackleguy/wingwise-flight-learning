@@ -4,10 +4,9 @@
  * Dial coordinates: 200 × 200 units, centre (100, 100), angles clockwise from 12 o'clock.
  */
 import { useId, useMemo, useRef } from "react";
-import { AIRCRAFT } from "@/core/defaults";
 import { clamp, norm360 } from "@/core/math";
 import { useFrame, usePanel } from "./context";
-import { ATT_UNITS_PER_DEG, altimeterAngles, arcPath, asiAngle, attitudeTransform, ballAngle, cardRotation, polar, turnCoordinatorAngle, vsiAngle } from "./geometry";
+import { ATT_UNITS_PER_DEG, altimeterAngles, arcPath, asiAngle, asiAngleFor, attitudeTransform, ballAngle, cardRotation, polar, turnCoordinatorAngle, vsiAngle } from "./geometry";
 import { usePress } from "./interact";
 import { Dial, DialNumbers, Hub, Knob, T, range, setOpacity, setRot, setShown, setText, tickPath, useCell } from "./parts";
 
@@ -57,28 +56,45 @@ function OffFlag({ x, y, refG, text = "OFF" }: { x: number; y: number; refG: Rea
 
 // ---------------------------------------------------------------- airspeed indicator
 
+/** A round step for dial numbers so that about eight of them fit. */
+const niceStep = (span: number) => [20, 25, 50, 100, 200].find((st) => span / st <= 9) ?? 200;
+
 export function Airspeed({ size }: { size: number }) {
   const needle = useRef<SVGGElement>(null);
   const cell = useCell(NaN);
+  const ac = usePanel().sim.aircraft;
+  const top = ac.asiMaxKt;
+  const asiAngle = useMemo(() => asiAngleFor(top), [top]);
   useFrame(({ ind }) => setRot(needle.current, cell, asiAngle(ind.ias)));
-  const v = AIRCRAFT.v;
+  const v = ac.v;
   const art = useMemo(() => {
-    const majors = range(40, 200, 10).map(asiAngle);
-    const minors = range(45, 195, 10).map(asiAngle);
-    const nums = [40, 60, 80, 100, 120, 140, 160, 180, 200].map((k) => [asiAngle(k), String(k)] as const);
+    if (!(top > 210)) {
+      // the trainer's dial
+      const majors = range(40, 200, 10).map(asiAngle);
+      const minors = range(45, 195, 10).map(asiAngle);
+      const nums = [40, 60, 80, 100, 120, 140, 160, 180, 200].map((k) => [asiAngle(k), String(k)] as const);
+      return { majors: tickPath(majors, 61, 73.5), minors: tickPath(minors, 67, 73.5), nums };
+    }
+    // faster aircraft: numbers every `step` knots from about where the dial starts to read
+    const step = niceStep(top);
+    const first = Math.ceil(((40 * top) / 210) / step) * step;
+    const majors = range(first, top, step / 2).map(asiAngle);
+    const onMajor = (k: number) => Math.abs((k - first) / (step / 2) - Math.round((k - first) / (step / 2))) < 1e-6;
+    const minors = range(first, top, step / 10).filter((k) => !onMajor(k)).map(asiAngle);
+    const nums = range(first, top, step).map((k) => [asiAngle(k), String(k)] as const);
     return { majors: tickPath(majors, 61, 73.5), minors: tickPath(minors, 67, 73.5), nums };
-  }, []);
+  }, [top, asiAngle]);
   return (
     <Dial id="airspeed" size={size} label="Airspeed indicator">
       {/* green: normal operating range (Vs1 to Vno); yellow: caution range (smooth air only); red line: never exceed */}
       <path d={arcPath(85.5, asiAngle(v.s1), asiAngle(v.no))} className="arc s-green" strokeWidth="7.5" />
       <path d={arcPath(85.5, asiAngle(v.no), asiAngle(v.ne))} className="arc s-yellow" strokeWidth="7.5" />
       {/* white: flap operating range (Vs0 to Vfe) */}
-      <path d={arcPath(77.6, asiAngle(v.s0), asiAngle(v.fe))} className="arc s-mk" strokeWidth="5.6" />
+      {v.fe > v.s0 && <path d={arcPath(77.6, asiAngle(v.s0), asiAngle(v.fe))} className="arc s-mk" strokeWidth="5.6" />}
       <path d={tickPath([asiAngle(v.ne)], 70, 90)} className="arc s-red" strokeWidth="3.4" />
       <path d={art.majors} className="arc s-mk" strokeWidth="2.2" />
       <path d={art.minors} className="arc s-mk" strokeWidth="1.2" />
-      <DialNumbers items={art.nums} r={50} s={12.8} />
+      <DialNumbers items={art.nums} r={50} s={top > 210 && art.nums.length > 8 ? 11.5 : 12.8} />
       <T x={100} y={77} s={8.2} className="tx-legend">
         AIRSPEED
       </T>

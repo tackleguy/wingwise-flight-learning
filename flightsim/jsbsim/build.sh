@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# NOTE (November 2026): SUPERSEDED by build-flightgear.sh, which builds the shipped files from
+# FlightGear's own copy of JSBSim and packages all ten aircraft. This script (a stand-alone JSBSim
+# checkout, Cessna 172P only) is kept for reference — running it would drop the other aircraft.
 # Builds the TeachX Flight Simulator's flight model:
 #   JSBSim (LGPL-2.1, unmodified library)  +  wrapper.cpp (TeachX glue)  +  the TeachX-tuned
 #   Cessna 172P data files in this folder  ->  ../public/jsbsim/{jsbsim.mjs,jsbsim.wasm,jsbsim.data}

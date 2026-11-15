@@ -17,10 +17,15 @@ export interface Targets {
   /** True heading to turn to and hold (uses up to `maxBankDeg` of bank). */
   headingTrue?: number;
   maxBankDeg?: number;
-  /** Exactly one of these three: pitch attitude, altitude or vertical speed to hold. */
+  /** Exactly one of these three: pitch attitude, altitude or vertical speed to hold … */
   pitchDeg?: number;
   altFt?: number;
   vsFpm?: number;
+  /**
+   * … or hold the yoke still at this elevator position (+ = pull) instead of chasing any of them.
+   * Needed beyond about 90° of bank, where pulling no longer raises the nose but drags it toward the ground.
+   */
+  elevator?: number;
   /** Rudder: a fixed deflection, or "coordinate" to keep the ball centred. Default "coordinate". */
   rudder?: number | "coordinate";
   /** Throttle: a fixed setting, or leave undefined to keep the present setting. */
@@ -30,6 +35,7 @@ export interface Targets {
 }
 
 export class Pilot {
+  private ailInt = 0;
   private elevInt = 0;
   private pitchInt = 0;
   private rudInt = 0;
@@ -51,29 +57,39 @@ export class Pilot {
         const lim = t.maxBankDeg ?? 20;
         bankCmd = clamp(norm180(t.headingTrue - s.headingTrue) * 1.2, -lim, lim);
       }
-      c.aileron = clamp((bankCmd - s.roll) * 0.06 - s.rollRate * 0.025, -1, 1);
+      const bankErr = bankCmd - s.roll;
+      // Like a real pilot, keep adding aileron while the bank stays short of what is wanted (crossed
+      // controls in a slip or skid need a steady aileron input). Only while the bank is steady, so
+      // that a roll from one bank to another does not wind it up.
+      if (Math.abs(s.rollRate) < 3) this.ailInt = clamp(this.ailInt + bankErr * 0.03 * dt, -0.6, 0.6);
+      c.aileron = clamp(bankErr * 0.06 - s.rollRate * 0.025 + this.ailInt, -1, 1);
 
       // --- pitch
-      let pitchCmd = t.pitchDeg;
-      if (pitchCmd === undefined) {
-        let vsCmd = t.vsFpm ?? 0;
-        if (t.altFt !== undefined) vsCmd = clamp((t.altFt - s.altMslFt) * 8, -700, 700);
-        const e = vsCmd - s.vsFpm;
-        this.pitchInt = clamp(this.pitchInt + e * 0.0008 * dt, -12, 15);
-        pitchCmd = clamp(this.pitchInt + e * 0.004, -15, 18);
+      if (t.elevator !== undefined) {
+        c.elevator = clamp(t.elevator, -1, 1);
+      } else {
+        let pitchCmd = t.pitchDeg;
+        if (pitchCmd === undefined) {
+          let vsCmd = t.vsFpm ?? 0;
+          if (t.altFt !== undefined) vsCmd = clamp((t.altFt - s.altMslFt) * 8, -700, 700);
+          const e = vsCmd - s.vsFpm;
+          this.pitchInt = clamp(this.pitchInt + e * 0.0008 * dt, -12, 15);
+          pitchCmd = clamp(this.pitchInt + e * 0.004, -15, 18);
+        }
+        const pe = pitchCmd - s.pitch;
+        this.elevInt = clamp(this.elevInt + pe * 0.05 * dt, -0.8, 0.8);
+        c.elevator = clamp(pe * 0.09 - s.pitchRate * 0.03 + this.elevInt, -1, 1);
       }
-      const pe = pitchCmd - s.pitch;
-      this.elevInt = clamp(this.elevInt + pe * 0.05 * dt, -0.8, 0.8);
-      c.elevator = clamp(pe * 0.09 - s.pitchRate * 0.03 + this.elevInt, -1, 1);
 
       // --- rudder
       const rud = t.rudder ?? "coordinate";
       if (rud === "coordinate") {
         // ny > 0 means the airframe is being pushed toward the right wing (ball left): step on the left pedal.
+        // Firmly enough that a sudden power change does not leave the aircraft skidding for seconds.
         // A yaw damper (against any yaw rate other than the one a coordinated turn needs) keeps it steady.
         const yawWanted = (57.2958 * 32.174 * Math.sin((s.roll * Math.PI) / 180)) / Math.max(40, s.ktas * 1.6878);
-        this.rudInt = clamp(this.rudInt - s.ny * 0.8 * dt, -0.6, 0.6);
-        c.rudder = clamp(this.rudInt - s.ny * 1.0 - (s.yawRate - yawWanted) * 0.04, -1, 1);
+        this.rudInt = clamp(this.rudInt - s.ny * 2.4 * dt, -0.6, 0.6);
+        c.rudder = clamp(this.rudInt - s.ny * 3.0 - (s.yawRate - yawWanted) * 0.04, -1, 1);
       } else {
         c.rudder = rud;
       }

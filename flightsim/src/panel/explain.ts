@@ -40,6 +40,7 @@ export interface InstrumentExplanation {
 
 // ---------------------------------------------------------------- small helpers for the live readings
 
+/** The Cessna 172's speeds: the fixed teaching text below is written for its panel. */
 const V = AIRCRAFT.v;
 const r0 = (n: number) => Math.round(Number.isFinite(n) ? n : 0);
 const hdg3 = (deg: number) => {
@@ -54,6 +55,7 @@ const powered = (sim: Sim) => sim.state.sys.busVolts > 10;
 const gal = (n: number) => `${Math.max(0, n).toFixed(n < 9.95 ? 1 : 0)} gal`;
 
 function airspeedReading(sim: Sim): string {
+  const V = sim.aircraft.v; // live readings use the speeds of the aircraft being flown
   const ias = sim.state.ind.ias;
   const k = r0(ias);
   if (ias < 20) return "The needle is resting near the top: the instrument needs roughly 30 to 40 knots of airflow before it reads reliably. That is normal when standing still or taxiing.";
@@ -127,12 +129,19 @@ function vsiReading(sim: Sim): string {
 }
 
 function tachReading(sim: Sim): string {
+  const ac = sim.aircraft;
+  if (ac.engine !== "piston") {
+    const pct = Math.round(sim.state.ind.tachRpm);
+    if (pct < 5) return "Zero: the engine is stopped.";
+    return `${pct} % — ${ac.engine === "jet" ? "the fan speed (N1)" : "the gas-generator speed (Ng)"} of the ${ac.engines > 1 ? "left engine" : "engine"}. ${pct >= 95 ? "Full power." : pct >= 75 ? "Climb or cruise power." : pct >= 55 ? "Idle or low power." : "Starting or stopping."} (This aircraft's gauge reads in percent instead of rpm.)`;
+  }
   const rpm = sim.state.ind.tachRpm;
   const n = Math.round(rpm / 10) * 10;
   if (rpm < 50) return "Zero: the engine is stopped.";
   let s = `${n.toLocaleString("en-US")} rpm — `;
-  if (rpm > AIRCRAFT.maxRpm + 20) s += "over the red line. Pull the throttle back; with a fixed-pitch propeller this happens easily in a dive.";
-  else if (rpm >= 2100) s += "in the green arc: normal cruise and climb power.";
+  const green = ac.id === "c172p" ? 2100 : Math.round((ac.maxRpm * 0.78) / 100) * 100;
+  if (rpm > ac.maxRpm + 20) s += ac.constantSpeedProp ? "over the red line. Pull the throttle back and check the propeller lever." : "over the red line. Pull the throttle back; with a fixed-pitch propeller this happens easily in a dive.";
+  else if (rpm >= green) s += "in the green arc: normal cruise and climb power.";
   else if (rpm >= 1000) s += "below the green arc: taxi, run-up or descent power. (The magneto check is done at 1,700 rpm.)";
   else if (rpm >= 450) s += "idling.";
   else s += "barely turning: cranking on the starter or windmilling.";
@@ -349,7 +358,9 @@ function carbHeatReading(sim: Sim): string {
 
 function flapReading(sim: Sim): string {
   const i = sim.controls.flapIndex;
-  const lever = AIRCRAFT.flapDetentsDeg[i] ?? 0;
+  const V = sim.aircraft.v;
+  if (sim.aircraft.flapDetentsDeg.length <= 1) return "This aircraft has no flaps you can set.";
+  const lever = sim.aircraft.flapDetentsDeg[i] ?? 0;
   const actual = sim.state.flapsDeg;
   const ias = sim.state.ind.ias;
   let s = `The lever is at ${lever === 0 ? "UP" : `${lever}°`}`;

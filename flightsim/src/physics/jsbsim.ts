@@ -19,6 +19,7 @@
  *   SkyReady trim     + = nose up          → fcs/pitch-trim-cmd-norm − = nose up
  * (verified by flight tests in tests/physics.)
  */
+import { getAircraft, type Aircraft } from "@/aircraft/catalog";
 import { FPS_PER_KT, KT_PER_FPS, LB_PER_GAL_AVGAS, R2D } from "@/core/math";
 
 interface FdmHandle {
@@ -29,6 +30,9 @@ interface FdmHandle {
   run(steps: number): boolean;
   /** Present in the flight simulator's own build (flightsim/jsbsim/wrapper.cpp); absent in older builds. */
   startEngines?(throttle: number, mixture: number): boolean;
+  /** FlightGear-engine build only: number of engines, and a trim that is safe for governed propellers. */
+  numEngines?(): number;
+  trim?(mode: number): boolean;
   bind(path: string, create: boolean): number;
   get(handle: number): number;
   set(handle: number, value: number): void;
@@ -69,6 +73,8 @@ export function loadJsbsim(url?: string): Promise<JsbsimModule> {
 }
 
 export interface FdmInit {
+  /** Which aircraft (default: the Cessna 172P). */
+  aircraft?: Aircraft;
   lat: number;
   lon: number;
   /** ft MSL when airborne (ignored on the ground). */
@@ -130,6 +136,8 @@ export interface FdmInputs {
   isaDeviationC: number;
   /** Sea-level pressure of the model atmosphere, inHg (see `modelSeaLevelPressureInHg` in core/sim.ts). */
   qnhInHg: number;
+  /** Landing-gear lever (aircraft with retractable gear only): true = down. Missing = down. */
+  gearDown?: boolean;
 }
 
 /** Raw truth values read back from JSBSim (already in SkyReady units and signs). */
@@ -182,6 +190,10 @@ export interface FdmOutputs {
   stallHyst: number;
   simTime: number;
   chtF: number;
+  /** Jets and turboprops: N1 (fan / gas-generator speed) in percent (0 for piston engines). */
+  n1Pct: number;
+  /** Landing gear: 1 down, 0 up (always 1 for fixed gear). */
+  gearPosNorm: number;
 }
 
 const READ = [
@@ -233,6 +245,10 @@ const READ = [
   "aero/stall-hyst-norm",
   "simulation/sim-time-sec",
   "propulsion/engine/cht-degF",
+  // (added for the other aircraft of the hangar; read for all, used where meaningful)
+  "propulsion/engine/n1",
+  "gear/gear-pos-norm",
+  "propulsion/engine/propeller-rpm",
 ] as const;
 
 const WRITE = [
@@ -260,6 +276,10 @@ const WRITE = [
   "atmosphere/delta-T",
   "atmosphere/P-sl-psf",
   "propulsion/engine/volumetric-efficiency",
+  // (added for the other aircraft of the hangar; only written for them)
+  "fcs/steer-cmd-norm",
+  "gear/gear-cmd-norm",
+  "propulsion/cutoff_cmd",
 ] as const;
 type WritePath = (typeof WRITE)[number];
 /** Positions in READ (= bind handles, they are bound first) that are checked for NaN after every step. */
@@ -296,7 +316,7 @@ const MIN_AIRFLOW_FRACTION = 0.05;
 /** Share of the power made in the cylinders that reaches the propeller at full throttle (the rest is friction). */
 const POWER_LOSS_SHAFT_SHARE = 0.63;
 
-/** One JSBSim aircraft instance (the C172P). Create a new one for every (re)spawn. */
+/** One JSBSim aircraft instance (any aircraft of the hangar). Create a new one for every (re)spawn. */
 export class FlightModel {
   /** Physics step, seconds. The simulator always advances in whole steps of this size. */
   static readonly DT = 1 / 120;
@@ -310,12 +330,33 @@ export class FlightModel {
   private readonly out: FdmOutputs;
   /** The engine's normal volumetric efficiency (cylinder filling), read from the engine file at creation. */
   private readonly baseVolumetricEfficiency: number;
+  /** The aircraft being flown. */
+  readonly aircraft: Aircraft;
+  /** The original Cessna 172P path (tuned, validated, unchanged) or the generic path for the other aircraft. */
+  private readonly trainer: boolean;
+  /** Handles of throttle / mixture / propeller lever for every engine (index 0 = the first engine). */
+  private readonly engineHandles: { throttle: number; mixture: number; advance: number }[] = [];
+  /** FlightGear-only inputs copied every step: [destination handle, source handle]. */
+  private readonly mirrorHandles: [number, number][] = [];
 
-  private constructor(m: JsbsimModule, fdm: FdmHandle) {
+  private constructor(m: JsbsimModule, fdm: FdmHandle, ac: Aircraft) {
     this.m = m;
     this.fdm = fdm;
+    this.aircraft = ac;
+    this.trainer = ac.id === "c172p";
     for (const p of READ) fdm.bind(p, true);
     for (const p of WRITE) this.writeHandles.set(p, fdm.bind(p, true));
+    if (!this.trainer) {
+      const n = Math.max(1, ac.engines);
+      for (let i = 0; i < n; i++) {
+        this.engineHandles.push({
+          throttle: fdm.bind(`fcs/throttle-cmd-norm[${i}]`, true),
+          mixture: fdm.bind(`fcs/mixture-cmd-norm[${i}]`, true),
+          advance: fdm.bind(`fcs/advance-cmd-norm[${i}]`, true),
+        });
+      }
+      for (const [dst, src] of ac.fgMirror) this.mirrorHandles.push([fdm.bind(dst, true), fdm.bind(src, true)]);
+    }
     this.buf = m._malloc(READ.length * 8);
     this.out = {} as FdmOutputs;
     const ve = fdm.getByName("propulsion/engine/volumetric-efficiency");
@@ -329,6 +370,8 @@ export class FlightModel {
 
   /** Synchronous creation once the module is loaded (used for instant repositioning). */
   static createSync(m: JsbsimModule, init: FdmInit): FlightModel {
+    const ac = init.aircraft ?? getAircraft("c172p");
+    if (ac.id !== "c172p") return FlightModel.createOther(m, init, ac);
     const fdm = new m.Fdm();
     if (!fdm.loadModel("c172p")) {
       const err = fdm.lastError();
@@ -415,9 +458,156 @@ export class FlightModel {
 
       }
     }
-    const model = new FlightModel(m, fdm);
+    const model = new FlightModel(m, fdm, ac);
     model.initialTrim = initialTrim;
     return model;
+  }
+
+  /**
+   * Creation for every aircraft except the tuned Cessna 172P. Same steps, adapted to engines that
+   * are not a fixed-pitch piston: all engines move together, governed propellers are kept at full
+   * fine pitch, engines that cannot be started instantly are started with the starter (behind the
+   * scenes), and if JSBSim's trim cannot balance the aircraft it is flown level for a few seconds
+   * and the pitch trim is set to what held it there.
+   */
+  private static createOther(m: JsbsimModule, init: FdmInit, ac: Aircraft): FlightModel {
+    const fdm = new m.Fdm();
+    if (!fdm.loadModel(ac.jsbsim)) {
+      const err = fdm.lastError();
+      fdm.delete();
+      throw new Error(`JSBSim could not load the ${ac.name}: ${err || "unknown error"}`);
+    }
+    fdm.setByName("position/terrain-elevation-asl-ft", init.terrainFt);
+    fdm.setInitial(init.lat, init.lon, init.onGround ? ac.groundStartAglFt : init.altMslFt, init.onGround, init.terrainFt, init.headingTrue, init.onGround ? 0 : init.kcas, init.onGround ? 0 : (init.pitchDeg ?? 0));
+    if (!init.onGround && init.gammaDeg) fdm.setByName("ic/gamma-deg", init.gammaDeg);
+    const flap = clamp(init.flapNorm ?? 0, 0, 1);
+    fdm.setByName("fcs/flap-cmd-norm", flap);
+    fdm.setByName("fcs/flap-pos-norm", flap);
+    fdm.setByName("fcs/flap-pos-deg", flap * ac.flapMaxDeg);
+    if (ac.retractableGear) fdm.setByName("gear/gear-cmd-norm", init.onGround ? 1 : 0);
+    if (init.isaDeviationC !== undefined) fdm.setByName("atmosphere/delta-T", init.isaDeviationC * 1.8);
+    if (init.seaLevelPressureInHg !== undefined) fdm.setByName("atmosphere/P-sl-psf", init.seaLevelPressureInHg * PSF_PER_INHG);
+    if (!fdm.runIC()) {
+      const err = fdm.lastError();
+      fdm.delete();
+      throw new Error(`JSBSim could not start at that position: ${err || "unknown error"}`);
+    }
+    fdm.setDt(FlightModel.DT);
+    if (ac.retractableGear && !init.onGround) {
+      fdm.setByName("gear/gear-cmd-norm", 0);
+      fdm.setByName("gear/gear-pos-norm", 0);
+    }
+    const model = new FlightModel(m, fdm, ac);
+    const n = model.engineHandles.length;
+    for (const e of model.engineHandles) {
+      fdm.set(e.mixture, 1);
+      fdm.set(e.advance, 1);
+    }
+    fdm.setByName("propulsion/magneto_cmd", 3);
+    const throttle = init.onGround ? 0 : ac.cruiseThrottle;
+    if (init.engineRunning && !model.startEnginesSafely(throttle, init.onGround)) {
+      model.dispose();
+      throw new Error(`The engine of the ${ac.name} could not be started.`);
+    }
+    if (!init.onGround) {
+      // Let propeller governors and engine regulators settle, then trim for hands-off flight.
+      model.runSteps(120 * 2);
+      for (const [d, sIdx] of model.mirrorHandles) fdm.set(d, fdm.get(sIdx));
+      let trimmed = false;
+      try {
+        trimmed = fdm.trim ? fdm.trim(0) : (fdm.setByName("simulation/do_simple_trim", 0), true);
+      } catch {
+        trimmed = false;
+      }
+      if (trimmed) {
+        const thr = fdm.getByName("fcs/throttle-cmd-norm");
+        const trim = fdm.getByName("fcs/pitch-trim-cmd-norm");
+        if (Number.isFinite(thr) && Number.isFinite(trim)) model.initialTrim = { throttle: thr, trim: -trim };
+      } else {
+        // JSBSim could not balance this aircraft (the trim also resets it to the starting point and
+        // may stop the engine): restart the engine and fly it level behind the scenes for 8 s.
+        if (init.engineRunning) model.startEnginesSafely(throttle, false);
+        for (let i = 0; i < n; i++) fdm.set(model.engineHandles[i]!.throttle, throttle);
+        fdm.setByName("fcs/pitch-trim-cmd-norm", 0);
+        let sum = 0;
+        let count = 0;
+        for (let k = 0; k < 120 * 8; k++) {
+          const vs = fdm.getByName("velocities/h-dot-fps");
+          const q = fdm.getByName("velocities/q-rad_sec");
+          const th = fdm.getByName("attitude/theta-deg");
+          const roll = fdm.getByName("attitude/phi-deg");
+          const p = fdm.getByName("velocities/p-rad_sec");
+          const prev = fdm.getByName("fcs/elevator-cmd-norm");
+          // JSBSim elevator command: negative = nose up
+          const cmd = clamp(fin(prev + vs * 0.0006 + q * 0.08 + Math.max(0, Math.abs(th) - 15) * Math.sign(th) * 0.002, 0), -1, 1);
+          fdm.setByName("fcs/elevator-cmd-norm", cmd);
+          fdm.setByName("fcs/aileron-cmd-norm", clamp(fin(-roll * 0.05 - p * 0.5, 0), -1, 1));
+          model.runSteps(1);
+          if (k >= 120 * 5) {
+            sum += cmd;
+            count++;
+          }
+        }
+        const elev = count ? sum / count : 0;
+        fdm.setByName("fcs/elevator-cmd-norm", 0);
+        fdm.setByName("fcs/aileron-cmd-norm", 0);
+        fdm.setByName("fcs/pitch-trim-cmd-norm", clamp(elev, -1, 1));
+        model.initialTrim = { throttle, trim: clamp(-elev, -1, 1) };
+      }
+      // Wind: the air starts moving (the c172p path re-initialises instead; that would reset the
+      // engine regulators of some of these aircraft, so here the wind simply starts blowing).
+      const windKt = init.windKt ?? 0;
+      if (windKt > 0.1) {
+        const dir = ((init.windDirTrue ?? 0) * Math.PI) / 180;
+        fdm.setByName("atmosphere/wind-north-fps", -windKt * FPS_PER_KT * Math.cos(dir));
+        fdm.setByName("atmosphere/wind-east-fps", -windKt * FPS_PER_KT * Math.sin(dir));
+      }
+    }
+    return model;
+  }
+
+  /** Run physics steps during set-up (copies the FlightGear-only inputs first, like `step`). */
+  private runSteps(n: number): boolean {
+    for (let i = 0; i < n; i++) {
+      for (const [d, sIdx] of this.mirrorHandles) this.fdm.set(d, this.fdm.get(sIdx));
+      if (!this.fdm.run(1)) return false;
+    }
+    return true;
+  }
+
+  private allEnginesRunning(): boolean {
+    const n = Math.max(1, this.aircraft.engines);
+    for (let i = 0; i < n; i++) if (!(this.fdm.getByName(`propulsion/engine[${i}]/set-running`) > 0.5)) return false;
+    return true;
+  }
+
+  /**
+   * Start every engine and leave it running at `throttle`: JSBSim's instant start first; engines
+   * that do not run after it are started with the starter like a pilot would (up to 10 s of
+   * simulated time, brakes on when on the ground). Returns false if an engine would not start.
+   */
+  private startEnginesSafely(throttle: number, onGround: boolean): boolean {
+    const fdm = this.fdm;
+    if (fdm.startEngines) fdm.startEngines(throttle, 1);
+    else fdm.setByName("propulsion/set-running", -1);
+    for (const e of this.engineHandles) fdm.set(e.throttle, throttle);
+    if (this.allEnginesRunning()) return true;
+    if (onGround) {
+      fdm.setByName("fcs/left-brake-cmd-norm", 1);
+      fdm.setByName("fcs/right-brake-cmd-norm", 1);
+    }
+    for (const e of this.engineHandles) fdm.set(e.throttle, 0.25);
+    fdm.setByName("propulsion/magneto_cmd", 3);
+    fdm.setByName("propulsion/starter_cmd", 1);
+    for (let t = 0; t < 10 && !this.allEnginesRunning(); t += 0.25) this.runSteps(30);
+    fdm.setByName("propulsion/starter_cmd", 0);
+    for (const e of this.engineHandles) fdm.set(e.throttle, throttle);
+    if (onGround) {
+      this.runSteps(120 * 2);
+      fdm.setByName("fcs/left-brake-cmd-norm", 0);
+      fdm.setByName("fcs/right-brake-cmd-norm", 0);
+    }
+    return this.allEnginesRunning();
   }
 
   private w(path: WritePath, v: number) {
@@ -426,6 +616,10 @@ export class FlightModel {
   }
 
   setInputs(i: FdmInputs) {
+    if (!this.trainer) {
+      this.setInputsOther(i);
+      return;
+    }
     // Every number is checked first: a NaN or infinity from a misbehaving input device or module must
     // never reach the flight model (it would poison the whole state). `fin` replaces such a value.
     this.w("fcs/elevator-cmd-norm", -clamp(fin(i.elevator, 0), -1, 1));
@@ -459,9 +653,64 @@ export class FlightModel {
     if (air < MIN_AIRFLOW_FRACTION) this.w("fcs/mixture-cmd-norm", 0);
   }
 
+  /** Inputs for every aircraft except the Cessna 172P (same conventions; see `setInputs`). */
+  private setInputsOther(i: FdmInputs) {
+    const ac = this.aircraft;
+    const fdm = this.fdm;
+    const rudder = clamp(fin(i.rudder, 0), -1, 1);
+    this.w("fcs/elevator-cmd-norm", -clamp(fin(i.elevator, 0), -1, 1));
+    this.w("fcs/aileron-cmd-norm", clamp(fin(i.aileron, 0), -1, 1));
+    this.w("fcs/rudder-cmd-norm", -rudder);
+    // Nose / tail wheel steering follows the rudder pedals (FlightGear does the same for these aircraft).
+    this.w("fcs/steer-cmd-norm", rudder);
+    this.w("fcs/pitch-trim-cmd-norm", -clamp(fin(i.trim, 0), -1, 1));
+    const throttle = clamp(fin(i.throttle, 0), 0, 1);
+    let mixture = clamp(fin(i.mixture, 1), 0, 1);
+    if (ac.engine === "piston") {
+      // Partial power loss: same idea as for the Cessna (less air into the cylinders).
+      const air = airflowFractionForPowerLoss(i.powerLoss);
+      this.w("propulsion/engine/volumetric-efficiency", this.baseVolumetricEfficiency * Math.max(MIN_AIRFLOW_FRACTION, air));
+      if (air < MIN_AIRFLOW_FRACTION) mixture = 0;
+    } else {
+      // Turbines: the mixture lever stands for the fuel condition lever (fully back = fuel cut off).
+      this.w("propulsion/cutoff_cmd", mixture < 0.5 ? 1 : 0);
+    }
+    for (const e of this.engineHandles) {
+      fdm.set(e.throttle, throttle);
+      fdm.set(e.mixture, mixture);
+      fdm.set(e.advance, 1);
+    }
+    this.w("fcs/flap-cmd-norm", clamp(fin(i.flapNorm, 0), 0, 1));
+    this.w("fcs/left-brake-cmd-norm", clamp(fin(i.brakeLeft, 0), 0, 1));
+    this.w("fcs/right-brake-cmd-norm", clamp(fin(i.brakeRight, 0), 0, 1));
+    this.w("fcs/center-brake-cmd-norm", 0);
+    this.w("propulsion/magneto_cmd", i.magnetos === 1 || i.magnetos === 2 || i.magnetos === 3 ? i.magnetos : 0);
+    this.w("propulsion/starter_cmd", i.starter ? 1 : 0);
+    if (ac.retractableGear) this.w("gear/gear-cmd-norm", i.gearDown === false ? 0 : 1);
+    if (Number.isFinite(i.terrainFt)) this.w("position/terrain-elevation-asl-ft", i.terrainFt);
+    this.w("atmosphere/wind-north-fps", clamp(fin(i.windNorthFps, 0), -MAX_WIND_FPS, MAX_WIND_FPS));
+    this.w("atmosphere/wind-east-fps", clamp(fin(i.windEastFps, 0), -MAX_WIND_FPS, MAX_WIND_FPS));
+    this.w("atmosphere/wind-down-fps", clamp(fin(i.windDownFps, 0), -MAX_WIND_FPS, MAX_WIND_FPS));
+    const turb = clamp(fin(i.turbulence, 0), 0, 1);
+    this.w("atmosphere/turb-type", turb > 0.001 ? 3 : 0);
+    this.w("atmosphere/turbulence/milspec/windspeed_at_20ft_AGL-fps", turb * 45 * FPS_PER_KT * 0.5);
+    this.w("atmosphere/turbulence/milspec/severity", Math.round(turb * 6));
+    this.w("atmosphere/delta-T", clamp(fin(i.isaDeviationC, 0), -60, 60) * 1.8);
+    this.w("atmosphere/P-sl-psf", clamp(fin(i.qnhInHg, 29.92126), 25, 33) * PSF_PER_INHG);
+  }
+
   /** Advance by whole physics steps. Returns false if the model failed (NaN / terminated). */
   step(steps = 1): boolean {
     if (this.disposed) return false;
+    if (this.mirrorHandles.length) {
+      // FlightGear-only inputs are refreshed before every single step (as FlightGear does every frame).
+      for (let k = Math.max(1, Math.round(steps)); k > 0; k--) {
+        for (const [d, sIdx] of this.mirrorHandles) this.fdm.set(d, this.fdm.get(sIdx));
+        if (!this.fdm.run(1)) return false;
+      }
+      for (const h of HEALTH_HANDLES) if (!Number.isFinite(this.fdm.get(h))) return false;
+      return true;
+    }
     if (!this.fdm.run(Math.max(1, Math.round(steps)))) return false;
     // `read()` hides NaN (it reports 0 instead) so that nothing downstream can be poisoned; here the raw
     // numbers are checked so that a numerical failure is reported instead of silently flying on zeros.
@@ -527,6 +776,18 @@ export class FlightModel {
     out.stallHyst = v(45);
     out.simTime = v(46);
     out.chtF = v(47);
+    out.n1Pct = 0;
+    out.gearPosNorm = 1;
+    if (!this.trainer) {
+      const ac = this.aircraft;
+      if (ac.engine !== "piston") {
+        // Jets and turboprops: the engine gauge shows fan / gas-generator speed (N1, Ng) in percent.
+        out.n1Pct = v(48);
+        out.rpm = out.n1Pct;
+      }
+      if (ac.retractableGear) out.gearPosNorm = clamp(v(49), 0, 1);
+      if (ac.rightAileronFromLeft) out.aileronRightRad = -out.aileronLeftRad;
+    }
     return out;
   }
 
@@ -540,6 +801,11 @@ export class FlightModel {
 
   /** Instantly start or stop the engine (lessons / instructor actions). */
   setEngineRunning(on: boolean) {
+    if (on && !this.trainer) {
+      const throttle = clamp(fin(this.fdm.getByName("fcs/throttle-cmd-norm"), 0), 0, 1);
+      this.startEnginesSafely(throttle, false);
+      return;
+    }
     if (on && this.fdm.startEngines) {
       // settle at the present throttle (JSBSim's own instant start settles at full throttle)
       const throttle = clamp(fin(this.fdm.getByName("fcs/throttle-cmd-norm"), 0), 0, 1);

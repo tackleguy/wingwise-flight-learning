@@ -167,10 +167,11 @@ describe("attitude indicator", () => {
     expect(inst.status.attitudeTumbling).toBe(false);
     expect(Math.abs(s.ind.attRoll - s.roll)).toBeLessThan(3);
 
-    // roll on past 100°
+    // roll on past 100°, yoke at neutral as in an aileron roll (pulling while nearly upside down only
+    // drags the nose toward the ground and stops the roll at about 100°, short of the stop)
     let tumbled = false;
     let rollWhenTumbled = 0;
-    pilot.fly(5, { bankDeg: 125, pitchDeg: 0, rudder: 0 }, () => {
+    pilot.fly(5, { bankDeg: 125, elevator: 0, rudder: 0 }, () => {
       if (!tumbled && inst.status.attitudeTumbling) {
         tumbled = true;
         rollWhenTumbled = s.roll;

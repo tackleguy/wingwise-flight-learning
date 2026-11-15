@@ -37,6 +37,14 @@ export const VSI_LIMIT_FPM = 2000;
 const VSI_KICK_GAIN = 12;
 
 export class PitotStatic {
+  /** Top of the airspeed dial of the aircraft being flown, kt (the needle stops there). */
+  asiMaxKt = ASI_MAX_KT;
+  /** Apply the Cessna 172P's published airspeed calibration (position error); other aircraft read calibrated airspeed. */
+  calibrated = true;
+  private kias(kcas: number, flapsDeg: number): number {
+    return this.calibrated ? kcasToKias(kcas, flapsDeg) : Math.max(0, kcas);
+  }
+
   ias = 0;
   alt = 0;
   vs = 0;
@@ -60,7 +68,7 @@ export class PitotStatic {
     this.vsiCase = hp - (vsNow / 60) * VSI_LEAK_S;
     this.vs = vsNow;
     this.kickFast = this.kickSlow = s.pitchRate;
-    this.ias = needleFromKias(kcasToKias(s.kcas, s.flapsDeg));
+    this.ias = needleFromKias(this.kias(s.kcas, s.flapsDeg));
     this.alt = this.indicated(kollsmanInHg);
   }
 
@@ -83,7 +91,7 @@ export class PitotStatic {
 
     // ---- airspeed indicator: a gauge of (pitot line − static line), scale drawn in knots
     const sensedKcas = kcasFromImpactPressure(this.pitotLine - this.staticLine);
-    const needle = Math.min(ASI_MAX_KT, needleFromKias(kcasToKias(sensedKcas, s.flapsDeg)));
+    const needle = Math.min(this.asiMaxKt, needleFromKias(this.kias(sensedKcas, s.flapsDeg)));
     this.ias += ((needle - this.ias) * dt) / (ASI_LAG_S + dt);
     if (this.ias < 1e-3 && needle === 0) this.ias = 0;
 

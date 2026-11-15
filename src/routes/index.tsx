@@ -404,7 +404,7 @@ function Dashboard() {
                 Pilot training · right in your browser
               </p>
               <h1 className="text-[34px] leading-[1.05] font-bold tracking-[-0.035em] text-balance text-white sm:text-[44px] lg:text-[52px]">
-                Get sky-ready{" "}
+                Get <span className="whitespace-nowrap">sky-ready</span>{" "}
                 <span className="text-brand-gradient">before you leave the ground.</span>
               </h1>
               <p className="mt-4 max-w-md text-[15px] leading-relaxed text-pretty text-white/70">

@@ -3,6 +3,7 @@
  * on a runway, on short final, in the air, or parked beside the runway with the engine off.
  */
 import type { Airport, Runway, WorldData } from "@/data/world-data";
+import type { Aircraft } from "@/aircraft/catalog";
 import { AIRCRAFT } from "./defaults";
 import { FT_PER_NM, destination, norm360 } from "./math";
 import type { Environment, SpawnRequest } from "./types";
@@ -62,7 +63,12 @@ export function findRunwayEnd(airport: Airport, endId: string): { runway: Runway
 
 const surfaceWind = (env: Environment) => env.wind[0] ?? { altFtMsl: 0, dirTrue: 0, kt: 0 };
 
-export function planSpawn(req: SpawnRequest, data: WorldData, env: Environment): SpawnPlan {
+export function planSpawn(req: SpawnRequest, data: WorldData, env: Environment, aircraft?: Aircraft): SpawnPlan {
+  // Speeds and flaps for the aircraft being flown (the Cessna 172P values when none is given).
+  const cruiseKt = aircraft?.cruiseKt ?? 100;
+  const approachKt = aircraft?.v.approach ?? AIRCRAFT.v.approach;
+  const lastFlap = Math.max(0, (aircraft?.flapDetentsDeg.length ?? AIRCRAFT.flapDetentsDeg.length) - 1);
+  const finalFlap = Math.min(lastFlap, aircraft?.finalFlapIndex ?? 3);
   const airport = req.airportIdent ? data.getAirport(req.airportIdent) : undefined;
   const wind = surfaceWind(env);
   const base = {
@@ -89,7 +95,7 @@ export function planSpawn(req: SpawnRequest, data: WorldData, env: Environment):
       heightAboveRefFt: req.altFtMsl === undefined ? 3000 : null,
       refLat: req.lat,
       refLon: req.lon,
-      kias: req.kias ?? 100,
+      kias: req.kias ?? cruiseKt,
       engineRunning: req.engineRunning ?? true,
       fallbackElevFt: 0,
     };
@@ -109,7 +115,7 @@ export function planSpawn(req: SpawnRequest, data: WorldData, env: Environment):
       heightAboveRefFt: req.altFtMsl === undefined ? 3000 : null,
       refLat: lat,
       refLon: lon,
-      kias: req.kias ?? 100,
+      kias: req.kias ?? cruiseKt,
       engineRunning: true,
       fallbackElevFt: 0,
       note: req.airportIdent ? `Airport "${req.airportIdent}" was not found — starting in the air instead.` : "",
@@ -132,7 +138,7 @@ export function planSpawn(req: SpawnRequest, data: WorldData, env: Environment):
       heightAboveRefFt: req.altFtMsl === undefined ? 3000 : null,
       refLat: airport.lat,
       refLon: airport.lon,
-      kias: req.kias ?? 100,
+      kias: req.kias ?? cruiseKt,
       engineRunning: req.engineRunning ?? true,
       fallbackElevFt: elev,
       runway: pick?.runway ?? null,
@@ -154,7 +160,7 @@ export function planSpawn(req: SpawnRequest, data: WorldData, env: Environment):
       heightAboveRefFt: onGround ? null : 1000,
       refLat: airport.lat,
       refLon: airport.lon,
-      kias: req.kias ?? (onGround ? 0 : 80),
+      kias: req.kias ?? (onGround ? 0 : aircraft && aircraft.id !== "c172p" ? Math.round(approachKt * 1.2) : 80),
       engineRunning: req.engineRunning ?? req.kind !== "ramp",
       parkingBrake: onGround,
       fallbackElevFt: elev,
@@ -182,9 +188,9 @@ export function planSpawn(req: SpawnRequest, data: WorldData, env: Environment):
       heightAboveRefFt: 50 + nm * 318,
       refLat: threshold.lat,
       refLon: threshold.lon,
-      kias: req.kias ?? AIRCRAFT.v.approach,
+      kias: req.kias ?? approachKt,
       gammaDeg: -3,
-      flapIndex: nm <= 3 ? 3 : 1,
+      flapIndex: nm <= 3 ? finalFlap : Math.min(1, finalFlap),
       engineRunning: req.engineRunning ?? true,
       note,
     };

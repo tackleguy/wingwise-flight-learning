@@ -1,0 +1,162 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>FG model check</title>
+<style>html,body{margin:0;background:#9ec3e6;overflow:hidden}#info{position:absolute;left:8px;top:6px;font:13px sans-serif;color:#102030}</style>
+<script type="importmap">
+{ "imports": { "three": "/node_modules/three/build/three.module.js", "three/addons/": "/node_modules/three/examples/jsm/" } }
+</script>
+</head>
+<body>
+<div id="info"></div>
+<script type="module">
+// Headless check viewer for scripts/fg-aircraft (driven by view.cjs).
+// URL: view.html?id=<id>&view=left|front|top|rear|deflect|deflectRear
+import * as THREE from "three";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+
+const q = new URLSearchParams(location.search);
+const id = q.get("id");
+const view = q.get("view") || "left";
+const W = innerWidth, H = innerHeight;
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setSize(W, H);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+document.body.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x9ec3e6);
+scene.add(new THREE.HemisphereLight(0xffffff, 0x666655, 1.6));
+const sun = new THREE.DirectionalLight(0xffffff, 1.8);
+sun.position.set(3, 8, 5);
+scene.add(sun);
+const sun2 = new THREE.DirectionalLight(0xffffff, 0.6);
+sun2.position.set(-4, 3, -6);
+scene.add(sun2);
+
+const gltf = await new GLTFLoader().loadAsync(`/public/models/fg/${id}.glb`);
+const root = gltf.scene;
+scene.add(root);
+const json = gltf.parser.json;
+const rootNode = json.nodes[json.scenes[0].nodes[0]];
+const meta = rootNode.extras.teachx;
+const dbg = rootNode.extras.teachxDebug;
+
+// ground plane at the JSBSim main-gear contact height, origin (CG) marker, JSBSim contact markers
+const gy = dbg.groundY;
+const size = Math.max(meta.spanM, meta.lengthM);
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(size * 3, size * 3), new THREE.MeshLambertMaterial({ color: 0x808080, side: THREE.DoubleSide }));
+ground.rotation.x = -Math.PI / 2;
+ground.position.y = gy;
+if (view !== "top" && view !== "flapsDown" && view !== "below") scene.add(ground);
+const grid = new THREE.GridHelper(size * 3, Math.round(size * 3), 0x555555, 0x6a6a6a);
+grid.position.y = gy + 0.002;
+if (view !== "top" && view !== "flapsDown" && view !== "below") scene.add(grid);
+const mk = (color, r) => new THREE.Mesh(new THREE.SphereGeometry(r, 16, 12), new THREE.MeshBasicMaterial({ color, depthTest: false }));
+const cgm = mk(0xff00ff, size * 0.012); cgm.renderOrder = 10; scene.add(cgm);
+const axes = new THREE.AxesHelper(size * 0.08); axes.material.depthTest = false; axes.renderOrder = 11; scene.add(axes);
+for (const [k, p] of Object.entries(dbg.jsbsimContacts)) {
+  const m = mk(k.startsWith("main") ? 0xffff00 : 0x00ffff, size * 0.006); m.renderOrder = 12; m.position.set(...p); scene.add(m);
+}
+if (meta.eye) { const e = mk(0x00ff00, size * 0.008); e.renderOrder = 12; e.position.set(...meta.eye); scene.add(e); }
+
+const deflect = view.startsWith("deflect");
+const checks = {};
+if (deflect) {
+  // numeric check: where does each part's centre go when turned +20 deg about its local +X?
+  // expected: elevator/ailerons/flaps up (+Y), rudder to the pilot's right (-X).
+  const d = THREE.MathUtils.degToRad(20);
+  root.updateMatrixWorld(true);
+  // trailing edge = the 5 % most-aft vertices (glTF -Z is aft) of everything under the node
+  const trailingEdge = (n) => {
+    const pts = [];
+    n.updateMatrixWorld(true);
+    n.traverse((o) => {
+      if (!o.isMesh) return;
+      const pa = o.geometry.attributes.position;
+      for (let i = 0; i < pa.count; i++) pts.push(new THREE.Vector3().fromBufferAttribute(pa, i).applyMatrix4(o.matrixWorld));
+    });
+    pts.sort((a, b) => a.z - b.z);
+    const k = Math.max(1, Math.round(pts.length * 0.05));
+    return pts.slice(0, k);
+  };
+  // only real glTF nodes (three.js also names per-material sub-meshes "<node>_1", "<node>_2", ...)
+  const gltfNodeNames = new Set(json.nodes.map((n) => n.name));
+  const nodesToCheck = [];
+  root.traverse((o) => {
+    if (o.isMesh && o.parent && o.parent.name !== o.name && !gltfNodeNames.has(o.name)) return;
+    if (gltfNodeNames.has(o.name) && /^(elevator|rudder|aileron_left|aileron_right|flap_left|flap_right)(_(left|right|\d+))?$/.test(o.name) && !nodesToCheck.some((x) => x.name === o.name)) nodesToCheck.push(o);
+  });
+  for (const n of nodesToCheck) {
+    const q0 = n.quaternion.clone();
+    const te0 = trailingEdge(n);
+    const before = te0.reduce((a, p) => a.add(p), new THREE.Vector3()).divideScalar(te0.length);
+    n.quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), d));
+    root.updateMatrixWorld(true);
+    // same vertices after the turn: recompute in the same order by tracking the world matrix change
+    const te1 = [];
+    n.traverse((o) => {
+      if (!o.isMesh) return;
+      const pa = o.geometry.attributes.position;
+      for (let i = 0; i < pa.count; i++) te1.push(new THREE.Vector3().fromBufferAttribute(pa, i).applyMatrix4(o.matrixWorld));
+    });
+    // match by the pre-turn order: rebuild pre-turn list unsorted to pair indices
+    n.quaternion.copy(q0);
+    root.updateMatrixWorld(true);
+    const pre = [];
+    n.traverse((o) => {
+      if (!o.isMesh) return;
+      const pa = o.geometry.attributes.position;
+      for (let i = 0; i < pa.count; i++) pre.push(new THREE.Vector3().fromBufferAttribute(pa, i).applyMatrix4(o.matrixWorld));
+    });
+    const idx = pre.map((p, i) => i).sort((a, b) => pre[a].z - pre[b].z).slice(0, te0.length);
+    const after = idx.reduce((a, i) => a.add(te1[i]), new THREE.Vector3()).divideScalar(idx.length);
+    const dv = after.sub(before);
+    const ok = n.name.startsWith("rudder") ? dv.x < 0 && Math.abs(dv.x) > Math.abs(dv.y) : dv.y > 0;
+    checks[n.name] = { dx: +dv.x.toFixed(3), dy: +dv.y.toFixed(3), dz: +dv.z.toFixed(3), ok };
+  }
+  for (const name of ["elevator", "rudder", "aileron_left", "aileron_right", "flap_left", "flap_right"]) {
+    const n = root.getObjectByName(name);
+    if (n) n.quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), d));
+  }
+  root.updateMatrixWorld(true);
+  const p = root.getObjectByName("propeller");
+  if (p) {
+    // propeller: local +X must point forward (+Z)
+    const ax = new THREE.Vector3(1, 0, 0).applyQuaternion(p.getWorldQuaternion(new THREE.Quaternion()));
+    checks.propeller = { axis: ax.toArray().map((v) => +v.toFixed(3)), ok: ax.z > 0.9 };
+  }
+}
+window.__checks = checks;
+if (view === "flapsDown") {
+  // flaps extended the way the app does it (negative angle = trailing edge down)
+  for (const name of ["flap_left", "flap_right"]) {
+    const n = root.getObjectByName(name);
+    if (n) n.quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), THREE.MathUtils.degToRad(-30)));
+  }
+}
+
+const [lo, hi] = meta.bounds;
+let c = new THREE.Vector3((lo[0] + hi[0]) / 2, (lo[1] + hi[1]) / 2, (lo[2] + hi[2]) / 2);
+let D = size * 1.25;
+if (view === "deflectTail") { c = new THREE.Vector3(0, (lo[1] + hi[1]) / 2, lo[2] + (hi[2] - lo[2]) * 0.12); D = size * 0.45; }
+if (view === "deflectWing") { c = new THREE.Vector3(hi[0] * 0.5, 0, 0); D = size * 0.6; }
+if (view === "nose" && meta.eye) { c = new THREE.Vector3(...meta.eye); D = size * 0.22; }
+const cam = new THREE.PerspectiveCamera(30, W / H, 0.05, 1000);
+const dirs = {
+  left: [1, 0.02, 0], front: [0.75, 0.38, 1], top: [0, 1, 0.0001], rear: [0, 0.18, -1],
+  deflect: [0.8, 0.65, -0.9], deflectRear: [0, 0.25, -1], right: [-1, 0.02, 0], below: [0.3, -0.6, 0.6],
+  deflectTail: [0.9, 0.35, -0.8], deflectWing: [0.35, 0.12, -1], flapsDown: [0.55, -0.35, -1], nose: [0.8, 0.45, 1],
+};
+const dv = new THREE.Vector3(...(dirs[view] || dirs.left)).normalize();
+cam.position.copy(c).addScaledVector(dv, D * (view === "top" ? 1.55 : view === "left" || view === "right" ? 1.45 : 1.3));
+if (view === "top") cam.up.set(0, 0, 1);
+cam.lookAt(c);
+renderer.render(scene, cam);
+document.getElementById("info").textContent =
+  `${id} ${view}${deflect ? " (+20 deg on elevator, rudder, ailerons, flaps)" : ""} | ${meta.triangles} tris ${(meta.bytes / 1e6).toFixed(2)} MB | parts: ${meta.parts.join(", ")}` +
+  (deflect ? " | " + Object.entries(checks).map(([k, v]) => `${k}:${v.ok ? "OK" : "WRONG"}`).join(" ") : "");
+window.__done = true;
+</script>
+</body>
+</html>

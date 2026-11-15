@@ -70,6 +70,8 @@ export interface ControlState {
   altimeterInHg: number;
   /** Heading bug on the heading indicator, magnetic degrees. */
   headingBugMag: number;
+  /** Landing-gear lever (aircraft with retractable gear): true = down. */
+  gearDown: boolean;
   /**
    * Total rotation the pilot has applied with the heading-indicator adjustment knob, degrees.
    * The instruments module adds it to the gyro heading (dgMag = gyro heading + dgAdjustDeg).
@@ -266,7 +268,12 @@ export interface SimState {
   // --- configuration & engine (truth)
   onGround: boolean;
   flapsDeg: number;
+  /** Engine rpm (piston engines) or N1 / Ng in percent (jets and turboprops). */
   rpm: number;
+  /** Jets and turboprops: fan / gas-generator speed N1 in percent of maximum (0 for piston engines). */
+  n1Pct: number;
+  /** Landing gear position: 1 down and locked, 0 up (always 1 for fixed gear). */
+  gearPosNorm: number;
   manifoldInHg: number;
   fuelFlowGph: number;
   powerHp: number;
@@ -416,4 +423,6 @@ export interface Settings {
   autoRudder: boolean;
   showHud: boolean;
   controlSensitivity: number;
+  /** Aircraft flown at the next start (an id from src/aircraft/catalog.ts). */
+  aircraft?: string;
 }

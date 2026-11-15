@@ -68,6 +68,11 @@ export function ExplainCard({ id, sim, onClose }: ExplainCardProps) {
         </button>
       </div>
       <p className="mt-2 text-[14px] leading-relaxed text-slate-100">{x.what}</p>
+      {sim.aircraft.id !== "c172p" && (
+        <p className="mt-2 rounded-md border border-amber-400/40 bg-amber-500/10 px-2 py-1.5 text-[13px] leading-snug text-amber-100">
+          You are flying the {sim.aircraft.name}. The live reading uses its numbers; the rest of this card describes the Cessna 172 trainer's panel. Its reference speeds: stall {sim.aircraft.v.s1} kt (flaps up), rotate {sim.aircraft.v.r} kt, approach {sim.aircraft.v.approach} kt, never exceed {sim.aircraft.v.ne} kt.
+        </p>
+      )}
 
       {reading ? (
         <div className="mt-3 rounded-lg border border-sky-400/30 bg-sky-500/10 p-3" aria-live="polite">

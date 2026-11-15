@@ -88,7 +88,7 @@ aircraft would expect to see, and the accepted range is what the tests enforce.
 | Ground effect: lift/drag ratio 2 ft above the runway | better (less induced drag) | 1.41 × free-air | 1.15 to 1.80 × free-air | pass | ratio of aerodynamic lift to drag passing 63 KCAS in that manoeuvre |
 | Ground effect one wingspan up (36 ft) | almost none | 100 % of free-air | 97 to 106 % of free-air | pass | same manoeuvre with the wheels 36 ft above the surface |
 | Crosswind take-off (15 kt): furthest from the centreline on the runway | stays on the centreline | 5.6 ft | 0.0 to 20.0 ft | pass | worse of wind from the left and from the right; aileron into wind, rudder to keep straight |
-| Crosswind take-off with feet on the floor: heading swing on the runway | weathervanes into the wind | 57.5 ° | 15.0 to 180.0 ° | pass | same wind, rudder not used |
+| Crosswind take-off with feet on the floor: heading swing on the runway | weathervanes into the wind | 57.4 ° | 15.0 to 180.0 ° | pass | same wind, rudder not used |
 | Crosswind landing (15 kt): sideways drift angle at touchdown | small | 1.6 ° | 0.0 to 6.0 ° | pass | crab on the approach, wing-low for the last 150 ft; worse of left and right wind |
 | Crosswind landing (15 kt): furthest from the centreline in the roll-out | stays on the runway | 46.1 ft | 0.0 to 75.0 ft | pass | same landings, from touchdown to stop |
 | Crosswind landing with no correction: drift angle at touchdown | large (drifts off the centreline) | 17.2 ° | 8.0 to 40.0 ° | pass | wings level, feet still, heading down the runway |
