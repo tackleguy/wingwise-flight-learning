@@ -31,7 +31,7 @@ from PIL import Image
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-from aircraft_config import AIRCRAFT, ORDER  # noqa: E402
+from aircraft_config import AIRCRAFT, ORDER, EXTRA  # noqa: E402
 from fgmodel import (  # noqa: E402
     Files, ModelLoader, Props, flatten_props, load_xml_includes, eval_condition, norm_prop, DYNAMIC_PROPS,
     parse_xml_file, fnum,
@@ -606,17 +606,19 @@ def build(aid, tex_max=None, quiet=False):
     files, setroot, props, ml, mp = load_aircraft(aid, cfg)
     texture_overrides(ml, files, props, cfg)
     cls = classify(ml, cfg, props)
-    jsb = jsbsim_info(cfg["jsbsim"])
-    con = pick_contacts(jsb, cfg)
-    aux_kind = "nose" if "nose" in con else "tail"
+    jsb = jsbsim_info(cfg["jsbsim"]) if cfg.get("jsbsim") else None
+    con = pick_contacts(jsb, cfg) if jsb else {}
+    aux_kind = "nose" if ("nose" in con or not jsb) else "tail"
     retract = cfg.get("retractable")
-    if retract is None:
+    if retract is None and jsb:
         root = ET.parse(jsb["path"]).getroot()
         retract = any(
             (c.findtext("retractable") or "0").strip() == "1"
             for c in root.find("ground_reactions").findall("contact")
             if c.get("name") in (con.get("mainLeft", ("",))[0], con.get("mainRight", ("",))[0])
         )
+    if retract is None:  # no flight model: retractable if FG animates any gear with gear position
+        retract = any(c[0] == "gear" for c in cls)
     notes = []
     scale = cfg.get("scale", 1.0)
     if scale != 1.0:
@@ -637,10 +639,22 @@ def build(aid, tex_max=None, quiet=False):
     if not quiet:
         log("   wheels: " + "; ".join(f"{k}: {', '.join(sorted({p.mesh.name for p in v}))[:80]} -> {fmt(wb[k])}" for k, v in wheels.items()))
     model_main = (wb["mainLeft"] + wb["mainRight"]) / 2
-    jl, jr = con["mainLeft"][1], con["mainRight"][1]
-    jsb_main = (jl + jr) / 2
-    T = jsb_main - model_main
-    cg = jsb["cg"]
+    if jsb:
+        jl, jr = con["mainLeft"][1], con["mainRight"][1]
+        jsb_main = (jl + jr) / 2
+        T = jsb_main - model_main
+        cg = jsb["cg"]
+    else:
+        # no flight model: origin at the centre of the bounding box in x (lateral) and z (fore/aft),
+        # y = 0 at the bottom of the main tyres (the ground with the gear down)
+        PP = np.concatenate([m.pos for m, _ in entries])
+        lo_, hi_ = PP.min(axis=0), PP.max(axis=0)
+        cg = np.zeros(3)
+        T = -np.array([(lo_[0] + hi_[0]) / 2, (lo_[1] + hi_[1]) / 2, model_main[2]])
+        jl = jr = jsb_main = model_main + T
+        if aux_kind in wb and wb[aux_kind][0] > model_main[0]:
+            wb["tail"] = wb.pop(aux_kind)
+            aux_kind = "tail"
 
     def to_gltf(P):
         return (np.asarray(P) + T - cg) @ A_F2G.T
@@ -649,13 +663,13 @@ def build(aid, tex_max=None, quiet=False):
         return np.asarray(D) @ A_F2G.T
 
     track_model = wb["mainRight"][1] - wb["mainLeft"][1]
-    track_jsb = jr[1] - jl[1]
+    track_jsb = (jr[1] - jl[1]) if jsb else track_model
     aux_err = None
     if aux_kind in wb and aux_kind in con:
         e = (wb[aux_kind] + T) - con[aux_kind][1]
         aux_err = e
     vrp_note = ""
-    if jsb.get("vrp") is not None:
+    if jsb and jsb.get("vrp") is not None:
         dv = T - jsb["vrp"]
         vrp_note = f"(FG would place the model origin at the JSBSim VRP; this alignment differs from that by x {dv[0]*100:+.0f} cm, z {dv[2]*100:+.0f} cm)"
 
@@ -1006,7 +1020,7 @@ def build(aid, tex_max=None, quiet=False):
         eye = to_gltf(np.array(cfg["eye_override"])[None])[0]
     wheels_g = {k: [round(float(x), 3) for x in to_gltf(v[None])[0]] for k, v in wb.items()}
     data = builder.bytes()
-    if abs(span / jsb["span"] - 1) > 0.10:
+    if jsb and abs(span / jsb["span"] - 1) > 0.10:
         notes.append(f"Model span {span:.2f} m vs JSBSim wingspan {jsb['span']:.2f} m ({(span/jsb['span']-1)*100:+.0f}%).")
     info = {
         "aid": aid, "data": data, "tris": total_tris, "bounds": [lo, hi], "span": span, "eye": eye,
@@ -1128,7 +1142,7 @@ def ts_value(v, ind=4):
 
 def write_meta_ts(failures):
     entries = {}
-    for aid in ORDER + [a for a in AIRCRAFT if a not in ORDER and os.path.exists(os.path.join(OUT_DIR, a + ".glb"))]:
+    for aid in ORDER:  # only the ten World Flight Simulator aircraft (the extras go to extra.json)
         path = os.path.join(OUT_DIR, aid + ".glb")
         meta = read_glb_meta(path) if os.path.exists(path) else None
         if meta is None:
@@ -1184,6 +1198,21 @@ def write_meta_ts(failures):
     return entries
 
 
+def write_extra_json():
+    """public/models/fg/extra.json: the aircraft without a JSBSim model (Scenario Simulator)."""
+    out = {}
+    for aid in EXTRA:
+        path = os.path.join(OUT_DIR, aid + ".glb")
+        if not os.path.exists(path):
+            continue
+        m = read_glb_meta(path)
+        out[aid] = {"url": m["url"], "source": AIRCRAFT[aid]["fgdir"], "spanM": m["spanM"], "lengthM": m["lengthM"], "notes": m["notes"]}
+    with open(os.path.join(OUT_DIR, "extra.json"), "w") as f:
+        json.dump(out, f, indent=2, ensure_ascii=False)
+        f.write("\n")
+    return out
+
+
 def write_credits(entries):
     out = [
         "# FlightGear aircraft models — credits and licences",
@@ -1199,9 +1228,12 @@ def write_credits(entries):
         "repository.",
         "",
     ]
-    for aid in ORDER:
+    extra_present = [a for a in EXTRA if os.path.exists(os.path.join(OUT_DIR, a + ".glb"))]
+    for aid in ORDER + extra_present:
+        if aid == (extra_present[0] if extra_present else None):
+            out += ["# Extra models (no JSBSim flight model; Scenario Simulator)", ""]
         c = credits_of(aid)
-        e = entries.get(aid, {})
+        e = entries.get(aid, {"url": "x"})
         out += [
             f"## {aid}.glb — {c['aircraft']}",
             "",
@@ -1217,7 +1249,7 @@ def write_credits(entries):
 
 
 def main(argv):
-    ids = argv or ORDER
+    ids = argv or (ORDER + EXTRA)
     failures = {}
     for aid in ids:
         cfg = AIRCRAFT[aid]
@@ -1238,10 +1270,11 @@ def main(argv):
             continue
         ae = info["aux_err"]
         log(f"== {aid}: {meta['bytes']/1e6:.2f} MB, {meta['triangles']} tris, textures {info['tex_bytes']/1e6:.2f} MB, "
-            f"parts {meta['parts']}, span {meta['spanM']} m (JSBSim {info['jsb']['span']:.2f}), "
+            f"parts {meta['parts']}, span {meta['spanM']} m (JSBSim {info['jsb']['span'] if info['jsb'] else float('nan'):.2f}), "
             f"{info['aux_kind']} err dx {ae[0]*100 if ae is not None else float('nan'):+.1f} cm dz {ae[2]*100 if ae is not None else float('nan'):+.1f} cm, "
             f"T={fmt(info['T'])} {info['vrp_note']} ({info['secs']:.1f}s)")
-    entries = write_meta_ts(failures)
+    entries = write_meta_ts({k: v for k, v in failures.items() if k in ORDER})
+    write_extra_json()
     write_credits(entries)
     total = sum(e["bytes"] for e in entries.values())
     log(f"total {total/1e6:.2f} MB")

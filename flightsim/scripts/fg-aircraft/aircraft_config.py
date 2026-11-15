@@ -193,3 +193,18 @@ AIRCRAFT = {
 }
 
 ORDER = ["c172p", "c182", "pa28", "J3Cub", "c310", "DHC6", "p51d", "A320", "f16", "t6texan2"]
+
+# Extra models for the Scenario Simulator (no JSBSim flight model): origin at the centre of the bounding
+# box in x/z, y = 0 at the bottom of the main tyres (gear down). Listed in public/models/fg/extra.json.
+NO_FDM = "no JSBSim model: origin at the bounding-box centre (x, z), y = 0 at the main-tyre bottoms"
+AIRCRAFT.update({
+    "da40": {"fgdir": "DA40", "set": "da40ng-jsb-club-set.xml", "retractable": False},
+    "da40_eb": {"fgdir": "Diamond-Da40", "set": "da40-set.xml", "retractable": False, "candidate": True},
+    "sr22": {"fgdir": "Cirrus-SR22", "set": "sr22-set.xml", "retractable": False},
+    "sr22t": {"fgdir": "SR22T", "set": "SR22T-set.xml", "retractable": False, "candidate": True},
+    "pa34": {"fgdir": "SenecaII", "set": "SenecaII-set.xml"},
+    "be350": {"fgdir": "Beechcraft-King-Air", "set": "kingair-set.xml"},
+    "b738": {"fgdir": "737-800", "set": "738-set.xml", "budget": 10e6, "no_propellers": True},
+    "be36": {"fgdir": "Mooney-M-20", "set": "m20-set.xml"},
+})
+EXTRA = ["da40", "sr22", "pa34", "be350", "b738", "be36"]
