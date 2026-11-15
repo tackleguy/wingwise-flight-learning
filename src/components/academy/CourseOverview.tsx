@@ -96,7 +96,7 @@ export function CourseOverview({
               to="/academy/$course/$module"
               params={{ course: course.id, module: next.mod.id }}
               search={{ lesson: next.n }}
-              className="inline-flex items-center gap-2 rounded-md bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+              className="inline-flex items-center gap-2 rounded-lg btn-glow px-3.5 py-2 text-sm font-semibold text-primary-foreground"
             >
               {started ? "Continue training" : "Start the course"}
               <ArrowRight className="size-4" />

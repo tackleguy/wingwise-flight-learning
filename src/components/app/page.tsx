@@ -23,7 +23,7 @@ export function Page({
   return (
     <div
       className={cn(
-        "mx-auto w-full px-4 py-6 sm:px-6 lg:py-8",
+        "stagger mx-auto w-full px-4 py-6 sm:px-6 lg:py-9",
         wide ? "max-w-[1600px]" : "max-w-7xl",
         className,
       )}
@@ -47,18 +47,35 @@ export function PageHeader({
   icon?: LucideIcon;
 }) {
   return (
-    <div className="mb-6 flex flex-col gap-4 border-b pb-5 md:flex-row md:items-end md:justify-between">
-      <div className="min-w-0">
-        {eyebrow ? <p className="label-caps mb-1.5 text-primary">{eyebrow}</p> : null}
-        <h1 className="flex items-center gap-2.5 text-2xl font-bold tracking-tight sm:text-[28px]">
-          {Icon ? <Icon className="size-6 text-primary" /> : null}
-          {title}
-        </h1>
-        {description ? (
-          <p className="mt-1.5 max-w-3xl text-sm text-muted-foreground">{description}</p>
-        ) : null}
+    <div className="relative mb-7">
+      <div className="flex flex-col gap-4 pb-5 md:flex-row md:items-end md:justify-between">
+        <div className="flex min-w-0 items-start gap-4">
+          {Icon ? (
+            <span className="relative mt-0.5 hidden size-12 shrink-0 place-items-center rounded-xl border border-primary/25 bg-[linear-gradient(145deg,color-mix(in_oklch,var(--primary)_22%,transparent),transparent_70%)] text-primary shadow-[inset_0_1px_0_oklch(1_0_0/0.08),0_10px_30px_-14px_var(--primary)] sm:grid">
+              <Icon className="size-[22px]" />
+            </span>
+          ) : null}
+          <div className="min-w-0">
+            {eyebrow ? (
+              <p className="label-caps mb-2 inline-flex items-center gap-1.5 text-primary">
+                <span className="size-1.5 rounded-full bg-primary shadow-[0_0_8px_var(--primary)]" />
+                {eyebrow}
+              </p>
+            ) : null}
+            <h1 className="flex items-center gap-2.5 text-2xl font-bold tracking-tight text-balance sm:text-[30px] sm:leading-[1.15]">
+              {Icon ? <Icon className="size-6 text-primary sm:hidden" /> : null}
+              {title}
+            </h1>
+            {description ? (
+              <p className="mt-2 max-w-3xl text-sm leading-relaxed text-pretty text-muted-foreground sm:text-[15px]">
+                {description}
+              </p>
+            ) : null}
+          </div>
+        </div>
+        {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
       </div>
-      {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
+      <div className="rule-fade" />
     </div>
   );
 }
@@ -81,7 +98,7 @@ export function Section({
       {title || actions ? (
         <div className="mb-3 flex items-end justify-between gap-3">
           <div>
-            {title ? <h2 className="text-base font-semibold tracking-tight">{title}</h2> : null}
+            {title ? <h2 className="text-[17px] font-semibold tracking-tight">{title}</h2> : null}
             {description ? (
               <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
             ) : null}
@@ -106,7 +123,7 @@ export function Panel({
   actions?: ReactNode;
 }) {
   return (
-    <div className={cn("panel min-w-0", className)}>
+    <div className={cn("panel spotlight min-w-0", className)}>
       {title || actions ? (
         <div className="flex items-center justify-between gap-2 border-b px-4 py-2.5">
           <div className="label-caps">{title}</div>
@@ -139,7 +156,7 @@ export function Stat({
     primary: "text-primary",
   }[tone];
   return (
-    <div className="panel px-4 py-3">
+    <div className="panel spotlight px-4 py-3.5">
       <div className="flex items-center justify-between">
         <span className="label-caps">{label}</span>
         {Icon ? <Icon className="size-4 text-muted-foreground" /> : null}
@@ -161,7 +178,8 @@ export function Meter({
   className?: string;
 }) {
   const v = Math.max(0, Math.min(100, Math.round(value)));
-  const color = v >= 80 ? "bg-ok" : v >= 60 ? "bg-primary" : v >= 35 ? "bg-caution" : "bg-warning";
+  const color =
+    v >= 80 ? "text-ok" : v >= 60 ? "text-primary" : v >= 35 ? "text-caution" : "text-warning";
   return (
     <div className={className}>
       {label ? (
@@ -170,9 +188,13 @@ export function Meter({
           <span className="font-mono tabular">{v}%</span>
         </div>
       ) : null}
-      <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+      <div className="h-1.5 overflow-hidden rounded-full bg-muted/80 shadow-[inset_0_1px_2px_oklch(0_0_0/0.4)]">
         <div
-          className={cn("h-full rounded-full transition-all", color)}
+          className={cn(
+            "animate-grow-x relative h-full rounded-full transition-[width] duration-700 ease-[var(--ease-out-expo)]",
+            "bg-[linear-gradient(90deg,color-mix(in_oklch,currentColor_55%,transparent),currentColor)] shadow-[0_0_10px_-1px_currentColor]",
+            color,
+          )}
           style={{ width: `${v}%` }}
         />
       </div>
@@ -192,16 +214,22 @@ export function EmptyState({
   action?: { to: string; label: string };
 }) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-lg border border-dashed px-6 py-10 text-center">
-      {Icon ? <Icon className="mb-3 size-8 text-muted-foreground" /> : null}
-      <p className="font-semibold">{title}</p>
+    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed bg-[radial-gradient(ellipse_at_top,color-mix(in_oklch,var(--primary)_7%,transparent),transparent_70%)] px-6 py-12 text-center">
+      {Icon ? (
+        <span className="relative mb-4 grid size-14 place-items-center">
+          <span className="animate-ping-ring absolute inset-0 rounded-full border border-primary/40" />
+          <span className="absolute inset-0 rounded-full border border-primary/25 bg-primary/10" />
+          <Icon className="relative size-6 text-primary" />
+        </span>
+      ) : null}
+      <p className="font-display font-semibold">{title}</p>
       {description ? (
         <p className="mt-1 max-w-md text-sm text-muted-foreground">{description}</p>
       ) : null}
       {action ? (
         <Link
           to={action.to}
-          className="mt-4 inline-flex items-center rounded-md bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+          className="btn-glow mt-5 inline-flex items-center rounded-lg px-4 py-2 text-sm font-semibold"
         >
           {action.label}
         </Link>
@@ -285,7 +313,7 @@ export function Pill({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[10px] font-semibold tracking-wide uppercase",
+        "inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[10px] font-semibold tracking-wide uppercase",
         toneCls,
         className,
       )}

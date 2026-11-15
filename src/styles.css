@@ -12,6 +12,11 @@
  *   --warning   red     : warning / emergency
  *   --cyan      cyan    : pilot-selected values (bugs, selected altitude/heading)
  *   --magenta   magenta : GPS course / active flight plan leg
+ *
+ * Brand colors (logo): --brand-1 deep blue → --brand-2 sky → --brand-3 ice.
+ *
+ * Motion: every animation here is switched off by prefers-reduced-motion and by the app's own
+ * "Reduce motion" setting (html.tx-reduced-motion, see src/lib/accessibility.ts).
  */
 
 @theme inline {
@@ -65,33 +70,39 @@
   --color-bezel: var(--bezel);
   --color-sky: var(--sky);
   --color-ground: var(--ground);
+  --color-brand-1: var(--brand-1);
+  --color-brand-2: var(--brand-2);
+  --color-brand-3: var(--brand-3);
 
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Sora", "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 :root {
-  --radius: 0.5rem;
-  --background: oklch(0.165 0.022 258);
-  --foreground: oklch(0.93 0.01 250);
-  --card: oklch(0.205 0.025 258);
-  --card-foreground: oklch(0.93 0.01 250);
-  --popover: oklch(0.21 0.026 258);
-  --popover-foreground: oklch(0.93 0.01 250);
-  --primary: oklch(0.68 0.14 242);
-  --primary-foreground: oklch(0.15 0.02 258);
-  --secondary: oklch(0.255 0.028 258);
+  --radius: 0.625rem;
+  --background: oklch(0.155 0.024 260);
+  --foreground: oklch(0.94 0.01 250);
+  --card: oklch(0.19 0.026 260);
+  --card-foreground: oklch(0.94 0.01 250);
+  --popover: oklch(0.2 0.027 260);
+  --popover-foreground: oklch(0.94 0.01 250);
+  --primary: oklch(0.7 0.145 240);
+  --primary-foreground: oklch(0.15 0.03 260);
+  --secondary: oklch(0.245 0.028 260);
   --secondary-foreground: oklch(0.9 0.01 250);
-  --muted: oklch(0.24 0.022 258);
-  --muted-foreground: oklch(0.68 0.025 250);
-  --accent: oklch(0.29 0.04 250);
-  --accent-foreground: oklch(0.95 0.01 250);
+  --muted: oklch(0.235 0.024 260);
+  --muted-foreground: oklch(0.7 0.025 252);
+  --accent: oklch(0.27 0.04 252);
+  --accent-foreground: oklch(0.96 0.01 250);
   --destructive: oklch(0.63 0.21 25);
   --destructive-foreground: oklch(0.98 0 0);
-  --border: oklch(0.3 0.03 258);
-  --input: oklch(0.32 0.03 258);
-  --ring: oklch(0.68 0.14 242);
+  --border: oklch(0.285 0.03 260);
+  --input: oklch(0.31 0.03 260);
+  --ring: oklch(0.7 0.145 240);
 
   --ok: oklch(0.8 0.19 148);
   --caution: oklch(0.82 0.16 78);
@@ -103,20 +114,24 @@
   --sky: oklch(0.6 0.12 240);
   --ground: oklch(0.48 0.09 60);
 
-  --chart-1: oklch(0.68 0.14 242);
+  --brand-1: oklch(0.55 0.22 263);
+  --brand-2: oklch(0.75 0.14 233);
+  --brand-3: oklch(0.91 0.08 205);
+
+  --chart-1: oklch(0.7 0.145 240);
   --chart-2: oklch(0.8 0.19 148);
   --chart-3: oklch(0.82 0.16 78);
   --chart-4: oklch(0.72 0.24 330);
   --chart-5: oklch(0.84 0.13 205);
 
-  --sidebar: oklch(0.14 0.02 258);
-  --sidebar-foreground: oklch(0.86 0.015 250);
-  --sidebar-primary: oklch(0.68 0.14 242);
-  --sidebar-primary-foreground: oklch(0.15 0.02 258);
-  --sidebar-accent: oklch(0.23 0.03 255);
-  --sidebar-accent-foreground: oklch(0.96 0.01 250);
-  --sidebar-border: oklch(0.26 0.028 258);
-  --sidebar-ring: oklch(0.68 0.14 242);
+  --sidebar: oklch(0.135 0.022 260);
+  --sidebar-foreground: oklch(0.84 0.015 250);
+  --sidebar-primary: oklch(0.7 0.145 240);
+  --sidebar-primary-foreground: oklch(0.15 0.03 260);
+  --sidebar-accent: oklch(0.215 0.03 258);
+  --sidebar-accent-foreground: oklch(0.97 0.01 250);
+  --sidebar-border: oklch(0.245 0.028 260);
+  --sidebar-ring: oklch(0.7 0.145 240);
 }
 
 @layer base {
@@ -125,18 +140,33 @@
   }
   html {
     color-scheme: dark;
+    -webkit-tap-highlight-color: transparent;
   }
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     font-feature-settings: "cv11", "ss01";
+    text-rendering: optimizeLegibility;
+  }
+  h1,
+  h2 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
   }
   ::selection {
-    background: oklch(0.68 0.14 242 / 0.35);
+    background: oklch(0.7 0.145 240 / 0.35);
+  }
+  :focus-visible {
+    outline-color: var(--color-ring);
   }
 }
+
+/* ------------------------------------------------------------------------------------------
+ * Surfaces
+ * ---------------------------------------------------------------------------------------- */
 
 /* Small uppercase label used on panels, like avionics annunciations. */
 @utility label-caps {
@@ -157,11 +187,40 @@
   border-radius: 0.375rem;
 }
 
-/* Raised panel surface used for cards across the app. */
+/* Raised panel surface used for cards across the app: a faint top light and a soft drop shadow. */
 @utility panel {
-  background: var(--color-card);
+  background:
+    linear-gradient(180deg, oklch(1 0 0 / 0.028), oklch(1 0 0 / 0) 42%), var(--color-card);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
+  box-shadow:
+    inset 0 1px 0 oklch(1 0 0 / 0.04),
+    0 10px 30px -18px oklch(0 0 0 / 0.7);
+}
+
+/* Frosted glass, for bars and overlays that sit on top of content. */
+@utility glass {
+  background: color-mix(in oklch, var(--color-background) 72%, transparent);
+  backdrop-filter: blur(16px) saturate(150%);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+}
+
+@utility text-brand-gradient {
+  background-image: linear-gradient(120deg, var(--color-brand-2), var(--color-brand-3));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* A 1px line that fades out to the right; used under page headers. */
+@utility rule-fade {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    color-mix(in oklch, var(--primary) 55%, transparent),
+    var(--border) 30%,
+    transparent
+  );
 }
 
 @utility tabular {
@@ -175,6 +234,146 @@
     linear-gradient(90deg, oklch(1 0 0 / 0.04) 1px, transparent 1px);
   background-size: 24px 24px;
 }
+
+/*
+ * Cursor spotlight: a soft glow and a lit border that follow the pointer.
+ * The pointer position (--mx/--my) is written by a single listener in the app shell.
+ */
+@utility spotlight {
+  position: relative;
+  isolation: isolate;
+  &::before,
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.35s ease;
+  }
+  &::after {
+    z-index: -1;
+    background: radial-gradient(
+      420px circle at var(--mx, 50%) var(--my, 50%),
+      color-mix(in oklch, var(--spot, var(--primary)) 11%, transparent),
+      transparent 45%
+    );
+  }
+  &::before {
+    padding: 1px;
+    background: radial-gradient(
+      260px circle at var(--mx, 50%) var(--my, 50%),
+      color-mix(in oklch, var(--spot, var(--primary)) 70%, transparent),
+      transparent 60%
+    );
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#000 0 0) content-box exclude,
+      linear-gradient(#000 0 0);
+  }
+  &:hover::before,
+  &:hover::after,
+  &:focus-visible::before,
+  &:focus-visible::after {
+    opacity: 1;
+  }
+}
+
+/* Primary call-to-action: brand gradient, inner light, glow, and a sheen that sweeps on hover. */
+@utility btn-glow {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  white-space: nowrap;
+  color: var(--primary-foreground);
+  background-image: linear-gradient(
+    180deg,
+    color-mix(in oklch, var(--primary), white 16%),
+    var(--primary) 55%,
+    color-mix(in oklch, var(--primary), var(--brand-1) 30%)
+  );
+  box-shadow:
+    inset 0 1px 0 oklch(1 0 0 / 0.35),
+    inset 0 -1px 0 oklch(0 0 0 / 0.15),
+    0 8px 22px -10px color-mix(in oklch, var(--primary) 85%, transparent);
+  transition:
+    transform 0.25s var(--ease-out-expo),
+    box-shadow 0.25s ease,
+    filter 0.25s ease;
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(
+      110deg,
+      transparent 30%,
+      oklch(1 0 0 / 0.45) 48%,
+      oklch(1 0 0 / 0.1) 55%,
+      transparent 70%
+    );
+    transform: translateX(-130%);
+    transition: transform 0.8s var(--ease-out-expo);
+  }
+  &:hover {
+    filter: brightness(1.06);
+    transform: translateY(-1px);
+    box-shadow:
+      inset 0 1px 0 oklch(1 0 0 / 0.35),
+      inset 0 -1px 0 oklch(0 0 0 / 0.15),
+      0 14px 30px -12px color-mix(in oklch, var(--primary) 95%, transparent);
+  }
+  &:hover::after {
+    transform: translateX(130%);
+  }
+  &:active {
+    transform: translateY(0) scale(0.98);
+  }
+}
+
+/* Secondary call-to-action on dark / imagery backgrounds. */
+@utility btn-ghost-glass {
+  background: oklch(1 0 0 / 0.06);
+  border: 1px solid oklch(1 0 0 / 0.14);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.25s var(--ease-out-expo);
+  &:hover {
+    background: oklch(1 0 0 / 0.11);
+    border-color: oklch(1 0 0 / 0.24);
+    transform: translateY(-1px);
+  }
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+/* Interactive row/card: lifts slightly on hover. */
+@utility lift {
+  transition:
+    transform 0.35s var(--ease-out-expo),
+    border-color 0.25s ease,
+    background-color 0.25s ease,
+    box-shadow 0.35s ease;
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 18px 40px -22px oklch(0 0 0 / 0.9);
+  }
+  &:active {
+    transform: translateY(0) scale(0.99);
+  }
+}
+
+/* ------------------------------------------------------------------------------------------
+ * Motion
+ * ---------------------------------------------------------------------------------------- */
 
 @keyframes annunciator-flash {
   0%,
@@ -201,7 +400,289 @@
   }
 }
 @utility animate-fade-up {
-  animation: fade-up 0.35s ease-out both;
+  animation: fade-up 0.45s var(--ease-out-expo) both;
+}
+/* Same motion, but leaves no transform behind afterwards (safe around position:fixed children). */
+@utility animate-fade-in-up {
+  animation: fade-up 0.4s var(--ease-out-expo) backwards;
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+@utility animate-rise {
+  animation: rise-in 0.7s var(--ease-out-expo) backwards;
+}
+
+/*
+ * Children rise in one after another. `backwards` fill (not `both`) so no transform is left
+ * behind once the animation ends — a lingering transform would trap position:fixed children.
+ */
+@utility stagger {
+  & > * {
+    animation: rise-in 0.7s var(--ease-out-expo) backwards;
+  }
+  & > :nth-child(2) {
+    animation-delay: 50ms;
+  }
+  & > :nth-child(3) {
+    animation-delay: 100ms;
+  }
+  & > :nth-child(4) {
+    animation-delay: 150ms;
+  }
+  & > :nth-child(5) {
+    animation-delay: 200ms;
+  }
+  & > :nth-child(6) {
+    animation-delay: 250ms;
+  }
+  & > :nth-child(7) {
+    animation-delay: 300ms;
+  }
+  & > :nth-child(8) {
+    animation-delay: 350ms;
+  }
+  & > :nth-child(n + 9) {
+    animation-delay: 400ms;
+  }
+}
+
+@keyframes grow-x {
+  from {
+    transform: scaleX(0);
+  }
+}
+@utility animate-grow-x {
+  transform-origin: left center;
+  animation: grow-x 1.1s var(--ease-out-expo) backwards;
+}
+
+@keyframes ping-ring {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.55;
+  }
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+@utility animate-ping-ring {
+  animation: ping-ring 2.4s cubic-bezier(0.2, 0.6, 0.3, 1) infinite;
+}
+
+@keyframes float-y {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+@utility animate-float {
+  animation: float-y 6s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+@keyframes radar-sweep {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@utility animate-radar {
+  animation: radar-sweep 4s linear infinite;
+}
+
+@utility animate-pulse-dot {
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+/* Route change progress bar (app shell). */
+@keyframes route-progress {
+  0% {
+    transform: scaleX(0);
+  }
+  60% {
+    transform: scaleX(0.7);
+  }
+  100% {
+    transform: scaleX(0.92);
+  }
+}
+
+/* Ambient page background: two slow drifting light blooms over a fading chart grid. */
+@keyframes aurora-a {
+  from {
+    transform: translate3d(-4%, -2%, 0) scale(1);
+  }
+  to {
+    transform: translate3d(6%, 4%, 0) scale(1.12);
+  }
+}
+@keyframes aurora-b {
+  from {
+    transform: translate3d(3%, 0, 0) scale(1.05);
+  }
+  to {
+    transform: translate3d(-5%, 5%, 0) scale(0.95);
+  }
+}
+.tx-ambient {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+}
+.tx-ambient::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(oklch(1 0 0 / 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, oklch(1 0 0 / 0.03) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(ellipse 70% 55% at 50% 0%, #000 20%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse 70% 55% at 50% 0%, #000 20%, transparent 75%);
+}
+.tx-ambient-a,
+.tx-ambient-b {
+  position: absolute;
+  border-radius: 9999px;
+  will-change: transform;
+}
+.tx-ambient-a {
+  width: 70vw;
+  height: 60vh;
+  left: -10vw;
+  top: -28vh;
+  background: radial-gradient(
+    closest-side,
+    color-mix(in oklch, var(--brand-1) 22%, transparent),
+    transparent
+  );
+  animation: aurora-a 26s ease-in-out infinite alternate;
+}
+.tx-ambient-b {
+  width: 55vw;
+  height: 50vh;
+  right: -12vw;
+  top: -22vh;
+  background: radial-gradient(
+    closest-side,
+    color-mix(in oklch, var(--brand-2) 12%, transparent),
+    transparent
+  );
+  animation: aurora-b 32s ease-in-out infinite alternate;
+}
+
+/* Sidebar: a faint brand tint at the top. */
+[data-sidebar="sidebar"] {
+  background-image: linear-gradient(
+    180deg,
+    color-mix(in oklch, var(--brand-1) 7%, transparent),
+    transparent 30%
+  );
+}
+
+/* ------------------------------------------------------------------------------------------
+ * Logo motion (src/components/brand/Logo.tsx)
+ * ---------------------------------------------------------------------------------------- */
+
+@keyframes tx-plane-in {
+  from {
+    transform: translateY(18px) scale(0.55);
+    opacity: 0;
+  }
+}
+@keyframes tx-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+}
+@keyframes tx-sheen {
+  0% {
+    transform: translateX(0) skewX(-20deg);
+    opacity: 0;
+  }
+  30% {
+    opacity: 0.22;
+  }
+  100% {
+    transform: translateX(110px) skewX(-20deg);
+    opacity: 0;
+  }
+}
+.tx-logo-bar {
+  stroke-dasharray: 1;
+}
+.tx-logo-plane {
+  transition: transform 0.6s var(--ease-spring);
+}
+.tx-logo-sheen {
+  opacity: 0;
+}
+.tx-logo-glow {
+  opacity: 0.85;
+  transition: opacity 0.4s ease;
+}
+.tx-logo-animated .tx-logo-plane {
+  animation: tx-plane-in 1s var(--ease-out-expo) 0.15s backwards;
+}
+.tx-logo-animated .tx-logo-bar {
+  animation: tx-draw 0.55s var(--ease-out-expo) backwards;
+}
+.tx-logo-animated .tx-logo-bar-2 {
+  animation-delay: 0.1s;
+}
+.tx-logo-host:hover .tx-logo-plane {
+  transform: translateY(-2px);
+}
+.tx-logo-host:hover .tx-logo-glow {
+  opacity: 1;
+}
+.tx-logo-host:hover .tx-logo-sheen {
+  animation: tx-sheen 0.9s ease-out;
+}
+
+/* Night (red) cockpit lighting: tint the fixed-color brand art so it can't spoil dark adaptation. */
+html.tx-night-lighting .tx-logo,
+html.tx-night-lighting .tx-night-tint {
+  filter: grayscale(1) sepia(1) saturate(5) hue-rotate(-45deg) brightness(0.62);
+}
+
+/* ------------------------------------------------------------------------------------------
+ * Reduced motion
+ * ---------------------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+html.tx-reduced-motion *,
+html.tx-reduced-motion *::before,
+html.tx-reduced-motion *::after {
+  animation-delay: 0ms !important;
 }
 
 /* Thin scrollbars to suit dense data views. */

@@ -47,6 +47,7 @@ html.tx-night-lighting {
   --panel: oklch(0.08 0.01 25); --bezel: oklch(0.06 0.01 25);
   --sidebar: oklch(0.09 0.012 25); --sidebar-foreground: oklch(0.68 0.15 28); --sidebar-primary: oklch(0.62 0.2 27);
   --sidebar-accent: oklch(0.17 0.04 25); --sidebar-accent-foreground: oklch(0.78 0.16 28); --sidebar-border: oklch(0.2 0.04 25);
+  --brand-1: oklch(0.5 0.2 25); --brand-2: oklch(0.62 0.2 27); --brand-3: oklch(0.75 0.15 35);
   --chart-1: oklch(0.62 0.2 27); --chart-2: oklch(0.7 0.15 45); --chart-3: oklch(0.55 0.15 15); --chart-4: oklch(0.75 0.12 35); --chart-5: oklch(0.5 0.12 20);
 }
 `;

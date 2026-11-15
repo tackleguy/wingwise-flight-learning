@@ -440,7 +440,7 @@ function TrackPage() {
             </p>
             <Link
               to="/checkrides"
-              className="inline-flex shrink-0 items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+              className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg btn-glow px-4 py-2 text-sm font-semibold text-primary-foreground"
             >
               Go to checkrides <ArrowRight className="size-4" />
             </Link>

@@ -414,7 +414,7 @@ export function InstrumentScanExercise() {
             setChecked(true);
             record(all);
           }}
-          className="inline-flex h-8 items-center rounded-md bg-primary px-3 text-xs font-semibold text-primary-foreground disabled:opacity-40"
+          className="inline-flex h-8 items-center rounded-lg btn-glow px-3 text-xs font-semibold text-primary-foreground disabled:opacity-40"
         >
           Check
         </button>
