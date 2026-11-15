@@ -629,7 +629,7 @@
       "group": "handling",
       "quantity": "Crosswind take-off (15 kt): furthest from the centreline on the runway",
       "published": "stays on the centreline",
-      "simulated": 5.6,
+      "simulated": 5.56,
       "unit": "ft",
       "min": 0,
       "max": 20,

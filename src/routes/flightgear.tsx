@@ -12,7 +12,7 @@ function WorldSimulator() {
         eyebrow="Fly"
         icon={Globe2}
         title="TeachX Flight Simulator"
-        description="Fly a Cessna 172-style trainer from any airport in the world, over real terrain, with real weather."
+        description="Fly ten aircraft — from Cessna trainers to a P-51 Mustang, an Airbus A320 and an F-16 — with FlightGear's flight physics and FlightGear's 3D aircraft, from any airport in the world, over real terrain, with real weather."
         actions={
           <a
             href={SIM_URL}

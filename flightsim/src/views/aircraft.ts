@@ -1,7 +1,9 @@
 /**
- * The aircraft as you see it: the 3D model (public/models/trainer.glb, built by
- * scripts/build-aircraft.mjs), its moving parts, its lights, and the two things it puts on the
- * ground — a soft shadow (the height cue for the landing flare) and the landing-light pool at night.
+ * The aircraft as you see it: the 3D model, its moving parts, its lights, and the two things it puts
+ * on the ground — a soft shadow (the height cue for the landing flare) and the landing-light pool at
+ * night. The model is the FlightGear 3D model of the aircraft being flown (public/models/fg/, see
+ * ./model-spec.ts); the original TeachX trainer model (public/models/trainer.glb, built by
+ * scripts/build-aircraft.mjs) is the fallback when a FlightGear model is missing.
  */
 import {
   BillboardCollection,
@@ -33,15 +35,13 @@ import {
   type Billboard,
   type ModelNode,
 } from "cesium";
-import { CG_HEIGHT_FT } from "@/core/defaults";
 import { D2R, FT_PER_M, FT_PER_NM, M_PER_FT, R2D, clamp, destination, norm360, smoothstep } from "@/core/math";
 import type { Sim } from "@/core/sim";
 import { daylight, sunPosition } from "@/core/sun";
 import { aircraftMatrix, type World } from "@/world/world";
 import { approach, gearShiftM, type RenderPose } from "./math";
+import { visualSpecFor, type LightKey, type VisualSpec } from "./model-spec";
 import { TRAINER_META } from "./trainer-meta";
-
-type LightKey = keyof typeof TRAINER_META.lights;
 
 /** What the shader does with each kind of surface (kinds are whole numbers added to texture U by the build script). */
 const SHADER = /* glsl */ `
@@ -103,11 +103,45 @@ void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {
 }
 `;
 
+/**
+ * Shading for the converted FlightGear models: the "painted outside surfaces" part of the trainer
+ * shader above (sky and ground light, sky reflections, the aircraft's own lights on the airframe),
+ * applied to every surface — these models have no surface-kind codes in their texture coordinates.
+ */
+const FG_SHADER = /* glsl */ `
+void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {
+  vec3 n = normalize(fsInput.attributes.normalEC);
+  vec3 v = -normalize(fsInput.attributes.positionEC);
+  if (dot(n, v) < 0.0) n = -n; // two-sided surfaces seen from behind
+  vec3 up = normalize(czm_viewRotation * u_upWC);
+  float nUp = dot(n, up);
+  vec3 ambient = mix(u_groundAmb, u_skyAmb, nUp * 0.5 + 0.5);
+  vec3 r = reflect(-v, n);
+  float rUp = dot(r, up);
+  vec3 env = rUp > 0.0 ? mix(u_envHorizon, u_envZenith, pow(rUp, 0.55)) : mix(u_envHorizon, u_envGround, smoothstep(0.0, 0.3, -rUp));
+  float gloss = 1.0 - material.roughness;
+  float fresnel = pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 5.0);
+  vec3 f = material.specular + (max(vec3(gloss), material.specular) - material.specular) * fresnel;
+  vec3 p = fsInput.attributes.positionEC;
+  vec3 own = vec3(0.0);
+  vec3 L = u_beaconEC - p;
+  float d2 = dot(L, L);
+  own += vec3(1.0, 0.07, 0.05) * (u_lightsA.x * 0.55 * max(dot(n, L * inversesqrt(d2 + 0.0001)), 0.0) / (1.0 + d2 * 0.8));
+  L = u_tipLeftEC - p;
+  d2 = dot(L, L);
+  own += (vec3(1.0, 0.07, 0.05) * (u_lightsA.y * 0.14) + vec3(u_lightsA.z * 1.3)) * (max(dot(n, L * inversesqrt(d2 + 0.0001)), 0.0) / (1.0 + d2 * 0.5));
+  L = u_tipRightEC - p;
+  d2 = dot(L, L);
+  own += (vec3(0.05, 1.0, 0.3) * (u_lightsA.y * 0.14) + vec3(u_lightsA.z * 1.3)) * (max(dot(n, L * inversesqrt(d2 + 0.0001)), 0.0) / (1.0 + d2 * 0.5));
+  material.emissive += material.diffuse * (ambient + own * u_lightsB.z) + env * f * gloss * gloss;
+}
+`;
+
 const SHADOW_FABRIC = /* glsl */ `
 float teachxBox(vec2 p, vec2 b) { vec2 d = abs(p) - b; return length(max(d, 0.0)) + min(max(d.x, d.y), 0.0); }
 czm_material czm_getMaterial(czm_materialInput materialInput) {
   czm_material m = czm_getDefaultMaterial(materialInput);
-  vec2 p = (materialInput.st * 2.0 - 1.0) * halfSize; // metres: x toward the nose, y toward the left wing
+  vec2 p = (materialInput.st * 2.0 - 1.0) * halfSize / shapeScale; // metres (of the trainer's outline): x toward the nose, y toward the left wing
   float d = teachxBox(p - vec2(-1.85, 0.0), vec2(4.0, 0.38)) - 0.14; // fuselage
   d = min(d, teachxBox(p - vec2(-0.4, 0.0), vec2(0.72, 5.42)) - 0.08); // wing
   d = min(d, teachxBox(p - vec2(-4.88, 0.0), vec2(0.55, 1.68)) - 0.05); // tailplane
@@ -248,7 +282,16 @@ export class AircraftVisual {
   holdFlash = false;
 
   private model: Model | null = null;
-  private readonly shader: CustomShader;
+  /** The shader of the model being shown (trainer or FlightGear). */
+  private shader: CustomShader;
+  private readonly trainerShader: CustomShader;
+  private readonly fgShader: CustomShader;
+  /** The model shown now / being loaded. */
+  private spec: VisualSpec = visualSpecFor("c172p");
+  private loadToken = 0;
+  /** Propellers of engines 2… (engine 1 uses `nodes.propeller` / `propellerBlades` / `discNode`). */
+  private readonly extraProps: { spin?: ModelNode; blades?: ModelNode; disc?: ModelNode }[] = [];
+  private gearRetractNode: ModelNode | undefined;
   private readonly billboards: BillboardCollection;
   private readonly glows: Billboard[] = [];
   private readonly lightLocal: Cartesian3[] = [];
@@ -296,9 +339,7 @@ export class AircraftVisual {
 
   constructor(private readonly world: World) {
     const v3 = (x: number, y: number, z: number) => ({ type: UniformType.VEC3, value: new Cartesian3(x, y, z) });
-    this.shader = new CustomShader({
-      lightingModel: LightingModel.PBR,
-      uniforms: {
+    const uniforms = () => ({
         u_upWC: v3(0, 0, 1),
         u_skyAmb: v3(0.4, 0.45, 0.55),
         u_groundAmb: v3(0.2, 0.19, 0.17),
@@ -312,14 +353,15 @@ export class AircraftVisual {
         u_lightsA: { type: UniformType.VEC4, value: new Cartesian4(0, 0, 0, 0) },
         u_lightsB: { type: UniformType.VEC4, value: new Cartesian4(0, 0, 0, 0) },
         u_disc: { type: UniformType.FLOAT, value: 0 },
-      },
-      fragmentShaderText: SHADER,
     });
+    this.trainerShader = new CustomShader({ lightingModel: LightingModel.PBR, uniforms: uniforms(), fragmentShaderText: SHADER });
+    this.fgShader = new CustomShader({ lightingModel: LightingModel.PBR, uniforms: uniforms(), fragmentShaderText: FG_SHADER });
+    this.shader = this.trainerShader;
     this.billboards = new BillboardCollection({ scene: world.scene, blendOption: BlendOption.TRANSLUCENT });
     world.scene.primitives.add(this.billboards);
     const sprite = glowSprite();
     for (const def of LIGHT_DEFS) {
-      const p = TRAINER_META.lights[def.key];
+      const p = this.spec.lights[def.key];
       this.lightLocal.push(new Cartesian3(p[0], p[1], p[2]));
       this.glows.push(
         this.billboards.add({
@@ -334,14 +376,38 @@ export class AircraftVisual {
         }),
       );
     }
-    this.shadow = new GroundPatch(world, "TeachxAircraftShadow", SHADOW_FABRIC, { opacity: 0.5, soft: 0.2, halfSize: new Cartesian2(9, 9) });
+    this.shadow = new GroundPatch(world, "TeachxAircraftShadow", SHADOW_FABRIC, { opacity: 0.5, soft: 0.2, halfSize: new Cartesian2(9, 9), shapeScale: 1 });
     this.pool = new GroundPatch(world, "TeachxLandingLightPool", POOL_FABRIC, { intensity: 0.5, tint: new Color(1, 0.95, 0.82, 1) });
-    void this.load();
+    void this.load(this.spec);
   }
 
-  private async load(): Promise<void> {
+  /** Show the model of this aircraft (loads it if a different model is shown now). */
+  setAircraft(id: string): void {
+    const spec = visualSpecFor(id);
+    if (spec.url === this.spec.url && (this.model || !this.failed)) {
+      this.spec = spec;
+      return;
+    }
+    void this.load(spec);
+  }
+
+  private async load(spec: VisualSpec): Promise<void> {
+    const token = ++this.loadToken;
+    // forget the previous model
+    if (this.model) {
+      this.world.scene.primitives.remove(this.model);
+      this.model = null;
+    }
+    this.ready = false;
+    this.failed = false;
+    this.spec = spec;
+    this.shader = spec.fg ? this.fgShader : this.trainerShader;
+    LIGHT_DEFS.forEach((def, i) => {
+      const p = spec.lights[def.key];
+      Cartesian3.fromElements(p[0], p[1], p[2], this.lightLocal[i]);
+    });
     try {
-      const url = new URL(`${import.meta.env.BASE_URL}${TRAINER_META.url}`, document.baseURI).href;
+      const url = new URL(`${import.meta.env.BASE_URL}${spec.url}`, document.baseURI).href;
       const model = await Model.fromGltfAsync({
         url,
         customShader: this.shader,
@@ -354,7 +420,7 @@ export class AircraftVisual {
         incrementallyLoadTextures: false,
         show: false,
       });
-      if (this.disposed) {
+      if (this.disposed || token !== this.loadToken) {
         model.destroy();
         return;
       }
@@ -363,12 +429,19 @@ export class AircraftVisual {
       model.errorEvent.addEventListener((e: unknown) => console.error("[TeachX] aircraft model error", e));
       model.readyEvent.addEventListener(() => this.onReady(model));
     } catch (err) {
+      if (token !== this.loadToken) return;
       this.failed = true;
       console.error("[TeachX] the aircraft model could not be loaded", err);
+      if (spec.fg) {
+        // fall back to the TeachX trainer model rather than showing nothing
+        console.warn(`[TeachX] showing the TeachX trainer model instead of ${spec.url}`);
+        void this.load({ ...visualSpecFor("__trainer__"), id: spec.id });
+      }
     }
   }
 
   private onReady(model: Model): void {
+    if (model !== this.model) return;
     const N = TRAINER_META.nodes;
     const get = (name: string): ModelNode | undefined => {
       try {
@@ -389,6 +462,11 @@ export class AircraftVisual {
     this.cabinNode = get(N.cabinExterior);
     this.cockpitNode = get(N.cockpit);
     GEAR.forEach((g, i) => (this.gearNodes[i] = get(g.node)));
+    this.extraProps.length = 0;
+    for (const p of this.spec.propellers.slice(1)) this.extraProps.push({ spin: get(p.spin), blades: get(p.blades), disc: get(p.disc) });
+    this.gearRetractNode = this.spec.gearNode ? get("gear_retract") : undefined;
+    this.hingeDeg.elevator = this.hingeDeg.rudder = this.hingeDeg.aileronLeft = this.hingeDeg.aileronRight = 999;
+    this.hingeDeg.flapLeft = this.hingeDeg.flapRight = this.hingeDeg.propeller = this.hingeDeg.propellerBlades = 999;
     // Light positions come from the model's empty "light_*" nodes when present (glTF x,y,z = left, up, nose).
     LIGHT_DEFS.forEach((def, i) => {
       const node = get("light_" + def.key.replace(/[A-Z]/g, (c) => "_" + c.toLowerCase()));
@@ -409,6 +487,14 @@ export class AircraftVisual {
     const node = this.nodes[key];
     if (!node || Math.abs(deg - this.hingeDeg[key]) < threshold) return;
     this.hingeDeg[key] = deg;
+    Matrix3.fromRotationX(deg * D2R, this.rot3);
+    Matrix4.fromRotationTranslation(this.rot3, Cartesian3.ZERO, this.rot4);
+    Matrix4.multiply(node.originalMatrix, this.rot4, this.nodeM);
+    node.matrix = this.nodeM;
+  }
+
+  /** Turn a node about its own local +X axis (no change threshold: used for the extra propellers). */
+  private spin(node: ModelNode, deg: number): void {
     Matrix3.fromRotationX(deg * D2R, this.rot3);
     Matrix4.fromRotationTranslation(this.rot3, Cartesian3.ZERO, this.rot4);
     Matrix4.multiply(node.originalMatrix, this.rot4, this.nodeM);
@@ -493,8 +579,18 @@ export class AircraftVisual {
 
       if (this.interiorApplied !== this.interior) {
         this.interiorApplied = this.interior;
-        if (this.cabinNode) this.cabinNode.show = !this.interior;
-        if (this.cockpitNode) this.cockpitNode.show = this.interior;
+        if (this.spec.fg) {
+          // The FlightGear models are exteriors only: in the cockpit view the instrument panel stands in for the cockpit.
+          model.show = !this.interior;
+        } else {
+          if (this.cabinNode) this.cabinNode.show = !this.interior;
+          if (this.cockpitNode) this.cockpitNode.show = this.interior;
+        }
+      }
+      // retractable landing gear: shown unless fully up
+      if (this.gearRetractNode) {
+        const down = s.gearPosNorm > 0.05;
+        if (this.gearRetractNode.show !== down) this.gearRetractNode.show = down;
       }
 
       // control surfaces (sign conventions: see the node notes in scripts/build-aircraft.mjs)
@@ -525,7 +621,8 @@ export class AircraftVisual {
       }
 
       // propeller: real blades at low rpm, a blurred disc when it turns too fast for the eye
-      const rpm = Math.max(0, s.rpm);
+      // (jets and turboprops report the engine speed in percent: draw the propeller at a plausible speed)
+      const rpm = sim.aircraft.engine === "piston" ? Math.max(0, s.rpm) : s.n1Pct > 5 ? 900 + s.n1Pct * 12 : 0;
       this.propAngle = (this.propAngle + rpm * 6 * dtSim) % 360;
       const blades = rpm < 700;
       const bladesNode = this.nodes.propellerBlades;
@@ -535,6 +632,15 @@ export class AircraftVisual {
       const disc = smoothstep(350, 900, rpm);
       if (this.discNode && this.discNode.show !== disc > 0.01) this.discNode.show = disc > 0.01;
       sh.setUniform("u_disc", disc);
+      for (let i = 0; i < this.extraProps.length; i++) {
+        const p = this.extraProps[i]!;
+        // the other engines' propellers turn the other way round on the drawing a little out of step
+        const ang = (this.propAngle + 37 * (i + 1)) % 360;
+        if (p.blades && p.blades.show !== blades) p.blades.show = blades;
+        if (p.disc && p.disc.show !== disc > 0.01) p.disc.show = disc > 0.01;
+        if (p.spin) this.spin(p.spin, ang);
+        if (p.blades && blades) this.spin(p.blades, ang);
+      }
     }
 
     // ---- light glows
@@ -572,20 +678,24 @@ export class AircraftVisual {
     }
 
     // ---- shadow on the ground under the aircraft
-    const aglFt = Math.max(0, pose.altMslFt - CG_HEIGHT_FT - s.groundElevFt);
+    const cgHeightFt = sim.aircraft.cgHeightFt;
+    const aglFt = Math.max(0, pose.altMslFt - cgHeightFt - s.groundElevFt);
     const ground0 = aglFt < 320 ? world.elevation.groundFt(pose.lat, pose.lon) : null;
     const camDist = Cartesian3.distance(cam, Matrix4.getTranslation(this.bodyMatrix, this.v3));
     const lift = (0.06 + camDist * 0.0012) * FT_PER_M; // a few centimetres above the surface, more when seen from far away
     const shadowAlpha = 0.6 * (1 - smoothstep(70, 300, aglFt)) * (0.25 + 0.75 * day) * (1 - 0.5 * overcast);
     if (ground0 !== null && shadowAlpha > 0.01 && this.ready) {
       if (this.frameNo % 5 === 0 || aglFt < 3) this.sampleSlope(pose, ground0);
-      const hM = Math.max(0, pose.altMslFt - CG_HEIGHT_FT - ground0) * M_PER_FT;
+      const hM = Math.max(0, pose.altMslFt - cgHeightFt - ground0) * M_PER_FT;
       const soft = 0.1 + hM * 0.07;
-      const half = 6.6 + soft * 1.6;
+      // the shadow outline is the trainer's, stretched to this aircraft's size
+      const shape = Math.max(0.6, this.spec.spanM / TRAINER_META.spanM);
+      const half = (6.6 + soft * 1.6) * Math.max(1, shape);
       this.shadow.place(pose.lat, pose.lon, ground0 + lift, pose.headingTrue, this.slopePitch, this.slopeRoll, half, half);
       const u = this.shadow.material.uniforms;
       u.opacity = shadowAlpha;
       u.soft = soft;
+      u.shapeScale = shape;
       (u.halfSize as Cartesian2).x = half;
       (u.halfSize as Cartesian2).y = half;
       this.shadow.show = true;
@@ -599,7 +709,7 @@ export class AircraftVisual {
       const dirBody = Cartesian3.fromElements(Math.cos(tilt), 0, -Math.sin(tilt), this.v3b);
       const dir = Matrix4.multiplyByPointAsVector(this.bodyMatrix, dirBody, this.v3b);
       const down = -Cartesian3.dot(dir, this.uUp);
-      const lampHeightM = Math.max(0.3, (pose.altMslFt - ground0) * M_PER_FT + TRAINER_META.lights.landing[2]);
+      const lampHeightM = Math.max(0.3, (pose.altMslFt - ground0) * M_PER_FT + this.spec.lights.landing[2]);
       if (down > 0.02) {
         const range = lampHeightM / down;
         if (range < 170) {

@@ -6,7 +6,6 @@
  * frame, so changes made with the keyboard, a joystick or a lesson script show up here too.
  */
 import { useId, useRef, type ReactNode } from "react";
-import { AIRCRAFT } from "@/core/defaults";
 import { clamp } from "@/core/math";
 import type { ControlState, FuelSelector as FuelSelectorPos, IgnitionPos } from "@/core/types";
 import { useFrame, usePanel } from "./context";
@@ -464,8 +463,9 @@ export function CarbHeatKnob() {
 
 export const FLAP_W = 54;
 const FLAP_Y0 = 26;
+/** Lever travel between notches for a four-notch lever (the Cessna 172); other aircraft share the same total travel. */
 const FLAP_DY = 28;
-const FLAP_LABELS = ["UP", "10°", "20°", "30°"];
+const FLAP_TRAVEL = FLAP_DY * 3;
 
 export function FlapLever() {
   const api = usePanel();
@@ -475,17 +475,20 @@ export function FlapLever() {
   const cLever = useCell(NaN);
   const cPtr = useCell(NaN);
   const pos = useRef(NaN);
-  const last = AIRCRAFT.flapDetentsDeg.length - 1;
-  const maxDeg = AIRCRAFT.flapDetentsDeg[last] ?? 30;
+  const detents = api.sim.aircraft.flapDetentsDeg;
+  const last = detents.length - 1;
+  const maxDeg = detents[last] || 1;
+  const dy = last > 0 ? FLAP_TRAVEL / last : FLAP_DY;
+  const labels = detents.map((d, i) => (i === 0 ? "UP" : `${d}°`));
   useFrame(({ c: k, state, dt }) => {
     pos.current = Number.isFinite(pos.current) ? pos.current + (k.flapIndex - pos.current) * Math.min(1, dt * 20) : k.flapIndex;
-    const y = Math.round(pos.current * FLAP_DY * 10) / 10;
+    const y = Math.round(pos.current * dy * 10) / 10;
     if (y !== cLever.v) {
       cLever.v = y;
       lever.current?.setAttribute("transform", `translate(0 ${y})`);
     }
     // The indicator shows where the flaps really are (they take a few seconds to travel).
-    const p = Math.round(clamp(state.flapsDeg / maxDeg, 0, 1) * FLAP_DY * last * 10) / 10;
+    const p = Math.round(clamp(state.flapsDeg / maxDeg, 0, 1) * dy * last * 10) / 10;
     if (p !== cPtr.v) {
       cPtr.v = p;
       ptr.current?.setAttribute("transform", `translate(0 ${p})`);
@@ -499,7 +502,7 @@ export function FlapLever() {
   };
   const drag = useDrag((d) => {
     if (d.phase === "up") return;
-    set((d.fy * LEVER_H - FLAP_Y0) / FLAP_DY);
+    set((d.fy * LEVER_H - FLAP_Y0) / dy);
   });
   const wheel = useWheel((dir) => set(c.flapIndex - dir));
   return (
@@ -523,22 +526,27 @@ export function FlapLever() {
         <T x={FLAP_W / 2} y={7} s={6.4} className="lbl">
           WING FLAPS
         </T>
-        <rect x="9.5" y={FLAP_Y0 - 7} width="7" height={FLAP_DY * last + 14} rx="3.5" className="tx-slot" />
-        {FLAP_LABELS.map((t, i) => (
+        <rect x="9.5" y={FLAP_Y0 - 7} width="7" height={dy * last + 14} rx="3.5" className="tx-slot" />
+        {labels.map((t, i) => (
           <g key={t}>
-            <path d={`M17.5 ${FLAP_Y0 + i * FLAP_DY}H22.5`} className="arc s-label" strokeWidth="1.2" />
-            <T x={31} y={FLAP_Y0 + i * FLAP_DY + 0.4} s={7} className="lbl">
+            <path d={`M17.5 ${FLAP_Y0 + i * dy}H22.5`} className="arc s-label" strokeWidth="1.2" />
+            <T x={31} y={FLAP_Y0 + i * dy + 0.4} s={last > 4 ? 6 : 7} className="lbl">
               {t}
             </T>
           </g>
         ))}
+        {last === 0 && (
+          <T x={FLAP_W / 2} y={FLAP_Y0 + 30} s={5.6} className="lbl tx-faint">
+            NO FLAPS
+          </T>
+        )}
         <g ref={lever}>
           <rect x="3" y={FLAP_Y0 - 6.5} width="21" height="13" rx="3" className="tx-flap-handle" />
           <path d={`M6 ${FLAP_Y0 - 2}H21M6 ${FLAP_Y0 + 2}H21`} className="tx-flap-grip" />
         </g>
         {/* position indicator */}
-        <rect x="42" y={FLAP_Y0 - 7} width="8" height={FLAP_DY * last + 14} rx="2" className="tx-window" />
-        <path d={`M42 ${FLAP_Y0}h8M42 ${FLAP_Y0 + FLAP_DY}h8M42 ${FLAP_Y0 + 2 * FLAP_DY}h8M42 ${FLAP_Y0 + 3 * FLAP_DY}h8`} className="arc s-label" strokeWidth="0.8" opacity="0.5" />
+        <rect x="42" y={FLAP_Y0 - 7} width="8" height={dy * last + 14} rx="2" className="tx-window" />
+        <path d={labels.map((_, i) => `M42 ${FLAP_Y0 + i * dy}h8`).join("")} className="arc s-label" strokeWidth="0.8" opacity="0.5" />
         <g ref={ptr}>
           <rect x="42.6" y={FLAP_Y0 - 2} width="6.8" height="4" rx="1" className="mk" />
         </g>

@@ -1,7 +1,14 @@
-JSBSim flight dynamics library (LGPL-2.1), compiled unmodified to WebAssembly.
-Library source: https://github.com/JSBSim-Team/jsbsim commit f80b9df8de8c2a0b7835dbbeb708c8ce37a28d96
+Flight-physics engine: JSBSim (LGPL-2.1) as bundled with FlightGear 2024.2.0
+(flightgear/src/FDM/JSBSim, https://gitlab.com/flightgear/flightgear), compiled to WebAssembly,
+linked with the stand-alone SimGear helper subset shipped in JSBSim 1.1.14
+(src/simgear, https://pypi.org/project/JSBSim/1.1.14/ ; SimGear is LGPL-2.0, expat is MIT).
+Two small fixes, both the same as later JSBSim releases made, are applied by the build script:
+the turbulence filter history becomes per-aircraft (FGWinds.h/.cpp) and strutils.cxx takes the
+POSIX strerror_r path under Emscripten. Everything else is FlightGear's code as released.
 
-Aircraft data in jsbsim.data: JSBSim's c172p (aircraft/c172p/c172p.xml, engine/eng_io320.xml,
-engine/prop_75in2f.xml) MODIFIED by the TeachX Flight Simulator project.
-The modified files, the unmodified originals, the list of every change and the build script are
-in the project repository under flightsim/jsbsim/ (see CHANGES.md and README.md there).
+Aircraft data in jsbsim.data: ten aircraft from JSBSim's aircraft collection (JSBSim 1.1.14) —
+c172p (tuned by the TeachX Flight Simulator project), c182 and pa28 (main-wheel steering fixed),
+J3Cub, c310, DHC6, p51d, A320, f16, t6texan2 (unchanged) — with their engine, propeller and system
+files. The c310 and f16 files declare the GPL; the others carry JSBSim's repository licence.
+The data files, the unmodified originals, the list of changes (CHANGES.md) and the build script
+(build-flightgear.sh) are in the project repository under flightsim/jsbsim/.

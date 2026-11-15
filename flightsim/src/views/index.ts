@@ -176,6 +176,7 @@ export function createViews(world: World): ViewsModule {
 
     onSpawn(s: Sim, _result: SpawnResult) {
       bind(s);
+      aircraft.setAircraft(s.aircraft.id);
       lead.reset();
       rig.onSpawn(s);
       notify();

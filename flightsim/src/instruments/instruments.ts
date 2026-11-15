@@ -88,10 +88,20 @@ export function createInstruments(options: InstrumentOptions = {}): InstrumentsA
     });
   }
 
+  /**
+   * Engine speed that drives the vacuum pump, rpm. Jets and turboprops report their engine speed in
+   * percent; their gyros are driven by engine bleed air or electrics, so they count as a piston
+   * engine at cruise rpm while the engines run.
+   */
+  let turbineGyros = false;
+  function pumpRpm(s: SimState): number {
+    return turbineGyros ? (s.sys.engineRunning ? 2400 : 0) : s.rpm;
+  }
+
   /** Suction available to the vacuum gyros, inHg. */
   function suctionNow(s: SimState): number {
     if (s.sys.failures.vacuum) return 0;
-    return hasSystems ? Math.max(0, s.sys.vacuumInHg) : estimatedSuctionInHg(s.rpm);
+    return hasSystems ? Math.max(0, s.sys.vacuumInHg) : estimatedSuctionInHg(pumpRpm(s));
   }
 
   function updateField(s: SimState): void {
@@ -141,6 +151,10 @@ export function createInstruments(options: InstrumentOptions = {}): InstrumentsA
     status,
 
     onSpawn(s: Sim, result: SpawnResult): void {
+      // The airspeed indicator of the aircraft being flown (the trainer's: calibrated, needle stop at 220 kt).
+      pitotStatic.calibrated = s.aircraft.id === "c172p";
+      turbineGyros = s.aircraft.engine !== "piston";
+      pitotStatic.asiMaxKt = s.aircraft.id === "c172p" ? 220 : s.aircraft.asiMaxKt * 1.05;
       attach(s);
       const st = s.state;
       const c = s.controls;
@@ -153,7 +167,7 @@ export function createInstruments(options: InstrumentOptions = {}): InstrumentsA
       const running = st.sys.engineRunning || !result.onGround;
       // At spawn the systems module may not have caught up yet, so judge power from the switches the core has just set.
       const powered = !hasSystems || c.masterBattery;
-      const suction = st.sys.failures.vacuum ? 0 : hasSystems ? Math.max(st.sys.vacuumInHg, estimatedSuctionInHg(st.rpm)) : estimatedSuctionInHg(st.rpm);
+      const suction = st.sys.failures.vacuum ? 0 : hasSystems ? Math.max(st.sys.vacuumInHg, estimatedSuctionInHg(pumpRpm(st))) : estimatedSuctionInHg(pumpRpm(st));
 
       kin.reset(st);
       updateField(st);

@@ -74,7 +74,7 @@ export const NAV: NavGroup[] = [
         to: "/flightgear",
         label: "World Flight Simulator",
         icon: Globe2,
-        description: "Any airport, real terrain & weather",
+        description: "10 aircraft, FlightGear physics, any airport",
       },
       {
         to: "/simulator",

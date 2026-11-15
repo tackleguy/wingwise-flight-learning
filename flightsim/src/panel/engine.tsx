@@ -5,9 +5,8 @@
  * bus has no power (as the real ones do).
  */
 import { useMemo, useRef } from "react";
-import { AIRCRAFT } from "@/core/defaults";
-import { useFrame } from "./context";
-import { FUEL_FULL_GAL, arcPath, interpTable, linearAngle, polar, tachAngle, type Table } from "./geometry";
+import { useFrame, usePanel } from "./context";
+import { FUEL_FULL_GAL, arcPath, interpTable, linearAngle, polar, tachAngle, tachPctAngle, type Table } from "./geometry";
 import { DialNumbers, Dial, Hub, SmallDial, T, box, range, setRot, setText, tickPath, useCell } from "./parts";
 
 // ---------------------------------------------------------------- tachometer
@@ -19,14 +18,25 @@ export function Tachometer({ size }: { size: number }) {
   const cNeedle = useCell(NaN);
   const cHours = useCell("");
   const cTenths = useCell("");
+  const ac = usePanel().sim.aircraft;
+  // Jets and turboprops: the same dial reads N1 / Ng in percent.
+  const pct = ac.engine !== "piston";
+  const angle = pct ? tachPctAngle : tachAngle;
   useFrame(({ ind }) => {
-    setRot(needle.current, cNeedle, tachAngle(ind.tachRpm));
+    setRot(needle.current, cNeedle, angle(ind.tachRpm));
     const h = Math.max(0, Number.isFinite(ind.hobbs) ? ind.hobbs : 0);
     const t = Math.floor(h * 10 + 1e-6);
     setText(hours.current, cHours, String(Math.floor(t / 10) % 10000).padStart(4, "0"));
     setText(tenths.current, cTenths, String(t % 10));
   });
   const art = useMemo(() => {
+    if (pct) {
+      return {
+        major: tickPath(range(0, 110, 10).map(tachPctAngle), 73, 90),
+        minor: tickPath(range(5, 105, 10).map(tachPctAngle), 81.5, 90),
+        nums: range(0, 100, 20).map((n) => [tachPctAngle(n), String(n)] as const),
+      };
+    }
     const nums = range(5, 35, 5).map((n) => [tachAngle(n * 100), String(n)] as const);
     return {
       major: tickPath(range(0, 3500, 500).map(tachAngle), 73, 90),
@@ -39,20 +49,22 @@ export function Tachometer({ size }: { size: number }) {
       ),
       nums,
     };
-  }, []);
+  }, [pct]);
+  // green arc: normal operating range (the trainer's published 2,100 rpm; about 78 % of maximum for the others)
+  const greenFrom = pct ? 60 : ac.id === "c172p" ? 2100 : Math.round((ac.maxRpm * 0.78) / 100) * 100;
   return (
-    <Dial id="tachometer" size={size} label="Tachometer (engine revolutions per minute)">
+    <Dial id="tachometer" size={size} label={pct ? `Engine speed gauge (${ac.engine === "jet" ? "N1" : "Ng"}, percent)` : "Tachometer (engine revolutions per minute)"}>
       {/* green arc: normal operating range; red line: maximum */}
-      <path d={arcPath(85.5, tachAngle(2100), tachAngle(AIRCRAFT.maxRpm))} className="arc s-green" strokeWidth="7.5" />
+      <path d={arcPath(85.5, angle(greenFrom), angle(ac.maxRpm))} className="arc s-green" strokeWidth="7.5" />
       <path d={art.minor} className="arc s-mk" strokeWidth="1.2" />
       <path d={art.major} className="arc s-mk" strokeWidth="2.6" />
-      <path d={tickPath([tachAngle(AIRCRAFT.maxRpm)], 70, 90)} className="arc s-red" strokeWidth="3.4" />
-      <DialNumbers items={art.nums} r={58} s={15} />
+      <path d={tickPath([angle(ac.maxRpm)], 70, 90)} className="arc s-red" strokeWidth="3.4" />
+      <DialNumbers items={art.nums} r={58} s={pct ? 13 : 15} />
       <T x={100} y={62} s={9} className="tx-legend">
-        RPM
+        {pct ? (ac.engine === "jet" ? "N1" : "Ng") : "RPM"}
       </T>
       <T x={100} y={72} s={5.8} className="tx-legend">
-        HUNDREDS
+        {pct ? "PERCENT" : "HUNDREDS"}
       </T>
       <T x={98} y={125.5} s={5.4} className="tx-legend">
         HOURS

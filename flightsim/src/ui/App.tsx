@@ -1,8 +1,9 @@
 /**
- * TeachX Flight Simulator — the app shell: start screen (airport search, where to start, weather,
- * time of day), the 3D world with the cockpit panel, and a small in-flight toolbar.
+ * TeachX Flight Simulator — the app shell: start screen (aircraft, airport search, where to start,
+ * weather, time of day), the 3D world with the cockpit panel, and a small in-flight toolbar.
  */
 import { useEffect, useRef, useState } from "react";
+import { AIRCRAFT_LIST, getAircraft, type AircraftId } from "@/aircraft/catalog";
 import { Runtime } from "@/app/runtime";
 import type { SpawnKind } from "@/core/types";
 import type { AirportSummary } from "@/data/world-data";
@@ -40,7 +41,8 @@ const KEYS: [string, string][] = [
   ["Arrow keys", "Yoke: pitch (up/down) and roll (left/right)"],
   ["A / D", "Rudder left / right (also steers on the ground)"],
   ["W / S", "Throttle up / down"],
-  ["F", "Flaps: next notch"],
+  ["F / Shift+F", "Flaps: down one notch / up one notch"],
+  ["G", "Landing gear up / down (aircraft with retractable gear)"],
   ["B", "Parking brake on / off"],
   ["Space", "Wheel brakes (hold)"],
   ["V", "Next view (cockpit, chase, tower, free)"],
@@ -73,6 +75,9 @@ export function App() {
   const [card, setCard] = useState<InstrumentId | null>(null);
   const [paused, setPaused] = useState(false);
   const [hud, setHud] = useState("");
+  /** Aircraft chosen in the menu, and the one actually flying (the panel is rebuilt when it changes). */
+  const [aircraftId, setAircraftId] = useState<AircraftId>("c172p");
+  const [flownId, setFlownId] = useState<AircraftId>("c172p");
 
   // ---- create the simulator once
   useEffect(() => {
@@ -111,6 +116,9 @@ export function App() {
         (window as unknown as { teachx: unknown }).teachx = { rt, sim, world, weather, sky, views };
         const apt = sim.data.getAirport(new URLSearchParams(location.search).get("apt") ?? "KPAO");
         if (apt) setAirport(apt);
+        // ?aircraft=<id> picks an aircraft from a link; otherwise the one flown last time
+        const fromUrl = new URLSearchParams(location.search).get("aircraft");
+        setAircraftId(getAircraft(fromUrl ?? sim.aircraft.id).id);
         setReady(true);
         setStatus("");
       } catch (e) {
@@ -140,7 +148,9 @@ export function App() {
       const m = mods.current;
       if (!m) return;
       const s = m.rt.sim.state;
-      setHud(`${Math.round(s.kcas)} kt · ${Math.round(s.altMslFt)} ft · view: ${m.views.mode}`);
+      const ac = m.rt.sim.aircraft;
+      const gear = ac.retractableGear ? ` · gear ${s.gearPosNorm > 0.98 ? "down" : s.gearPosNorm < 0.02 ? "up" : "moving"}` : "";
+      setHud(`${ac.shortName} · ${Math.round(s.kcas)} kt · ${Math.round(s.altMslFt)} ft${gear} · view: ${m.views.mode}`);
     }, 300);
     return () => clearInterval(id);
   }, [flying]);
@@ -176,6 +186,7 @@ export function App() {
     setBusy(true);
     try {
       const { sim } = m.rt;
+      sim.setAircraft(aircraftId);
       if (wx === "real") {
         setStatus("Getting the real weather…");
         const r = await m.weather.loadRealWeather(airport.lat, airport.lon, airport.ident);
@@ -188,6 +199,7 @@ export function App() {
       m.views.setMode("cockpit");
       sim.setPaused(false);
       m.rt.start();
+      setFlownId(sim.aircraft.id);
       setFlying(true);
       setMenu(false);
     } catch (e) {
@@ -206,7 +218,7 @@ export function App() {
 
       {flying && m && (
         <>
-          <CockpitPanel sim={m.rt.sim} explainMode={explain} onExplain={setCard} onCoverage={(f) => m.views.setCockpitHorizonFraction(f > 0 ? Math.max(0.2, (1 - f) * 0.62) : 0.5)} />
+          <CockpitPanel key={flownId} sim={m.rt.sim} explainMode={explain} onExplain={setCard} onCoverage={(f) => m.views.setCockpitHorizonFraction(f > 0 ? Math.max(0.2, (1 - f) * 0.62) : 0.5)} />
           <div className="absolute left-2 top-2 z-20 flex flex-wrap items-center gap-1.5">
             <button className={btn} onClick={() => setMenu(true)}>Menu</button>
             <button className={btn} onClick={() => m.views.next()}>View</button>
@@ -228,7 +240,7 @@ export function App() {
         <div className="absolute inset-0 z-40 grid place-items-center overflow-y-auto bg-slate-950/80 p-4 select-text">
           <div className="w-full max-w-xl rounded-2xl border border-slate-700 bg-slate-900 p-5 shadow-2xl">
             <h1 className="text-2xl font-semibold">TeachX Flight Simulator</h1>
-            <p className="mt-1 text-sm text-slate-300">Fly a Cessna 172-style trainer from any airport in the world. Free, in your browser.</p>
+            <p className="mt-1 text-sm text-slate-300">Fly ten aircraft — from a Cessna trainer to an airliner — with FlightGear's flight physics, from any airport in the world. Free, in your browser.</p>
             <p className="mt-3 rounded-md border border-amber-500/50 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">{DISCLAIMER}</p>
 
             {error ? (
@@ -237,6 +249,33 @@ export function App() {
               <p className="mt-4 text-sm text-slate-300">{status}</p>
             ) : (
               <>
+                <label className="mt-4 block text-sm font-medium">Aircraft</label>
+                <div className="mt-1 grid grid-cols-2 gap-1.5 sm:grid-cols-5" role="radiogroup" aria-label="Aircraft">
+                  {AIRCRAFT_LIST.map((a) => (
+                    <button
+                      key={a.id}
+                      role="radio"
+                      aria-checked={aircraftId === a.id}
+                      data-aircraft={a.id}
+                      className={`min-h-11 rounded-md px-2 py-1.5 text-left text-xs leading-tight ${aircraftId === a.id ? "bg-sky-600" : "bg-slate-800 hover:bg-slate-700"}`}
+                      onClick={() => setAircraftId(a.id)}
+                    >
+                      <span className="block text-sm font-semibold">{a.shortName}</span>
+                      <span className="block text-slate-300">{a.category}</span>
+                    </button>
+                  ))}
+                </div>
+                {(() => {
+                  const a = getAircraft(aircraftId);
+                  return (
+                    <div className="mt-1.5 rounded-md bg-slate-800/60 px-3 py-2 text-sm">
+                      <p><b>{a.name}.</b> {a.blurb}</p>
+                      <p className="mt-1 text-slate-300"><b>Take-off:</b> {a.tips}</p>
+                      <p className="mt-1 text-xs text-slate-400">{a.realism}</p>
+                    </div>
+                  );
+                })()}
+
                 <label className="mt-4 block text-sm font-medium">Airport</label>
                 <input
                   className="mt-1 w-full rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-sm outline-none focus:border-sky-400"
@@ -301,14 +340,16 @@ export function App() {
                 <table className="mt-2 w-full"><tbody>
                   {KEYS.map(([k, d]) => <tr key={k} className="border-t border-slate-800"><td className="py-1 pr-3 font-mono text-sky-300">{k}</td><td className="py-1">{d}</td></tr>)}
                 </tbody></table>
-                <p className="mt-2 text-slate-300">Take-off: release the parking brake (B), full throttle (hold W), keep straight with A / D, and gently pull back (Down arrow) at about 55 knots.</p>
+                <p className="mt-2 text-slate-300">Take-off in the {getAircraft(m?.rt.sim.aircraft.id).name}: {getAircraft(m?.rt.sim.aircraft.id).tips}</p>
+                <p className="mt-1 text-slate-400">The parking brake is B. Aircraft with a constant-speed propeller keep the propeller lever fully forward; the throttle moves all engines together.</p>
               </>
             ) : (
               <>
                 <h2 className="text-lg font-semibold">TeachX Flight Simulator — credits</h2>
                 <p className="mt-2 text-amber-200">{DISCLAIMER}</p>
                 <ul className="mt-2 list-disc space-y-1 pl-5 text-slate-300">
-                  <li>Flight physics: JSBSim (LGPL-2.1), c172p flight model</li>
+                  <li>Flight physics: JSBSim (LGPL-2.1) as built into FlightGear 2024.2 (gitlab.com/flightgear/flightgear), compiled to WebAssembly; flight models from JSBSim's aircraft collection (the Cessna 172P tuned by TeachX; Cessna 310 and F-16 files are GPL)</li>
+                  <li>Aircraft 3D models: FlightGear hangars (FGData and FGAddon), GPL — authors and licences in public/models/fg/CREDITS.md</li>
                   <li>3D globe: CesiumJS (Apache-2.0)</li>
                   <li>{ATTRIBUTION.terrain}</li>
                   <li dangerouslySetInnerHTML={{ __html: `Imagery: ${ATTRIBUTION.sentinel}; ${ATTRIBUTION.blueMarble}; ${ATTRIBUTION.usgs}; ${ATTRIBUTION.nightLights}` }} />

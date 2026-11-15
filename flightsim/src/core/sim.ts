@@ -10,7 +10,8 @@ import type { WorldData } from "@/data/world-data";
 import { FlightModel, loadJsbsim, type FdmInputs, type JsbsimModule } from "@/physics/jsbsim";
 import type { ElevationService } from "@/world/elevation";
 import { cloudDensityAt } from "./clouds";
-import { AIRCRAFT, CG_HEIGHT_FT, DEFAULT_SETTINGS, defaultControls, defaultEnvironment, initialState } from "./defaults";
+import { getAircraft, type Aircraft, type StrikePart } from "@/aircraft/catalog";
+import { DEFAULT_SETTINGS, defaultControls, defaultEnvironment, initialState } from "./defaults";
 import { EventBus } from "./events";
 import { magneticVariation } from "./magvar";
 import { D2R, FPS_PER_KT, R2D, clamp, densityAltitudeFt, isaTempC, norm360, pressureAltitudeFt, pressureAtAltitudeInHg } from "./math";
@@ -93,7 +94,14 @@ export class Sim {
   readonly events = new EventBus<SimEvents>();
   readonly data: WorldData;
   readonly elevation: ElevationService;
-  readonly aircraft = AIRCRAFT;
+  /** The aircraft being flown (chosen with `setAircraft`, remembered in the settings). */
+  get aircraft(): Aircraft {
+    // read on every physics step: look it up only when the setting changed
+    let c = this.aircraftCache;
+    if (!c || c.key !== this.settings.aircraft) c = this.aircraftCache = { key: this.settings.aircraft, ac: getAircraft(this.settings.aircraft) };
+    return c.ac;
+  }
+  private aircraftCache: { key: string | undefined; ac: Aircraft } | null = null;
   /** What is sent to the flight model on the next step. Filled from `controls`/`env`, then adjusted by modules. */
   readonly fdmIn: FdmInputs = {
     elevator: 0,
@@ -146,6 +154,7 @@ export class Sim {
   private wasAirborne = false;
   private minVsRecent = 0;
   private lastAirKcas = 0;
+  private lastTailStrikeMsg = -999;
   private stallStartAlt = 0;
   private stallMinAlt = 0;
   private magVarAt = { lat: 999, lon: 999 };
@@ -182,6 +191,11 @@ export class Sim {
     this.events.emit("pause", { paused });
   }
 
+  /** Choose the aircraft for the next spawn (the current flight continues until then). */
+  setAircraft(id: string): void {
+    this.updateSettings({ aircraft: getAircraft(id).id });
+  }
+
   updateSettings(patch: Partial<Settings>): void {
     Object.assign(this.settings, patch);
     saveJson("settings", this.settings);
@@ -203,7 +217,8 @@ export class Sim {
     const token = ++this.spawnToken;
     this.spawning = true;
     try {
-      const plan = planSpawn(req, this.data, this.env);
+      const ac = this.aircraft;
+      const plan = planSpawn(req, this.data, this.env, ac);
       await Promise.all([this.preload(), this.elevation.ensure(plan.lat, plan.lon, 1.5).catch(() => undefined)]);
       if (plan.refLat !== plan.lat || plan.refLon !== plan.lon) await this.elevation.ensure(plan.refLat, plan.refLon, 0.5).catch(() => undefined);
       if (token !== this.spawnToken) throw new Error("Superseded by a newer spawn request.");
@@ -212,7 +227,7 @@ export class Sim {
 
       const ground = this.elevation.groundFt(plan.lat, plan.lon) ?? plan.fallbackElevFt;
       const refGround = this.elevation.groundFt(plan.refLat, plan.refLon) ?? plan.fallbackElevFt;
-      let altFtMsl = ground + CG_HEIGHT_FT;
+      let altFtMsl = ground + ac.cgHeightFt;
       if (!plan.onGround) {
         altFtMsl = plan.altFtMsl ?? refGround + (plan.heightAboveRefFt ?? 3000);
         altFtMsl = Math.max(altFtMsl, ground + 300);
@@ -221,8 +236,9 @@ export class Sim {
       // --- controls for the new situation
       const c = this.controls;
       c.elevator = c.aileron = c.rudder = 0;
-      c.trim = 0;
-      c.flapIndex = plan.flapIndex;
+      c.trim = plan.onGround && ac.takeoffTrim ? ac.takeoffTrim : 0;
+      c.flapIndex = Math.min(plan.flapIndex, ac.flapDetentsDeg.length - 1);
+      c.gearDown = plan.onGround || !ac.retractableGear;
       c.throttle = plan.onGround ? 0 : 0.6;
       c.mixture = plan.engineRunning ? 1 : 0;
       c.carbHeat = false;
@@ -239,6 +255,7 @@ export class Sim {
       this.terrainFt = this.terrainTarget = ground;
       this.fillInputs();
       const fdm = FlightModel.createSync(jsb, {
+        aircraft: ac,
         lat: plan.lat,
         lon: plan.lon,
         altMslFt: altFtMsl,
@@ -251,7 +268,7 @@ export class Sim {
         fuelRightGal: this.loading.fuelRightGal,
         payloadLb: this.loading.payloadLb,
         gammaDeg: plan.gammaDeg,
-        flapNorm: (AIRCRAFT.flapDetentsDeg[plan.flapIndex] ?? 0) / 30,
+        flapNorm: (ac.flapDetentsDeg[c.flapIndex] ?? 0) / ac.flapMaxDeg,
         windDirTrue: windAt(this.env, altFtMsl).dirTrue,
         windKt: windAt(this.env, altFtMsl).kt,
         seaLevelPressureInHg: modelSeaLevelPressureInHg(this.env),
@@ -359,7 +376,9 @@ export class Sim {
     f.trim = c.trim;
     f.throttle = c.throttle;
     f.mixture = c.mixture;
-    f.flapNorm = (AIRCRAFT.flapDetentsDeg[c.flapIndex] ?? 0) / 30;
+    const ac = this.aircraft;
+    f.flapNorm = (ac.flapDetentsDeg[c.flapIndex] ?? 0) / ac.flapMaxDeg;
+    f.gearDown = c.gearDown;
     const pb = c.parkingBrake ? 1 : 0;
     f.brakeLeft = Math.max(c.brakeLeft, pb);
     f.brakeRight = Math.max(c.brakeRight, pb);
@@ -423,7 +442,7 @@ export class Sim {
     s.lon = o.lon;
     s.altMslFt = o.altMslFt;
     s.groundElevFt = this.terrainFt;
-    s.aglFt = Math.max(0, o.altMslFt - this.terrainFt - CG_HEIGHT_FT);
+    s.aglFt = Math.max(0, o.altMslFt - this.terrainFt - this.aircraft.cgHeightFt);
     s.headingTrue = o.headingTrue;
     s.pitch = o.pitch;
     s.roll = o.roll;
@@ -446,6 +465,8 @@ export class Sim {
     s.onGround = o.wowNose || o.wowLeft || o.wowRight;
     s.flapsDeg = o.flapsDeg;
     s.rpm = o.rpm;
+    s.n1Pct = o.n1Pct;
+    s.gearPosNorm = o.gearPosNorm;
     s.manifoldInHg = o.manifoldInHg;
     s.fuelFlowGph = o.fuelFlowGph;
     s.powerHp = o.powerHp;
@@ -492,7 +513,8 @@ export class Sim {
     const fdm = this.fdm!;
 
     // --- flew into rising terrain
-    if (!s.onGround && this.wasAirborne && s.altMslFt - CG_HEIGHT_FT < this.terrainFt - 6) {
+    const ac = this.aircraft;
+    if (!s.onGround && this.wasAirborne && s.altMslFt - ac.cgHeightFt < this.terrainFt - 6) {
       this.crash("Flew into terrain.");
       return;
     }
@@ -525,8 +547,25 @@ export class Sim {
       }
       // Structure touching the ground (checked ten times a second while rolling).
       if (this.stepCount % 12 === 0 && !s.crash) {
-        if (fdm.getProperty("gear/unit[5]/WOW") > 0.5 || fdm.getProperty("gear/unit[6]/WOW") > 0.5) this.crash("A wing tip struck the ground.");
-        else if (fdm.getProperty("gear/unit[3]/WOW") > 0.5 && s.gsKt > 15) this.crash("The nose struck the ground.");
+        // Which non-wheel contact points of this aircraft touch the ground (see the aircraft catalog).
+        let struck: StrikePart | null = null;
+        for (const st of ac.strikes) {
+          if (fdm.getProperty(`gear/unit[${st.unit}]/WOW`) <= 0.5) continue;
+          if (st.part === "nose" && s.gsKt <= 15) continue;
+          if (st.part === "tail") {
+            if (s.time - this.lastTailStrikeMsg > 10) {
+              this.lastTailStrikeMsg = s.time;
+              this.message("Tail strike — the tail touched the runway. Raise the nose less steeply.", "warn");
+            }
+            continue;
+          }
+          if (struck === null || st.part === "wing") struck = st.part;
+        }
+        if (struck === "wing") this.crash("A wing tip struck the ground.");
+        else if (struck === "nose") this.crash("The nose struck the ground.");
+        else if (struck === "engine") this.crash("An engine struck the ground.");
+        else if (struck === "propeller") this.crash("The propeller struck the ground.");
+        else if (struck === "body") this.crash("The aircraft's body struck the ground.");
         else if (Math.abs(s.roll) > 40 || s.pitch < -25 || s.pitch > 40) this.crash("The aircraft overturned.");
       }
     } else {
@@ -545,13 +584,13 @@ export class Sim {
 
     // --- aerodynamic stall (critical angle of attack exceeded)
     const airborne = !s.onGround && s.aglFt > 3;
-    if (!s.stalled && airborne && s.alphaDeg > 16 && s.kcas > 15) {
+    if (!s.stalled && airborne && s.alphaDeg > ac.stallAlphaDeg && s.kcas > 15) {
       s.stalled = true;
       this.stallStartAlt = this.stallMinAlt = s.altMslFt;
       this.events.emit("stall", { kcas: s.kcas, altMslFt: s.altMslFt });
     } else if (s.stalled) {
       this.stallMinAlt = Math.min(this.stallMinAlt, s.altMslFt);
-      if (!airborne || (s.alphaDeg < 12 && s.vsFpm > -300)) {
+      if (!airborne || (s.alphaDeg < ac.stallAlphaDeg - 4 && s.vsFpm > -300)) {
         s.stalled = false;
         if (airborne) this.events.emit("stallRecovered", { altitudeLostFt: Math.max(0, this.stallStartAlt - this.stallMinAlt) });
       }

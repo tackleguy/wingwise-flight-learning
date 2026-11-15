@@ -10,12 +10,12 @@ import { aircraftMatrix, ecef, type World } from "@/world/world";
 import type { TowerSite, ViewMode } from "./api";
 import { ShiftedFrustum } from "./frustum";
 import { LOOK_LIMITS, approach, approachAngle, autoZoomFovDeg, axisNdcForFraction, cesiumFovRad, observerSite, pickTowerSite, screenFractionOfElevation, smootherstep, verticalFovDeg, type RenderPose } from "./math";
+import { visualSpecFor } from "./model-spec";
 import { TRAINER_META } from "./trainer-meta";
 
 /** Top of the glare shield as seen from the pilot's eye (from the model's geometry): degrees below the level line of sight. */
 export const GLARE_SHIELD_DEPRESSION_DEG = TRAINER_META.sight.glareShieldDeg;
 
-const EYE = TRAINER_META.eye;
 /** Default horizontal fields of view on a 16:9 screen, degrees. */
 const COCKPIT_HFOV = 86;
 const CHASE_HFOV = 75;
@@ -60,6 +60,10 @@ export class CameraRig {
   private headSway = 0;
   private axisNow = axisNdcForFraction(0.33);
 
+  /** Pilot's eye point of the aircraft being flown (frame A: x nose, y left, z up), its span, and size relative to the trainer. */
+  private eye: readonly [number, number, number] = TRAINER_META.eye;
+  private spanM: number = TRAINER_META.spanM;
+  private sizeScale = 1;
   private chaseHeading = 0;
   private chaseYaw = 0;
   private chasePitch = CHASE.elevation;
@@ -173,7 +177,7 @@ export class CameraRig {
         this.cockpitZoom = clamp(this.cockpitZoom * f, 0.28, 1.25);
         break;
       case "chase":
-        this.chaseDistT = clamp(this.chaseDistT * f, CHASE.minDistance, CHASE.maxDistance);
+        this.chaseDistT = clamp(this.chaseDistT * f, CHASE.minDistance * this.sizeScale, CHASE.maxDistance * this.sizeScale);
         break;
       case "tower":
         this.towerZoom = clamp(this.towerZoom * f, 0.25, 6);
@@ -196,7 +200,7 @@ export class CameraRig {
         this.chaseYaw = angleDiff(this.chaseYaw, 0);
         this.chaseYawT = 0;
         this.chasePitchT = CHASE.elevation;
-        this.chaseDistT = CHASE.distance;
+        this.chaseDistT = CHASE.distance * this.sizeScale;
         break;
       case "tower":
         this.towerYaw = this.towerPitch = 0;
@@ -258,6 +262,12 @@ export class CameraRig {
   /** After the aircraft has been repositioned: no easing from the old place. */
   onSpawn(sim: Sim): void {
     const s = sim.state;
+    const spec = visualSpecFor(sim.aircraft.id);
+    const before = this.sizeScale;
+    this.eye = spec.eye;
+    this.spanM = spec.spanM;
+    this.sizeScale = Math.max(1, spec.lengthM / TRAINER_META.lengthM);
+    if (before !== this.sizeScale) this.chaseDist = this.chaseDistT = clamp(CHASE.distance * this.sizeScale, CHASE.minDistance, CHASE.maxDistance * this.sizeScale);
     this.chaseHeading = s.headingTrue;
     this.chaseLift = 0;
     this.trT = 1;
@@ -446,9 +456,9 @@ export class CameraRig {
     const cp = Math.cos(this.headPitch * D2R);
     const sp = Math.sin(this.headPitch * D2R);
     // turning the head moves the eyes a little (the neck is behind them): about 9 cm of travel side to side
-    const eyeX = EYE[0] + 0.09 * (cy - 1) * 0.5;
-    const eyeY = EYE[1] - 0.085 * sy - shakeSide - this.headSway;
-    const eyeZ = EYE[2] - this.headSink + shakeUp;
+    const eyeX = this.eye[0] + 0.09 * (cy - 1) * 0.5;
+    const eyeY = this.eye[1] - 0.085 * sy - shakeSide - this.headSway;
+    const eyeZ = this.eye[2] - this.headSink + shakeUp;
     Matrix4.multiplyByPoint(this.body, Cartesian3.fromElements(eyeX, eyeY, eyeZ, this.a), t.pos);
     // body axes: x nose, y left, z up; positive yaw = look right, positive pitch = look up
     Matrix4.multiplyByPointAsVector(this.body, Cartesian3.fromElements(cp * cy, -cp * sy, sp, this.a), t.dir);
@@ -579,7 +589,7 @@ export class CameraRig {
     }
     const dist = this.watchFrom(this.towerPos, this.towerYaw, this.towerPitch, t);
     // automatic zoom: the aircraft keeps a sensible size however far away it is
-    const tight = autoZoomFovDeg(dist, TRAINER_META.spanM, 0.2, 1.2, 62);
+    const tight = autoZoomFovDeg(dist, this.spanM, 0.2, 1.2, 62);
     const want = clamp(this.groundInView(s.aglFt, dist, tight, aspect, 3.2, t) * this.towerZoom, 0.6, 90);
     this.towerFov = approach(this.towerFov, want, dt, 0.35);
     t.fovy = verticalFovDeg(this.towerFov, aspect, 0.3, 75);
@@ -589,7 +599,7 @@ export class CameraRig {
 
   private stayPoseFn(dt: number, aspect: number, t: Pose): void {
     const dist = this.watchFrom(this.stayPos, this.stayYaw, this.stayPitch, t);
-    const tight = autoZoomFovDeg(dist, TRAINER_META.spanM, 0.26, 3.5, 70);
+    const tight = autoZoomFovDeg(dist, this.spanM, 0.26, 3.5, 70);
     const want = clamp(this.groundInView(this.lastAglFt, dist, tight, aspect, 2.2, t) * this.stayZoom, 1, 95);
     this.stayFov = approach(this.stayFov, want, dt, 0.3);
     t.fovy = verticalFovDeg(this.stayFov, aspect, 0.6, 78);
