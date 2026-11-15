@@ -80,7 +80,7 @@ repository.
 - Licence: GPL-2.0-or-later
 - Source: https://sourceforge.net/p/flightgear/fgaddon/HEAD/tree/trunk/Aircraft/f16/
 - Version: r21799
-- Converted to glTF (textures resized, exterior only) by the TeachX project. **(conversion failed — no file)**
+- Converted to glTF (textures resized, exterior only) by the TeachX project.
 
 ## t6texan2.glb — Beechcraft-T6-Texan-II
 

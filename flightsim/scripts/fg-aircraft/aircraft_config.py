@@ -58,7 +58,17 @@ AIRCRAFT = {
         },
         "tex_max": 2048,
     },
-    "f16": {"fgdir": "f16", "set": "f16-block-52-set.xml", "jsbsim": "f16"},
+    "f16": {
+        "fgdir": "f16", "set": "f16-block-52-set.xml", "jsbsim": "f16",
+        "no_propellers": True,  # the engine fan stays static
+        # the F-16 has flaperons (no separate flaps): they become the aileron nodes; the leading-edge
+        # flaps stay static; both all-moving tail halves form the elevator
+        "parts_by_name": {
+            "aileron": [r"^(Left|Right)(Upper|Lower)Flap$"],
+            "elevator": [r"^(Left|Right)(Upper|Lower)HorizonTail$"],
+            "static": [r"^(Left|Right)(Upper|Lower)Lef$"],
+        },
+    },
     "t6texan2": {
         "fgdir": "Beechcraft-T6-Texan-II", "set": "t6II-set.xml", "jsbsim": "t6texan2",
         # French object names: roue = wheel, pale = blade, bol = spinner, volet = flap

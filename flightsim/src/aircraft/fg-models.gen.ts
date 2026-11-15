@@ -55,7 +55,7 @@ export const FG_MODELS: Record<"c172p"|"c182"|"pa28"|"J3Cub"|"c310"|"DHC6"|"p51d
     parts: ["body", "aileron_left", "aileron_right", "elevator", "flap_left", "flap_right", "propeller_blades", "propeller_disc", "propeller", "rudder"],
     retractableGear: false,
     triangles: 28368,
-    bytes: 1344396,
+    bytes: 1344388,
     notes: "Aligned on the JSBSim main-gear contact points; the nose wheel then differs from the JSBSim nose contact by +1 cm fore/aft (+ = aft) and -3 cm vertically (+ = model tyre higher)."
   },
   c182: {
@@ -287,7 +287,7 @@ export const FG_MODELS: Record<"c172p"|"c182"|"pa28"|"J3Cub"|"c310"|"DHC6"|"p51d
     notes: "Aligned on the JSBSim main-gear contact points; the nose wheel then differs from the JSBSim nose contact by -1 cm fore/aft (+ = aft) and -4 cm vertically (+ = model tyre higher). Main-gear track: model 7.72 m, JSBSim 7.34 m. elevator: two halves with swept hinges: turning this node moves both about one lateral axis (approximate); elevator_left / elevator_right have the exact hinges. flap_left: several segments: turning this node moves them all about the hinge of flap_left_1 (exact for it, approximate for the others); the children have exact hinges. flap_right: several segments: turning this node moves them all about the hinge of flap_right_1 (exact for it, approximate for the others); the children have exact hinges."
   },
   f16: {
-    url: "",
+    url: "models/fg/f16.glb",
     source: {
       aircraft: "f16",
       revision: "r21799",
@@ -295,21 +295,22 @@ export const FG_MODELS: Record<"c172p"|"c182"|"pa28"|"J3Cub"|"c310"|"DHC6"|"p51d
       authors: "see the aircraft's files",
       page: "https://sourceforge.net/p/flightgear/fgaddon/HEAD/tree/trunk/Aircraft/f16/"
     },
-    lengthM: 0,
-    spanM: 0,
-    heightM: 0,
-    bounds: [[0, 0, 0], [0, 0, 0]],
-    eye: [0, 0, 0],
+    lengthM: 14.307,
+    spanM: 9.589,
+    heightM: 5.167,
+    bounds: [[-4.789, -1.803, -6.207], [4.8, 3.364, 8.099]],
+    eye: [0.006, 0.972, 3.792],
     wheels: {
-      mainLeft: [0, 0, 0],
-      mainRight: [0, 0, 0]
+      nose: [0.037, -1.803, 2.709],
+      mainLeft: [1.225, -1.689, -0.874],
+      mainRight: [-1.225, -1.689, -0.874]
     },
     propellers: [],
-    parts: [],
-    retractableGear: false,
-    triangles: 0,
-    bytes: 0,
-    notes: "Conversion failed: not converted yet"
+    parts: ["body", "gear_retract", "aileron_left", "aileron_right", "elevator", "rudder"],
+    retractableGear: true,
+    triangles: 20171,
+    bytes: 1546604,
+    notes: "Aligned on the JSBSim main-gear contact points; the nose wheel then differs from the JSBSim nose contact by -0 cm fore/aft (+ = aft) and -10 cm vertically (+ = model tyre higher)."
   },
   t6texan2: {
     url: "models/fg/t6texan2.glb",

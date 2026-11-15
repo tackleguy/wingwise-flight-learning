@@ -283,7 +283,7 @@ def classify(ml, cfg, props):
                 res.append((hit, "by name", None))
                 continue
             base = hit.split("_")[0]
-            cand = found.get(hit) or found.get(base) or [a for v in found.values() for a in v]
+            cand = found.get(hit) or found.get(base) or [a for a in m.anims if a.type in ("rotate", "spin")]
             res.append(("gear", "", cand) if hit == "gear" else ("part", hit, cand))
             continue
         if cfg.get("no_propellers"):
@@ -750,7 +750,7 @@ def build(aid, tex_max=None, quiet=False):
         clusters = []  # [prim, pieces, area]
         if node.startswith("propeller") or cfg.get("hinge_override", {}).get(node):
             prim = max(anims, key=lambda a: area.get(id(a), 0)) if anims else None
-            clusters.append([prim, list(pieces), 1.0])
+            clusters.append([prim, list(pieces), 1.0, [prim] if prim else []])
         else:
             remaining = sorted(anims, key=lambda a: -area.get(id(a), 0))
             assigned = set()
@@ -763,7 +763,7 @@ def build(aid, tex_max=None, quiet=False):
                 for p in cp:
                     assigned.add(id(p))
                 if cp:
-                    clusters.append([prim, cp, sum(tri_area(p.points()).sum() for p in cp)])
+                    clusters.append([prim, cp, sum(tri_area(p.points()).sum() for p in cp), compat])
             left = [p for p in pieces if id(p) not in assigned]
             clusters.sort(key=lambda c_: -c_[2])
             main = clusters[0]
@@ -782,12 +782,19 @@ def build(aid, tex_max=None, quiet=False):
             log(f"   {node}: hinge groups: " + " | ".join(", ".join(sorted({p.mesh.name for p in c_[1]})) + f" ({c_[2]:.1f} m2)" for c_ in clusters))
         # hinge of every cluster (glTF), with the Fowler-flap pivot where FG also translates the surface
         hz = []
-        for prim, cp, _ in clusters:
+        for prim, cp, _, compat in clusters:
             ho = cfg.get("hinge_override", {}).get(node)
             if ho:
                 cF, aF = np.array(ho[0], float), np.array(ho[1], float) / np.linalg.norm(ho[1])
             else:
                 cF, aF = prim.center, prim.axis
+                if node == "elevator" and len(compat) > 1:
+                    # mirrored halves on nearly the same hinge (dihedral / anhedral): average them
+                    acc = sum((1.0 if a.axis @ prim.axis >= 0 else -1.0) * a.axis * (area.get(id(a), 0) + 1e-9) for a in compat)
+                    aF = acc / np.linalg.norm(acc)
+                    cc = sum(a.center * (area.get(id(a), 0) + 1e-9) for a in compat) / sum(area.get(id(a), 0) + 1e-9 for a in compat)
+                    cF = prim.center + ((cc - prim.center) @ aF) * aF
+                    cF = cc if abs(cc[1]) < abs(cF[1]) else cF
                 piv = equivalent_pivot(prim, cp)
                 if piv is not None:
                     if not quiet:
