@@ -14,7 +14,8 @@ export default defineConfig({
   build: {
     target: "es2022",
     chunkSizeWarningLimit: 6000,
-    rollupOptions: { input: { main: path.resolve(__dirname, "index.html") } },
+    // TEACHX_BUILD_INPUT=dev/slice.html builds a single developer page instead of the app (build smoke tests).
+    rollupOptions: { input: { main: path.resolve(__dirname, process.env.TEACHX_BUILD_INPUT ?? "index.html") } },
   },
   test: {
     environment: "node",
