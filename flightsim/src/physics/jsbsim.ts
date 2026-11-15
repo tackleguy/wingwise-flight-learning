@@ -166,6 +166,7 @@ export interface FdmOutputs {
   rudderRad: number;
   stallHyst: number;
   simTime: number;
+  chtF: number;
 }
 
 const READ = [
@@ -216,6 +217,7 @@ const READ = [
   "fcs/rudder-pos-rad",
   "aero/stall-hyst-norm",
   "simulation/sim-time-sec",
+  "propulsion/engine/cht-degF",
 ] as const;
 
 const WRITE = [
@@ -455,6 +457,7 @@ export class FlightModel {
     out.rudderRad = v(44);
     out.stallHyst = v(45);
     out.simTime = v(46);
+    out.chtF = v(47);
     return out;
   }
 

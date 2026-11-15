@@ -266,6 +266,11 @@ export interface SimState {
   fuelFlowGph: number;
   powerHp: number;
   thrustLb: number;
+  /** Engine temperatures and oil pressure (truth; the gauges in `ind` lag behind these). */
+  oilTempF: number;
+  oilPressPsi: number;
+  egtF: number;
+  chtF: number;
   fuelLeftGal: number;
   fuelRightGal: number;
   weightLb: number;

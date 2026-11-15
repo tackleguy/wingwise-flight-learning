@@ -9,6 +9,7 @@
 import type { WorldData } from "@/data/world-data";
 import { FlightModel, loadJsbsim, type FdmInputs, type JsbsimModule } from "@/physics/jsbsim";
 import type { ElevationService } from "@/world/elevation";
+import { cloudDensityAt } from "./clouds";
 import { AIRCRAFT, CG_HEIGHT_FT, DEFAULT_SETTINGS, defaultControls, defaultEnvironment, initialState } from "./defaults";
 import { EventBus } from "./events";
 import { magneticVariation } from "./magvar";
@@ -440,6 +441,10 @@ export class Sim {
     s.fuelFlowGph = o.fuelFlowGph;
     s.powerHp = o.powerHp;
     s.thrustLb = o.thrustLb;
+    s.oilTempF = o.oilTempF;
+    s.oilPressPsi = o.oilPressPsi;
+    s.egtF = o.egtF;
+    s.chtF = o.chtF;
     s.fuelLeftGal = o.fuelLeftGal;
     s.fuelRightGal = o.fuelRightGal;
     s.weightLb = o.weightLb;
@@ -462,6 +467,7 @@ export class Sim {
     }
     s.distanceNm += (o.gsKt * dt) / 3600;
     s.sys.engineRunning = o.engineRunning;
+    s.inCloud = this.stepCount % 6 === 0 ? cloudDensityAt(this.env, s.lat, s.lon, s.altMslFt) : s.inCloud;
   }
 
   private crash(reason: string): void {

@@ -6,6 +6,8 @@ import path from "node:path";
 // Relative base so the built site works from any folder (Vercel root, or embedded under a sub-path).
 export default defineConfig({
   base: "./",
+  // Several dev servers may run at once (one per feature test page); give each its own cache folder.
+  cacheDir: process.env.VITE_CACHE_DIR ?? "node_modules/.vite",
   plugins: [react(), tailwindcss()],
   resolve: { alias: { "@": path.resolve(__dirname, "./src") } },
   server: { host: "127.0.0.1" },
