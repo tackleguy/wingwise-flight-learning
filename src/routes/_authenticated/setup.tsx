@@ -83,7 +83,10 @@ function Setup() {
 
   const save = async () => {
     if (!data?.user) return;
-    if (focus.length === 0) return toast.error("Pick at least one thing to work on.");
+    if (focus.length === 0) {
+      toast.error("Pick at least one thing to work on.");
+      return;
+    }
     setSaving(true);
     const { error } = await supabase.from("profiles").upsert({
       id: data.user.id,
@@ -97,7 +100,10 @@ function Setup() {
       updated_at: new Date().toISOString(),
     });
     setSaving(false);
-    if (error) return toast.error("Couldn't save your setup. Try again.");
+    if (error) {
+      toast.error("Couldn't save your setup. Try again.");
+      return;
+    }
     const local = getState().profile;
     const displayName = name.trim() || data.user.email?.split("@")[0] || "Pilot";
     if (local) actions.updateProfile({ name: displayName, goal: goal as TrackId });
