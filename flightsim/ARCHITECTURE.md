@@ -164,6 +164,12 @@ Where clouds are is defined once (noise table + thresholds) so that "inside a cl
 and what is drawn (graphics) agree. Use `cloudDensityAt`, `layerDensity`, `CLOUD_NOISE` (upload as
 texture) rather than inventing another cloud layout.
 
+Sun position, daylight (0 night … 1 day) and local-solar-time helpers are in `src/core/sun.ts` —
+use them for anything that depends on day/night (panel lighting, runway lights, aircraft lights).
+
+`sim.fdmIn.powerLoss` (0…1) is the fraction of engine power lost to carburettor ice / carb heat /
+partial failures: [systems] sets it in `preStep`, the [physics] adapter applies it.
+
 ### 4.6 Data (`src/data/world-data.ts`)
 
 `WorldData`: `getAirport(code)`, `searchAirports(q)`, `airportsNear`, `nearestAirport`,

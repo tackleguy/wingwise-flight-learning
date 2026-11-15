@@ -101,6 +101,11 @@ export interface FdmInputs {
   /** 0 off, 1 right, 2 left, 3 both */
   magnetos: 0 | 1 | 2 | 3;
   starter: boolean;
+  /**
+   * Fraction of engine power lost to carburettor ice / carburettor heat / a simulated partial failure:
+   * 0 = full power available, 1 = no power. (Implemented by the physics adapter.)
+   */
+  powerLoss: number;
   /** Fuel can reach the engine from each tank (selector / failures). */
   feedLeft: boolean;
   feedRight: boolean;

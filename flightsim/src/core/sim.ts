@@ -101,6 +101,7 @@ export class Sim {
     brakeRight: 0,
     magnetos: 3,
     starter: false,
+    powerLoss: 0,
     feedLeft: true,
     feedRight: true,
     terrainFt: 0,
@@ -357,6 +358,7 @@ export class Sim {
     f.brakeRight = Math.max(c.brakeRight, pb);
     f.magnetos = c.ignition >= 3 ? 3 : (c.ignition as 0 | 1 | 2);
     f.starter = c.ignition === 4;
+    f.powerLoss = 0;
     f.feedLeft = c.fuelSelector === "left" || c.fuelSelector === "both";
     f.feedRight = c.fuelSelector === "right" || c.fuelSelector === "both";
     f.terrainFt = this.terrainFt;
