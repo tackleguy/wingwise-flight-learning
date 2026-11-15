@@ -72,7 +72,7 @@ repository.
 - Licence: GPL-2.0-or-later
 - Source: https://sourceforge.net/p/flightgear/fgaddon/HEAD/tree/trunk/Aircraft/A320-family/
 - Version: r21799
-- Converted to glTF (textures resized, exterior only) by the TeachX project. **(conversion failed — no file)**
+- Converted to glTF (textures resized, exterior only) by the TeachX project.
 
 ## f16.glb — f16
 

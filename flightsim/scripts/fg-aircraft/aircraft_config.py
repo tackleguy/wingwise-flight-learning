@@ -57,9 +57,6 @@ AIRCRAFT = {
         # French object names: roue = wheel, pale = blade, bol = spinner, volet = flap
         "wheels": {"mainLeft": "^roueG$", "mainRight": "^roueD$", "nose": "^roueA$"},
         "hub_re": r"^bol$",
-        # the centre flap under the fuselage ("volet") hinges 0.2 m from the outer flap hinge lines (they meet at the
-        # wing roots); it is moved with the outer flap of each side
-        "hinge_tolerance_m": {"flap_left": 0.3, "flap_right": 0.3},
     },
 }
 ORDER = ["c172p", "c182", "pa28", "J3Cub", "c310", "DHC6", "p51d", "A320", "f16", "t6texan2"]

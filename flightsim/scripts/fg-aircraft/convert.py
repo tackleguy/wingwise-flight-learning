@@ -71,7 +71,7 @@ PART_PROPS = [
     ("aileron", r"aileron(?!.*(trim|tab))"),  # left / right decided by where the surface is
     ("elevator", r"elevator(?!.*(trim|tab))"),
     ("rudder", r"rudder(?!.*(trim|tab|pedal))"),
-    ("flap", r"^(?!.*(apu|cowl|lever|switch|indicator|exhaust|vent)).*flap"),
+    ("flap", r"^(?!.*(apu|cowl|lever|switch|indicator|exhaust|vent|outflow|valve)).*flap"),
 ]
 PART_PRIORITY = ["gear", "propeller", "aileron", "elevator", "rudder", "flap"]
 
@@ -545,6 +545,8 @@ def equivalent_pivot(prim, pieces, v=1.0):
     d = np.zeros(3)
     seen = set()
     for p in pieces:
+        if not any(a is prim for a in p.mesh.anims):
+            continue  # only the surface(s) that the primary rotation moves
         for a in p.mesh.anims:
             if a.type == "translate" and a.prop == prim.prop and id(a) not in seen:
                 seen.add(id(a))
@@ -703,25 +705,40 @@ def build(aid, tex_max=None, quiet=False):
         groups[nn] = groups.pop(k)
         part_anims[nn] = part_anims.pop(k, [])
 
-    # ---- hinge per part node (primary animation = the one moving the largest area)
-    hinges = {}
-    for node, pieces in list(groups.items()):
-        anims = []
-        seen = set()
+    # ---- hinges. Each part's pieces are clustered by FG hinge animation; the biggest cluster gives the
+    # node its axis. Other clusters of a similar orientation and a real size (inner/outer flaps, swept
+    # elevator halves, centre flap) become child nodes with their own exact hinge; small linkages that
+    # turn about other axes (rudder cables, steering, flap-track fairings) stay static.
+    def want_dir(node):
+        return GLTF_NOSE if node.startswith("propeller") else (GLTF_UP if node.startswith("rudder") else GLTF_LEFT)
+
+    def gltf_hinge(node, cF, aF):
+        c = to_gltf(cF[None])[0]
+        ag = dir_gltf(aF[None])[0]
+        ag /= np.linalg.norm(ag)
+        if ag @ want_dir(node) < 0:
+            ag = -ag
+        return c, ag
+
+    def hinge_mid(c, ag, pieces):
+        """point on the hinge line (glTF) at the middle of the pieces' extent along it"""
+        P = to_gltf(np.concatenate([p.points() for p in pieces]))
+        tt = (P - c) @ ag
+        return c + ag * (tt.min() + tt.max()) / 2
+
+    POS = {"elevator": "trailing edge UP", "rudder": "trailing edge to the pilot's RIGHT"}
+    prop_info = []
+    node_defs = []  # (name, pieces, R (glTF), t (glTF), extras, [(kid name, pieces, R, t, extras)])
+    for node in sorted(groups):
+        pieces = groups[node]
+        anims, seen = [], set()
         for a in part_anims.get(node, []):
             if id(a) not in seen and a.axis is not None:
                 seen.add(id(a))
                 anims.append(a)
-        ho = cfg.get("hinge_override", {}).get(node)
-        if ho:
-            c = np.array(ho[0], dtype=float)
-            ax = np.array(ho[1], dtype=float)
-            hinges[node] = (c, ax / np.linalg.norm(ax))
-            continue
-        if not anims:
-            notes.append(f"{node}: no usable hinge animation found, kept static")
+        if not anims and not cfg.get("hinge_override", {}).get(node):
+            notes.append(f"{node}: no usable hinge animation found in the FG model, kept static")
             static.extend(pieces)
-            del groups[node]
             continue
         area = {}
         for p in pieces:
@@ -729,69 +746,62 @@ def build(aid, tex_max=None, quiet=False):
             for a in p.mesh.anims:
                 if id(a) in seen:
                     area[id(a)] = area.get(id(a), 0) + ar
-        prim = max(anims, key=lambda a: area.get(id(a), 0))
         tol = cfg.get("hinge_tolerance_m", {}).get(node, 0.15)
-        compat = [a for a in anims if abs(a.axis @ prim.axis) > 0.9 and line_dist(prim.center, prim.axis, a.center, a.axis) < tol]
-        if len(compat) > 1 and not quiet:
-            log(f"   {node}: {len(compat)} FG hinge animations combined")
-        keep, drop = [], []
-        cids = {id(a) for a in compat}
-        for p in pieces:
-            ok = any(id(a) in cids for a in p.mesh.anims) or (node.startswith("propeller") and not any(a.type in ("spin", "rotate") for a in p.mesh.anims))
-            (keep if ok else drop).append(p)
-        if drop:
-            if not quiet:
-                log(f"   {node}: {len(drop)} piece(s) on another hinge kept static: " + ", ".join(sorted({p.mesh.name for p in drop}))[:200])
-            static.extend(drop)
-        groups[node] = keep
-        # combine compatible axes (e.g. two elevator halves), oriented like the primary
-        ax = np.zeros(3)
-        cen = np.zeros(3)
-        wsum = 0
-        for a in compat:
-            w = area.get(id(a), 0) + 1e-9
-            s_ = 1.0 if a.axis @ prim.axis >= 0 else -1.0
-            ax += s_ * a.axis * w
-            cen += a.center * w
-            wsum += w
-        ax /= np.linalg.norm(ax)
-        cen /= wsum
-        if node not in ("elevator",):  # averaging is for mirrored halves only; otherwise keep the main hinge
-            ax, cen = prim.axis, prim.center
-        # make the centre lie on the primary hinge line
-        cen = prim.center + ((cen - prim.center) @ ax) * ax
-        # rotate + translate on the same property (Fowler-type flaps): use the single pivot that
-        # gives FG's position at full deflection
-        piv = equivalent_pivot(prim, keep)
-        if piv is not None:
-            if not quiet:
-                log(f"   {node}: rotate+translate in FG -> equivalent pivot {fmt(piv)} (FG centre {fmt(prim.center)})")
-            cen = piv
-        hinges[node] = (cen, ax)
-
-    # ---- propeller sub-groups
-    prop_info = []
-    node_defs = []  # (name, pieces, R (glTF), t (glTF), extras, children-defs)
-    for node in sorted(groups):
-        pieces = groups[node]
-        cF, aF = hinges[node]
-        c = to_gltf(cF[None])[0]
-        a = dir_gltf(aF[None])[0]
-        a /= np.linalg.norm(a)
-        if node.startswith("propeller"):
-            want = GLTF_NOSE
-        elif node == "rudder":
-            want = GLTF_UP
+        clusters = []  # [prim, pieces, area]
+        if node.startswith("propeller") or cfg.get("hinge_override", {}).get(node):
+            prim = max(anims, key=lambda a: area.get(id(a), 0)) if anims else None
+            clusters.append([prim, list(pieces), 1.0])
         else:
-            want = GLTF_LEFT
-        if a @ want < 0:
-            a = -a
+            remaining = sorted(anims, key=lambda a: -area.get(id(a), 0))
+            assigned = set()
+            while remaining:
+                prim = remaining[0]
+                compat = [a for a in remaining if abs(a.axis @ prim.axis) > 0.9 and line_dist(prim.center, prim.axis, a.center, a.axis) < tol]
+                remaining = [a for a in remaining if all(a is not c_ for c_ in compat)]
+                cids = {id(a) for a in compat}
+                cp = [p for p in pieces if id(p) not in assigned and any(id(a) in cids for a in p.mesh.anims)]
+                for p in cp:
+                    assigned.add(id(p))
+                if cp:
+                    clusters.append([prim, cp, sum(tri_area(p.points()).sum() for p in cp)])
+            left = [p for p in pieces if id(p) not in assigned]
+            clusters.sort(key=lambda c_: -c_[2])
+            main = clusters[0]
+            keep_c = [main]
+            for c_ in clusters[1:]:
+                if abs(c_[0].axis @ main[0].axis) > 0.5 and c_[2] >= 0.15 * main[2]:
+                    keep_c.append(c_)
+                else:
+                    left.extend(c_[1])
+            if left:
+                if not quiet:
+                    log(f"   {node}: {len(left)} piece(s) on other hinges kept static: " + ", ".join(sorted({p.mesh.name for p in left}))[:160])
+                static.extend(left)
+            clusters = keep_c
+        if len(clusters) > 1 and not quiet:
+            log(f"   {node}: hinge groups: " + " | ".join(", ".join(sorted({p.mesh.name for p in c_[1]})) + f" ({c_[2]:.1f} m2)" for c_ in clusters))
+        # hinge of every cluster (glTF), with the Fowler-flap pivot where FG also translates the surface
+        hz = []
+        for prim, cp, _ in clusters:
+            ho = cfg.get("hinge_override", {}).get(node)
+            if ho:
+                cF, aF = np.array(ho[0], float), np.array(ho[1], float) / np.linalg.norm(ho[1])
+            else:
+                cF, aF = prim.center, prim.axis
+                piv = equivalent_pivot(prim, cp)
+                if piv is not None:
+                    if not quiet:
+                        log(f"   {node}: rotate+translate in FG -> equivalent pivot {fmt(piv)} (FG centre {fmt(prim.center)})")
+                    cF = piv
+            c, ag = gltf_hinge(node, cF, aF)
+            hz.append((c, ag, cp))
+
         if node.startswith("propeller"):
-            # put the node origin on the axis, at the middle of the blades
+            c, ag, _ = hz[0]
+            # node origin on the axis, at the middle of the blades
             P = to_gltf(np.concatenate([p.points() for p in pieces]))
-            c = c + ((P.mean(axis=0) - c) @ a) * a
-        Rm = axis_frame(a)
-        if node.startswith("propeller"):
+            c = c + ((P.mean(axis=0) - c) @ ag) * ag
+            Rm = axis_frame(ag)
             suffix = node[len("propeller"):]
             sub = {"blades": [], "disc": [], "hub": []}
             for p in pieces:
@@ -800,21 +810,40 @@ def build(aid, tex_max=None, quiet=False):
                 sub[k].append(p)
             P = to_gltf(np.concatenate([p.points() for p in (sub["blades"] or sub["disc"] or pieces)]))
             d = P - c
-            radial = d - np.outer(d @ a, a)
+            radial = d - np.outer(d @ ag, ag)
             radius = float(np.linalg.norm(radial, axis=1).max())
             prop_info.append({"node": node, "radiusM": round(radius, 3), "position": [round(float(x), 3) for x in c]})
             kids = []
             if sub["blades"]:
-                kids.append(("propeller_blades" + suffix, sub["blades"]))
+                kids.append(("propeller_blades" + suffix, sub["blades"], Rm, c, None))
             if sub["disc"]:
-                kids.append(("propeller_disc" + suffix, sub["disc"]))
+                kids.append(("propeller_disc" + suffix, sub["disc"], Rm, c, None))
             node_defs.append((node, sub["hub"], Rm, c, {"spin": "local +X points forward; positive angle = clockwise seen from the cockpit"}, kids))
+            continue
+
+        ex = {"hinge": "local +X", "positive": POS.get(node, "trailing edge UP")}
+        if len(hz) == 1:
+            c, ag, cp = hz[0]
+            node_defs.append((node, cp, axis_frame(ag), c, ex, []))
+            continue
+        # several hinges: geometry goes into child nodes with exact hinges; the parent turns them all
+        # together about one compromise axis (exact for the first child)
+        ys = [float(np.mean(to_gltf(np.concatenate([p.points() for p in cp]))[:, 0])) for _, _, cp in hz]
+        mirrored = node == "elevator" and len(hz) == 2 and ys[0] * ys[1] < 0
+        kids = []
+        for i, (c, ag, cp) in enumerate(hz):
+            kname = (f"{node}_{'left' if ys[i] > 0 else 'right'}") if mirrored else f"{node}_{i + 1}"
+            kids.append((kname, cp, axis_frame(ag), hinge_mid(c, ag, cp), dict(ex, note=f"exact hinge of one segment; turn either '{node}' or its children, not both")))
+        if mirrored:
+            axs = sum(h[1] for h in hz)
+            pc = sum(hinge_mid(h[0], h[1], h[2]) for h in hz) / len(hz)
+            pa = axs / np.linalg.norm(axs)
+            note = "two halves with swept hinges: turning this node moves both about one lateral axis (approximate); elevator_left / elevator_right have the exact hinges"
         else:
-            ex = {
-                "elevator": "trailing edge UP",
-                "rudder": "trailing edge to the pilot's RIGHT",
-            }.get(node, "trailing edge UP")
-            node_defs.append((node, pieces, Rm, c, {"hinge": "local +X", "positive": ex}, []))
+            pc, pa = kids[0][3], hz[0][1]
+            note = f"several segments: turning this node moves them all about the hinge of {kids[0][0]} (exact for it, approximate for the others); the children have exact hinges"
+        notes.append(f"{node}: {note}.")
+        node_defs.append((node, [], axis_frame(pa), pc, dict(ex, note=note), kids))
 
     # ---- materials / textures
     builder = GlbBuilder("TeachX scripts/fg-aircraft/convert.py", cfg.get("copyright"))
@@ -924,9 +953,11 @@ def build(aid, tex_max=None, quiet=False):
     for name, pieces, Rm, t, extras, kids in node_defs:
         mesh = make_mesh(name, pieces, Rm, t)
         kid_ids = []
-        for kname, kp in kids:
-            km = make_mesh(kname, kp, Rm, t)
-            kid_ids.append(builder.add_node(kname, km))
+        for kname, kp, kR, kt, kex in kids:
+            km = make_mesh(kname, kp, kR, kt)
+            Rrel = Rm.T @ kR
+            trel = Rm.T @ (kt - t)
+            kid_ids.append(builder.add_node(kname, km, translation=trel, rotation=quat_from_matrix(Rrel), extras=kex))
             parts.append(kname)
         node_ids.append(builder.add_node(name, mesh, translation=t, rotation=quat_from_matrix(Rm), children=kid_ids, extras=extras))
         parts.append(name)
@@ -944,7 +975,7 @@ def build(aid, tex_max=None, quiet=False):
     builder.set_roots([root_id], aid)
 
     # ---- bounds etc. (glTF frame, all geometry)
-    allP = to_gltf(np.concatenate([p.points() for p in static + gear + [q for _, ps, _, _, _, kids in node_defs for q in ps + [x for _, kp in kids for x in kp]]]))
+    allP = to_gltf(np.concatenate([p.points() for p in static + gear + [q for _, ps, _, _, _, kids in node_defs for q in ps + [x for k in kids for x in k[1]]]]))
     lo, hi = allP.min(axis=0), allP.max(axis=0)
     span = hi[0] - lo[0]
     eye = None
