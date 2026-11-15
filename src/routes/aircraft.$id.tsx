@@ -47,12 +47,12 @@ export const Route = createFileRoute("/aircraft/$id")({
     const a = getAircraft(params.id);
     return {
       meta: [
-        { title: `${a ? a.name : "Aircraft"} — TeachX` },
+        { title: `${a ? a.name : "Aircraft"} — SkyReady` },
         {
           name: "description",
           content: a
             ? `${a.name}: systems, cockpit, V-speeds, limitations and performance (educational approximations).`
-            : "TeachX aircraft library.",
+            : "SkyReady aircraft library.",
         },
       ],
     };

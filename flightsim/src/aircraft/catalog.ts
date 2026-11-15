@@ -177,7 +177,7 @@ export const AIRCRAFT_LIST: readonly Aircraft[] = [
       { unit: 8, part: "nose" },
     ],
     fgMirror: [],
-    realism: "JSBSim's PA-28 as its authors made it, except that the main wheels no longer swivel freely (a fix this project also made on the main TeachX site).",
+    realism: "JSBSim's PA-28 as its authors made it, except that the main wheels no longer swivel freely (a fix this project also made on the main SkyReady site).",
   },
   {
     id: "J3Cub",

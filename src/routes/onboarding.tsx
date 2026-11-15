@@ -21,7 +21,7 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/onboarding")({
   head: () => ({
     meta: [
-      { title: "Create Your Pilot Profile — TeachX" },
+      { title: "Create Your Pilot Profile — SkyReady" },
       {
         name: "description",
         content:

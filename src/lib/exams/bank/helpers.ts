@@ -1,5 +1,5 @@
 /**
- * Helpers for authoring the TeachX practice question bank.
+ * Helpers for authoring the SkyReady practice question bank.
  *
  * IMPORTANT: every question in this bank is original, unofficial study material written from
  * FAA source documents (14 CFR, AIM, PHAK, AFH, IFH, AIH, AC 00-45). None of it is taken from,

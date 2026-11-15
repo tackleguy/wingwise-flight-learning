@@ -139,7 +139,7 @@ hotspots.push({
   parent?, shape?: "rect" | "circle", fit?: "contain" | "none", bare?: boolean, options? }
 ```
 
-The viewer renders the TeachX avionics React component for `component` into a DOM element of
+The viewer renders the SkyReady avionics React component for `component` into a DOM element of
 `pixelWidth × pixelWidth·heightM/widthM` px, placed with CSS3D exactly at the pose (the screen faces
 its local +z). `position`/`rotation` are in `parent` space (default `root`) — e.g. use
 `displayBezel(...).screen.position` with `parent: bezel.group`. A punch-through mesh at the same

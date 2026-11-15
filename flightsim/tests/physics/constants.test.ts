@@ -77,7 +77,7 @@ describe("stall angles of attack", () => {
   });
 });
 
-describe("adapter sign conventions (TeachX: + = pull / roll right / yaw right / nose-up trim)", () => {
+describe("adapter sign conventions (SkyReady: + = pull / roll right / yaw right / nose-up trim)", () => {
   async function cruise() {
     const sim = await lab({ weightLb: 2000 });
     await airborne(sim, 4000, 100);

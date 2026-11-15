@@ -1,14 +1,14 @@
 # Decisions
 
-Choices made while building the TeachX Flight Simulator, in plain language, newest topics last.
+Choices made while building the SkyReady Flight Simulator, in plain language, newest topics last.
 (Per-module details are in `docs/notes/`.)
 
 ## Where the simulator lives
-- **A folder (`flightsim/`) inside the existing TeachX repository**, not a new repository. The
+- **A folder (`flightsim/`) inside the existing SkyReady repository**, not a new repository. The
   build session could not create GitHub repositories, and one repository is simpler to own.
   A `vercel.json` at the repository root tells Vercel to build only this folder, so importing the
   repository into Vercel publishes the simulator and every later push goes live automatically.
-- It is a **stand-alone static site** (Vite + TypeScript). The main TeachX site links to it; it can
+- It is a **stand-alone static site** (Vite + TypeScript). The main SkyReady site links to it; it can
   also be embedded in a page (it works from any sub-folder because all URLs are relative).
 
 ## 3D world
@@ -27,7 +27,7 @@ Choices made while building the TeachX Flight Simulator, in plain language, newe
   editions are licensed non-commercial/share-alike; optional **USGS** aerial imagery over the USA
   (public domain); NASA city lights on the night side. 10 m imagery is blurry close to the
   ground — accepted; procedures matter more than scenery.
-- EOX's free tile service is for non-commercial use; if TeachX becomes a business the imagery
+- EOX's free tile service is for non-commercial use; if SkyReady becomes a business the imagery
   source must be revisited (see `CREDITS.md`).
 
 ## Flight physics
@@ -57,7 +57,7 @@ Choices made while building the TeachX Flight Simulator, in plain language, newe
   (worldwide, CC BY 4.0). No keys are needed for any of them.
 
 ## Earlier work that was paused
-- The earlier request for 3D cockpits / "FlightGear Live" inside the main TeachX site was paused
+- The earlier request for 3D cockpits / "FlightGear Live" inside the main SkyReady site was paused
   when the brief for this simulator arrived. The partial code is saved in the repository but its
   menu links are hidden. JSBSim is not wired into the main site's older simulator.
 
@@ -77,8 +77,8 @@ Choices made while building the TeachX Flight Simulator, in plain language, newe
 - **Aircraft:** ten aircraft (`src/aircraft/catalog.ts`). Flight models come from JSBSim's own
   aircraft collection (designed to run outside FlightGear); FlightGear's own versions of these
   aircraft depend on FlightGear's scripting (Nasal) and property tree and do not run without it.
-  The Cessna 172P keeps the TeachX-tuned model and its validated code path. Two kinds of fixes were
-  needed in the bridge (`jsbsim/wrapper.cpp`, TeachX's own code): governed propellers are held at
+  The Cessna 172P keeps the SkyReady-tuned model and its validated code path. Two kinds of fixes were
+  needed in the bridge (`jsbsim/wrapper.cpp`, SkyReady's own code): governed propellers are held at
   fine pitch while JSBSim computes an instant engine start or a trim (its half-second steps made the
   governor stall the engine), and some models read values FlightGear would supply every frame
   (the P-51D's manifold-pressure regulator) — the adapter copies them (`fgMirror`).

@@ -1,5 +1,5 @@
 /**
- * <CockpitPanel>: the instrument panel of the TeachX trainer, drawn as SVG over the lower part of
+ * <CockpitPanel>: the instrument panel of the SkyReady trainer, drawn as SVG over the lower part of
  * the 3D view.
  *
  * - Reads sim.state.ind / nav / sys and sim.controls; writes only sim.controls and emits commands.
@@ -537,7 +537,7 @@ export function CockpitPanel({ sim, onExplain, explainMode = false, className, o
         } catch (err) {
           if (!warned) {
             warned = true;
-            console.error("[TeachX] panel instrument update failed", err);
+            console.error("[SkyReady] panel instrument update failed", err);
           }
         }
       }
@@ -554,10 +554,10 @@ export function CockpitPanel({ sim, onExplain, explainMode = false, className, o
   useEffect(() => {
     coverage.current?.(fraction, hidden ? null : m);
     const px = hidden ? 0 : Math.round(m.heightPx);
-    document.documentElement.style.setProperty("--teachx-panel-height", `${px}px`);
+    document.documentElement.style.setProperty("--skyready-panel-height", `${px}px`);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fraction, hidden, m.mode]);
-  useEffect(() => () => void document.documentElement.style.removeProperty("--teachx-panel-height"), []);
+  useEffect(() => () => void document.documentElement.style.removeProperty("--skyready-panel-height"), []);
 
   // ---- explain mode: taps explain instead of operating
   const isChrome = (t: EventTarget | null) => !!(t as Element | null)?.closest?.("[data-panel-chrome]");
@@ -659,7 +659,7 @@ export function CockpitPanel({ sim, onExplain, explainMode = false, className, o
         onExplain?.(id);
       }}
     >
-      <style href="teachx-panel-css" precedence="default">
+      <style href="skyready-panel-css" precedence="default">
         {PANEL_CSS}
       </style>
       <PanelContext.Provider value={api}>

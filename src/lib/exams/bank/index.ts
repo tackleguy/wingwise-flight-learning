@@ -1,5 +1,5 @@
 /**
- * TeachX practice question bank — unofficial study material, NOT actual FAA knowledge test
+ * SkyReady practice question bank — unofficial study material, NOT actual FAA knowledge test
  * questions. See helpers.ts for the id-prefix scheme used to draw questions by certificate level.
  */
 import type { QuizQuestion } from "@/lib/content/types";

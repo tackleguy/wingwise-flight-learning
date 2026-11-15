@@ -5,7 +5,7 @@
  */
 export const TRAINER_META = {
   url: "models/trainer.glb",
-  registration: "TX-172",
+  registration: "SR-172",
   /** Pilot's eye point (left seat). */
   eye: [0.03, 0.24, 0.4617] as [number, number, number],
   /** How the flight model sits on its wheels (used to place the tyres). */

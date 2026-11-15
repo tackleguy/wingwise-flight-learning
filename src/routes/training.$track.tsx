@@ -42,12 +42,12 @@ export const Route = createFileRoute("/training/$track")({
   },
   head: ({ loaderData }) => ({
     meta: [
-      { title: `${loaderData?.title ?? "Training track"} — TeachX` },
+      { title: `${loaderData?.title ?? "Training track"} — SkyReady` },
       {
         name: "description",
         content:
           loaderData?.summary ??
-          "TeachX certification track: FAA requirements, ground school, exams, simulator scenarios and ATC practice.",
+          "SkyReady certification track: FAA requirements, ground school, exams, simulator scenarios and ATC practice.",
       },
     ],
   }),
@@ -214,7 +214,7 @@ function TrackPage() {
         title="Not an FAA certificate, rating or endorsement."
         className="mb-6"
       >
-        Completing TeachX training does not grant any FAA certificate, rating, endorsement, or
+        Completing SkyReady training does not grant any FAA certificate, rating, endorsement, or
         loggable flight time. Requirements are simplified study summaries of 14 CFR (references are
         to 14 CFR unless stated) and may omit exceptions — verify them in the current regulations
         and ACS, and train with an authorized instructor. Simulated flights are not loggable time.

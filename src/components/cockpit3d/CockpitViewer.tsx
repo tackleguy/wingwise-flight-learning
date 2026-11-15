@@ -5,7 +5,7 @@
  *   {engine && def ? <CockpitViewer definition={def} engine={engine} onSelect={setHotspot} /> : null}
  *
  * three.js is loaded on the client only (dynamic import in an effect); on the server — and until
- * WebGL is ready — a lightweight placeholder is rendered. Live instruments are the regular TeachX
+ * WebGL is ready — a lightweight placeholder is rendered. Live instruments are the regular SkyReady
  * avionics React components, rendered through portals into CSS3D screens inside the cockpit.
  */
 import {

@@ -1,4 +1,6 @@
-# TeachX — Flight Simulator & Pilot Training Platform
+# SkyReady — Flight Simulator & Pilot Training Platform
+
+**Get sky-ready before you leave the ground.** (SkyReady was previously called TeachX.)
 
 A complete simulated aviation training environment in the browser:
 
@@ -20,7 +22,7 @@ This project is connected to [Lovable](https://lovable.dev/projects/e1f8669a-347
 
 ## AI (all local)
 
-All AI on TeachX runs locally — nothing is sent to a cloud AI service and there are no API keys.
+All AI on SkyReady runs locally — nothing is sent to a cloud AI service and there are no API keys.
 
 - **On-device AI (default)** — Llama 3.2 3B runs inside the visitor's browser on their GPU via
   [WebLLM](https://github.com/mlc-ai/web-llm). Users turn it on once (about a 2 GB download, then

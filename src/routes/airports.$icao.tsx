@@ -34,12 +34,12 @@ export const Route = createFileRoute("/airports/$icao")({
     const a = getAirport(params.icao);
     return {
       meta: [
-        { title: `${a ? `${a.icao} · ${a.name}` : "Airport"} — TeachX` },
+        { title: `${a ? `${a.icao} · ${a.name}` : "Airport"} — SkyReady` },
         {
           name: "description",
           content: a
             ? `${a.name} (${a.icao}): runways, frequencies, airspace, diagram, wind tool and procedures. Educational data, not for navigation.`
-            : "TeachX airport database.",
+            : "SkyReady airport database.",
         },
       ],
     };
@@ -56,7 +56,7 @@ function AirportPage() {
         <EmptyState
           icon={Building2}
           title="Airport not found"
-          description={`"${icao}" is not in the TeachX educational airport dataset.`}
+          description={`"${icao}" is not in the SkyReady educational airport dataset.`}
           action={{ to: "/airports", label: "Browse airports" }}
         />
       </Page>

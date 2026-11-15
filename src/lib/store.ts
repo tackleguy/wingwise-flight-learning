@@ -1,5 +1,5 @@
 /**
- * TeachX persistent training record.
+ * SkyReady persistent training record.
  *
  * All progress (profile, lessons, quizzes, exams, flights, ATC sessions, oral exams,
  * checkrides, settings) lives in ONE store so every section of the app stays connected.
@@ -12,6 +12,7 @@
  *   actions.logFlight({...})
  */
 import { useSyncExternalStore } from "react";
+import { LEGACY_KEYS, migrateLegacyKey } from "@/lib/legacy-storage";
 
 export type TrackId =
   | "student"
@@ -312,7 +313,7 @@ export const INITIAL_STATE: TrainingState = {
   settings: DEFAULT_SETTINGS,
 };
 
-const STORAGE_KEY = "teachx-training-v1";
+const [LEGACY_STORAGE_KEY, STORAGE_KEY] = LEGACY_KEYS.training;
 
 let state: TrainingState = INITIAL_STATE;
 let loaded = false;
@@ -345,6 +346,7 @@ function deepMergeSettings(s: Partial<Settings> | undefined): Settings {
 function load() {
   if (loaded || typeof window === "undefined") return;
   loaded = true;
+  migrateLegacyKey(LEGACY_STORAGE_KEY, STORAGE_KEY);
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (raw) {
@@ -616,7 +618,7 @@ export const actions = {
   importData(json: string) {
     const parsed = JSON.parse(json) as Partial<TrainingState>;
     if (typeof parsed !== "object" || parsed === null || parsed.version !== 1)
-      throw new Error("Not a TeachX export file");
+      throw new Error("Not a SkyReady export file");
     setState(() => ({ ...INITIAL_STATE, ...parsed, settings: deepMergeSettings(parsed.settings) }));
   },
   resetAll() {

@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/oral-exam")({
   head: () => ({
     meta: [
-      { title: "Oral Exam Simulator — TeachX" },
+      { title: "Oral Exam Simulator — SkyReady" },
       {
         name: "description",
         content:
@@ -99,7 +99,7 @@ function OralExamPage() {
         actions={<OralAiPill />}
       />
       <Notice tone="caution" title="Simulated, unofficial oral exam." className="-mt-2 mb-6">
-        TeachX's examiner is a training tool built from FAA publications and the ACS. It is not a
+        SkyReady's examiner is a training tool built from FAA publications and the ACS. It is not a
         designated pilot examiner, its scores are estimates, and it does not satisfy any FAA
         requirement.
       </Notice>

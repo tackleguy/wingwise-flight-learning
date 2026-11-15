@@ -31,13 +31,13 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Pilot Dashboard — TeachX Flight Training" },
+      { title: "Pilot Dashboard — SkyReady Flight Training" },
       {
         name: "description",
         content:
           "Your flight training at a glance: proficiency, simulated flights, lessons, exam readiness and quick-start training.",
       },
-      { property: "og:title", content: "TeachX — Flight Simulator & Pilot Training Platform" },
+      { property: "og:title", content: "SkyReady — Flight Simulator & Pilot Training Platform" },
       {
         property: "og:description",
         content:
@@ -404,12 +404,12 @@ function Dashboard() {
                 Pilot training · right in your browser
               </p>
               <h1 className="text-[34px] leading-[1.05] font-bold tracking-[-0.035em] text-balance text-white sm:text-[44px] lg:text-[52px]">
-                Learn to fly{" "}
+                Get <span className="whitespace-nowrap">sky-ready</span>{" "}
                 <span className="text-brand-gradient">before you leave the ground.</span>
               </h1>
               <p className="mt-4 max-w-md text-[15px] leading-relaxed text-pretty text-white/70">
-                A 3D flight simulator, ground school, ATC radio practice and mock checkrides — one
-                training cockpit.
+                A 3D flight simulator, ground school, ATC radio practice and mock checkrides — so
+                you show up to every lesson ready.
               </p>
               <div className="mt-7 flex flex-wrap gap-2.5">
                 <Link

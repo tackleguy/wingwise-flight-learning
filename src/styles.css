@@ -4,7 +4,7 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * TeachX design system — dark avionics theme.
+ * SkyReady design system — dark avionics theme.
  *
  * Colors use oklch. Semantic avionics colors:
  *   --ok        green   : normal / engaged / active
@@ -602,18 +602,18 @@
  * Logo motion (src/components/brand/Logo.tsx)
  * ---------------------------------------------------------------------------------------- */
 
-@keyframes tx-plane-in {
+@keyframes brand-plane-in {
   from {
-    transform: translateY(18px) scale(0.55);
+    transform: translateY(16px) scale(0.5);
     opacity: 0;
   }
 }
-@keyframes tx-draw {
+@keyframes brand-draw {
   from {
     stroke-dashoffset: 1;
   }
 }
-@keyframes tx-sheen {
+@keyframes brand-sheen {
   0% {
     transform: translateX(0) skewX(-20deg);
     opacity: 0;
@@ -626,40 +626,39 @@
     opacity: 0;
   }
 }
-.tx-logo-bar {
+.brand-logo-check {
   stroke-dasharray: 1;
 }
-.tx-logo-plane {
+.brand-logo-plane {
   transition: transform 0.6s var(--ease-spring);
 }
-.tx-logo-sheen {
+.brand-logo-sheen {
   opacity: 0;
 }
-.tx-logo-glow {
+.brand-logo-glow {
   opacity: 0.85;
   transition: opacity 0.4s ease;
 }
-.tx-logo-animated .tx-logo-plane {
-  animation: tx-plane-in 1s var(--ease-out-expo) 0.15s backwards;
+/* The check draws first, then the aircraft climbs off its tip. */
+.brand-logo-animated .brand-logo-check {
+  animation: brand-draw 0.6s var(--ease-out-expo) backwards;
 }
-.tx-logo-animated .tx-logo-bar {
-  animation: tx-draw 0.55s var(--ease-out-expo) backwards;
+.brand-logo-animated .brand-logo-plane {
+  animation: brand-plane-in 0.9s var(--ease-out-expo) 0.3s backwards;
 }
-.tx-logo-animated .tx-logo-bar-2 {
-  animation-delay: 0.1s;
+/* The plane group is rotated to its heading, so -Y is "forward along the climb". */
+.brand-logo-host:hover .brand-logo-plane {
+  transform: translateY(-2.5px);
 }
-.tx-logo-host:hover .tx-logo-plane {
-  transform: translateY(-2px);
-}
-.tx-logo-host:hover .tx-logo-glow {
+.brand-logo-host:hover .brand-logo-glow {
   opacity: 1;
 }
-.tx-logo-host:hover .tx-logo-sheen {
-  animation: tx-sheen 0.9s ease-out;
+.brand-logo-host:hover .brand-logo-sheen {
+  animation: brand-sheen 0.9s ease-out;
 }
 
 /* Night (red) cockpit lighting: tint the fixed-color brand art so it can't spoil dark adaptation. */
-html.tx-night-lighting .tx-logo,
+html.tx-night-lighting .brand-logo,
 html.tx-night-lighting .tx-night-tint {
   filter: grayscale(1) sepia(1) saturate(5) hue-rotate(-45deg) brightness(0.62);
 }

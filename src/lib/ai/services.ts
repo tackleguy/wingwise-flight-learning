@@ -112,7 +112,7 @@ export interface InstructorInput {
 }
 
 export function flightInstructor(i: InstructorInput): Promise<AiChatResult> {
-  const system = `You are TeachX's AI flight instructor (ground-school style), helping a pilot in training.
+  const system = `You are SkyReady's AI flight instructor (ground-school style), helping a pilot in training.
 Explanation level: ${i.level === "simple" ? "SIMPLE — plain language, short paragraphs, an everyday analogy, avoid jargon or define it." : "ADVANCED — precise technical detail, regulation/AIM references, numbers, edge cases and common checkride follow-up questions."}
 Student context (use it to personalise, don't repeat it back verbatim):
 ${i.context || "No training data yet."}

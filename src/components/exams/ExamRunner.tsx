@@ -307,7 +307,7 @@ export function ExamRunner({
           tone="caution"
           title="Unofficial study material — not an FAA test."
         >
-          These are original TeachX practice questions written from FAA publications — not actual
+          These are original SkyReady practice questions written from FAA publications — not actual
           FAA knowledge test questions. Always verify against current regulations and handbooks.
         </Notice>
       </div>

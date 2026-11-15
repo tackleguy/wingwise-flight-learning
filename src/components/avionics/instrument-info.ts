@@ -230,7 +230,7 @@ export const INSTRUMENT_INFO: Record<InstrumentId, InstrumentInfo> = {
     ],
   },
   gps: {
-    title: "TX-750 Navigator (GPS)",
+    title: "SR-750 Navigator (GPS)",
     shows:
       "Moving map, navigation data (DTK, TRK, DIS, ETE), flight plan, direct-to, nearest airports, airport information and approach (procedure) selection.",
     how: "Satellite position + a database of waypoints. With the CDI on GPS, the HSI shows magenta guidance and the autopilot NAV mode flies the active leg.",

@@ -2,7 +2,7 @@
  * The aircraft as you see it: the 3D model, its moving parts, its lights, and the two things it puts
  * on the ground — a soft shadow (the height cue for the landing flare) and the landing-light pool at
  * night. The model is the FlightGear 3D model of the aircraft being flown (public/models/fg/, see
- * ./model-spec.ts); the original TeachX trainer model (public/models/trainer.glb, built by
+ * ./model-spec.ts); the original SkyReady trainer model (public/models/trainer.glb, built by
  * scripts/build-aircraft.mjs) is the fallback when a FlightGear model is missing.
  */
 import {
@@ -138,13 +138,13 @@ void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {
 `;
 
 const SHADOW_FABRIC = /* glsl */ `
-float teachxBox(vec2 p, vec2 b) { vec2 d = abs(p) - b; return length(max(d, 0.0)) + min(max(d.x, d.y), 0.0); }
+float skyreadyBox(vec2 p, vec2 b) { vec2 d = abs(p) - b; return length(max(d, 0.0)) + min(max(d.x, d.y), 0.0); }
 czm_material czm_getMaterial(czm_materialInput materialInput) {
   czm_material m = czm_getDefaultMaterial(materialInput);
   vec2 p = (materialInput.st * 2.0 - 1.0) * halfSize / shapeScale; // metres (of the trainer's outline): x toward the nose, y toward the left wing
-  float d = teachxBox(p - vec2(-1.85, 0.0), vec2(4.0, 0.38)) - 0.14; // fuselage
-  d = min(d, teachxBox(p - vec2(-0.4, 0.0), vec2(0.72, 5.42)) - 0.08); // wing
-  d = min(d, teachxBox(p - vec2(-4.88, 0.0), vec2(0.55, 1.68)) - 0.05); // tailplane
+  float d = skyreadyBox(p - vec2(-1.85, 0.0), vec2(4.0, 0.38)) - 0.14; // fuselage
+  d = min(d, skyreadyBox(p - vec2(-0.4, 0.0), vec2(0.72, 5.42)) - 0.08); // wing
+  d = min(d, skyreadyBox(p - vec2(-4.88, 0.0), vec2(0.55, 1.68)) - 0.05); // tailplane
   float edge = max(length(materialInput.st * 2.0 - 1.0) - 0.9, 0.0) * 10.0;
   m.diffuse = vec3(0.0);
   m.alpha = opacity * (1.0 - smoothstep(-soft, soft, d)) * (1.0 - clamp(edge, 0.0, 1.0));
@@ -376,8 +376,8 @@ export class AircraftVisual {
         }),
       );
     }
-    this.shadow = new GroundPatch(world, "TeachxAircraftShadow", SHADOW_FABRIC, { opacity: 0.5, soft: 0.2, halfSize: new Cartesian2(9, 9), shapeScale: 1 });
-    this.pool = new GroundPatch(world, "TeachxLandingLightPool", POOL_FABRIC, { intensity: 0.5, tint: new Color(1, 0.95, 0.82, 1) });
+    this.shadow = new GroundPatch(world, "SkyreadyAircraftShadow", SHADOW_FABRIC, { opacity: 0.5, soft: 0.2, halfSize: new Cartesian2(9, 9), shapeScale: 1 });
+    this.pool = new GroundPatch(world, "SkyreadyLandingLightPool", POOL_FABRIC, { intensity: 0.5, tint: new Color(1, 0.95, 0.82, 1) });
     void this.load(this.spec);
   }
 
@@ -426,15 +426,15 @@ export class AircraftVisual {
       }
       this.model = model;
       this.world.scene.primitives.add(model);
-      model.errorEvent.addEventListener((e: unknown) => console.error("[TeachX] aircraft model error", e));
+      model.errorEvent.addEventListener((e: unknown) => console.error("[SkyReady] aircraft model error", e));
       model.readyEvent.addEventListener(() => this.onReady(model));
     } catch (err) {
       if (token !== this.loadToken) return;
       this.failed = true;
-      console.error("[TeachX] the aircraft model could not be loaded", err);
+      console.error("[SkyReady] the aircraft model could not be loaded", err);
       if (spec.fg) {
-        // fall back to the TeachX trainer model rather than showing nothing
-        console.warn(`[TeachX] showing the TeachX trainer model instead of ${spec.url}`);
+        // fall back to the SkyReady trainer model rather than showing nothing
+        console.warn(`[SkyReady] showing the SkyReady trainer model instead of ${spec.url}`);
         void this.load({ ...visualSpecFor("__trainer__"), id: spec.id });
       }
     }

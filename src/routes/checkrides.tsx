@@ -54,7 +54,7 @@ export const Route = createFileRoute("/checkrides")({
   },
   head: () => ({
     meta: [
-      { title: "Virtual Checkrides — TeachX" },
+      { title: "Virtual Checkrides — SkyReady" },
       {
         name: "description",
         content:
@@ -120,7 +120,7 @@ function SimNotice() {
       title="Simulated checkride — not an FAA practical test."
       className="mb-6"
     >
-      TeachX checkrides are training exercises modeled on the FAA Airman Certification Standards.
+      SkyReady checkrides are training exercises modeled on the FAA Airman Certification Standards.
       They are not administered by an examiner, do not grant any certificate or rating, and do not
       satisfy any FAA requirement.
     </Notice>

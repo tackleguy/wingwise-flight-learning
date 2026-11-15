@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Convert FlightGear aircraft models (AC3D + model XML) to glTF binaries for the TeachX simulator.
+Convert FlightGear aircraft models (AC3D + model XML) to glTF binaries for the SkyReady simulator.
 
     python3 -I scripts/fg-aircraft/convert.py                 # every aircraft in aircraft_config.py
     python3 -I scripts/fg-aircraft/convert.py c172p p51d      # some of them
@@ -880,7 +880,7 @@ def build(aid, tex_max=None, quiet=False):
         node_defs.append((node, [], axis_frame(pa), pc, dict(ex, note=note), kids))
 
     # ---- materials / textures
-    builder = GlbBuilder("TeachX scripts/fg-aircraft/convert.py", cfg.get("copyright"))
+    builder = GlbBuilder("SkyReady scripts/fg-aircraft/convert.py", cfg.get("copyright"))
     tex_max = tex_max or cfg.get("tex_max", 1024)
     mat_index = {}
     tex_index = {}
@@ -1001,7 +1001,7 @@ def build(aid, tex_max=None, quiet=False):
         node_ids.append(builder.add_node(name, mesh, translation=t, rotation=quat_from_matrix(Rm), children=kid_ids, extras=extras))
         parts.append(name)
     root_extras = {
-        "source": f"FlightGear {cfg['fgdir']} ({cfg.get('licence', 'GPL-2.0-or-later')}), converted by TeachX scripts/fg-aircraft",
+        "source": f"FlightGear {cfg['fgdir']} ({cfg.get('licence', 'GPL-2.0-or-later')}), converted by SkyReady scripts/fg-aircraft",
         "axes": "glTF +Z nose, +Y up, +X left wing. Origin = JSBSim centre of gravity. Metres.",
         "movingParts": "Every moving node turns about its own local +X axis (see each node's extras).",
     }
@@ -1226,12 +1226,12 @@ def write_credits(entries):
         "# FlightGear aircraft models — credits and licences",
         "",
         "The `.glb` files in this folder are conversions of aircraft 3D models from the FlightGear flight",
-        "simulator project (https://www.flightgear.org). They are **not** original TeachX work: each model",
+        "simulator project (https://www.flightgear.org). They are **not** original SkyReady work: each model",
         "keeps the licence stated in its own aircraft files (GNU GPL, see below). Each was",
-        "**converted to glTF (textures resized, exterior only) by the TeachX project** with",
+        "**converted to glTF (textures resized, exterior only) by the SkyReady project** with",
         "`scripts/fg-aircraft/convert.py` (cockpit, instruments, pilots, effects and lights removed;",
         "default livery only; model moved so that its centre of gravity and wheels match the JSBSim",
-        "flight model used by TeachX). The GPL requires that the source of these files stays available:",
+        "flight model used by SkyReady). The GPL requires that the source of these files stays available:",
         "the original FlightGear files can be downloaded from the pages below, and the converter is in this",
         "repository.",
         "",
@@ -1249,7 +1249,7 @@ def write_credits(entries):
             f"- Licence: {c['licence']}",
             f"- Source: {c['page']}",
             f"- Version: {c['revision']}",
-            f"- Converted to glTF (textures resized, exterior only) by the TeachX project." + ("" if e.get("url") else " **(conversion failed — no file)**"),
+            f"- Converted to glTF (textures resized, exterior only) by the SkyReady project." + ("" if e.get("url") else " **(conversion failed — no file)**"),
             "",
         ]
     with open(os.path.join(OUT_DIR, "CREDITS.md"), "w") as f:

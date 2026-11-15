@@ -13,7 +13,7 @@ by `tools/gen_model.py`; see `../docs/PHYSICS-VALIDATION.md` for what was change
 
 - `LEFT_MAIN` and `RIGHT_MAIN` gear contacts: `<max_steer>` changed from `360.0` (free-castering
   main wheels, which make the aircraft spin round on the ground) to `0.0`. Marked in the files with
-  a comment. (The main TeachX site made the same fix to its own copy of the PA-28.)
+  a comment. (The main SkyReady site made the same fix to its own copy of the PA-28.)
 
 ## Everything else
 

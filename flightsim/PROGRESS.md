@@ -57,6 +57,6 @@ controls help, credits, disclaimer.
 size, attitude-indicator tumble, and a random-control-input robustness run that produced a
 non-finite state after 66 s).
 
-**Main TeachX site:** a built copy of the simulator lives in the repo root `public/sim/` and is shown
+**Main SkyReady site:** a built copy of the simulator lives in the repo root `public/sim/` and is shown
 at the `/flightgear` page (menu: Fly → World Flight Simulator). To refresh it after changing the
 simulator: `cd flightsim && npm run build && rm -rf ../public/sim && cp -r dist ../public/sim`.

@@ -37,7 +37,7 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/progress")({
   head: () => ({
     meta: [
-      { title: "Progress & Statistics — TeachX" },
+      { title: "Progress & Statistics — SkyReady" },
       {
         name: "description",
         content:

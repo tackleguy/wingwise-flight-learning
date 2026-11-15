@@ -1,5 +1,5 @@
 /**
- * Avionics helpers — small, pure, backwards-compatible utilities used by the TeachX avionics
+ * Avionics helpers — small, pure, backwards-compatible utilities used by the SkyReady avionics
  * component library (PFD, MFD, GPS navigator, radios). Nothing here changes engine state.
  */
 import { AIRPORTS, NAVAIDS } from "@/lib/data/airports";

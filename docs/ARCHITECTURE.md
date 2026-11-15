@@ -1,6 +1,6 @@
-# TeachX — Architecture
+# SkyReady — Architecture
 
-TeachX is a TanStack Start (React 19 + TypeScript) application styled with Tailwind CSS v4.
+SkyReady is a TanStack Start (React 19 + TypeScript) application styled with Tailwind CSS v4.
 
 ## Layout
 

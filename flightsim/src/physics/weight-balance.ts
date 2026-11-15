@@ -1,5 +1,5 @@
 /**
- * Weight and balance for the TeachX trainer (Cessna 172P-class).
+ * Weight and balance for the SkyReady trainer (Cessna 172P-class).
  *
  * The numbers here are the SAME numbers the flight model uses (flightsim/jsbsim/aircraft/c172p/
  * c172p.xml): same empty weight, same loading stations, same arms. A test checks that the centre

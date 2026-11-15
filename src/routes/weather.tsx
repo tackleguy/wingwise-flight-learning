@@ -37,7 +37,7 @@ import {
 export const Route = createFileRoute("/weather")({
   head: () => ({
     meta: [
-      { title: "Weather Lab — TeachX" },
+      { title: "Weather Lab — SkyReady" },
       {
         name: "description",
         content:
@@ -141,7 +141,7 @@ function WeatherLab() {
       <Notice tone="caution" title="Educational weather only." className="mb-4">
         Sample reports and scenarios on this page are written for training and are not live weather.
         Every METAR, TAF, PIREP and advisory in the decision scenarios is invented for teaching.
-        Decoders work on any report you paste, but TeachX does not fetch real observations. For real
+        Decoders work on any report you paste, but SkyReady does not fetch real observations. For real
         flights, obtain an official briefing (1800wxbrief.com, aviationweather.gov or another
         FAA-approved source).
       </Notice>

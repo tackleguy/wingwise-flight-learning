@@ -139,7 +139,7 @@ export function CommandMenu() {
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="top-[18%] max-w-[calc(100%-2rem)] translate-y-0 gap-0 overflow-hidden rounded-2xl border-border/80 bg-popover/95 p-0 shadow-[0_30px_80px_-20px_oklch(0_0_0/0.9),0_0_0_1px_oklch(1_0_0/0.04)] backdrop-blur-xl sm:max-w-xl [&>button:last-child]:hidden">
-          <DialogTitle className="sr-only">Search TeachX</DialogTitle>
+          <DialogTitle className="sr-only">Search SkyReady</DialogTitle>
           <DialogDescription className="sr-only">
             Jump to any page or start a common flight.
           </DialogDescription>

@@ -1,17 +1,17 @@
-# JSBSim (FlightGear's flight dynamics) for TeachX
+# JSBSim (FlightGear's flight dynamics) for SkyReady
 
-TeachX's browser simulator can use **JSBSim** — the open-source flight dynamics model used by the
+SkyReady's browser simulator can use **JSBSim** — the open-source flight dynamics model used by the
 FlightGear simulator — compiled to WebAssembly. The built files live in `public/jsbsim/`:
 
 | File | What it is |
 | --- | --- |
-| `jsbsim.wasm` | JSBSim library + the TeachX bridge (`wrapper.cpp`), compiled with Emscripten |
+| `jsbsim.wasm` | JSBSim library + the SkyReady bridge (`wrapper.cpp`), compiled with Emscripten |
 | `jsbsim.mjs` | Emscripten loader (ES module) |
 | `jsbsim.data` | JSBSim aircraft/engine XML files packaged for the virtual file system |
 | `JSBSIM-LICENSE-LGPL-2.1.txt` | JSBSim's licence |
 | `JSBSIM-SOURCE.txt` | Exact upstream source location and commit |
 
-TeachX code talks to it only through `src/sim/jsbsim.ts`.
+SkyReady code talks to it only through `src/sim/jsbsim.ts`.
 
 ## Licence (LGPL-2.1)
 
@@ -29,7 +29,7 @@ TeachX code talks to it only through `src/sim/jsbsim.ts`.
   the engine/propeller files they reference. These files carry no separate licence; JSBSim's
   repository licence applies. The 737 model is **not** shipped because its file declares a GPL
   licence.
-- TeachX's own code (`wrapper.cpp`, `src/sim/jsbsim.ts` and the rest of TeachX) is not part of JSBSim.
+- SkyReady's own code (`wrapper.cpp`, `src/sim/jsbsim.ts` and the rest of SkyReady) is not part of JSBSim.
 
 ## Rebuilding
 
@@ -46,12 +46,12 @@ mkdir build-wasm && cd build-wasm && emcmake cmake ../jsbsim -DCMAKE_BUILD_TYPE=
 ```
 
 ```bash
-JSBSIM_SRC=$PWD/jsbsim JSBSIM_BUILD=$PWD/build-wasm path/to/teachx/tools/jsbsim-wasm/build.sh
+JSBSIM_SRC=$PWD/jsbsim JSBSIM_BUILD=$PWD/build-wasm path/to/skyready/tools/jsbsim-wasm/build.sh
 ```
 
 ## Conventions verified by tests (`src/sim/jsbsim.test.ts`)
 
-JSBSim's command signs differ from TeachX's: elevator − = nose up, rudder − = yaw right,
+JSBSim's command signs differ from SkyReady's: elevator − = nose up, rudder − = yaw right,
 pitch trim − = nose up (aileron + = roll right in both). Latitude must be set with the geodetic
 setter, and ground starts place the reference point a few feet above the runway (as JSBSim's own
 reset files do) so the aircraft settles onto its gear.

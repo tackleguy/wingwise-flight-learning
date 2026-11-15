@@ -64,7 +64,7 @@ export const Route = createFileRoute("/planner")({
   },
   head: () => ({
     meta: [
-      { title: "Flight Planner — TeachX" },
+      { title: "Flight Planner — SkyReady" },
       {
         name: "description",
         content:
@@ -374,7 +374,7 @@ function Planner() {
 
   return (
     <Page wide>
-      <style>{`@media print { body * { visibility: hidden !important; } #teachx-navlog, #teachx-navlog * { visibility: visible !important; } #teachx-navlog { position: absolute; left: 0; top: 0; width: 100%; color: #000 !important; background: #fff !important; } #teachx-navlog .no-print { display: none !important; } #teachx-navlog .print-only { display: block !important; } #teachx-navlog td, #teachx-navlog th { color: #000 !important; border-color: #999 !important; } }`}</style>
+      <style>{`@media print { body * { visibility: hidden !important; } #skyready-navlog, #skyready-navlog * { visibility: visible !important; } #skyready-navlog { position: absolute; left: 0; top: 0; width: 100%; color: #000 !important; background: #fff !important; } #skyready-navlog .no-print { display: none !important; } #skyready-navlog .print-only { display: block !important; } #skyready-navlog td, #skyready-navlog th { color: #000 !important; border-color: #999 !important; } }`}</style>
       <PageHeader
         eyebrow="Train"
         icon={RouteIcon}
@@ -542,7 +542,7 @@ function Planner() {
                   }}
                 >
                   <Input
-                    list="teachx-wpts"
+                    list="skyready-wpts"
                     value={wpInput}
                     onChange={(e) => setWpInput(e.target.value)}
                     placeholder="Add waypoint, e.g. OSI"
@@ -560,7 +560,7 @@ function Planner() {
                     <Plus className="size-4" />
                   </Button>
                 </form>
-                <datalist id="teachx-wpts">
+                <datalist id="skyready-wpts">
                   {NAVAIDS.map((n) => (
                     <option key={`n${n.id}`} value={n.id}>{`${n.name} ${n.type}`}</option>
                   ))}
@@ -770,7 +770,7 @@ function Planner() {
 
                 {/* Nav log */}
                 <TabsContent value="navlog" className="mt-4">
-                  <div id="teachx-navlog" className="min-w-0">
+                  <div id="skyready-navlog" className="min-w-0">
                     <p className="label-caps mb-2 truncate">
                       {name.trim() || `${dep} → ${dst}`} · {rules} · {perf.shortName} ·{" "}
                       {altN.toLocaleString()} ft · TAS {tasN} · Wind {fmtHdg(windDirN)}/{windKtN}

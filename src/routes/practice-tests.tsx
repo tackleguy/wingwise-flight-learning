@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/practice-tests")({
   head: () => ({
     meta: [
-      { title: "Practice Test Center — TeachX" },
+      { title: "Practice Test Center — SkyReady" },
       {
         name: "description",
         content:
@@ -104,7 +104,7 @@ function PracticeTests() {
         title="Unofficial study material — not actual FAA knowledge test questions."
         className="-mt-2 mb-4"
       >
-        TeachX questions are original, written from 14 CFR, the AIM and FAA handbooks to teach the
+        SkyReady questions are original, written from 14 CFR, the AIM and FAA handbooks to teach the
         same knowledge areas. Regulations change — verify against current publications.
       </Notice>
 

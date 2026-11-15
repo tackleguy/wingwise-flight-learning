@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/achievements")({
   head: () => ({
     meta: [
-      { title: "Achievements — TeachX" },
+      { title: "Achievements — SkyReady" },
       {
         name: "description",
         content:

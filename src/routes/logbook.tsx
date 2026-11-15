@@ -48,7 +48,7 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/logbook")({
   head: () => ({
     meta: [
-      { title: "Flight Logbook — TeachX" },
+      { title: "Flight Logbook — SkyReady" },
       {
         name: "description",
         content:
@@ -177,18 +177,18 @@ function Logbook() {
       "SIMULATED - not loggable under 14 CFR 61.51",
     ]);
     downloadFile(
-      `teachx-logbook-${new Date().toISOString().slice(0, 10)}.csv`,
+      `skyready-logbook-${new Date().toISOString().slice(0, 10)}.csv`,
       [header, ...rows].map((r) => r.map(csvEscape).join(",")).join("\n"),
       "text/csv",
     );
   };
   const exportJson = () => {
     downloadFile(
-      `teachx-logbook-${new Date().toISOString().slice(0, 10)}.json`,
+      `skyready-logbook-${new Date().toISOString().slice(0, 10)}.json`,
       JSON.stringify(
         {
           notice:
-            "TeachX simulated training flights. Simulated time is not loggable flight time under 14 CFR 61.51.",
+            "SkyReady simulated training flights. Simulated time is not loggable flight time under 14 CFR 61.51.",
           exportedAt: new Date().toISOString(),
           flights: list,
         },
@@ -241,7 +241,7 @@ function Logbook() {
         certificate or rating. Training time may only be credited when it is received in an
         FAA-approved aviation training device (ATD), flight training device (FTD) or full flight
         simulator, with an authorized instructor, within the limits of the applicable regulations.
-        TeachX is not an FAA-approved training device. This logbook is a study record only.
+        SkyReady is not an FAA-approved training device. This logbook is a study record only.
       </Notice>
 
       {!hydrated ? null : flights.length === 0 ? (

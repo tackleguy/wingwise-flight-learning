@@ -1,6 +1,6 @@
 # Credits and licences
 
-The TeachX Flight Simulator uses only open-source software and open data. No paid services, no
+The SkyReady Flight Simulator uses only open-source software and open data. No paid services, no
 API keys, no accounts. (This list is completed from `docs/notes/` as modules are finished.)
 
 ## Software
@@ -9,7 +9,7 @@ API keys, no accounts. (This list is completed from `docs/notes/` as modules are
 | --- | --- | --- | --- |
 | JSBSim **as bundled in FlightGear 2024.2** (`flightgear/src/FDM/JSBSim`) | Flight physics engine, compiled to WebAssembly by `jsbsim/build-flightgear.sh` (two small bug fixes that later JSBSim releases also made are applied during the build — listed in that script); shipped as a separate replaceable module in `public/jsbsim/` | LGPL-2.1 | https://gitlab.com/flightgear/flightgear · https://github.com/JSBSim-Team/jsbsim |
 | SimGear helper subset shipped with JSBSim 1.1.14 (`src/simgear`: property tree, XML reader, paths) and the expat XML parser inside it | Lets FlightGear's JSBSim run without the full SimGear library | LGPL-2.0-or-later (SimGear) / MIT (expat) | https://pypi.org/project/JSBSim/1.1.14/ |
-| JSBSim aircraft collection (`jsbsim/aircraft/`): c172p (tuned by TeachX), c182, pa28, J3Cub, c310, DHC6, p51d, A320, f16, t6texan2, with their engine/propeller/system files | Flight models of the ten aircraft. The c182 and pa28 main-wheel steering is fixed (`jsbsim/CHANGES.md`); the others are unmodified | JSBSim's repository licence (LGPL-2.1); **c310 and f16 files declare GPL** | https://pypi.org/project/JSBSim/1.1.14/ |
+| JSBSim aircraft collection (`jsbsim/aircraft/`): c172p (tuned by SkyReady), c182, pa28, J3Cub, c310, DHC6, p51d, A320, f16, t6texan2, with their engine/propeller/system files | Flight models of the ten aircraft. The c182 and pa28 main-wheel steering is fixed (`jsbsim/CHANGES.md`); the others are unmodified | JSBSim's repository licence (LGPL-2.1); **c310 and f16 files declare GPL** | https://pypi.org/project/JSBSim/1.1.14/ |
 | FlightGear aircraft 3D models (c172p from FGData; the other nine from FGAddon) | What the ten aircraft look like (converted to glTF, exterior only, textures resized) — separate data files in `public/models/fg/` | **GPL** (each aircraft's own licence; authors, sources and revisions in `public/models/fg/CREDITS.md`) | https://gitlab.com/flightgear/fgdata · https://sourceforge.net/p/flightgear/fgaddon/ |
 | CesiumJS | 3D globe (used without Cesium ion) | Apache-2.0 | https://github.com/CesiumGS/cesium |
 | React, React DOM | User interface | MIT | https://react.dev |
@@ -52,7 +52,7 @@ the U.S. Geological Survey.
 
 ## Original work
 The instrument panel artwork, runway textures, sounds, lessons and all simulator code outside the
-items above are original to TeachX. The original TeachX trainer 3D model (`public/models/trainer.glb`)
+items above are original to SkyReady. The original SkyReady trainer 3D model (`public/models/trainer.glb`)
 is kept as a fallback for when a FlightGear model cannot be loaded.
 
 ## About the GPL items

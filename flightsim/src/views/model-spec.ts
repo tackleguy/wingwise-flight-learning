@@ -4,7 +4,7 @@
  *
  * Every aircraft uses its FlightGear 3D model (converted by scripts/fg-aircraft/convert.py, numbers
  * in src/aircraft/fg-models.gen.ts). If a model is missing, the view falls back to the original
- * TeachX trainer model so that the simulator still works.
+ * SkyReady trainer model so that the simulator still works.
  *
  * Frames: the generated FlightGear numbers are glTF (x LEFT, y up, z nose); everything exported
  * here is in the aircraft frame used by aircraftMatrix() ("frame A": x nose, y LEFT, z up).
@@ -20,7 +20,7 @@ export interface VisualSpec {
   id: string;
   /** Model file (relative to the site). */
   url: string;
-  /** A converted FlightGear model (generic shading, no cockpit interior) — false for the TeachX trainer. */
+  /** A converted FlightGear model (generic shading, no cockpit interior) — false for the SkyReady trainer. */
   fg: boolean;
   /** Pilot's eye point. */
   eye: V3;

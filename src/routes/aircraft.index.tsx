@@ -32,11 +32,11 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/aircraft/")({
   head: () => ({
     meta: [
-      { title: "Aircraft Library — TeachX" },
+      { title: "Aircraft Library — SkyReady" },
       {
         name: "description",
         content:
-          "Systems, limitations and performance of every TeachX training aircraft, from the Cessna 152 to the Airbus A320 — with side-by-side comparison.",
+          "Systems, limitations and performance of every SkyReady training aircraft, from the Cessna 152 to the Airbus A320 — with side-by-side comparison.",
       },
     ],
   }),
@@ -95,7 +95,7 @@ function AircraftLibrary() {
         eyebrow="Fly"
         icon={Plane}
         title="Aircraft Library"
-        description="Systems, limitations and performance for every aircraft in the TeachX simulator."
+        description="Systems, limitations and performance for every aircraft in the SkyReady simulator."
       />
 
       <Notice tone="caution" title="Educational data." className="mb-4">

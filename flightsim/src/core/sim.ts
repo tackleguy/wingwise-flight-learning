@@ -355,7 +355,7 @@ export class Sim {
       try {
         m.frame?.(this, dtReal);
       } catch (err) {
-        console.error(`[TeachX] module "${m.name}" frame() failed`, err);
+        console.error(`[SkyReady] module "${m.name}" frame() failed`, err);
       }
     }
   }

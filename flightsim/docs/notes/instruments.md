@@ -80,7 +80,7 @@ being painted on.
   rudder.
 - **Tachometer** 0.3 s lag (mechanical). **Hour meter** counts while the engine runs and belongs to
   the aircraft: it is not reset by a reposition and is remembered in the browser
-  (`localStorage` key `teachx.sim.hobbs`). **Fuel gauges** electric, 5 s damping, a per-flight
+  (`localStorage` key `skyready.sim.hobbs`). **Fuel gauges** electric, 5 s damping, a per-flight
   calibration error of up to about ±2 gal that is zero at empty, fuel slosh with lateral/fore-aft
   acceleration (largest with half-full tanks), needle falls to E without power. **Oil temperature**
   electric (6 s, rests at the bottom of the scale, 75 °F, when cold or unpowered). **Oil pressure**
@@ -295,3 +295,19 @@ that flies real manoeuvres through `sim.controls` using the true state. Measured
   engine vibration.
 - Deviation that changes with electrical load; a printed compass correction card for the panel.
 - Hour meter driven by an oil-pressure switch; unusable fuel on the gauges.
+
+## 10. Three failing tests fixed (November 2026)
+
+Three instrument tests had been failing (before and after the FlightGear-physics change). In all three
+the **instrument model was right and the test was wrong**: the robot test pilot
+(`tests/instruments/pilot.ts`) did not fly the manoeuvre the test describes. No instrument code,
+limit or test threshold was changed; no test was skipped.
+
+| test | what went wrong | fix |
+| --- | --- | --- |
+| compass: no acceleration error heading north (worst error must stay under 5°; was 5.95°) | When the throttle was closed the aircraft yawed and skidded right with the wings level. The robot's rudder caught up too slowly. Sideways acceleration tips the floating compass card just as a turn does, and heading north over the USA (67° of dip) that is northerly turning error — a real compass does the same. A copy of the compass with the dip removed stayed within 0.3°, which proves it was turning error and not acceleration error. | The robot keeps the ball centred three times more firmly (as a pilot does when changing power). Now 3.0°. |
+| ball: slip with right wing low and left rudder (bank must exceed 4°; was 3.2°) | The ball was already correct (0.64 toward the low wing). The robot was asked for 10° of bank but stopped at 3.2°: its bank hold only pushed in proportion to the error, so against the crossed rudder it settled short. | The robot keeps adding aileron while the bank stays short, only while the bank is steady. Slip now at 10.1° bank, ball 0.67. The two skids before it are now really flown wings-level, as the test says. |
+| attitude indicator tumbles past its bank limit (was: never tumbled) | The gimbal limit is 102° (real older instruments: about 100–110°). The robot held "nose level" by pulling the yoke even when nearly upside down, which drags the nose toward the ground (pitch fell to −58°) and stopped the roll at 100.6° — short of the stop. | New robot option `elevator` (hold the yoke still). The test rolls on with the yoke at neutral, like an aileron roll. Tumbles at 102.8°, is 22.8° wrong after recovery and 3.1° better a minute later (erection about 3° per minute). |
+
+Verified with `npx vitest run` in `flightsim/`: 29 files, 408 of 408 tests pass; `npx tsc --noEmit`
+clean. Diagnostics were done with temporary scripts that were deleted afterwards.

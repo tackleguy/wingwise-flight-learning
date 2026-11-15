@@ -23,7 +23,7 @@ export async function cacheModelAsset(
     for (let attempt = 0; attempt < 2; attempt++) {
       original.signal.throwIfAborted();
       url.searchParams.set("download", "true");
-      url.searchParams.set("teachx_retry", `${Date.now()}-${attempt}`);
+      url.searchParams.set("skyready_retry", `${Date.now()}-${attempt}`);
       try {
         const response = await fetchAsset(
           new Request(url, {

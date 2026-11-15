@@ -64,7 +64,7 @@ export class Runtime {
       try {
         this.world.render();
       } catch (err) {
-        console.error("[TeachX] render failed", err);
+        console.error("[SkyReady] render failed", err);
       }
     };
     this.raf = requestAnimationFrame(loop);

@@ -48,13 +48,13 @@ export const Route = createFileRoute("/academy/$course/$module")({
   head: ({ loaderData }) => ({
     meta: [
       {
-        title: `${loaderData?.title ?? "Module"} — ${loaderData?.courseTitle ?? "Academy"} — TeachX`,
+        title: `${loaderData?.title ?? "Module"} — ${loaderData?.courseTitle ?? "Academy"} — SkyReady`,
       },
       {
         name: "description",
         content:
           loaderData?.summary ??
-          "TeachX ground school module with lessons, flashcards and a graded module exam.",
+          "SkyReady ground school module with lessons, flashcards and a graded module exam.",
       },
     ],
   }),

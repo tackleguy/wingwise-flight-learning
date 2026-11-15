@@ -53,7 +53,7 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/settings")({
   head: () => ({
     meta: [
-      { title: "Settings — TeachX" },
+      { title: "Settings — SkyReady" },
       {
         name: "description",
         content:
@@ -1349,7 +1349,7 @@ function AiSection({ settings }: { settings: Settings }) {
         </div>
       ) : null}
       <div className="py-3">
-        <Notice tone="caution" title="All AI on TeachX is local; output may be wrong.">
+        <Notice tone="caution" title="All AI on SkyReady is local; output may be wrong.">
           Nothing is sent to a cloud AI service and there are no API keys. The on-device model runs
           inside your browser; your own model server is reached directly at the URL above. AI output
           is a training aid and may be wrong; always verify against official FAA sources.
@@ -1368,7 +1368,7 @@ function DataSection() {
 
   const exportAll = () => {
     downloadFile(
-      `teachx-training-${new Date().toISOString().slice(0, 10)}.json`,
+      `skyready-training-${new Date().toISOString().slice(0, 10)}.json`,
       actions.exportData(),
       "application/json",
     );

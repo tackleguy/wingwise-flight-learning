@@ -1,12 +1,12 @@
 # FlightGear aircraft models — credits and licences
 
 The `.glb` files in this folder are conversions of aircraft 3D models from the FlightGear flight
-simulator project (https://www.flightgear.org). They are **not** original TeachX work: each model
+simulator project (https://www.flightgear.org). They are **not** original SkyReady work: each model
 keeps the licence stated in its own aircraft files (GNU GPL, see below). Each was
-**converted to glTF (textures resized, exterior only) by the TeachX project** with
+**converted to glTF (textures resized, exterior only) by the SkyReady project** with
 `scripts/fg-aircraft/convert.py` (cockpit, instruments, pilots, effects and lights removed;
 default livery only; model moved so that its centre of gravity and wheels match the JSBSim
-flight model used by TeachX). The GPL requires that the source of these files stays available:
+flight model used by SkyReady). The GPL requires that the source of these files stays available:
 the original FlightGear files can be downloaded from the pages below, and the converter is in this
 repository.
 
@@ -16,7 +16,7 @@ repository.
 - Licence: GPL-2.0 (LICENSE file in the aircraft folder)
 - Source: https://gitlab.com/flightgear/fgdata/-/tree/release/2024.1/Aircraft/c172p
 - Version: FGData branch release/2024.1 (commit 11c6545, 2024.1.8-rc1)
-- Converted to glTF (textures resized, exterior only) by the TeachX project.
+- Converted to glTF (textures resized, exterior only) by the SkyReady project.
 
 ## c182.glb — Cessna 182S (FlightGear c182s)
 
@@ -24,7 +24,7 @@ repository.
 - Licence: GPL-2.0 (LICENSE file in the aircraft folder)
 - Source: https://sourceforge.net/p/flightgear/fgaddon/HEAD/tree/trunk/Aircraft/c182s/
 - Version: r21799 (folder last changed in r15312)
-- Converted to glTF (textures resized, exterior only) by the TeachX project.
+- Converted to glTF (textures resized, exterior only) by the SkyReady project.
 
 ## pa28.glb — Piper PA-28-161 Warrior II (FlightGear PA28)
 
@@ -32,7 +32,7 @@ repository.
 - Licence: GPL-2.0 (LICENSE file in the aircraft folder)
 - Source: https://sourceforge.net/p/flightgear/fgaddon/HEAD/tree/trunk/Aircraft/PA28/
 - Version: r21799 (folder last changed in r18092)
-- Converted to glTF (textures resized, exterior only) by the TeachX project.
+- Converted to glTF (textures resized, exterior only) by the SkyReady project.
 
 ## J3Cub.glb — Piper J-3 Cub (FlightGear J3Cub)
 
@@ -40,7 +40,7 @@ repository.
 - Licence: GPL (README: 'License: GPL'; the folder ships the GPL version 3 text, copying.txt)
 - Source: https://sourceforge.net/p/flightgear/fgaddon/HEAD/tree/trunk/Aircraft/J3Cub/
 - Version: r21799 (folder last changed in r20587)
-- Converted to glTF (textures resized, exterior only) by the TeachX project.
+- Converted to glTF (textures resized, exterior only) by the SkyReady project.
 
 ## c310.glb — Cessna 310 (FlightGear c310, model c310-dpm)
 
@@ -48,7 +48,7 @@ repository.
 - Licence: no licence file in the aircraft folder; distributed in FlightGear's FGAddon repository under the GNU GPL
 - Source: https://sourceforge.net/p/flightgear/fgaddon/HEAD/tree/trunk/Aircraft/c310/
 - Version: r21799 (folder last changed in r2171)
-- Converted to glTF (textures resized, exterior only) by the TeachX project.
+- Converted to glTF (textures resized, exterior only) by the SkyReady project.
 
 ## DHC6.glb — de Havilland Canada DHC-6-300 Twin Otter, wheels (FlightGear dhc6)
 
@@ -56,7 +56,7 @@ repository.
 - Licence: no licence file in the aircraft folder; files that state one use GPL-2.0-or-later (e.g. Config/dhc6-mice.xml, onox 2015)
 - Source: https://sourceforge.net/p/flightgear/fgaddon/HEAD/tree/trunk/Aircraft/dhc6/
 - Version: r21799 (folder last changed in r18298)
-- Converted to glTF (textures resized, exterior only) by the TeachX project.
+- Converted to glTF (textures resized, exterior only) by the SkyReady project.
 
 ## p51d.glb — North American P-51D-25-NA Mustang (FlightGear p51d, default livery 'Delivery Day - March 1944')
 
@@ -64,7 +64,7 @@ repository.
 - Licence: GPL-2.0 (COPYING file in the aircraft folder)
 - Source: https://sourceforge.net/p/flightgear/fgaddon/HEAD/tree/trunk/Aircraft/p51d/
 - Version: r21799 (folder last changed in r15368)
-- Converted to glTF (textures resized, exterior only) by the TeachX project.
+- Converted to glTF (textures resized, exterior only) by the SkyReady project.
 
 ## A320.glb — Airbus A320-214 CFM56-5B (FlightGear A320-family, default livery Swiss HB-JLS)
 
@@ -72,7 +72,7 @@ repository.
 - Licence: GPL-2.0-only (README.copyright.md: 'version 2 of the GNU General Public License')
 - Source: https://sourceforge.net/p/flightgear/fgaddon/HEAD/tree/trunk/Aircraft/A320-family/
 - Version: r21799 (folder last changed in r20377)
-- Converted to glTF (textures resized, exterior only) by the TeachX project.
+- Converted to glTF (textures resized, exterior only) by the SkyReady project.
 
 ## f16.glb — General Dynamics F-16CJ Block 52 Fighting Falcon (FlightGear f16), clean (no stores)
 
@@ -80,7 +80,7 @@ repository.
 - Licence: GPL-2.0 (LICENSE file in the aircraft folder)
 - Source: https://sourceforge.net/p/flightgear/fgaddon/HEAD/tree/trunk/Aircraft/f16/
 - Version: r21799 (folder last changed in r8379)
-- Converted to glTF (textures resized, exterior only) by the TeachX project.
+- Converted to glTF (textures resized, exterior only) by the SkyReady project.
 
 ## t6texan2.glb — Beechcraft T-6 Texan II (FlightGear Beechcraft-T6-Texan-II, US Navy livery)
 
@@ -88,4 +88,4 @@ repository.
 - Licence: GPL-2.0 (COPYING file in the aircraft folder)
 - Source: https://sourceforge.net/p/flightgear/fgaddon/HEAD/tree/trunk/Aircraft/Beechcraft-T6-Texan-II/
 - Version: r21799 (folder last changed in r18616)
-- Converted to glTF (textures resized, exterior only) by the TeachX project.
+- Converted to glTF (textures resized, exterior only) by the SkyReady project.

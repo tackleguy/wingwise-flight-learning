@@ -56,13 +56,13 @@ import {
 export const Route = createFileRoute("/instructor")({
   head: () => ({
     meta: [
-      { title: "AI Flight Instructor — TeachX" },
+      { title: "AI Flight Instructor — SkyReady" },
       {
         name: "description",
         content:
           "Ask an AI flight instructor about regulations, aerodynamics, weather, instruments and procedures — with practice scenarios, quizzes, mistake reviews and checkride prep. Works offline with a built-in knowledge base.",
       },
-      { property: "og:title", content: "AI Flight Instructor — TeachX" },
+      { property: "og:title", content: "AI Flight Instructor — SkyReady" },
       {
         property: "og:description",
         content:
@@ -705,7 +705,7 @@ function InstructorPage() {
         Answers are explanations for study — consult current FAA publications, the POH/AFM and a CFI
         for real-world operations.
         {!loading && !aiOn
-          ? " No AI provider is active, so answers come from TeachX's built-in knowledge base."
+          ? " No AI provider is active, so answers come from SkyReady's built-in knowledge base."
           : ""}
       </Notice>
 

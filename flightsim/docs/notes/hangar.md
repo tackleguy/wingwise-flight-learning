@@ -3,7 +3,7 @@
 ## What was built
 - **Physics engine from FlightGear.** `jsbsim/build-flightgear.sh` compiles FlightGear 2024.2's own
   copy of JSBSim (`flightgear/src/FDM/JSBSim`) to WebAssembly with the SimGear helper subset of
-  JSBSim 1.1.14, the TeachX bridge (`jsbsim/wrapper.cpp`) and the ten aircraft's data files.
+  JSBSim 1.1.14, the SkyReady bridge (`jsbsim/wrapper.cpp`) and the ten aircraft's data files.
 - **Ten aircraft** (`src/aircraft/catalog.ts`): Cessna 172P (tuned, unchanged code path), Cessna 182,
   Piper PA-28, Piper J-3 Cub, Cessna 310, DHC-6 Twin Otter, P-51D Mustang, Airbus A320, F-16,
   T-6 Texan II. Picker on the start screen (`?aircraft=<id>` also works), remembered in settings.

@@ -1,5 +1,5 @@
 /**
- * Stylized EDUCATIONAL chart of the San Francisco Bay Area built from the TeachX airport/navaid
+ * Stylized EDUCATIONAL chart of the San Francisco Bay Area built from the SkyReady airport/navaid
  * dataset. Airspace shapes are simplified rings, coastline is coarse, and the restricted area,
  * MOA, obstacles and GPS waypoints are FICTIONAL examples for symbol training.
  * NOT FOR NAVIGATION.

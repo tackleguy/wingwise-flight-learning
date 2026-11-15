@@ -272,7 +272,7 @@ export function createSky(world: World): Sky {
     };
     const id = ++stageSerial;
     const clouds = new PostProcessStage({
-      name: `teachx_sky_clouds_${id}`,
+      name: `skyready_sky_clouds_${id}`,
       fragmentShader: cloudPassShader(options),
       textureScale: scale,
       sampleMode: PostProcessStageSampleMode.NEAREST,
@@ -292,7 +292,7 @@ export function createSky(world: World): Sky {
       },
     });
     const final = new PostProcessStage({
-      name: `teachx_sky_final_${id}`,
+      name: `skyready_sky_final_${id}`,
       fragmentShader: finalPassShader(options),
       sampleMode: PostProcessStageSampleMode.NEAREST,
       uniforms: {
@@ -309,7 +309,7 @@ export function createSky(world: World): Sky {
         u_precipColor: () => U.precipColor,
       },
     });
-    composite = new PostProcessStageComposite({ name: `teachx_sky_${id}`, stages: [clouds, final], inputPreviousStageTexture: false });
+    composite = new PostProcessStageComposite({ name: `skyready_sky_${id}`, stages: [clouds, final], inputPreviousStageTexture: false });
     composite.enabled = enabled;
     scene.postProcessStages.add(composite);
   }

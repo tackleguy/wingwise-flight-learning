@@ -370,7 +370,7 @@ class Scenery implements SceneryApi {
       try {
         done = this.job.gen.next().done === true;
       } catch (err) {
-        console.error(`[TeachX] scenery: building ${this.job.airport.ident} failed`, err);
+        console.error(`[SkyReady] scenery: building ${this.job.airport.ident} failed`, err);
         this.job.airport.dispose();
         this.airports.delete(this.job.airport.index);
       }

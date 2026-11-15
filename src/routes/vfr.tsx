@@ -5,7 +5,7 @@ import { CourseOverview } from "@/components/academy/CourseOverview";
 export const Route = createFileRoute("/vfr")({
   head: () => ({
     meta: [
-      { title: "VFR Ground School — TeachX" },
+      { title: "VFR Ground School — SkyReady" },
       {
         name: "description",
         content:

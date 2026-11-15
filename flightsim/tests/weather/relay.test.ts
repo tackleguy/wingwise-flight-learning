@@ -82,7 +82,7 @@ describe("/api/metar relay", () => {
     expect(maxLon - minLon).toBeGreaterThan(1.5); // widened in longitude so the box stays about square on the ground
     expect(maxLon - minLon).toBeLessThan(2.2);
     expect((minLon + maxLon) / 2).toBeCloseTo(-122.5, 1);
-    expect(calls[0]!.headers["User-Agent"]).toBe("TeachX-Flight-Simulator (educational; contact via site)");
+    expect(calls[0]!.headers["User-Agent"]).toBe("SkyReady-Flight-Simulator (educational; contact via site)");
 
     // the simulator's own adapter understands the relay's answer
     const obs = relayToObservation(body, Date.UTC(2026, 10, 15, 3, 20))!;

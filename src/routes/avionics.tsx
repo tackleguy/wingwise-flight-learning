@@ -48,11 +48,11 @@ import { SimProvider, useCreateSim, useSimSelector } from "@/sim/react";
 export const Route = createFileRoute("/avionics")({
   head: () => ({
     meta: [
-      { title: "Avionics Lab — TeachX" },
+      { title: "Avionics Lab — SkyReady" },
       {
         name: "description",
         content:
-          "Hands-on avionics training: a live glass-cockpit PFD/MFD, classic six-pack, VOR/ILS/ADF/DME, the TX-750 GPS navigator and a full autopilot — with guided tasks, failures and instrument explanations.",
+          "Hands-on avionics training: a live glass-cockpit PFD/MFD, classic six-pack, VOR/ILS/ADF/DME, the SR-750 GPS navigator and a full autopilot — with guided tasks, failures and instrument explanations.",
       },
     ],
   }),
@@ -117,7 +117,7 @@ function AvionicsLab() {
         }
       />
       <Notice tone="caution" title="Educational simulation." className="mb-4">
-        Avionics here are Garmin-inspired training representations (TeachX Flight Display, TX-750
+        Avionics here are Garmin-inspired training representations (SkyReady Flight Display, SR-750
         Navigator), simplified for learning. Approaches are simulator-generated training procedures,
         not published IAPs. Not a substitute for aircraft-specific training, the AFM/POH, or the
         manufacturer's pilot guide.

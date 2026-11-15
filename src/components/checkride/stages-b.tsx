@@ -142,7 +142,7 @@ export function ManeuversStage({ attempt, track, stage, onComplete }: StageProps
         {track.ifr
           ? "instrument checkride profile — a precision approach to minimums and the missed approach"
           : "flight portion — the maneuvers and landing in the checkride profile"}{" "}
-        in the TeachX simulator. Your flight is linked to this checkride and scored automatically
+        in the SkyReady simulator. Your flight is linked to this checkride and scored automatically
         against the objectives.
       </p>
       <Notice className="mb-4" title="How it works:">

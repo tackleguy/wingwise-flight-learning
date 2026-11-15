@@ -9,7 +9,7 @@ module, as the LGPL requires. `JSBSIM-SOURCE.txt` there records exactly what it 
 | --- | --- |
 | `build-flightgear.sh` | **The build used for the shipped files.** FlightGear's JSBSim + the SimGear helper subset of JSBSim 1.1.14 + `wrapper.cpp` + the aircraft below. |
 | `build.sh` | The earlier build from a stand-alone JSBSim checkout (Cessna only). Kept for reference; not used any more. |
-| `wrapper.cpp` | TeachX's bridge between the engine and the simulator's JavaScript (TeachX's own code). |
+| `wrapper.cpp` | SkyReady's bridge between the engine and the simulator's JavaScript (SkyReady's own code). |
 | `aircraft/`, `engine/`, `systems/` | The flight-model data packaged into `jsbsim.data`: the ten aircraft of `src/aircraft/catalog.ts` and the engine, propeller and system files they use. |
 | `upstream/` | Unmodified originals of every aircraft file this project changed. |
 | `CHANGES.md` | Every change made to the aircraft data. |

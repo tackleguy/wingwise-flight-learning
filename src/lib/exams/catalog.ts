@@ -2,7 +2,7 @@
  * Exam catalog for the Practice Test Center and Written Exams.
  *
  * Written exams mirror the STRUCTURE of the FAA airman knowledge tests (question count, time,
- * 70% passing score) but draw from TeachX's own unofficial question bank. When the bank has fewer
+ * 70% passing score) but draw from SkyReady's own unofficial question bank. When the bank has fewer
  * matching questions than the FAA test length, the question count is capped at the number
  * available and the time limit is scaled proportionally.
  */
