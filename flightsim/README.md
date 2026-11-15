@@ -13,7 +13,7 @@ airports of the whole world, real weather, and a training mode with scored lesso
 - Where the work stands: [PROGRESS.md](PROGRESS.md)
 - How the flight model compares with the real aircraft: [docs/PHYSICS-VALIDATION.md](docs/PHYSICS-VALIDATION.md)
 - How to use the simulator: [docs/USER-GUIDE.md](docs/USER-GUIDE.md)
-- **Lesson scoring tolerances you can edit:** [`src/training/tolerances.config.ts`](src/training/tolerances.config.ts)
+- **Tests mode** (scored failures, weather, preflight and skill tests): [docs/notes/tests.md](docs/notes/tests.md)
 
 ## Putting it online (Vercel, free)
 

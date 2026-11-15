@@ -91,3 +91,17 @@ Choices made while building the SkyReady Flight Simulator, in plain language, ne
 - **Licences:** the physics engine stays LGPL (separate, replaceable module). The FlightGear 3D
   models and the c310/f16 flight-model files are GPL; they are separate data files shipped with
   their licence and source links (`public/models/fg/CREDITS.md`, `CREDITS.md`).
+
+## Tests mode (owner's request, November 2026)
+- The owner asked for "tests inside the sim, like failures, weather, preflight". They are a
+  **Tests** tab on the start screen of the World Flight Simulator: 16 scored tests with a briefing,
+  a panel while flying (objectives, clock, "Report a problem", "End test") and a debrief.
+- **Cessna 172P only**, because it is the one aircraft whose numbers are checked against a
+  handbook; the scoring uses real speeds and limits.
+- **Pass = 80 % and every essential item.** Essential items are the ones an examiner would stop
+  the flight for (damage, flying an aircraft that must not fly).
+- **The walk-around is a described inspection, not 3D**: the FlightGear model has no detail for
+  fuel samples, oil, hinges; the decisions it teaches (fix it, or do not fly) are the same.
+- Results stay in the browser only; the main site's database is managed by Lovable and was not
+  changed.
+- Details: `docs/notes/tests.md`.

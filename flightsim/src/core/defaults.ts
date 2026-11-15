@@ -197,7 +197,7 @@ export function initialState(): SimState {
       vacuumInHg: 0,
       carbIce: 0,
       stallHorn: false,
-      failures: { engine: false, alternator: false, vacuum: false, pitot: false, staticPort: false, radio: false },
+      failures: { engine: false, alternator: false, vacuum: false, pitot: false, staticPort: false, radio: false, carbIce: false },
     },
   };
 }

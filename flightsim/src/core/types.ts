@@ -219,7 +219,16 @@ export interface SystemsState {
   /** 0..1 primer / flooding not modelled; reserved */
   stallHorn: boolean;
   /** Active failures injected by lessons or the instructor panel. */
-  failures: { engine: boolean; alternator: boolean; vacuum: boolean; pitot: boolean; staticPort: boolean; radio: boolean };
+  failures: {
+    engine: boolean;
+    alternator: boolean;
+    vacuum: boolean;
+    pitot: boolean;
+    staticPort: boolean;
+    radio: boolean;
+    /** Carburettor icing conditions: ice builds while carburettor heat is off (see src/systems/failures.ts). */
+    carbIce?: boolean;
+  };
 }
 
 // ---------------------------------------------------------------- truth state

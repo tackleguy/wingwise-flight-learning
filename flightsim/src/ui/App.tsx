@@ -12,6 +12,12 @@ import { createInstruments } from "@/instruments";
 import { CockpitPanel, ExplainCard, type InstrumentId } from "@/panel";
 import { createScenery } from "@/scenery";
 import { createSky, type Sky } from "@/sky";
+import { createFailureEffects } from "@/systems/failures";
+import { createTraining, getTest, makeInspection, prepareTestFlight, type InspectionItem, type StoredResult, type TestDef, type TestResult, type TrainingModule } from "@/training";
+import { Debrief } from "@/training/ui/Debrief";
+import { TestHud } from "@/training/ui/TestHud";
+import { TestsMenu } from "@/training/ui/TestsMenu";
+import { Walkaround } from "@/training/ui/Walkaround";
 import { createViews, type ViewsModule } from "@/views";
 import { createWeather, type WeatherApi } from "@/weather";
 import { ATTRIBUTION } from "@/world/world";
@@ -21,6 +27,7 @@ interface Mods {
   weather: WeatherApi;
   sky: Sky;
   views: ViewsModule;
+  training: TrainingModule;
 }
 
 const STARTS: { kind: SpawnKind; label: string }[] = [
@@ -78,6 +85,11 @@ export function App() {
   /** Aircraft chosen in the menu, and the one actually flying (the panel is rebuilt when it changes). */
   const [aircraftId, setAircraftId] = useState<AircraftId>("c172p");
   const [flownId, setFlownId] = useState<AircraftId>("c172p");
+  // Tests mode
+  const [tab, setTab] = useState<"fly" | "tests">(() => (new URLSearchParams(location.search).get("tab") === "tests" ? "tests" : "fly"));
+  const [result, setResult] = useState<TestResult | null>(null);
+  const [walk, setWalk] = useState<InspectionItem[] | null>(null);
+  const [scores, setScores] = useState<Record<string, StoredResult>>({});
 
   // ---- create the simulator once
   useEffect(() => {
@@ -96,23 +108,24 @@ export function App() {
         sim.use(createScenery(world));
         const views = sim.use(createViews(world));
         sim.use(basicKeyboard());
-        // Basic electrics (battery / alternator / avionics switches) so the panel and radios light up.
-        sim.use({
-          name: "basic-electrics",
-          postStep(sm) {
-            const c = sm.controls;
-            const y = sm.state.sys;
-            y.alternatorOnline = c.masterBattery && c.masterAlternator && y.engineRunning;
-            y.busVolts = c.masterBattery ? (y.alternatorOnline ? 28 : 24) : 0;
-            y.avionicsPowered = c.masterBattery && c.avionicsMaster;
-          },
-        });
+        // Electrical system (battery, alternator, buses) and what injected failures do (see src/systems/failures.ts).
+        sim.use(createFailureEffects());
+        // Tests mode: scored exercises (src/training)
+        const training = sim.use(createTraining());
+        setScores(training.results());
+        offs.push(
+          training.onResult((r) => {
+            setScores(training.results());
+            setResult(r);
+            if (r.id !== "walkaround") sim.setPaused(true);
+          }),
+        );
         offs.push(views.attach(worldEl.current!));
         offs.push(sim.events.on("message", (m) => setToast(m.text)));
         offs.push(sim.events.on("pause", (p) => setPaused(p.paused)));
         offs.push(sim.events.on("crash", () => setToast("The aircraft was damaged. Press R to restart on short final, or M for the menu.")));
         offs.push(sim.events.on("stall", () => setToast("STALL — lower the nose, add full power, level the wings.")));
-        mods.current = { rt, weather, sky, views };
+        mods.current = { rt, weather, sky, views, training };
         (window as unknown as { skyready: unknown }).skyready = { rt, sim, world, weather, sky, views };
         const apt = sim.data.getAirport(new URLSearchParams(location.search).get("apt") ?? "KPAO");
         if (apt) setAirport(apt);
@@ -133,6 +146,18 @@ export function App() {
       mods.current = null;
     };
   }, []);
+
+  // ---- the walk-around covers the whole screen: pause the flight and stop drawing the 3D world meanwhile
+  const walking = walk !== null;
+  useEffect(() => {
+    const m = mods.current;
+    if (!walking || !m) return;
+    m.rt.sim.setPaused(true);
+    m.rt.stop();
+    return () => {
+      if (flying) m.rt.start();
+    };
+  }, [walking, flying]);
 
   // ---- airport search
   useEffect(() => {
@@ -186,6 +211,8 @@ export function App() {
     setBusy(true);
     try {
       const { sim } = m.rt;
+      m.training.clear();
+      setResult(null);
       sim.setAircraft(aircraftId);
       if (wx === "real") {
         setStatus("Getting the real weather…");
@@ -211,6 +238,39 @@ export function App() {
     }
   };
 
+  /** Start a test: the walk-around opens its inspection; flying tests place the aircraft and begin. */
+  const startTest = async (def: TestDef) => {
+    const md = mods.current;
+    if (!md || busy) return;
+    setResult(null);
+    md.training.clear();
+    if (def.walkaround) {
+      setWalk(makeInspection());
+      setMenu(false);
+      return;
+    }
+    setBusy(true);
+    try {
+      setStatus("Preparing the test…");
+      await prepareTestFlight(md.rt.sim, md.weather, md.sky, def);
+      md.training.begin(def, md.rt.sim);
+      md.views.setMode("cockpit");
+      md.rt.sim.setPaused(false);
+      md.rt.start();
+      setAircraftId("c172p");
+      setFlownId("c172p");
+      setFlying(true);
+      setMenu(false);
+      setToast(`Test started: ${def.title}. The test panel is at the top.`);
+    } catch (e) {
+      console.error(e);
+      setToast("Could not start the test: " + String(e));
+    } finally {
+      setStatus("");
+      setBusy(false);
+    }
+  };
+
   const m = mods.current;
   return (
     <div className="fixed inset-0 overflow-hidden bg-slate-950 text-slate-100 select-none">
@@ -228,6 +288,7 @@ export function App() {
             <button className={btn} onClick={() => setHelp(true)}>Keys</button>
             <span className="rounded-md bg-slate-900/70 px-2 py-1 text-xs tabular-nums text-slate-200">{hud}</span>
           </div>
+          <TestHud training={m.training} />
           {explain && !card && <div className="absolute left-1/2 top-14 z-20 -translate-x-1/2 rounded-md bg-sky-700/90 px-3 py-1.5 text-sm">Tap any instrument to have it explained.</div>}
           {paused && <div className="absolute left-1/2 top-1/3 z-20 -translate-x-1/2 rounded-lg bg-slate-900/85 px-5 py-3 text-lg font-semibold">Paused — press P to continue</div>}
           {card && <ExplainCard id={card} sim={m.rt.sim} onClose={() => setCard(null)} />}
@@ -252,6 +313,24 @@ export function App() {
               <p className="mt-4 text-sm text-slate-300">{status}</p>
             ) : (
               <>
+                <div className="mt-4 grid grid-cols-2 gap-1 rounded-lg bg-slate-800 p-1" role="tablist">
+                  {(["fly", "tests"] as const).map((k) => (
+                    <button key={k} role="tab" aria-selected={tab === k} data-tab={k} className={`min-h-10 rounded-md text-sm font-semibold ${tab === k ? "bg-sky-600" : "hover:bg-slate-700"}`} onClick={() => setTab(k)}>
+                      {k === "fly" ? "Free flight" : "Tests"}
+                    </button>
+                  ))}
+                </div>
+                {tab === "tests" ? (
+                  <>
+                    <TestsMenu results={scores} busy={busy} onStart={(d) => void startTest(d)} />
+                    {busy && <p className="mt-2 text-sm text-slate-300">{status}</p>}
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {flying && <button className={btn} onClick={() => setMenu(false)}>Back to flight</button>}
+                      <button className={btn} onClick={() => setHelp(true)}>Controls</button>
+                    </div>
+                  </>
+                ) : (
+                <>
                 <label className="mt-4 block text-sm font-medium">Aircraft</label>
                 <div className="mt-1 grid grid-cols-2 gap-1.5 sm:grid-cols-5" role="radiogroup" aria-label="Aircraft">
                   {AIRCRAFT_LIST.map((a) => (
@@ -328,10 +407,54 @@ export function App() {
                   <button className={btn} onClick={() => setHelp(true)}>Controls</button>
                   <button className={btn} onClick={() => setCredits(true)}>Credits</button>
                 </div>
+                </>
+                )}
               </>
             )}
           </div>
         </div>
+      )}
+
+      {walk && m && (
+        <Walkaround
+          items={walk}
+          onDone={(r) => {
+            setWalk(null);
+            m.training.record(r);
+          }}
+          onCancel={() => {
+            setWalk(null);
+            setTab("tests");
+            setMenu(true);
+          }}
+        />
+      )}
+
+      {result && m && (
+        <Debrief
+          result={result}
+          def={getTest(result.id)}
+          onRetry={() => {
+            const d = getTest(result.id);
+            setResult(null);
+            if (d) void startTest(d);
+          }}
+          onTests={() => {
+            setResult(null);
+            m.training.clear();
+            setTab("tests");
+            setMenu(true);
+          }}
+          onClose={
+            flying && result.id !== "walkaround"
+              ? () => {
+                  setResult(null);
+                  m.training.clear();
+                  m.rt.sim.setPaused(false);
+                }
+              : null
+          }
+        />
       )}
 
       {(help || credits) && (

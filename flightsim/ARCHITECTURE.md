@@ -56,7 +56,7 @@ flightsim/
   src/world/     world.ts (CesiumJS globe), elevation.ts (terrain for render AND physics)
   src/app/       runtime.ts — creates data + sim + world and runs the frame loop
   src/dev/       basic.ts — placeholder aircraft/camera/keyboard for dev pages
-  src/systems/   engine, electrical, fuel, vacuum, failures                    [systems]
+  src/systems/   failures.ts — what injected failures do, carb ice, electrical  [systems]
   src/instruments/ indicated values with lag and errors                        [instruments]
   src/nav/       VOR/DME/ADF/COM receivers                                     [nav]
   src/weather/   real weather, presets, custom weather, gusts                  [weather]
@@ -66,7 +66,8 @@ flightsim/
   src/audio/     engine/wind/warning sounds, speech                            [audio]
   src/input/     keyboard, mouse, gamepad/joystick, touch                      [input]
   src/panel/     SVG cockpit panel + "explain this instrument"                 [panel]
-  src/training/  lessons, scoring, tolerances, recorder, checklists (+ ui/)    [training]
+  src/training/  Tests mode: scored tests, objectives, walk-around (+ ui/)     [training]
+                 see docs/notes/tests.md
   src/ui/        app shell: start screen, menus, HUD, settings, credits        [ui]
   dev/           one developer test page per module: dev/<module>.html + .ts
   tests/         vitest tests (tests/<module>/*.test.ts), tests/helpers.ts

@@ -12,6 +12,12 @@
 - Developer slice page `dev/slice.html` verified in headless Chrome: spawn on KSFO 28R, take-off,
   climb over real terrain/imagery. `tests/core.test.ts` (5 tests) pass.
 
+- Tests mode (November 2026): 16 scored tests in the Cessna 172P — preflight (walk-around,
+  engine start and checks), failures (engine, carb ice, vacuum, alternator, pitot, radio), weather
+  (crosswind, gusts, fog go-around, turbulence, hot & high) and skills (steep turn, power-off
+  stall); failure effects and an electrical system (`src/systems/failures.ts`). Start screen →
+  Tests tab, or `?tab=tests`. Notes: `docs/notes/tests.md`.
+
 ## In progress
 - Feature modules built in parallel (see the ownership table in `ARCHITECTURE.md`); each writes
   `docs/notes/<module>.md`.

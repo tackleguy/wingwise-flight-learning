@@ -46,6 +46,10 @@ realistically.
 Scenarios (`src/sim/scenarios.ts`) define start state, weather, scheduled failures and measurable
 objectives (`src/sim/objectives.ts`). Flights are scored and written to the logbook.
 
+The World Flight Simulator (`flightsim/`, served at `/sim/`) has its own scored **Tests** tab:
+preflight (walk-around, engine start and checks), failures, weather and skill tests in the
+Cessna 172P, with results kept in the browser. See `flightsim/docs/notes/tests.md`.
+
 Headless tests: `bunx vitest run src/sim/sim.test.ts`.
 
 ## Persistence
