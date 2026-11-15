@@ -68,8 +68,13 @@ export interface ControlState {
   xpdr: { code: string; mode: "OFF" | "STBY" | "ON" | "ALT" };
   /** Kollsman window setting, inHg. */
   altimeterInHg: number;
-  /** Heading-indicator card offset the pilot has dialled in (deg). See `InstrumentState.dgError`. */
+  /** Heading bug on the heading indicator, magnetic degrees. */
   headingBugMag: number;
+  /**
+   * Total rotation the pilot has applied with the heading-indicator adjustment knob, degrees.
+   * The instruments module adds it to the gyro heading (dgMag = gyro heading + dgAdjustDeg).
+   */
+  dgAdjustDeg: number;
 }
 
 // ---------------------------------------------------------------- environment (weather & time)
@@ -266,7 +271,10 @@ export interface SimState {
   weightLb: number;
   /** CG position aft of datum, inches. */
   cgIn: number;
-  /** Control surface positions, degrees (for animating the 3D model). */
+  /**
+   * Control surface positions, degrees (for animating the 3D model): elevatorDeg + = trailing edge up
+   * (nose-up command); aileron*Deg + = that aileron's trailing edge down; rudderDeg + = trailing edge right (yaw right).
+   */
   surfaces: { elevatorDeg: number; aileronLeftDeg: number; aileronRightDeg: number; rudderDeg: number };
 
   // --- environment at the aircraft (truth)
@@ -340,6 +348,27 @@ export interface TouchdownInfo {
   gLoad: number;
 }
 
+/** Non-flight-control actions, sent as the `command` event by input devices and on-screen buttons. */
+export type CommandId =
+  | "pause-toggle"
+  | "menu-toggle"
+  | "help-toggle"
+  | "map-toggle"
+  | "checklist-toggle"
+  | "explain-toggle"
+  | "panel-toggle"
+  | "hud-toggle"
+  | "mute-toggle"
+  | "view-next"
+  | "view-cockpit"
+  | "view-chase"
+  | "view-tower"
+  | "view-free"
+  | "view-reset"
+  | "reset-short-final"
+  | "restart"
+  | "dg-align";
+
 export interface SimEvents {
   spawn: SpawnResult;
   liftoff: { kcas: number };
@@ -352,6 +381,7 @@ export interface SimEvents {
   pause: { paused: boolean };
   /** Short message for the pilot (HUD toast / instructor voice). */
   message: { text: string; level: "info" | "coach" | "warn"; speak?: boolean };
+  command: { id: CommandId };
   /** Free-form event channel for the training module. */
   training: { type: string; data?: unknown };
 }

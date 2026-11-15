@@ -74,6 +74,16 @@ export interface FdmInit {
   fuelRightGal: number;
   /** Cabin loading, lb: [pilot, front passenger, rear-left, rear-right, baggage]. */
   payloadLb?: [number, number, number, number, number];
+  /** Flight-path angle for airborne starts, degrees (negative = descending). */
+  gammaDeg?: number;
+  /** Flap position at the start, 0..1 of full travel. */
+  flapNorm?: number;
+  /** Wind at the start: direction it blows FROM (true degrees) and speed (kt). Used for airborne starts so the airspeed is right from the first moment. */
+  windDirTrue?: number;
+  windKt?: number;
+  /** Sea-level pressure for the model atmosphere, inHg, and temperature offset from standard, °C. */
+  seaLevelPressureInHg?: number;
+  isaDeviationC?: number;
 }
 
 /** Commands sent to the flight model each step (after the systems module has applied switch logic). */
@@ -103,7 +113,7 @@ export interface FdmInputs {
   turbulence: number;
   /** Temperature offset from the standard atmosphere, °C. */
   isaDeviationC: number;
-  /** Sea-level pressure, inHg. */
+  /** Sea-level pressure of the model atmosphere, inHg (see `modelSeaLevelPressureInHg` in core/sim.ts). */
   qnhInHg: number;
 }
 
@@ -247,6 +257,8 @@ export class FlightModel {
   private readonly writeHandles = new Map<WritePath, number>();
   private readonly buf: number;
   private disposed = false;
+  /** Throttle and pitch-trim positions (TeachX conventions) for steady hands-off flight, found for airborne starts. */
+  initialTrim: { throttle: number; trim: number } | null = null;
   private readonly out: FdmOutputs;
 
   private constructor(m: JsbsimModule, fdm: FdmHandle) {
@@ -278,14 +290,74 @@ export class FlightModel {
     payload.forEach((lb, i) => fdm.setByName(`inertia/pointmass-weight-lbs[${i}]`, Math.max(0, lb)));
     fdm.setByName("propulsion/tank[0]/contents-lbs", Math.max(0, init.fuelLeftGal) * LB_PER_GAL_AVGAS);
     fdm.setByName("propulsion/tank[1]/contents-lbs", Math.max(0, init.fuelRightGal) * LB_PER_GAL_AVGAS);
+    if (!init.onGround && init.gammaDeg) fdm.setByName("ic/gamma-deg", init.gammaDeg);
+    const flap = clamp(init.flapNorm ?? 0, 0, 1);
+    fdm.setByName("fcs/flap-cmd-norm", flap);
+    fdm.setByName("fcs/flap-pos-norm", flap);
+    fdm.setByName("fcs/flap-pos-deg", flap * 30);
+    if (init.isaDeviationC !== undefined) fdm.setByName("atmosphere/delta-T", init.isaDeviationC * 1.8);
+    if (init.seaLevelPressureInHg !== undefined) fdm.setByName("atmosphere/P-sl-psf", init.seaLevelPressureInHg * PSF_PER_INHG);
     if (!fdm.runIC()) {
       const err = fdm.lastError();
       fdm.delete();
       throw new Error(`JSBSim could not start at that position: ${err || "unknown error"}`);
     }
     fdm.setDt(FlightModel.DT);
-    if (init.engineRunning) fdm.setByName("propulsion/set-running", -1);
-    return new FlightModel(m, fdm);
+    const startEngine = () => {
+      if (!init.engineRunning) return;
+      fdm.setByName("fcs/mixture-cmd-norm", 1);
+      fdm.setByName("propulsion/magneto_cmd", 3);
+      fdm.setByName("propulsion/set-running", -1);
+    };
+    startEngine();
+    let initialTrim: { throttle: number; trim: number } | null = null;
+    if (!init.onGround) {
+      // 1) Trim for steady hands-off flight in still air (JSBSim solves for pitch, throttle and pitch trim).
+      try {
+        fdm.setByName("fcs/throttle-cmd-norm", 0.5);
+        fdm.setByName("simulation/do_simple_trim", 0);
+        const throttle = fdm.getByName("fcs/throttle-cmd-norm");
+        const trim = fdm.getByName("fcs/pitch-trim-cmd-norm");
+        if (Number.isFinite(throttle) && Number.isFinite(trim)) initialTrim = { throttle, trim: -trim };
+      } catch {
+        initialTrim = null;
+      }
+      // 2) Add the wind: keep the motion through the AIR exactly as trimmed and shift the motion over
+      //    the GROUND by the wind. (JSBSim's own initial-wind options use the opposite sign to its
+      //    run-time wind, so the wind is applied here instead.)
+      const windKt = init.windKt ?? 0;
+      if (windKt > 0.1) {
+        const dir = ((init.windDirTrue ?? 0) * Math.PI) / 180;
+        const toNorth = -windKt * FPS_PER_KT * Math.cos(dir);
+        const toEast = -windKt * FPS_PER_KT * Math.sin(dir);
+        const vn = fdm.getByName("velocities/v-north-fps");
+        const ve = fdm.getByName("velocities/v-east-fps");
+        const vd = fdm.getByName("velocities/v-down-fps");
+        fdm.setByName("ic/theta-deg", fdm.getByName("attitude/theta-deg"));
+        fdm.setByName("ic/phi-deg", fdm.getByName("attitude/phi-deg"));
+        fdm.setByName("ic/psi-true-deg", fdm.getByName("attitude/psi-deg"));
+        fdm.setByName("ic/vn-fps", vn + toNorth);
+        fdm.setByName("ic/ve-fps", ve + toEast);
+        fdm.setByName("ic/vd-fps", vd);
+        if (!fdm.runIC()) {
+          const err = fdm.lastError();
+          fdm.delete();
+          throw new Error(`JSBSim could not start with that wind: ${err || "unknown error"}`);
+        }
+        fdm.setDt(FlightModel.DT);
+        // (The engine keeps running at its trimmed speed through this re-initialisation — do not restart it.)
+        fdm.setByName("atmosphere/wind-north-fps", toNorth);
+        fdm.setByName("atmosphere/wind-east-fps", toEast);
+        if (initialTrim) {
+          fdm.setByName("fcs/throttle-cmd-norm", initialTrim.throttle);
+          fdm.setByName("fcs/pitch-trim-cmd-norm", -initialTrim.trim);
+        }
+
+      }
+    }
+    const model = new FlightModel(m, fdm);
+    model.initialTrim = initialTrim;
+    return model;
   }
 
   private w(path: WritePath, v: number) {

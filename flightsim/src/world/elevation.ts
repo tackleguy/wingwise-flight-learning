@@ -71,6 +71,30 @@ async function decodeTerrarium(url: string): Promise<Float32Array | null> {
   return out;
 }
 
+/**
+ * The source data includes the sea floor (ocean depths). A simulator wants a flat sea, so heights
+ * are clamped to sea level — except inside these boxes, where real LAND lies below sea level.
+ * [south, north, west, east, lowest land height in metres]
+ */
+const BELOW_SEA_LEVEL_LAND: readonly (readonly [number, number, number, number, number])[] = [
+  [30.4, 33.3, 35.2, 35.75, -432], // Dead Sea and Jordan valley
+  [35.6, 37.0, -117.5, -116.3, -86], // Death Valley
+  [32.5, 33.9, -116.4, -114.9, -72], // Salton Sea / Imperial Valley
+  [36.0, 48.0, 46.0, 55.0, -28], // Caspian depression (the Caspian Sea surface is 28 m below sea level)
+  [51.0, 53.6, 3.3, 7.3, -7], // Netherlands polders
+  [42.0, 43.5, 88.5, 90.5, -154], // Turpan depression
+  [28.5, 30.6, 26.0, 29.5, -133], // Qattara depression
+  [11.0, 15.0, 39.8, 42.7, -155], // Danakil / Lake Assal
+  [-49.8, -49.3, -68.7, -68.0, -105], // Laguna del Carbón
+  [-29.8, -27.5, 136.5, 138.5, -15], // Lake Eyre
+];
+
+/** Lowest height (m) the terrain may have at a point: 0 over the sea, negative only in known dry depressions. */
+export function seaFloorM(lat: number, lon: number): number {
+  for (const b of BELOW_SEA_LEVEL_LAND) if (lat >= b[0] && lat <= b[1] && lon >= b[2] && lon <= b[3]) return b[4];
+  return 0;
+}
+
 const mercX = (lon: number, z: number) => ((lon + 180) / 360) * 2 ** z;
 const mercY = (lat: number, z: number) => {
   const s = Math.sin(clamp(lat, -85.0511, 85.0511) * D2R);
@@ -127,6 +151,11 @@ export class ElevationService {
         this.queue.shift()?.();
         // Missing tiles (open ocean) are sea level.
         entry.data = data ?? new Float32Array(TILE * TILE);
+        if (data) {
+          // Flatten the sea: clamp ocean depths to sea level (see BELOW_SEA_LEVEL_LAND).
+          const floor = z >= 7 ? seaFloorM(latOfMercY(y + 0.5, z), ((xx + 0.5) / n) * 360 - 180) : 0;
+          for (let i = 0; i < data.length; i++) if (data[i]! < floor) data[i] = floor;
+        }
         return entry.data;
       });
     this.tiles.set(key, entry);

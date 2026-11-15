@@ -16,6 +16,9 @@ export const AIRCRAFT: AircraftSpec = {
   idleRpm: 650,
 };
 
+/** Height of the aircraft reference point (centre of gravity) above the ground when standing on its wheels, ft. */
+export const CG_HEIGHT_FT = 4.36;
+
 export function defaultControls(): ControlState {
   return {
     elevator: 0,
@@ -46,6 +49,7 @@ export function defaultControls(): ControlState {
     xpdr: { code: "1200", mode: "ALT" },
     altimeterInHg: 29.92,
     headingBugMag: 0,
+    dgAdjustDeg: 0,
   };
 }
 
