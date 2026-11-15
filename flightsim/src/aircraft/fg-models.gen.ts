@@ -283,7 +283,7 @@ export const FG_MODELS: Record<"c172p"|"c182"|"pa28"|"J3Cub"|"c310"|"DHC6"|"p51d
     parts: ["body", "gear_retract", "aileron_left", "aileron_right", "elevator_left", "elevator_right", "elevator", "flap_left_1", "flap_left_2", "flap_left_3", "flap_left", "flap_right_1", "flap_right_2", "flap_right_3", "flap_right", "rudder"],
     retractableGear: true,
     triangles: 101847,
-    bytes: 5434644,
+    bytes: 7001784,
     notes: "Aligned on the JSBSim main-gear contact points; the nose wheel then differs from the JSBSim nose contact by -1 cm fore/aft (+ = aft) and -4 cm vertically (+ = model tyre higher). Main-gear track: model 7.72 m, JSBSim 7.34 m. elevator: two halves with swept hinges: turning this node moves both about one lateral axis (approximate); elevator_left / elevator_right have the exact hinges. flap_left: several segments: turning this node moves them all about the hinge of flap_left_1 (exact for it, approximate for the others); the children have exact hinges. flap_right: several segments: turning this node moves them all about the hinge of flap_right_1 (exact for it, approximate for the others); the children have exact hinges."
   },
   f16: {

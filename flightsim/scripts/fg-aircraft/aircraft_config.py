@@ -50,6 +50,13 @@ AIRCRAFT = {
     "A320": {
         "fgdir": "A320-family", "set": "A320-200-CFM-set.xml", "jsbsim": "A320",
         "no_propellers": True,  # engine fans and the ram-air turbine stay static
+        # default livery SWR (A320-200-CFM-set.xml): applied by Nasal (canvas livery) to these objects
+        "fetch_extra": ["Models/Liveries/CFM/SWR.xml", "Models/Liveries/CFM/4k/SWR-fuselage.png", "Models/Liveries/CFM/2k/SWR-engine.png"],
+        "texture_map": {
+            "@^(AileronL|AileronR|Antenna1|Antenna2|ApuFlap|AvionicsVentDoor|Cargo1|Cargo2|Cargo3|DoorL1|DoorL4|DoorR1|DoorR4|ElevatorL|ElevatorR|EngineFairingL|EngineFairingR|FairingL1|FairingL2|FairingL3|FairingR1|FairingR2|FairingR3|FlapL1|FlapL2|FlapR1|FlapR2|Fuselage|GPUServiceDoor|Hstabs|MLGGearDoorL|MLGGearDoorR|MLGWingDoorL1|MLGWingDoorL2|MLGWingDoorR1|MLGWingDoorR2|NLGAftDoorL|NLGAftDoorR|NLGFittingPanel|NLGForewardDoorL|NLGForewardDoorR|OutflowValveDoor1|OutflowValveDoor2|RatDoorL|RatDoorR|Rudder|Sharklet|SlatL1|SlatL2|SlatR1|SlatR2|SpoilerL1|SpoilerL2|SpoilerL3|SpoilerL4|SpoilerL5|SpoilerR1|SpoilerR2|SpoilerR3|SpoilerR4|SpoilerR5|Wings|WingtipFence|AOASensorL1|AOASensorL2|AOASensorR)$": "Models/Liveries/CFM/4k/SWR-fuselage.png",
+            "@^(EngineCFM56L|EngineCFM56R|ReverserLDoor1|ReverserLDoor2|ReverserLDoor3|ReverserLDoor4|ReverserRDoor1|ReverserRDoor2|ReverserRDoor3|ReverserRDoor4|PylonCFM56L|PylonCFM56R|IntakeCFM56L|IntakeCFM56R)$": "Models/Liveries/CFM/2k/SWR-engine.png",
+        },
+        "tex_max": 2048,
     },
     "f16": {"fgdir": "f16", "set": "f16-block-52-set.xml", "jsbsim": "f16"},
     "t6texan2": {
