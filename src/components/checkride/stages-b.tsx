@@ -47,7 +47,7 @@ import {
 } from "./shared";
 
 const linkBtn =
-  "inline-flex h-9 items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90";
+  "inline-flex h-9 items-center justify-center gap-2 rounded-lg btn-glow px-4 text-sm font-medium text-primary-foreground";
 const linkBtnOutline =
   "inline-flex h-9 items-center justify-center gap-2 rounded-md border border-input bg-background px-4 text-sm font-medium hover:bg-accent";
 

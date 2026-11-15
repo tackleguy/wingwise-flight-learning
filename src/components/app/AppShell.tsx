@@ -1,6 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
-import { ChevronDown, Plane, UserCircle2 } from "lucide-react";
+import { ChevronDown, ChevronRight, ShieldCheck, UserCircle2 } from "lucide-react";
 
 import {
   Sidebar,
@@ -19,9 +19,12 @@ import {
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { Logo } from "@/components/brand/Logo";
+import { CommandMenu } from "@/components/app/CommandMenu";
 import { NAV, navItemFor } from "@/lib/nav";
 import { useStore } from "@/lib/store";
 import { useApplyAccessibility } from "@/lib/accessibility";
+import { cn } from "@/lib/utils";
 
 function isActive(pathname: string, to: string) {
   if (to === "/") return pathname === "/";
@@ -30,18 +33,12 @@ function isActive(pathname: string, to: string) {
 
 function Brand() {
   return (
-    <Link to="/" className="flex items-center gap-2.5 px-1 py-1">
-      <span className="grid size-8 shrink-0 place-items-center rounded-md border border-primary/40 bg-primary/10 text-primary">
-        <Plane className="size-4 -rotate-45" />
-      </span>
-      <span className="flex flex-col leading-none group-data-[collapsible=icon]:hidden">
-        <span className="text-[15px] font-bold tracking-tight">
-          TEACH<span className="text-primary">X</span>
-        </span>
-        <span className="mt-1 text-[10px] font-medium tracking-[0.18em] text-muted-foreground uppercase">
-          Flight Training Systems
-        </span>
-      </span>
+    <Link
+      to="/"
+      aria-label="TeachX home"
+      className="flex items-center rounded-lg px-1 py-1.5 outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring group-data-[collapsible=icon]:px-0"
+    >
+      <Logo size={34} className="group-data-[collapsible=icon]:[&_svg]:size-8" />
     </Link>
   );
 }
@@ -85,45 +82,64 @@ function NavMenu() {
                 type="button"
                 onClick={() => toggle(group.label)}
                 aria-expanded={open}
-                className="flex w-full items-center justify-between hover:text-sidebar-foreground"
+                className="flex w-full items-center justify-between transition-colors hover:text-sidebar-foreground"
               >
-                {group.label}
+                <span className="flex items-center gap-2">
+                  {group.label}
+                  {!open && group.label === activeGroup ? (
+                    <span className="size-1 rounded-full bg-primary" />
+                  ) : null}
+                </span>
                 <ChevronDown
-                  className={
-                    open ? "size-3 transition-transform" : "size-3 -rotate-90 transition-transform"
-                  }
+                  className={cn(
+                    "size-3 transition-transform duration-300 ease-[var(--ease-out-expo)]",
+                    !open && "-rotate-90",
+                  )}
                 />
               </button>
             </SidebarGroupLabel>
-            {open ? (
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {group.items.map((item) => {
-                    const active = isActive(pathname, item.to) || resolved?.to === item.to;
-                    return (
-                      <SidebarMenuItem key={item.to}>
-                        <SidebarMenuButton asChild isActive={active} tooltip={item.label}>
-                          <Link
-                            to={item.to}
-                            onClick={() => {
-                              if (isMobile) setOpenMobile(false);
-                            }}
-                            className={
-                              active
-                                ? "relative before:absolute before:inset-y-1.5 before:left-0 before:w-0.5 before:rounded before:bg-primary"
-                                : ""
-                            }
+            {/* Animated collapse: the grid row eases between 0fr and 1fr. Closed groups are inert. */}
+            <div
+              className={cn(
+                "grid transition-[grid-template-rows,opacity] duration-300 ease-[var(--ease-out-expo)]",
+                open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0",
+              )}
+              inert={!open}
+            >
+              <div className="min-h-0 overflow-hidden">
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {group.items.map((item) => {
+                      const active = isActive(pathname, item.to) || resolved?.to === item.to;
+                      return (
+                        <SidebarMenuItem key={item.to}>
+                          <SidebarMenuButton
+                            asChild
+                            isActive={active}
+                            tooltip={item.label}
+                            className={cn(
+                              "h-9 rounded-lg transition-[background-color,color,padding] duration-200 [&>svg]:transition-transform [&>svg]:duration-300 [&>svg]:ease-[var(--ease-spring)] hover:[&>svg]:scale-110",
+                              active &&
+                                "relative bg-[linear-gradient(90deg,color-mix(in_oklch,var(--primary)_18%,transparent),color-mix(in_oklch,var(--primary)_4%,transparent))] shadow-[inset_0_0_0_1px_color-mix(in_oklch,var(--primary)_22%,transparent)] before:absolute before:inset-y-2 before:left-0 before:w-[3px] before:rounded-full before:bg-primary before:shadow-[0_0_12px_var(--primary)] data-[active=true]:bg-transparent group-data-[collapsible=icon]:before:hidden",
+                            )}
                           >
-                            <item.icon className={active ? "text-primary" : ""} />
-                            <span>{item.label}</span>
-                          </Link>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    );
-                  })}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            ) : null}
+                            <Link
+                              to={item.to}
+                              onClick={() => {
+                                if (isMobile) setOpenMobile(false);
+                              }}
+                            >
+                              <item.icon className={active ? "text-primary" : ""} />
+                              <span>{item.label}</span>
+                            </Link>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      );
+                    })}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </div>
+            </div>
           </SidebarGroup>
         );
       })}
@@ -131,27 +147,40 @@ function NavMenu() {
   );
 }
 
+function initials(name: string) {
+  return name
+    .split(" ")
+    .map((p) => p[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
+
 function ProfileChip() {
   const profile = useStore((s) => s.profile);
+  const onOnboarding = useRouterState({ select: (s) => s.location.pathname === "/onboarding" });
   if (!profile) {
+    if (onOnboarding) return null;
     return (
       <Link
         to="/onboarding"
-        className="inline-flex items-center gap-1.5 rounded-md border border-primary/50 bg-primary/10 px-2.5 py-1.5 text-xs font-semibold text-primary hover:bg-primary/20"
+        className="btn-glow inline-flex h-9 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold"
       >
-        <UserCircle2 className="size-4" /> Create pilot profile
+        <UserCircle2 className="size-4" />
+        <span className="hidden sm:inline">Create pilot profile</span>
+        <span className="sm:hidden">Start</span>
       </Link>
     );
   }
   return (
-    <Link to="/settings" className="flex items-center gap-2 rounded-md px-2 py-1 hover:bg-accent">
-      <span className="grid size-7 place-items-center rounded-full bg-primary/15 text-xs font-bold text-primary">
-        {profile.name
-          .split(" ")
-          .map((p) => p[0])
-          .join("")
-          .slice(0, 2)
-          .toUpperCase()}
+    <Link
+      to="/settings"
+      className="group flex items-center gap-2 rounded-lg py-1 pr-2 pl-1 transition-colors hover:bg-accent/60"
+    >
+      <span className="relative grid size-8 place-items-center rounded-full bg-[conic-gradient(from_180deg,var(--brand-1),var(--brand-2),var(--brand-3),var(--brand-1))] p-[1.5px] transition-transform duration-300 group-hover:scale-105">
+        <span className="grid size-full place-items-center rounded-full bg-background text-[11px] font-bold text-primary">
+          {initials(profile.name)}
+        </span>
       </span>
       <span className="hidden flex-col leading-tight sm:flex">
         <span className="text-xs font-semibold">{profile.name}</span>
@@ -161,43 +190,104 @@ function ProfileChip() {
   );
 }
 
+/** Thin brand-colored bar under the top bar while a route is loading. */
+function RouteProgress() {
+  const loading = useRouterState({ select: (s) => s.status === "pending" || s.isLoading });
+  const [phase, setPhase] = useState<"idle" | "loading" | "done">("idle");
+  useEffect(() => {
+    if (loading) {
+      setPhase("loading");
+      return;
+    }
+    setPhase((p) => (p === "loading" ? "done" : p));
+    const t = window.setTimeout(() => setPhase("idle"), 450);
+    return () => window.clearTimeout(t);
+  }, [loading]);
+  return (
+    <div
+      aria-hidden
+      className={cn(
+        "pointer-events-none absolute inset-x-0 -bottom-px h-[2px] origin-left bg-[linear-gradient(90deg,var(--brand-1),var(--brand-2),var(--brand-3))] shadow-[0_0_10px_var(--brand-2)]",
+        phase === "idle" && "scale-x-0 opacity-0",
+        phase === "loading" && "animate-[route-progress_2.4s_var(--ease-out-expo)_forwards]",
+        phase === "done" && "scale-x-100 opacity-0 transition-opacity duration-500",
+      )}
+    />
+  );
+}
+
 function TopBar() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const item = navItemFor(pathname);
+  const group = NAV.find((g) => g.items.some((i) => i.to === item?.to))?.label;
   return (
-    <header className="sticky top-0 z-30 flex h-12 shrink-0 items-center gap-3 border-b bg-background/85 px-3 backdrop-blur supports-[backdrop-filter]:bg-background/70">
-      <SidebarTrigger className="-ml-1" />
+    <header className="glass sticky top-0 z-30 flex h-14 shrink-0 items-center gap-3 border-b border-border/70 px-3 sm:px-4">
+      <SidebarTrigger className="-ml-1 size-8 rounded-lg" />
       <div className="h-5 w-px bg-border" />
-      <div className="flex min-w-0 items-center gap-2">
-        {item ? <item.icon className="size-4 shrink-0 text-primary" /> : null}
-        <span className="truncate text-sm font-semibold">{item?.label ?? "TeachX"}</span>
-      </div>
-      <div className="ml-auto flex items-center gap-3">
+      <nav aria-label="Breadcrumb" className="flex min-w-0 items-center gap-1.5 text-sm">
+        {group && group !== "Overview" ? (
+          <>
+            <span className="hidden text-muted-foreground sm:inline">{group}</span>
+            <ChevronRight className="hidden size-3.5 shrink-0 text-muted-foreground/50 sm:inline" />
+          </>
+        ) : null}
+        <span key={pathname} className="animate-fade-in-up flex min-w-0 items-center gap-2">
+          {item ? <item.icon className="size-4 shrink-0 text-primary" /> : null}
+          <span className="truncate font-semibold">
+            {item?.label ?? (pathname === "/onboarding" ? "Pilot profile" : "TeachX")}
+          </span>
+        </span>
+      </nav>
+      <div className="ml-auto flex items-center gap-2">
+        <CommandMenu />
         <ProfileChip />
       </div>
+      <RouteProgress />
     </header>
   );
 }
 
+/** One document-level listener feeds the cursor position to every `.spotlight` element. */
+function useSpotlightPointer() {
+  useEffect(() => {
+    const onMove = (e: PointerEvent) => {
+      const target = e.target as Element | null;
+      const el = target?.closest?.(".spotlight") as HTMLElement | null;
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      el.style.setProperty("--mx", `${e.clientX - r.left}px`);
+      el.style.setProperty("--my", `${e.clientY - r.top}px`);
+    };
+    document.addEventListener("pointermove", onMove, { passive: true });
+    return () => document.removeEventListener("pointermove", onMove);
+  }, []);
+}
+
 export function AppShell({ children }: { children: ReactNode }) {
   useApplyAccessibility();
+  useSpotlightPointer();
   return (
     <SidebarProvider>
       <Sidebar collapsible="icon" variant="sidebar">
-        <SidebarHeader className="border-b border-sidebar-border">
+        <SidebarHeader className="h-14 justify-center border-b border-sidebar-border px-3 group-data-[collapsible=icon]:px-2">
           <Brand />
         </SidebarHeader>
-        <SidebarContent className="gap-0 py-1">
+        <SidebarContent className="gap-0 py-2">
           <NavMenu />
         </SidebarContent>
         <SidebarFooter className="border-t border-sidebar-border">
-          <p className="px-2 text-[10px] leading-snug text-muted-foreground group-data-[collapsible=icon]:hidden">
+          <p className="flex gap-2 px-2 text-[10px] leading-snug text-muted-foreground group-data-[collapsible=icon]:hidden">
+            <ShieldCheck className="mt-px size-3.5 shrink-0 text-primary/70" />
             Training simulator — not for real-world flight or navigation.
           </p>
         </SidebarFooter>
         <SidebarRail />
       </Sidebar>
-      <SidebarInset className="min-w-0">
+      <SidebarInset className="isolate min-w-0">
+        <div aria-hidden className="tx-ambient">
+          <div className="tx-ambient-a" />
+          <div className="tx-ambient-b" />
+        </div>
         <TopBar />
         <div className="min-w-0 flex-1">{children}</div>
       </SidebarInset>

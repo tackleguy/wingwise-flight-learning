@@ -83,7 +83,7 @@ function AvionicsLab() {
   return (
     <Page wide>
       <PageHeader
-        eyebrow="Train"
+        eyebrow="Fly"
         title="Avionics Lab"
         icon={Cpu}
         description="Fly a live simulation and learn every display, radio and autopilot mode by doing."

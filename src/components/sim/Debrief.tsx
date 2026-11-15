@@ -182,7 +182,7 @@ export function Debrief({
             </Button>
           ) : null}
           {checkrideId ? (
-            <Button variant="default" className="ml-auto bg-ok text-black hover:bg-ok/90" asChild>
+            <Button variant="default" className="ml-auto text-black [--primary:var(--ok)]" asChild>
               <Link to="/checkrides" search={{ attempt: checkrideId }}>
                 <ClipboardCheck className="size-4" /> Return to checkride
               </Link>

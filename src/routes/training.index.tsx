@@ -60,14 +60,14 @@ function TrainingHub() {
             <Link
               to="/training/$track"
               params={{ track: goalTrack.id }}
-              className="inline-flex items-center gap-2 rounded-md bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+              className="inline-flex items-center gap-2 rounded-lg btn-glow px-3.5 py-2 text-sm font-semibold text-primary-foreground"
             >
               Open my goal track <ArrowRight className="size-4" />
             </Link>
           ) : !profile ? (
             <Link
               to="/onboarding"
-              className="inline-flex items-center gap-2 rounded-md bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+              className="inline-flex items-center gap-2 rounded-lg btn-glow px-3.5 py-2 text-sm font-semibold text-primary-foreground"
             >
               Find my track <ArrowRight className="size-4" />
             </Link>

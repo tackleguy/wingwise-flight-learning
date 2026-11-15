@@ -13,23 +13,54 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AppShell } from "@/components/app/AppShell";
+import { LogoMark } from "@/components/brand/Logo";
 import { Toaster } from "@/components/ui/sonner";
+
+/** Radar scope behind the 404 / error messages. */
+function RadarBackdrop() {
+  return (
+    <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 grid place-items-center">
+      <div className="relative size-[min(80vw,520px)]">
+        {[1, 0.75, 0.5, 0.25].map((s) => (
+          <div
+            key={s}
+            className="absolute rounded-full border border-primary/15"
+            style={{ inset: `${(1 - s) * 50}%` }}
+          />
+        ))}
+        <div className="absolute inset-x-0 top-1/2 h-px bg-primary/10" />
+        <div className="absolute inset-y-0 left-1/2 w-px bg-primary/10" />
+        <div className="animate-radar absolute inset-0 rounded-full bg-[conic-gradient(from_0deg,transparent_0deg,transparent_300deg,color-mix(in_oklch,var(--primary)_35%,transparent)_360deg)] [mask-image:radial-gradient(circle,#000_68%,transparent_70%)]" />
+        <span className="animate-pulse-dot absolute top-[28%] left-[64%] size-2 rounded-full bg-caution shadow-[0_0_12px_var(--caution)]" />
+      </div>
+    </div>
+  );
+}
 
 function NotFoundComponent() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
-        <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          The page you're looking for doesn't exist or has been moved.
+    <div className="relative isolate flex min-h-[calc(100dvh-3.5rem)] items-center justify-center overflow-hidden px-4 py-16">
+      <RadarBackdrop />
+      <div className="animate-rise max-w-md text-center">
+        <LogoMark size={56} className="mx-auto mb-6" />
+        <p className="label-caps text-caution">Squawk 7600 · lost comms</p>
+        <h1 className="mt-3 text-5xl font-bold tracking-tight sm:text-6xl">Off course.</h1>
+        <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
+          This page isn&apos;t on any chart we have. It may have moved, or the link may be wrong.
         </p>
-        <div className="mt-6">
+        <div className="mt-8 flex flex-wrap justify-center gap-2.5">
           <Link
             to="/"
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            className="btn-glow inline-flex h-11 items-center justify-center rounded-xl px-5 text-sm font-semibold"
           >
-            Go home
+            Return to base
+          </Link>
+          <Link
+            to="/simulator"
+            search={{ scenario: "free-flight" }}
+            className="btn-ghost-glass inline-flex h-11 items-center justify-center rounded-xl px-5 text-sm font-semibold"
+          >
+            Go fly instead
           </Link>
         </div>
       </div>
@@ -45,27 +76,30 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
   }, [error]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
-        <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          This page didn't load
+    <div className="relative isolate flex min-h-screen items-center justify-center overflow-hidden bg-background px-4">
+      <RadarBackdrop />
+      <div className="animate-rise max-w-md text-center">
+        <LogoMark size={56} className="mx-auto mb-6" />
+        <p className="label-caps text-warning">Master caution</p>
+        <h1 className="mt-3 text-2xl font-bold tracking-tight text-foreground">
+          This page didn&apos;t load
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
           Something went wrong on our end. You can try refreshing or head back home.
         </p>
-        <div className="mt-6 flex flex-wrap justify-center gap-2">
+        <div className="mt-7 flex flex-wrap justify-center gap-2.5">
           <button
             onClick={() => {
               router.invalidate();
               reset();
             }}
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            className="btn-glow inline-flex h-10 items-center justify-center rounded-xl px-5 text-sm font-semibold"
           >
             Try again
           </button>
           <a
             href="/"
-            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+            className="btn-ghost-glass inline-flex h-10 items-center justify-center rounded-xl px-5 text-sm font-semibold text-foreground"
           >
             Go home
           </a>
@@ -89,7 +123,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content:
           "Flight simulator, avionics lab, AI ATC practice, ground school, practice exams and mock checkrides in one training platform.",
       },
-      { name: "theme-color", content: "#0b1220" },
+      { name: "theme-color", content: "#0c1424" },
       { name: "author", content: "Lovable" },
 
       { property: "og:type", content: "website" },
@@ -103,9 +137,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap",
       },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+      { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
+      { rel: "icon", href: "/favicon.ico", sizes: "any" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
     ],
   }),
   shellComponent: RootShell,

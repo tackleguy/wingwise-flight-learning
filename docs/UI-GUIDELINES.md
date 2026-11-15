@@ -20,3 +20,18 @@ The owner asked for a **less cluttered UI throughout**. Apply these rules on eve
    routes, search params, stored data or required legal labels (simulated / unofficial / not for navigation /
    not loggable / not an FAA test). Keep labels short.
 9. Responsive: must still work at 390 px wide with no horizontal page scroll.
+
+## Brand & motion
+
+- **Logo:** `<Logo />` / `<LogoMark />` from `@/components/brand/Logo` — a paper plane whose contrail forms
+  the X. Never redraw it inline; favicons live in `public/favicon.svg`, `favicon.ico`, `apple-touch-icon.png`.
+- **Fonts:** headings (`h1`, `h2`) use Sora (`font-display`); body text Inter; numbers JetBrains Mono.
+- **Primary actions:** `<Button>` (default variant) or the `btn-glow` class on a link. Secondary on imagery:
+  `btn-ghost-glass`. One glowing button per area.
+- **Interactive cards/rows:** add `panel spotlight` (cursor glow + lit border) and optionally `lift`
+  (hover rise). Set `--spot` to a token (e.g. `var(--ok)`) to colour the glow.
+- **Entrances:** `<Page>` already staggers its direct children in; don't add more page-level animation.
+  Use `animate-fade-in-up` / `animate-rise` for smaller reveals (they leave no transform behind).
+- **Reduced motion:** CSS animations are disabled automatically. JS-driven animation must check
+  `useReducedMotion()` from `@/hooks/use-reduced-motion`.
+- **Night (red) lighting:** fixed-colour artwork must carry `tx-night-tint` so it turns red in that mode.

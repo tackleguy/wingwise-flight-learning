@@ -214,7 +214,7 @@ function ExamRow({
           to="/exam/$examId"
           params={{ examId: def.id }}
           search={{ mode: "timed" }}
-          className="inline-flex h-8 items-center justify-center gap-1.5 rounded-md bg-primary px-3 text-xs font-semibold text-primary-foreground hover:bg-primary/90"
+          className="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg btn-glow px-3 text-xs font-semibold text-primary-foreground"
         >
           <Timer className="size-3.5" /> Timed exam
         </Link>
