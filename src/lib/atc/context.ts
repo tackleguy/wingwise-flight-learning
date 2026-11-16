@@ -29,6 +29,7 @@ import {
 } from "./phrase";
 import type {
   AircraftInfo,
+  AirportLegContext,
   AtisInfo,
   Facility,
   FacilityKey,
@@ -343,30 +344,33 @@ export function facilityOf(ctx: ScenarioContext, key: FacilityKey): Facility {
 }
 
 /** All facilities as a directory for the radio "frequency list". */
-export function facilityDirectory(
-  ctx: ScenarioContext,
+export function facilityDirectoryForFields(
+  airportName: string,
+  atisFreq: number | null,
+  facilities: Partial<Record<FacilityKey, Facility>>,
+  isTowered = true,
 ): { mhz: number; name: string; station: string; simulated: boolean }[] {
   const seen = new Set<string>();
   const out: { mhz: number; name: string; station: string; simulated: boolean }[] = [];
-  if (ctx.atisFreq)
+  if (atisFreq)
     out.push({
-      mhz: ctx.atisFreq,
-      name: `${ctx.airportName} ATIS`,
-      station: "ATIS",
+      mhz: atisFreq,
+      name: `${airportName} ${isTowered ? "ATIS" : "AWOS"}`,
+      station: isTowered ? "ATIS" : "AWOS",
       simulated: false,
     });
   const order: FacilityKey[] = [
     "clearance",
     "ground",
     "tower",
+    "ctaf",
     "departure",
     "approach",
     "center",
     "fss",
-    "ctaf",
   ];
   for (const k of order) {
-    const f = ctx.facilities[k];
+    const f = facilities[k];
     if (!f) continue;
     const key = `${f.name}|${f.mhz}`;
     if (seen.has(key)) continue;
@@ -374,6 +378,18 @@ export function facilityDirectory(
     out.push({ mhz: f.mhz, name: f.name, station: f.station, simulated: f.simulated });
   }
   return out;
+}
+
+/** All facilities as a directory for the radio "frequency list". */
+export function facilityDirectory(
+  ctx: ScenarioContext,
+): { mhz: number; name: string; station: string; simulated: boolean }[] {
+  return facilityDirectoryForFields(
+    ctx.airportName,
+    ctx.atisFreq,
+    ctx.facilities,
+    ctx.airport.towered,
+  );
 }
 
 // ---------- runway / ATIS ----------
@@ -408,6 +424,55 @@ export function approachPhrase(r: RunwayInfo): Phrase {
     : { text: `RNAV (GPS) runway ${r.id}`, spoken: `R-NAV runway ${rwy(r.id).spoken}` };
 }
 
+export function composeAtis(params: {
+  airportName: string;
+  letterCode: string;
+  zuluTime: string;
+  runway: RunwayInfo;
+  windDirMag: number;
+  windKt: number;
+  visibilitySm: number;
+  sky: string;
+  tempC: number;
+  dewC: number;
+  altimeterInHg: number;
+  ifrWx: boolean;
+}): AtisInfo {
+  const {
+    airportName,
+    letterCode,
+    zuluTime,
+    runway,
+    windDirMag,
+    windKt,
+    visibilitySm,
+    sky,
+    tempC,
+    dewC,
+    altimeterInHg,
+    ifrWx,
+  } = params;
+  const approachInUse = ifrWx
+    ? ph`${approachPhrase(runway)} approach in use.`
+    : runway.ils
+      ? plain("Visual approaches in use.")
+      : null;
+  const visWord = Number.isInteger(visibilitySm) ? String(visibilitySm) : visibilitySm.toFixed(1);
+  const phrase = ph`${airportName} airport information ${letter(letterCode)}, ${digits(zuluTime)} Zulu. ${wind(windDirMag, windKt)}. Visibility ${visWord}${ifrWx && visibilitySm < 6 ? " mist" : ""}. ${sky}. Temperature ${Math.round(tempC)}, dew point ${Math.round(dewC)}. Altimeter ${altimeter(altimeterInHg)}. ${approachInUse} Landing and departing runway ${rwy(runway.id)}. Advise on initial contact you have information ${letter(letterCode)}.`;
+  return {
+    letter: letterCode,
+    zuluTime,
+    windDirMag,
+    windKt,
+    visibilitySm,
+    sky,
+    tempC: Math.round(tempC),
+    dewC: Math.round(dewC),
+    altimeter: Math.round(altimeterInHg * 100) / 100,
+    phrase,
+  };
+}
+
 function buildAtis(
   name: string,
   rng: Rng,
@@ -437,23 +502,84 @@ function buildAtis(
         "Scattered clouds at 3,500",
         "Few clouds at 6,000",
       ]);
-  const approachInUse = ifrWx
-    ? ph`${approachPhrase(runway)} approach in use.`
-    : runway.ils
-      ? plain("Visual approaches in use.")
-      : null;
-  const phrase = ph`${name} airport information ${letter(letterCode)}, ${digits(zuluTime)} Zulu. ${wind(windDirMag, windKt)}. Visibility ${visibilitySm}${ifrWx ? " mist" : ""}. ${sky}. Temperature ${tempC}, dew point ${dewC}. Altimeter ${altimeter(altSetting)}. ${approachInUse} Landing and departing runway ${rwy(runway.id)}. Advise on initial contact you have information ${letter(letterCode)}.`;
-  return {
-    letter: letterCode,
+  return composeAtis({
+    airportName: name,
+    letterCode,
     zuluTime,
+    runway,
     windDirMag,
     windKt,
     visibilitySm,
     sky,
     tempC,
     dewC,
-    altimeter: altSetting,
-    phrase,
+    altimeterInHg: altSetting,
+    ifrWx,
+  });
+}
+
+export function buildAirportLegContext(
+  airport: Airport,
+  opts: {
+    rng?: Rng;
+    preferIls?: boolean;
+    ifrWeather?: boolean;
+    preferredRunwayId?: string;
+    windTrue?: number;
+    windKt?: number;
+  } = {},
+): AirportLegContext {
+  const rng = opts.rng ?? makeRng(Date.now());
+  const ends = allRunwayEnds(airport);
+  let windTrue = opts.windTrue ?? between(rng, 0, 35) * 10;
+  if (opts.windTrue === undefined && opts.preferIls) {
+    const ilsEnds = ends.filter((e) => e.end.ils);
+    if (ilsEnds.length)
+      windTrue = norm360(pick(rng, ilsEnds).end.trueHeading + between(rng, -25, 25));
+  }
+  const windKt = opts.windKt ?? between(rng, 4, 14);
+  const preferredEnd = opts.preferredRunwayId
+    ? ends.find((e) => usRunway(e.end.id) === usRunway(opts.preferredRunwayId!))
+    : undefined;
+  const best = preferredEnd ?? bestRunwayForWind(airport, windTrue) ?? ends[0];
+  const runway = best
+    ? runwayInfo(airport, best.end)
+    : { id: "36", dataId: "36", magHeading: 360, pattern: "left" as const, ils: null };
+  const otherRunway = ends.find(
+    (e) =>
+      best &&
+      e.runway.name !== best.runway.name &&
+      Math.abs(norm180(e.end.trueHeading - windTrue)) < 100,
+  );
+  const reciprocal = best ? best.runway.ends.find((e) => e.id !== best.end.id) : undefined;
+  const altEnd = otherRunway?.end ?? reciprocal;
+  const altRunway = altEnd ? runwayInfo(airport, altEnd) : null;
+  const airportName = airportSpokenName(airport);
+  const atis = buildAtis(
+    airportName,
+    rng,
+    runway,
+    windTrue,
+    windKt,
+    airport.magVar,
+    !!opts.ifrWeather,
+  );
+  const facilities = buildFacilities(airport);
+  const taxiRoute = airport.taxiways.length
+    ? airport.taxiways.slice(0, rng() < 0.5 ? 1 : Math.min(2, airport.taxiways.length))
+    : ["A"];
+  return {
+    airport,
+    airportName,
+    runway,
+    altRunway,
+    atis,
+    atisFreq: freqOf(airport, "ATIS")?.mhz ?? freqOf(airport, "AWOS")?.mhz ?? null,
+    facilities,
+    taxiRoute,
+    patternAltitude: Math.round((airport.elevationFt + 1000) / 100) * 100,
+    interceptAltitude: Math.ceil((airport.elevationFt + 1900) / 100) * 100,
+    approachName: approachPhrase(runway).text,
   };
 }
 

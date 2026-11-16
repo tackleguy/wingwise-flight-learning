@@ -39,8 +39,10 @@ import { AtcReport } from "@/components/radio/AtcReport";
 import { AiStatusPill, useAiStatus } from "@/components/ai/AiStatusPill";
 import { actions, useHydrated, useStore, type SavedFlightPlan } from "@/lib/store";
 import { cn } from "@/lib/utils";
-import { atcAircraftOptions, facilityOf, toweredAirports } from "@/lib/atc/context";
+import { AIRPORTS } from "@/lib/data/airports";
+import { atcAircraftOptions, facilityOf } from "@/lib/atc/context";
 import {
+  advanceFreeFlight,
   aiStateSnapshot,
   applyAiTurn,
   blockedTurn,
@@ -128,15 +130,16 @@ function AiAtcPage() {
   const sessions = useStore((s) => s.atcSessions);
   const { status, loading, refresh, aiAvailable } = useAiStatus();
 
-  const towered = useMemo(() => toweredAirports(), []);
+  const allAirports = AIRPORTS;
   const aircraftOptions = useMemo(() => atcAircraftOptions(), []);
 
   const [planId, setPlanId] = useState<string>("none");
   const [airport, setAirport] = useState("KPAO");
+  const [destination, setDestination] = useState("auto");
   const [aircraftId, setAircraftId] = useState("c172");
   const [callsign, setCallsign] = useState("N172TX");
   const [rules, setRules] = useState<"VFR" | "IFR">("VFR");
-  const [goalId, setGoalId] = useState<FreeGoalId>("vfr-departure-ff");
+  const [goalId, setGoalId] = useState<FreeGoalId>("vfr-full-flight");
   const [customGoal, setCustomGoal] = useState("");
   const [difficulty, setDifficulty] = useState<Difficulty>("beginner");
   const [personality, setPersonality] = useState<Personality>("professional");
@@ -151,19 +154,24 @@ function AiAtcPage() {
     (p: SavedFlightPlan | null) => {
       if (!p) return;
       setRules(p.rules);
-      setGoalId(p.rules === "IFR" ? "ifr-departure" : "vfr-departure-ff");
-      if (towered.some((a) => a.icao === p.departure.toUpperCase()))
+      setGoalId(p.rules === "IFR" ? "ifr-full-flight" : "vfr-full-flight");
+      if (allAirports.some((a) => a.icao === p.departure.toUpperCase()))
         setAirport(p.departure.toUpperCase());
+      if (allAirports.some((a) => a.icao === p.destination.toUpperCase()))
+        setDestination(p.destination.toUpperCase());
       if (aircraftOptions.some((a) => a.id === p.aircraftId)) setAircraftId(p.aircraftId);
     },
-    [towered, aircraftOptions],
+    [allAirports, aircraftOptions],
   );
 
   useEffect(() => {
     if (!hydrated || defaultsApplied.current) return;
     defaultsApplied.current = true;
     if (profile?.callsign) setCallsign(profile.callsign.toUpperCase());
-    if (profile?.homeAirport && towered.some((a) => a.icao === profile.homeAirport.toUpperCase()))
+    if (
+      profile?.homeAirport &&
+      allAirports.some((a) => a.icao === profile.homeAirport.toUpperCase())
+    )
       setAirport(profile.homeAirport.toUpperCase());
     if (aircraftOptions.some((a) => a.id === settings.preferredAircraft))
       setAircraftId(settings.preferredAircraft);
@@ -182,7 +190,7 @@ function AiAtcPage() {
     settings.training.difficulty,
     search.plan,
     plans,
-    towered,
+    allAirports,
     aircraftOptions,
     applyPlan,
   ]);
@@ -241,6 +249,9 @@ function AiAtcPage() {
     historyRef.current = [];
     const { state: s, replies } = createFreeState({
       airportIcao: airport,
+      ...(destination !== "auto" && destination !== airport
+        ? { destinationIcao: destination }
+        : {}),
       aircraftId,
       callsign,
       rules,
@@ -268,6 +279,15 @@ function AiAtcPage() {
     setPhase("live");
     queue.push(toQueue(replies));
     if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const advanceLeg = () => {
+    const cur = stateRef.current;
+    if (!cur) return;
+    const { state: next, replies } = advanceFreeFlight(cur);
+    commit(next);
+    setAiHint("");
+    if (replies.length) queue.push(toQueue(replies));
   };
 
   const finish = () => {
@@ -422,17 +442,22 @@ function AiAtcPage() {
     [queue, thinking, useAi],
   );
 
-  const atisFreq = state?.ctx.atisFreq ?? null;
-  const tunedAtis = phase === "live" && atisFreq !== null && isListening(radio, atisFreq);
+  const tunedAtisLeg =
+    phase === "live" && state
+      ? ([
+          state.ctx,
+          ...(state.dest && state.dest.airport.icao !== state.ctx.airport.icao ? [state.dest] : []),
+          ...(state.dep.airport.icao !== state.ctx.airport.icao ? [state.dep] : []),
+        ].find((l) => l.atisFreq !== null && isListening(radio, l.atisFreq)) ?? null)
+      : null;
   const playAtis = () => {
-    const s = stateRef.current;
-    if (s)
+    if (tunedAtisLeg)
       queue.push([
         {
           kind: "traffic",
-          station: `${s.ctx.airportName} ATIS`,
-          text: s.ctx.atis.phrase.text,
-          spoken: s.ctx.atis.phrase.spoken,
+          station: `${tunedAtisLeg.airportName} ${tunedAtisLeg.airport.towered ? "ATIS" : "AWOS"}`,
+          text: tunedAtisLeg.atis.phrase.text,
+          spoken: tunedAtisLeg.atis.phrase.spoken,
           delayMs: 200,
           pitch: 0.9,
         },
@@ -453,8 +478,10 @@ function AiAtcPage() {
           title={state.goal}
           subtitle={
             <>
-              {state.ctx.airport.icao} · {state.ctx.aircraft.shortName} {state.ctx.cs.full} ·{" "}
-              {state.rules} · {DIFFICULTIES.find((d) => d.id === state.difficulty)?.label} ·{" "}
+              {state.dep.airport.icao}
+              {state.dest ? ` → ${state.dest.airport.icao}` : ""} · {state.ctx.aircraft.shortName}{" "}
+              {state.ctx.cs.full} · {state.rules} ·{" "}
+              {DIFFICULTIES.find((d) => d.id === state.difficulty)?.label} ·{" "}
               {aiTurns.current > 0
                 ? `AI controller (${aiTurns.current} AI turn${aiTurns.current > 1 ? "s" : ""})`
                 : "Scripted controller"}
@@ -492,6 +519,10 @@ function AiAtcPage() {
   if (phase === "live" && state) {
     const ctx = state.ctx;
     const cur = facilityOf(ctx, state.currentStation);
+    const canAdvanceToDest =
+      !!state.dest &&
+      state.leg !== "destination" &&
+      (state.phase === "airborne" || state.phase === "enroute");
     const hintsLeft = HINTS[state.difficulty] - hintsUsed;
     const lastEval = state.evals[state.evals.length - 1];
     const hintAllowed =
@@ -553,9 +584,15 @@ function AiAtcPage() {
                 loading={false}
                 using={useAi ? lastEngine : "scripted"}
               />
+              {state.dest ? (
+                <Pill tone="primary">
+                  Leg: {state.leg} ({state.dep.airport.icao} → {state.dest.airport.icao})
+                </Pill>
+              ) : null}
               {state.goalReached ? <Pill tone="ok">Goal reached</Pill> : null}
               <span>
-                {ctx.airport.icao} · {ctx.aircraft.shortName}{" "}
+                {ctx.airport.icao}
+                {!ctx.airport.towered ? " (CTAF)" : ""} · {ctx.aircraft.shortName}{" "}
                 <span className="font-mono">{ctx.cs.full}</span> · {state.rules} ·{" "}
                 {DIFFICULTIES.find((d) => d.id === state.difficulty)?.label} ·{" "}
                 {PERSONALITIES.find((p) => p.id === state.personality)?.label}
@@ -563,6 +600,11 @@ function AiAtcPage() {
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
+            {canAdvanceToDest ? (
+              <Button variant="secondary" size="sm" onClick={advanceLeg}>
+                <Play /> Approach {state.dest?.airport.icao}
+              </Button>
+            ) : null}
             <Button variant="ghost" size="sm" onClick={start}>
               <RotateCcw /> Restart
             </Button>
@@ -613,6 +655,7 @@ function AiAtcPage() {
 
             <dl className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs">
               {[
+                ["Airport", ctx.airport.icao],
                 ["Phase", state.phase.replace("-", " ")],
                 ["Rwy", `${ctx.runway.id} (${ctx.runway.pattern})`],
                 [
@@ -637,19 +680,20 @@ function AiAtcPage() {
               ))}
             </dl>
 
-            {tunedAtis ? (
+            {tunedAtisLeg ? (
               <div className="avionics-screen p-3">
                 <div className="mb-1 flex items-center justify-between gap-2">
                   <span className="flex items-center gap-1.5 text-[11px] font-semibold text-cyan">
-                    <Headphones className="size-3.5" /> Receiving ATIS{" "}
-                    {atisFreq ? formatFreqShort(atisFreq) : ""}
+                    <Headphones className="size-3.5" /> Receiving {tunedAtisLeg.airport.icao}{" "}
+                    {tunedAtisLeg.airport.towered ? "ATIS" : "AWOS"}{" "}
+                    {tunedAtisLeg.atisFreq ? formatFreqShort(tunedAtisLeg.atisFreq) : ""}
                   </span>
                   <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={playAtis}>
                     <Volume2 /> Listen
                   </Button>
                 </div>
                 <p className="font-mono text-xs leading-relaxed text-cyan/90">
-                  {ctx.atis.phrase.text}
+                  {tunedAtisLeg.atis.phrase.text}
                 </p>
               </div>
             ) : null}
@@ -872,9 +916,6 @@ function AiAtcPage() {
                       {plan.rules === "IFR"
                         ? "Request your simulated IFR clearance from Clearance Delivery/Ground."
                         : "Request flight following after departure."}
-                      {!towered.some((a) => a.icao === plan.departure.toUpperCase())
-                        ? " (Departure airport isn't towered in the dataset — choose a towered airport.)"
-                        : ""}
                     </p>
                   ) : null}
                 </div>
@@ -922,20 +963,52 @@ function AiAtcPage() {
         <div className="lg:sticky lg:top-4 lg:self-start">
           <section className="panel space-y-4 p-4">
             <label className="block space-y-1">
-              <span className="label-caps">Airport</span>
-              <Select value={airport} onValueChange={setAirport}>
+              <span className="label-caps">
+                {goalId === "vfr-arrival" || goalId === "ifr-arrival"
+                  ? "Arrival airport"
+                  : "Departure airport"}
+              </span>
+              <Select
+                value={airport}
+                onValueChange={(v) => {
+                  setAirport(v);
+                  if (destination === v) setDestination("auto");
+                }}
+              >
                 <SelectTrigger aria-label="Airport">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {towered.map((a) => (
+                  {allAirports.map((a) => (
                     <SelectItem key={a.icao} value={a.icao}>
                       {a.icao} — {a.name}
+                      {a.towered ? "" : " (CTAF)"}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </label>
+            {!["vfr-arrival", "ifr-arrival", "pattern"].includes(goalId) ? (
+              <label className="block space-y-1">
+                <span className="label-caps">Destination airport</span>
+                <Select value={destination} onValueChange={setDestination}>
+                  <SelectTrigger aria-label="Destination airport">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="auto">Auto (nearby airport)</SelectItem>
+                    {allAirports
+                      .filter((a) => a.icao !== airport)
+                      .map((a) => (
+                        <SelectItem key={a.icao} value={a.icao}>
+                          {a.icao} — {a.name}
+                          {a.towered ? "" : " (CTAF)"}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </label>
+            ) : null}
             <div>
               <span className="label-caps">Flight rules</span>
               <div
