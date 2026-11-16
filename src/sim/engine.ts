@@ -45,6 +45,7 @@ import { computeNav, type TrainingNdb } from "./navigation";
 import { calibratedAirspeedKt, SteamInstruments, type InstrumentInputs } from "./instruments";
 import type {
   AircraftState,
+  CrashMotion,
   AutopilotState,
   Controls,
   Failures,
@@ -680,6 +681,7 @@ export class SimEngine {
   }
 
   reposition(s: StartState) {
+    this.crashMotion = null;
     const weight = this.ac.weightLb;
     this.ac = this.initialAircraft(s);
     this.ac.weightLb = weight;
@@ -1083,8 +1085,31 @@ export class SimEngine {
     a.bank = 0;
   }
 
+  /** How the aircraft was moving when it crashed (null before a crash). */
+  crashMotion: CrashMotion | null = null;
+
   private crash(reason: string) {
     if (this.ac.crashed) return;
+    const a = this.ac;
+    // kept before the speeds are zeroed: the 3D view's crash physics carries on from here
+    this.crashMotion = {
+      lat: a.lat,
+      lon: a.lon,
+      altMslFt: a.altMslFt,
+      heading: a.heading,
+      pitch: a.pitch,
+      bank: a.bank,
+      gsKt: a.gsKt,
+      track: a.track,
+      vsFpm: a.vsFpm,
+      pitchRate: a.pitchRate,
+      rollRate: a.rollRate,
+      yawRate: a.yawRate,
+      gearDown: a.gearPosition > 0.5,
+      weightLb: a.weightLb,
+      structural: reason.startsWith("Structural failure"),
+      reason,
+    };
     this.ac.crashed = true;
     this.ac.crashReason = reason;
     this.ac.engineRunning = false;

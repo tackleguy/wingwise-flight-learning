@@ -47,6 +47,16 @@ R. In Tests mode the debrief waits for the wreck to come to rest (at most 12 s).
 - **The end:** when nothing has moved faster than 0.25 m/s (or 0.25 rad/s) for 1.2 s, after 30 s,
   or when the fuselage reaches the edge of the simulated ground.
 
+### Also in the Scenario Simulator (the website's /simulator)
+
+`wreck.ts` is shared: `src/components/sim/crash-view.ts` (three.js) imports it directly. There the
+simple flight engine keeps `crashMotion` (how the aircraft was moving, before it zeroes the speeds);
+the 3D view starts the wreck from it with the pieces stored in the model file (scaled like the model),
+moves the pieces' nodes, makes its own dust, smoke and thump, orbits the wreck, and the debrief waits
+until it has come to rest. A structural failure in the air (overspeed, overload) starts with the
+wings broken off: they fold up and flutter down slower than the fuselage (more air drag for their
+mass); the ground grid is placed where the falling wreck will land (fall worked out with the same drag).
+
 ## 2. Decisions
 
 See `DECISIONS.md` → "Crash physics". In short: Rapier (maintained, CCD, small enough, Apache-2.0)
@@ -63,13 +73,18 @@ No other outside code or data (dust, smoke and sound are made here).
 
 ## 4. Verified
 
-- `npx vitest run tests/crash` — 9 tests with the real engine: the pose given is the pose read back;
+- `npx vitest run tests/crash` — 10 tests with the real engine (one is a break-up in the air at 1,500 ft): the pose given is the pose read back;
   an aircraft on its wheels stays standing and nothing breaks; a 300 ft/min touchdown breaks nothing;
   1,500 ft/min breaks a main leg and the aircraft comes down on its fuselage or a wing, slides
   15–250 m, ends neither in the ground nor floating; gear broken by the crash comes off at once; a
   wing tip touching at taxi speed does not tear the wing off; an 80 kt dive breaks the aircraft apart
   with nothing ending up in the ground; an A320 gear-up landing slides on its belly; and the whole
   chain in the simulator (JSBSim flies into the ground → crash module → at rest → a new start resets).
+- Website: `bunx vitest run src/components/sim/crash-view.test.ts` — the engine keeps the motion at a
+  crash; a dive breaks the Cessna (pieces from the real model file) and it comes to rest on the
+  ground; the simple drawn shape works too. Headless Chrome on /simulator: a dive (pieces scattered on
+  the runway, smoke, debrief after it came to rest) and a structural failure (wings fold away, the
+  fuselage falls); no errors.
 - Headless Chrome on the real app: a dive near KLVK — wings, tail and wheels break off, dust,
   the outside camera keeps the wreck in the middle, "come to rest" after about 11 s; no errors.
 - The split of all ten World Flight Simulator models checked by eye (coloured, pulled apart:
@@ -89,4 +104,3 @@ No other outside code or data (dust, smoke and sound are made here).
 - Damage short of a crash (a bent propeller after a prop strike, a damaged nose gear you can still
   taxi on).
 - Pieces hitting buildings and trees; skid marks.
-- The same crash physics in the Scenario Simulator (three.js).

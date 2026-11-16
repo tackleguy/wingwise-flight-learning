@@ -316,6 +316,30 @@ export interface Indicated {
   avionicsPowered: boolean;
 }
 
+/** How the aircraft was moving at the moment it crashed (the crash physics in the 3D view starts from this). */
+export interface CrashMotion {
+  lat: number;
+  lon: number;
+  /** Height of the aircraft's reference point (its wheels on the ground), ft. */
+  altMslFt: number;
+  heading: number;
+  pitch: number;
+  bank: number;
+  gsKt: number;
+  /** Ground track, TRUE degrees. */
+  track: number;
+  vsFpm: number;
+  /** deg/s */
+  pitchRate: number;
+  rollRate: number;
+  yawRate: number;
+  gearDown: boolean;
+  weightLb: number;
+  /** Broke up in the air (overspeed or overload) rather than hitting the ground. */
+  structural: boolean;
+  reason: string;
+}
+
 export interface SimEvent {
   t: number;
   type:

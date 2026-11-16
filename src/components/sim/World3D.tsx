@@ -12,6 +12,7 @@ import type { SimEngine } from "@/sim/engine";
 import type { Landmark } from "@/sim/scenarios";
 import type { SimSnapshot } from "@/sim/types";
 import { animateFgAircraft, loadFgAircraft, type FgAircraft } from "./fg-aircraft";
+import { CrashScene } from "./crash-view";
 
 export type CameraMode = "cockpit" | "chase" | "orbit" | "tower";
 
@@ -27,6 +28,8 @@ interface Props {
   /** Look offset for cockpit view in degrees (yaw, pitch) */
   look?: { yaw: number; pitch: number };
   className?: string;
+  /** After a crash: called once the wreck has come to rest (crash physics). */
+  onCrashSettled?: () => void;
 }
 
 function latLonFromLocal(origin: { lat: number; lon: number }, eastFt: number, northFt: number) {
@@ -639,8 +642,11 @@ export function World3D({
   quality,
   look,
   className,
+  onCrashSettled,
 }: Props) {
   const host = useRef<HTMLDivElement>(null);
+  const settledRef = useRef(onCrashSettled);
+  settledRef.current = onCrashSettled;
   const camRef = useRef<CameraMode>(camera);
   const lookRef = useRef(look ?? { yaw: 0, pitch: 0 });
   camRef.current = camera;
@@ -834,6 +840,21 @@ export function World3D({
     })();
 
     let raf = 0;
+    // Crash physics: after a crash the wreck moves on (src/components/sim/crash-view.ts)
+    const crash = new CrashScene((lat, lon, altFt) => toWorld(origin, lat, lon, altFt));
+    scene.add(crash.effects);
+    let crashAz = 0;
+    let crashRpm = 0;
+    const offCrash = engine.onEvent((e) => {
+      const m = engine.crashMotion;
+      if (e.type !== "crash" || !m) return;
+      crashRpm = engine.getSnapshot().aircraft.rpm;
+      // the camera starts behind the aircraft, a little to its left
+      crashAz = Math.atan2(-Math.sin(toRad(m.heading)), Math.cos(toRad(m.heading))) + 0.6;
+      void crash.start(m, model.fg, model.gearDrop, perf.wingSpanFt * M, terrainElevationFt, () =>
+        settledRef.current?.(),
+      );
+    });
     let lastT = performance.now();
     const euler = new THREE.Euler(0, 0, 0, "YXZ");
     rebuildWorld(toWorld(origin, snap0.aircraft.lat, snap0.aircraft.lon, 0).setY(0), snap0);
@@ -843,16 +864,36 @@ export function World3D({
       lastT = t;
       const s = engine.getSnapshot();
       const a = s.aircraft;
-      const pos = toWorld(origin, a.lat, a.lon, a.altMslFt);
+      // after a crash the wreck's position and attitude (its reference point is the model's origin, not the wheels)
+      const wp = crash.update(dt, s.paused);
+      const P = wp
+        ? {
+            lat: wp.lat,
+            lon: wp.lon,
+            alt: wp.altMslFt,
+            pitch: wp.pitch,
+            heading: wp.headingTrue,
+            bank: wp.roll,
+          }
+        : {
+            lat: a.lat,
+            lon: a.lon,
+            alt: a.altMslFt,
+            pitch: a.pitch,
+            heading: a.heading,
+            bank: a.bank,
+          };
+      if (wp && !s.paused) crashRpm *= Math.exp(-dt / 0.35);
+      const pos = toWorld(origin, P.lat, P.lon, P.alt);
       const flat = pos.clone().setY(0);
       if (flat.distanceTo(terrainCenter.clone().setY(0)) > 15000) rebuildWorld(flat, s);
 
       // aircraft transform
-      model.group.position.copy(pos).setY(pos.y + model.gearDrop);
-      euler.set(toRad(a.pitch), -toRad(a.heading), -toRad(a.bank), "YXZ");
+      model.group.position.copy(pos).setY(pos.y + (wp ? 0 : model.gearDrop));
+      euler.set(toRad(P.pitch), -toRad(P.heading), -toRad(P.bank), "YXZ");
       model.group.setRotationFromEuler(euler);
       if (model.fg) {
-        animateFgAircraft(model.fg, a.rpm, s.aircraft.gearPosition > 0.15, dt);
+        animateFgAircraft(model.fg, wp ? crashRpm : a.rpm, s.aircraft.gearPosition > 0.15, dt);
       } else {
         const propSpeed = a.rpm / 60;
         for (const p of model.props) {
@@ -953,8 +994,22 @@ export function World3D({
 
       // camera
       const mode = camRef.current;
-      model.group.visible = mode !== "cockpit";
-      if (mode === "cockpit") {
+      // after a crash the cockpit and chase views give way to a slow orbit round the wreck
+      const crashCam = crash.active && (mode === "cockpit" || mode === "chase");
+      model.group.visible = crashCam || mode !== "cockpit";
+      if (crashCam) {
+        if (!s.paused) crashAz += dt * 0.08;
+        const dist = Math.max(30, (model.fg ? model.fg.spanM : perf.wingSpanFt * M) * 3.2);
+        const el = toRad(24);
+        const off = new THREE.Vector3(
+          Math.sin(crashAz) * Math.cos(el),
+          Math.sin(el),
+          Math.cos(crashAz) * Math.cos(el),
+        ).multiplyScalar(dist);
+        cam.position.copy(model.group.position).add(off);
+        cam.lookAt(model.group.position);
+        cam.fov = 55;
+      } else if (mode === "cockpit") {
         const eye = new THREE.Vector3(0, perf.eyeHeightFt * M * 0.35, -perf.wingSpanFt * M * 0.12)
           .applyEuler(euler)
           .add(model.group.position);
@@ -1008,6 +1063,8 @@ export function World3D({
 
     return () => {
       disposed = true;
+      offCrash();
+      crash.dispose();
       cancelAnimationFrame(raf);
       ro.disconnect();
       window.removeEventListener("pointerup", onUp);

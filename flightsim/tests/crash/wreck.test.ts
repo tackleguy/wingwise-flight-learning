@@ -146,6 +146,17 @@ describe("crash physics", () => {
     w.dispose();
   });
 
+  it("a break-up in the air (wings gone at 1,500 ft, 150 kt) falls, lands where it should and comes to rest", () => {
+    const s = start({ altMslFt: 1600, vEastKt: 150, vsFpm: -500, pitch: -5, broken: ["wing_left", "wing_right"] });
+    const w = Wreck.create(R, airframe(), s, flat);
+    run(w, 90);
+    expect(w.settled).toBe(true);
+    expect(w.clearanceM("body")).toBeLessThan(0.5); // on the ground, not hanging in the air
+    expect(w.clearanceM("body")).toBeGreaterThan(-0.3);
+    expect(distanceM(w, s)).toBeGreaterThan(300); // it carried on a long way while falling
+    w.dispose();
+  });
+
   it("a gear-up landing with retractable gear slides on the belly (A320)", () => {
     const s = start({ altMslFt: 100 + 9, vEastKt: 130, vsFpm: -600 });
     const w = Wreck.create(R, airframe("A320", false), s, flat);

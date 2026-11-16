@@ -41,6 +41,20 @@ export interface FgAircraft {
   discs: THREE.Object3D[];
   /** Retractable landing gear (with doors), if the aircraft has it. */
   gear: THREE.Object3D | null;
+  /** The loaded model (its nodes are found by name: wing_left, tail, …). */
+  model: THREE.Object3D;
+  /** Scale applied to the model (its wingspan → the aircraft's real wingspan). */
+  scale: number;
+  /** Pieces that can break off in a crash, in the model's own frame (unscaled), or null. */
+  crash: FgCrashMeta | null;
+}
+
+/** Crash pieces stored in each model file by flightsim/scripts/fg-aircraft/convert.py (split_airframe). */
+export interface FgCrashMeta {
+  parts: Record<
+    string,
+    { nodes: string[]; min: [number, number, number]; max: [number, number, number] } | undefined
+  >;
 }
 
 const loader = new GLTFLoader();
@@ -85,6 +99,8 @@ export async function loadFgAircraft(
     const mesh = o as THREE.Mesh;
     if (mesh.isMesh) mesh.frustumCulled = true;
   });
+  // the converter keeps its numbers in the root node's extras (three.js: userData)
+  const extras = model.children[0]?.userData as { teachx?: { crash?: FgCrashMeta } } | undefined;
   return {
     root,
     gearDrop: -box.min.y * scale,
@@ -93,6 +109,9 @@ export async function loadFgAircraft(
     blades,
     discs,
     gear,
+    model,
+    scale,
+    crash: extras?.teachx?.crash ?? null,
   };
 }
 

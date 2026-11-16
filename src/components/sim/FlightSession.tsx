@@ -227,7 +227,8 @@ function ActiveFlight({
       } else if (e.type === "crash") {
         pushMessage(`CRASH — ${e.message}`, "warn");
         stats.current.crashAt = Date.now();
-        window.setTimeout(() => finish("crash"), 2500);
+        // the debrief comes when the wreck has come to rest (World3D onCrashSettled); this is the latest
+        window.setTimeout(() => finish("crash"), 45000);
       } else if (
         e.type === "stall" ||
         e.type === "overspeed" ||
@@ -298,6 +299,7 @@ function ActiveFlight({
           camera={camera}
           quality={settings.sim.quality}
           className="absolute inset-0"
+          onCrashSettled={() => window.setTimeout(() => finish("crash"), 1200)}
         />
 
         {/* Top-left: scenario & objectives */}

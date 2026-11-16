@@ -12,6 +12,9 @@
  * and slides on its own. The ground is a height grid made from the same terrain data the flight
  * model uses (runways included).
  *
+ * Shared: the website's Scenario Simulator imports this file directly
+ * (src/components/sim/crash-view.ts), so it must stay self-contained — no "@/" imports.
+ *
  * Frames: physics P = metres, X east, Y up, Z south, origin on the ground at the crash point.
  * Body B = x forward, y right, z down (aircraft convention), origin at the centre of gravity.
  * Model G (glTF, the 3D model's) = x left, y up, z nose.
@@ -107,6 +110,8 @@ const MASS_SHARE: Record<PartName, number> = { body: 0.62, wing_left: 0.12, wing
 /** Friction against the ground. Wheels roll, so the gear slides easily (a box cannot roll). */
 const FRICTION: Record<PartName, number> = { body: 0.55, wing_left: 0.5, wing_right: 0.5, tail: 0.5, gear_left: 0.12, gear_right: 0.12, gear_nose: 0.12, gear_tail: 0.12, gear: 0.12 };
 const TERRAIN_FRICTION = 0.7;
+/** Air drag on the wreck, as Rapier linear damping (1/s). */
+const LINEAR_DAMPING = 0.05;
 const RESTITUTION = 0.05;
 /** Collision groups: the ground collides with everything; pieces of the aircraft only with the ground. */
 const GROUP_GROUND = (0x0001 << 16) | 0xffff;
@@ -288,6 +293,10 @@ export class Wreck {
   private readonly mPerDegLon: number;
   /** Height grid: centre (x, z), size, cells per side, heights (column-major, x columns). */
   private readonly grid: { cx: number; cz: number; size: number; n: number; h: Float32Array };
+  /** Highest point of the grid (physics frame, m): above it a piece is still falling, not lost. */
+  private readonly gridTop: number;
+  /** When to give up waiting for everything to stop, s. */
+  private readonly maxTime: number;
   private acc = 0;
   private quietFor = 0;
   private impacts: Impact[] = [];
@@ -312,13 +321,31 @@ export class Wreck {
     const Rb = bodyToP(attitudeMatrix(s.headingTrue, s.pitch, s.roll));
     const w = mul3(Rb, [s.rollRate * D2R, s.pitchRate * D2R, s.yawRate * D2R]);
 
-    // ---- the ground: a height grid around the crash, reaching further in the direction of travel
-    const vh = Math.hypot(vEast, vSouth);
+    // ---- the ground: a height grid around where it hits, reaching further in the direction of travel.
+    // A break-up in the air (structural failure) falls first: the grid goes where it will land.
+    const heightM = s.altMslFt * M_PER_FT - this.h0;
+    // where it reaches the ground: the fall worked out step by step with the same air drag (linear damping)
+    let [fx, fz, fvx, fvz, fy, fvy, fallS] = [0, 0, vEast, vSouth, heightM, vUp, 0];
+    if (heightM > 20) {
+      const dt = 0.05;
+      const k = 1 / (1 + dt * LINEAR_DAMPING);
+      while (fy > 0 && fallS < 180) {
+        fvy = (fvy - G * dt) * k;
+        fvx *= k;
+        fvz *= k;
+        fx += fvx * dt;
+        fy += fvy * dt;
+        fz += fvz * dt;
+        fallS += dt;
+      }
+    }
+    this.maxTime = 30 + fallS;
+    const vh = Math.hypot(fvx, fvz);
     const size = Math.min(900, Math.max(240, 120 + vh * 6));
     const n = 160;
     const ahead = vh > 1 ? size / 2 - 60 : 0;
-    const cx = vh > 1 ? (vEast / vh) * ahead : 0;
-    const cz = vh > 1 ? (vSouth / vh) * ahead : 0;
+    const cx = fx + (vh > 1 ? (fvx / vh) * ahead : 0);
+    const cz = fz + (vh > 1 ? (fvz / vh) * ahead : 0);
     const heights = new Float32Array((n + 1) * (n + 1));
     const d = size / n;
     for (let c = 0; c <= n; c++) {
@@ -330,6 +357,9 @@ export class Wreck {
       }
     }
     this.grid = { cx, cz, size, n, h: heights };
+    let top = 0;
+    for (let i = 0; i < heights.length; i++) top = Math.max(top, heights[i]!);
+    this.gridTop = top;
     this.world.createCollider(
       // (FIX_INTERNAL_EDGES: no false bumps where the grid's triangles meet)
       R.ColliderDesc.heightfield(n, n, heights, { x: size, y: 1, z: size }, R.HeightFieldFlags.FIX_INTERNAL_EDGES)
@@ -347,7 +377,7 @@ export class Wreck {
         .setRotation(quatFromMatrix(Rb))
         .setLinvel(vEast, vUp, vSouth)
         .setAngvel({ x: w[0], y: w[1], z: w[2] })
-        .setLinearDamping(0.05)
+        .setLinearDamping(LINEAR_DAMPING)
         .setAngularDamping(0.35)
         .setCcdEnabled(true),
     );
@@ -454,16 +484,30 @@ export class Wreck {
       return;
     }
     // velocity of the piece = velocity of the centre of mass + rotation × lever arm from it
-    const c = mul3(matrixFromQuat(q), st.centre);
+    const Rq = matrixFromQuat(q);
+    const c = mul3(Rq, st.centre);
     const arm: V3 = [t.x + c[0] - com.x, t.y + c[1] - com.y, t.z + c[2] - com.z];
+    let wx = w.x;
+    let wy = w.y;
+    let wz = w.z;
+    const name = st.spec.name;
+    const flat = name === "wing_left" || name === "wing_right" || name === "tail";
+    if (name === "wing_left" || name === "wing_right") {
+      // a wing tearing off folds up about its root (about the fuselage's long axis)
+      const fold = mul3(Rq, [name === "wing_left" ? 2.5 : -2.5, 0, 0]);
+      wx += fold[0];
+      wy += fold[1];
+      wz += fold[2];
+    }
     const body = this.world.createRigidBody(
       R.RigidBodyDesc.dynamic()
         .setTranslation(t.x, t.y, t.z)
         .setRotation(q)
         .setLinvel(v.x + w.y * arm[2] - w.z * arm[1], v.y + w.z * arm[0] - w.x * arm[2], v.z + w.x * arm[1] - w.y * arm[0])
-        .setAngvel(w)
-        .setLinearDamping(0.08)
-        .setAngularDamping(0.3)
+        .setAngvel({ x: wx, y: wy, z: wz })
+        // wings and tail are light for their size: the air slows them much more than the fuselage
+        .setLinearDamping(flat ? 0.45 : 0.08)
+        .setAngularDamping(flat ? 0.15 : 0.3)
         .setCcdEnabled(true),
     );
     st.collider = this.world.createCollider(this.colliderDesc(R, st), body);
@@ -515,7 +559,8 @@ export class Wreck {
 
     // ---- pieces that leave the simulated ground are dropped; the end when all is still
     const { cx, cz, size } = this.grid;
-    const inside = (p: { x: number; z: number }, m: number) => Math.abs(p.x - cx) < size / 2 - m && Math.abs(p.z - cz) < size / 2 - m;
+    // outside the grid only counts once down at ground level (a piece falling from a break-up in the air is not lost)
+    const inside = (p: { x: number; y: number; z: number }, m: number) => p.y > this.gridTop + 30 || (Math.abs(p.x - cx) < size / 2 - m && Math.abs(p.z - cz) < size / 2 - m);
     let moving = false;
     for (const st of this.states) {
       const b = st.body;
@@ -537,7 +582,7 @@ export class Wreck {
     }
     if (this.isMoving(this.main)) moving = true;
     this.quietFor = moving ? 0 : this.quietFor + H;
-    if (this.quietFor > 1.2 || this.time > 30) this.settled = true;
+    if (this.quietFor > 1.2 || this.time > this.maxTime) this.settled = true;
   }
 
   private isMoving(b: RBody): boolean {

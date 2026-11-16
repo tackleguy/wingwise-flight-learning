@@ -39,6 +39,17 @@ Baron use the closest FlightGear look-alike, the SR20 the SR22 airframe and the 
 models are GPL; authors and sources are in `public/sim/models/fg/CREDITS.md`. A simple drawn shape
 is shown while a model loads, or if it cannot be loaded.
 
+**Crash physics.** When a flight ends in a crash the engine keeps how the aircraft was moving
+(`SimEngine.crashMotion`, taken before it zeroes the speeds) and the 3D view hands the aircraft to a
+rigid-body simulation (`src/components/sim/crash-view.ts`): it keeps its speed and spin, hits,
+slides and tumbles; landing gear, wings and tail break off (a structural failure in the air starts
+with the wings gone); dust, smoke and an impact thump; the cockpit and chase views give way to an
+orbit round the wreck; the debrief comes once it has come to rest. The physics is shared with the
+World Flight Simulator — `flightsim/src/crash/wreck.ts`, imported directly (keep that file free of
+`@/` imports) — and uses **Rapier** (`@dimforge/rapier3d-compat` 0.19.3, Apache-2.0,
+https://rapier.rs), downloaded only when a crash happens. The pieces are the FlightGear model's own
+parts (crash data stored in each model file). Details: `flightsim/docs/notes/crash.md`.
+
 Every instrument and the 3D view subscribe to the same immutable `SimSnapshot`, so all displays stay
 synchronised. Instruments read `snapshot.indicated.*` so failures (e.g. a blocked pitot tube) show up
 realistically.
