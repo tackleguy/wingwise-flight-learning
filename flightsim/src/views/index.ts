@@ -33,6 +33,8 @@ export function createViews(world: World): ViewsModule {
   let offs: (() => void)[] = [];
   const detachers = new Set<() => void>();
   let pendingMode: ViewMode | null = null;
+  /** The view in use when the aircraft crashed (the camera goes outside to watch; it comes back on the next start). */
+  let modeBeforeCrash: ViewMode | null = null;
 
   const notify = () => {
     for (const fn of [...listeners]) {
@@ -87,6 +89,14 @@ export function createViews(world: World): ViewsModule {
         }
       }),
       s.events.on("touchdown", (t: SimEvents["touchdown"]) => rig.touchdown(t.vsFpm)),
+      s.events.on("crash", () => {
+        // watch the crash from outside (the outside view orbits the wreck without turning with it)
+        if (rig.mode === "cockpit" || rig.mode === "chase" || (rig.mode === "free" && !rig.freeStay)) {
+          modeBeforeCrash = rig.mode;
+          rig.watchCrash(s);
+          notify();
+        }
+      }),
     ];
     if (pendingMode) {
       rig.setMode(pendingMode, s);
@@ -176,6 +186,12 @@ export function createViews(world: World): ViewsModule {
 
     onSpawn(s: Sim, _result: SpawnResult) {
       bind(s);
+      if (modeBeforeCrash) {
+        const m = modeBeforeCrash;
+        modeBeforeCrash = null;
+        rig.resetFreeOrbit();
+        if (rig.mode === "free" && !rig.freeStay) api.setMode(m);
+      }
       aircraft.setAircraft(s.aircraft.id);
       lead.reset();
       rig.onSpawn(s);

@@ -23,6 +23,15 @@ export interface FgModelMeta {
   triangles: number;
   bytes: number;
   notes: string;
+  /** Pieces that can break off in a crash: the nodes of each piece and its collision box (glTF frame). */
+  crash?: FgCrashMeta;
+}
+
+export interface FgCrashMeta {
+  fuselageHalfWidth: number;
+  wingBand: [number, number]; // glTF z range of the wing (aft, front)
+  tailStartZ: number | null; // the tail is everything aft of this (glTF z)
+  parts: Partial<Record<"body" | "wing_left" | "wing_right" | "tail" | "gear_left" | "gear_right" | "gear_nose" | "gear_tail" | "gear", { nodes: string[]; min: [number, number, number]; max: [number, number, number] }>>;
 }
 
 export const FG_MODELS: Record<"c172p"|"c182"|"pa28"|"J3Cub"|"c310"|"DHC6"|"p51d"|"A320"|"f16"|"t6texan2", FgModelMeta> = {
@@ -52,11 +61,53 @@ export const FG_MODELS: Record<"c172p"|"c182"|"pa28"|"J3Cub"|"c310"|"DHC6"|"p51d
         position: [-0.001, -0.174, 1.981]
       }
     ],
-    parts: ["body", "aileron_left", "aileron_right", "elevator", "flap_left", "flap_right", "propeller_blades", "propeller_disc", "propeller", "rudder"],
+    parts: ["body", "wing_left", "wing_right", "tail", "gear_left", "gear_right", "gear_nose", "aileron_left", "aileron_right", "elevator", "flap_left", "flap_right", "propeller_blades", "propeller_disc", "propeller", "rudder"],
     retractableGear: false,
     triangles: 28368,
-    bytes: 1341540,
-    notes: "Aligned on the JSBSim main-gear contact points; the nose wheel then differs from the JSBSim nose contact by +1 cm fore/aft (+ = model wheel further aft) and -3 cm vertically (+ = model tyre higher). No wheel fairings (FlightGear's default for this model). Flaps: FlightGear moves them with a rotation plus a translation (Fowler-type); the flap nodes use the single pivot that gives FG's position at full flap (in between it is approximate)."
+    bytes: 1359376,
+    notes: "Aligned on the JSBSim main-gear contact points; the nose wheel then differs from the JSBSim nose contact by +1 cm fore/aft (+ = model wheel further aft) and -3 cm vertically (+ = model tyre higher). No wheel fairings (FlightGear's default for this model). Flaps: FlightGear moves them with a rotation plus a translation (Fowler-type); the flap nodes use the single pivot that gives FG's position at full flap (in between it is approximate).",
+    crash: {
+      fuselageHalfWidth: 0.499,
+      wingBand: [-1.115, 0.285],
+      tailStartZ: -4.115,
+      parts: {
+        body: {
+          nodes: ["body", "propeller"],
+          min: [-0.562, -1.048, -4.035],
+          max: [0.558, 0.704, 1.985]
+        },
+        wing_left: {
+          nodes: ["wing_left", "aileron_left", "flap_left"],
+          min: [0.49, 0.266, -1.351],
+          max: [5.585, 0.602, 0.29]
+        },
+        wing_right: {
+          nodes: ["wing_right", "aileron_right", "flap_right"],
+          min: [-5.584, 0.266, -1.351],
+          max: [-0.484, 0.598, 0.294]
+        },
+        tail: {
+          nodes: ["tail", "elevator", "rudder"],
+          min: [-1.724, -0.423, -5.784],
+          max: [1.724, 1.289, -3.968]
+        },
+        gear_left: {
+          nodes: ["gear_left"],
+          min: [0.368, -1.319, -0.732],
+          max: [1.185, -0.716, -0.295]
+        },
+        gear_right: {
+          nodes: ["gear_right"],
+          min: [-1.184, -1.319, -0.721],
+          max: [-0.385, -0.715, -0.295]
+        },
+        gear_nose: {
+          nodes: ["gear_nose"],
+          min: [-0.097, -1.447, 0.991],
+          max: [0.095, -0.733, 1.345]
+        }
+      }
+    }
   },
   c182: {
     url: "models/fg/c182.glb",
@@ -84,11 +135,53 @@ export const FG_MODELS: Record<"c172p"|"c182"|"pa28"|"J3Cub"|"c310"|"DHC6"|"p51d
         position: [-0.001, -0.307, 2.207]
       }
     ],
-    parts: ["body", "aileron_left", "aileron_right", "elevator", "flap_left", "flap_right", "propeller_blades", "propeller_disc", "propeller", "rudder"],
+    parts: ["body", "wing_left", "wing_right", "tail", "gear_left", "gear_right", "gear_nose", "aileron_left", "aileron_right", "elevator", "flap_left", "flap_right", "propeller_blades", "propeller_disc", "propeller", "rudder"],
     retractableGear: false,
     triangles: 28359,
-    bytes: 1091676,
-    notes: "Aligned on the JSBSim main-gear contact points; the nose wheel then differs from the JSBSim nose contact by +2 cm fore/aft (+ = model wheel further aft) and -8 cm vertically (+ = model tyre higher). The spinner is static (it is not part of the propeller node; it is round, so this does not show). Main-gear track: model 2.62 m, JSBSim 2.18 m. Flaps: FlightGear moves them with a rotation plus a translation (Fowler-type); the flap nodes use the single pivot that gives FG's position at full flap (in between it is approximate)."
+    bytes: 1109708,
+    notes: "Aligned on the JSBSim main-gear contact points; the nose wheel then differs from the JSBSim nose contact by +2 cm fore/aft (+ = model wheel further aft) and -8 cm vertically (+ = model tyre higher). The spinner is static (it is not part of the propeller node; it is round, so this does not show). Main-gear track: model 2.62 m, JSBSim 2.18 m. Flaps: FlightGear moves them with a rotation plus a translation (Fowler-type); the flap nodes use the single pivot that gives FG's position at full flap (in between it is approximate).",
+    crash: {
+      fuselageHalfWidth: 0.57,
+      wingBand: [-1.164, 0.436],
+      tailStartZ: -3.964,
+      parts: {
+        body: {
+          nodes: ["body", "propeller"],
+          min: [-0.665, -1.236, -3.979],
+          max: [0.663, 0.631, 2.259]
+        },
+        wing_left: {
+          nodes: ["wing_left", "aileron_left", "flap_left"],
+          min: [0.631, -0.073, -1.202],
+          max: [5.362, 0.681, 0.372]
+        },
+        wing_right: {
+          nodes: ["wing_right", "aileron_right", "flap_right"],
+          min: [-5.362, -0.073, -1.202],
+          max: [-0.631, 0.683, 0.378]
+        },
+        tail: {
+          nodes: ["tail", "elevator", "rudder"],
+          min: [-1.709, -0.236, -5.614],
+          max: [1.715, 1.625, -3.934]
+        },
+        gear_left: {
+          nodes: ["gear_left"],
+          min: [0.433, -1.376, -0.899],
+          max: [1.437, -0.766, -0.08]
+        },
+        gear_right: {
+          nodes: ["gear_right"],
+          min: [-1.431, -1.376, -0.899],
+          max: [-0.433, -0.766, -0.08]
+        },
+        gear_nose: {
+          nodes: ["gear_nose"],
+          min: [-0.153, -1.508, 0.682],
+          max: [0.153, -1.045, 1.503]
+        }
+      }
+    }
   },
   pa28: {
     url: "models/fg/pa28.glb",
@@ -116,11 +209,53 @@ export const FG_MODELS: Record<"c172p"|"c182"|"pa28"|"J3Cub"|"c310"|"DHC6"|"p51d
         position: [0.0, 0.136, 1.972]
       }
     ],
-    parts: ["body", "aileron_left", "aileron_right", "elevator", "flap_left", "flap_right", "propeller_blades", "propeller_disc", "propeller", "rudder"],
+    parts: ["body", "wing_left", "wing_right", "tail", "gear_left", "gear_right", "gear_nose", "aileron_left", "aileron_right", "elevator", "flap_left", "flap_right", "propeller_blades", "propeller_disc", "propeller", "rudder"],
     retractableGear: false,
     triangles: 40789,
-    bytes: 2041200,
-    notes: "Aligned on the JSBSim main-gear contact points; the nose wheel then differs from the JSBSim nose contact by +8 cm fore/aft (+ = model wheel further aft) and +19 cm vertically (+ = model tyre higher). The model is a PA-28-161 Warrior (tapered 35 ft wing) while the JSBSim pa28 is a PA-28-180 Cherokee (30 ft constant-chord wing). Not rescaled (that would shrink the fuselage too). The JSBSim nose contact is 19 cm lower than the model's nose tyre when the main wheels match: the JSBSim aircraft rests about 5.6 degrees nose-up, the model is drawn level. Model span 10.69 m vs JSBSim wingspan 9.14 m (+17%)."
+    bytes: 2051136,
+    notes: "Aligned on the JSBSim main-gear contact points; the nose wheel then differs from the JSBSim nose contact by +8 cm fore/aft (+ = model wheel further aft) and +19 cm vertically (+ = model tyre higher). The model is a PA-28-161 Warrior (tapered 35 ft wing) while the JSBSim pa28 is a PA-28-180 Cherokee (30 ft constant-chord wing). Not rescaled (that would shrink the fuselage too). The JSBSim nose contact is 19 cm lower than the model's nose tyre when the main wheels match: the JSBSim aircraft rests about 5.6 degrees nose-up, the model is drawn level. Model span 10.69 m vs JSBSim wingspan 9.14 m (+17%).",
+    crash: {
+      fuselageHalfWidth: 0.515,
+      wingBand: [-1.332, 0.068],
+      tailStartZ: -3.932,
+      parts: {
+        body: {
+          nodes: ["body", "propeller"],
+          min: [-0.648, -0.85, -4.269],
+          max: [0.648, 1.137, 1.935]
+        },
+        wing_left: {
+          nodes: ["wing_left", "aileron_left", "flap_left"],
+          min: [0.506, -0.36, -1.417],
+          max: [5.23, 0.391, 0.219]
+        },
+        wing_right: {
+          nodes: ["wing_right", "aileron_right", "flap_right"],
+          min: [-5.231, -0.36, -1.417],
+          max: [-0.499, 0.391, 0.219]
+        },
+        tail: {
+          nodes: ["tail", "elevator", "rudder"],
+          min: [-1.818, 0.084, -4.892],
+          max: [1.844, 1.648, -3.96]
+        },
+        gear_left: {
+          nodes: ["gear_left"],
+          min: [1.289, -1.073, -0.797],
+          max: [1.604, -0.174, -0.361]
+        },
+        gear_right: {
+          nodes: ["gear_right"],
+          min: [-1.604, -1.073, -0.797],
+          max: [-1.286, -0.174, -0.361]
+        },
+        gear_nose: {
+          nodes: ["gear_nose"],
+          min: [-0.082, -1.078, 1.006],
+          max: [0.082, -0.25, 1.427]
+        }
+      }
+    }
   },
   J3Cub: {
     url: "models/fg/J3Cub.glb",
@@ -148,11 +283,58 @@ export const FG_MODELS: Record<"c172p"|"c182"|"pa28"|"J3Cub"|"c310"|"DHC6"|"p51d
         position: [0.0, -0.031, 1.646]
       }
     ],
-    parts: ["body", "aileron_left", "aileron_right", "elevator", "propeller_blades", "propeller_disc", "propeller", "rudder"],
+    parts: ["body", "wing_left", "wing_right", "tail", "gear_left", "gear_right", "gear_nose", "gear_tail", "aileron_left", "aileron_right", "elevator", "propeller_blades", "propeller_disc", "propeller", "rudder"],
     retractableGear: false,
     triangles: 38054,
-    bytes: 2300308,
-    notes: "Aligned on the JSBSim main-gear contact points; the tail wheel then differs from the JSBSim tail contact by +7 cm fore/aft (+ = model wheel further aft) and -7 cm vertically (+ = model tyre higher). No flaps (the real J-3 Cub has none). The steerable tail wheel is static (FG turns it with the rudder). Tail-dragger: in the level structural attitude the tail wheel is 1.1 m above the main-wheel contact height (as in JSBSim)."
+    bytes: 2323052,
+    notes: "Aligned on the JSBSim main-gear contact points; the tail wheel then differs from the JSBSim tail contact by +7 cm fore/aft (+ = model wheel further aft) and -7 cm vertically (+ = model tyre higher). No flaps (the real J-3 Cub has none). The steerable tail wheel is static (FG turns it with the rudder). Tail-dragger: in the level structural attitude the tail wheel is 1.1 m above the main-wheel contact height (as in JSBSim).",
+    crash: {
+      fuselageHalfWidth: 0.35,
+      wingBand: [-1.293, 0.307],
+      tailStartZ: -3.793,
+      parts: {
+        body: {
+          nodes: ["body", "propeller"],
+          min: [-0.366, -0.955, -3.7],
+          max: [0.369, 0.891, 1.648]
+        },
+        wing_left: {
+          nodes: ["wing_left", "aileron_left"],
+          min: [0.449, 0.064, -1.334],
+          max: [5.299, 0.701, 0.248]
+        },
+        wing_right: {
+          nodes: ["wing_right", "aileron_right"],
+          min: [-5.29, 0.081, -1.335],
+          max: [-0.443, 0.715, 0.247]
+        },
+        tail: {
+          nodes: ["tail", "elevator", "rudder"],
+          min: [-1.413, -0.167, -5.162],
+          max: [1.421, 1.305, -3.782]
+        },
+        gear_left: {
+          nodes: ["gear_left"],
+          min: [0.252, -1.375, -0.329],
+          max: [1.011, -0.689, 0.463]
+        },
+        gear_right: {
+          nodes: ["gear_right"],
+          min: [-1.011, -1.375, -0.327],
+          max: [-0.244, -0.698, 0.463]
+        },
+        gear_nose: {
+          nodes: ["gear_nose"],
+          min: [-0.491, -0.961, 0.107],
+          max: [0.347, -0.02, 0.895]
+        },
+        gear_tail: {
+          nodes: ["gear_tail"],
+          min: [-0.03, -0.347, -5.07],
+          max: [0.059, -0.163, -4.89]
+        }
+      }
+    }
   },
   c310: {
     url: "models/fg/c310.glb",
@@ -185,11 +367,43 @@ export const FG_MODELS: Record<"c172p"|"c182"|"pa28"|"J3Cub"|"c310"|"DHC6"|"p51d
         position: [-1.659, 0.174, 1.487]
       }
     ],
-    parts: ["body", "gear_retract", "aileron_left", "aileron_right", "elevator", "flap_left", "flap_right", "propeller_blades", "propeller_disc", "propeller", "propeller_blades_2", "propeller_disc_2", "propeller_2", "rudder"],
+    parts: ["body", "wing_left", "wing_right", "tail", "gear_retract", "aileron_left", "aileron_right", "elevator", "flap_left", "flap_right", "propeller_blades", "propeller_disc", "propeller", "propeller_blades_2", "propeller_disc_2", "propeller_2", "rudder"],
     retractableGear: true,
     triangles: 1487,
-    bytes: 188464,
-    notes: "Aligned on the JSBSim main-gear contact points; the nose wheel then differs from the JSBSim nose contact by +44 cm fore/aft (+ = model wheel further aft) and -12 cm vertically (+ = model tyre higher). Old, very simple model (about 1,500 triangles). Model wheelbase 2.38 m vs JSBSim 2.82 m, so the nose wheel is 44 cm behind the JSBSim nose contact. propeller = engine 0 = LEFT engine, propeller_2 = engine 1 = RIGHT engine. gear_retract also holds the nose-gear doors and the boarding step (FG retracts both with the gear)."
+    bytes: 194804,
+    notes: "Aligned on the JSBSim main-gear contact points; the nose wheel then differs from the JSBSim nose contact by +44 cm fore/aft (+ = model wheel further aft) and -12 cm vertically (+ = model tyre higher). Old, very simple model (about 1,500 triangles). Model wheelbase 2.38 m vs JSBSim 2.82 m, so the nose wheel is 44 cm behind the JSBSim nose contact. propeller = engine 0 = LEFT engine, propeller_2 = engine 1 = RIGHT engine. gear_retract also holds the nose-gear doors and the boarding step (FG retracts both with the gear).",
+    crash: {
+      fuselageHalfWidth: 0.503,
+      wingBand: [-1.421, 1.179],
+      tailStartZ: -4.421,
+      parts: {
+        body: {
+          nodes: ["body"],
+          min: [-0.598, -0.239, -5.961],
+          max: [0.623, 1.147, 2.855]
+        },
+        wing_left: {
+          nodes: ["wing_left", "aileron_left", "flap_left", "propeller"],
+          min: [0.482, -0.496, -1.833],
+          max: [5.326, 1.008, 1.506]
+        },
+        wing_right: {
+          nodes: ["wing_right", "aileron_right", "flap_right", "propeller_2"],
+          min: [-5.218, -0.619, -1.814],
+          max: [-0.449, 1.008, 1.499]
+        },
+        tail: {
+          nodes: ["tail", "elevator", "rudder"],
+          min: [-2.427, 0.016, -6.41],
+          max: [2.457, 2.113, -4.301]
+        },
+        gear: {
+          nodes: ["gear_retract"],
+          min: [-1.93, -1.024, -1.598],
+          max: [1.93, 0.001, 2.473]
+        }
+      }
+    }
   },
   DHC6: {
     url: "models/fg/DHC6.glb",
@@ -222,11 +436,58 @@ export const FG_MODELS: Record<"c172p"|"c182"|"pa28"|"J3Cub"|"c310"|"DHC6"|"p51d
         position: [-2.857, 0.245, 1.943]
       }
     ],
-    parts: ["body", "aileron_left", "aileron_right", "elevator", "flap_left", "flap_right", "propeller_blades", "propeller_disc", "propeller", "propeller_blades_2", "propeller_disc_2", "propeller_2", "rudder"],
+    parts: ["body", "wing_left", "wing_right", "tail", "gear_left", "gear_right", "gear_nose", "gear_tail", "aileron_left", "aileron_right", "elevator", "flap_left", "flap_right", "propeller_blades", "propeller_disc", "propeller", "propeller_blades_2", "propeller_disc_2", "propeller_2", "rudder"],
     retractableGear: false,
     triangles: 21237,
-    bytes: 854740,
-    notes: "Aligned on the JSBSim main-gear contact points; the nose wheel then differs from the JSBSim nose contact by -22 cm fore/aft (+ = model wheel further aft) and +6 cm vertically (+ = model tyre higher). Default paint = the texture the 3D model itself uses (paint2-R.png); FG's livery default 'paint2.png' does not exist. In FG the ailerons also droop with the flaps; here the aileron nodes only carry the aileron hinge (the app may add a flap-dependent droop). flap_left/flap_right hold the flap vane and the main flap of the double-slotted flap on one hinge. propeller = engine 0 = LEFT engine, propeller_2 = RIGHT engine."
+    bytes: 872200,
+    notes: "Aligned on the JSBSim main-gear contact points; the nose wheel then differs from the JSBSim nose contact by -22 cm fore/aft (+ = model wheel further aft) and +6 cm vertically (+ = model tyre higher). Default paint = the texture the 3D model itself uses (paint2-R.png); FG's livery default 'paint2.png' does not exist. In FG the ailerons also droop with the flaps; here the aileron nodes only carry the aileron hinge (the app may add a flap-dependent droop). flap_left/flap_right hold the flap vane and the main flap of the double-slotted flap on one hinge. propeller = engine 0 = LEFT engine, propeller_2 = RIGHT engine.",
+    crash: {
+      fuselageHalfWidth: 0.861,
+      wingBand: [-1.789, 0.411],
+      tailStartZ: -6.277,
+      parts: {
+        body: {
+          nodes: ["body", "propeller", "propeller_2"],
+          min: [-0.889, -1.692, -6.964],
+          max: [0.889, 0.364, 5.263]
+        },
+        wing_left: {
+          nodes: ["wing_left", "aileron_left", "flap_left"],
+          min: [0.904, -0.195, -1.775],
+          max: [9.672, 0.8, 1.505]
+        },
+        wing_right: {
+          nodes: ["wing_right", "aileron_right", "flap_right"],
+          min: [-9.672, -0.195, -1.775],
+          max: [-0.904, 0.8, 1.505]
+        },
+        tail: {
+          nodes: ["tail", "elevator", "rudder"],
+          min: [-3.125, -0.965, -10.147],
+          max: [3.125, 3.068, -6.822]
+        },
+        gear_left: {
+          nodes: ["gear_left"],
+          min: [0.878, -2.598, -1.29],
+          max: [2.087, -1.512, -0.442]
+        },
+        gear_right: {
+          nodes: ["gear_right"],
+          min: [-2.087, -2.598, -1.29],
+          max: [-0.878, -1.512, -0.442]
+        },
+        gear_nose: {
+          nodes: ["gear_nose"],
+          min: [-0.203, -2.564, 3.335],
+          max: [0.289, -1.297, 4.025]
+        },
+        gear_tail: {
+          nodes: ["gear_tail"],
+          min: [-0.969, -1.641, -1.912],
+          max: [0.969, -1.067, -0.229]
+        }
+      }
+    }
   },
   p51d: {
     url: "models/fg/p51d.glb",
@@ -254,11 +515,43 @@ export const FG_MODELS: Record<"c172p"|"c182"|"pa28"|"J3Cub"|"c310"|"DHC6"|"p51d
         position: [-0.0, 0.097, 2.843]
       }
     ],
-    parts: ["body", "gear_retract", "aileron_left", "aileron_right", "elevator", "flap_left", "flap_right", "propeller_blades", "propeller_disc", "propeller", "rudder"],
+    parts: ["body", "wing_left", "wing_right", "tail", "gear_retract", "aileron_left", "aileron_right", "elevator", "flap_left", "flap_right", "propeller_blades", "propeller_disc", "propeller", "rudder"],
     retractableGear: true,
     triangles: 122745,
-    bytes: 4564916,
-    notes: "Aligned on the JSBSim main-gear contact points; the tail wheel then differs from the JSBSim tail contact by -23 cm fore/aft (+ = model wheel further aft) and +22 cm vertically (+ = model tyre higher). The blurred propeller disc's texture is outside the aircraft folder in FG; it is drawn as a plain translucent disc. The inner main-gear doors (FG moves them with a separate property) are static and shown closed. Tail-dragger with a retractable tail wheel (in gear_retract). Textures not available (surfaces drawn in their plain material colour): propDiskSpinner.png."
+    bytes: 4592484,
+    notes: "Aligned on the JSBSim main-gear contact points; the tail wheel then differs from the JSBSim tail contact by -23 cm fore/aft (+ = model wheel further aft) and +22 cm vertically (+ = model tyre higher). The blurred propeller disc's texture is outside the aircraft folder in FG; it is drawn as a plain translucent disc. The inner main-gear doors (FG moves them with a separate property) are static and shown closed. Tail-dragger with a retractable tail wheel (in gear_retract). Textures not available (surfaces drawn in their plain material colour): propDiskSpinner.png.",
+    crash: {
+      fuselageHalfWidth: 0.503,
+      wingBand: [-1.356, 0.444],
+      tailStartZ: -4.556,
+      parts: {
+        body: {
+          nodes: ["body", "propeller"],
+          min: [-0.644, -1.633, -4.329],
+          max: [0.695, 1.829, 2.862]
+        },
+        wing_left: {
+          nodes: ["wing_left", "aileron_left", "flap_left"],
+          min: [0.404, -0.677, -1.685],
+          max: [5.517, 0.021, 0.645]
+        },
+        wing_right: {
+          nodes: ["wing_right", "aileron_right", "flap_right"],
+          min: [-5.516, -0.677, -1.691],
+          max: [-0.4, 0.036, 0.63]
+        },
+        tail: {
+          nodes: ["tail", "elevator", "rudder"],
+          min: [-1.867, -0.215, -6.49],
+          max: [1.867, 1.72, -4.326]
+        },
+        gear: {
+          nodes: ["gear_retract"],
+          min: [-1.96, -2.03, -4.746],
+          max: [1.96, 0.063, 0.807]
+        }
+      }
+    }
   },
   A320: {
     url: "models/fg/A320.glb",
@@ -280,11 +573,43 @@ export const FG_MODELS: Record<"c172p"|"c182"|"pa28"|"J3Cub"|"c310"|"DHC6"|"p51d
       nose: [-0.01, -2.538, 12.1]
     },
     propellers: [],
-    parts: ["body", "gear_retract", "aileron_left", "aileron_right", "elevator_left", "elevator_right", "elevator", "flap_left_1", "flap_left_2", "flap_left_3", "flap_left", "flap_right_1", "flap_right_2", "flap_right_3", "flap_right", "rudder"],
+    parts: ["body", "wing_left", "wing_right", "tail", "gear_retract", "aileron_left", "aileron_right", "elevator_left", "elevator_right", "elevator", "flap_left_1", "flap_left_2", "flap_left_3", "flap_left", "flap_right_1", "flap_right_2", "flap_right_3", "flap_right", "rudder"],
     retractableGear: true,
     triangles: 101847,
-    bytes: 7001792,
-    notes: "Aligned on the JSBSim main-gear contact points; the nose wheel then differs from the JSBSim nose contact by -1 cm fore/aft (+ = model wheel further aft) and -4 cm vertically (+ = model tyre higher). Jet: no propeller nodes (engine fans and the ram-air turbine are static). Spoilers, slats, the trimmable stabiliser and thrust reversers are static. gear_retract also holds the gear-bay doors: hiding it with the gear up leaves the wheel-bay openings visible. Main-gear track: model 7.72 m, JSBSim 7.34 m. elevator: two halves with swept hinges: turning this node moves both about one lateral axis (approximate); elevator_left / elevator_right have the exact hinges. Flaps: FlightGear moves them with a rotation plus a translation (Fowler-type); the flap nodes use the single pivot that gives FG's position at full flap (in between it is approximate). flap_left: several segments: turning this node moves them all about the hinge of flap_left_1 (exact for it, approximate for the others); the children have exact hinges. flap_right: several segments: turning this node moves them all about the hinge of flap_right_1 (exact for it, approximate for the others); the children have exact hinges."
+    bytes: 7040952,
+    notes: "Aligned on the JSBSim main-gear contact points; the nose wheel then differs from the JSBSim nose contact by -1 cm fore/aft (+ = model wheel further aft) and -4 cm vertically (+ = model tyre higher). Jet: no propeller nodes (engine fans and the ram-air turbine are static). Spoilers, slats, the trimmable stabiliser and thrust reversers are static. gear_retract also holds the gear-bay doors: hiding it with the gear up leaves the wheel-bay openings visible. Main-gear track: model 7.72 m, JSBSim 7.34 m. elevator: two halves with swept hinges: turning this node moves both about one lateral axis (approximate); elevator_left / elevator_right have the exact hinges. Flaps: FlightGear moves them with a rotation plus a translation (Fowler-type); the flap nodes use the single pivot that gives FG's position at full flap (in between it is approximate). flap_left: several segments: turning this node moves them all about the hinge of flap_left_1 (exact for it, approximate for the others); the children have exact hinges. flap_right: several segments: turning this node moves them all about the hinge of flap_right_1 (exact for it, approximate for the others); the children have exact hinges.",
+    crash: {
+      fuselageHalfWidth: 2.409,
+      wingBand: [-5.457, 0.543],
+      tailStartZ: -13.594,
+      parts: {
+        body: {
+          nodes: ["body"],
+          min: [-2.303, -0.645, -13.501],
+          max: [2.285, 3.718, 15.508]
+        },
+        wing_left: {
+          nodes: ["wing_left", "aileron_left", "flap_left"],
+          min: [1.963, -1.451, -4.194],
+          max: [16.611, 2.182, 4.903]
+        },
+        wing_right: {
+          nodes: ["wing_right", "aileron_right", "flap_right"],
+          min: [-16.629, -1.451, -4.194],
+          max: [-1.981, 2.182, 4.903]
+        },
+        tail: {
+          nodes: ["tail", "elevator", "rudder"],
+          min: [-5.961, 0.836, -20.095],
+          max: [5.936, 9.489, -13.52]
+        },
+        gear: {
+          nodes: ["gear_retract"],
+          min: [-4.507, -2.58, -0.958],
+          max: [4.507, 0.686, 14.119]
+        }
+      }
+    }
   },
   f16: {
     url: "models/fg/f16.glb",
@@ -306,11 +631,43 @@ export const FG_MODELS: Record<"c172p"|"c182"|"pa28"|"J3Cub"|"c310"|"DHC6"|"p51d
       mainRight: [-1.225, -1.689, -0.874]
     },
     propellers: [],
-    parts: ["body", "gear_retract", "aileron_left", "aileron_right", "elevator", "rudder"],
+    parts: ["body", "wing_left", "wing_right", "tail", "gear_retract", "aileron_left", "aileron_right", "elevator", "rudder"],
     retractableGear: true,
     triangles: 20171,
-    bytes: 1541308,
-    notes: "Aligned on the JSBSim main-gear contact points; the nose wheel then differs from the JSBSim nose contact by 0 cm fore/aft (+ = model wheel further aft) and -10 cm vertically (+ = model tyre higher). No flap nodes: the F-16 has flaperons; they are exported as aileron_left / aileron_right (the app may add the flap deflection to them). Leading-edge flaps, speed brakes and the engine fan are static. elevator = both all-moving tail halves turned about one averaged axis (the real halves have about 10 degrees of anhedral each). Fairly low-detail model (about 20,000 triangles). gear_retract also holds the gear doors: hiding it with the gear up leaves the wheel-bay openings visible."
+    bytes: 1552420,
+    notes: "Aligned on the JSBSim main-gear contact points; the nose wheel then differs from the JSBSim nose contact by 0 cm fore/aft (+ = model wheel further aft) and -10 cm vertically (+ = model tyre higher). No flap nodes: the F-16 has flaperons; they are exported as aileron_left / aileron_right (the app may add the flap deflection to them). Leading-edge flaps, speed brakes and the engine fan are static. elevator = both all-moving tail halves turned about one averaged axis (the real halves have about 10 degrees of anhedral each). Fairly low-detail model (about 20,000 triangles). gear_retract also holds the gear doors: hiding it with the gear up leaves the wheel-bay openings visible.",
+    crash: {
+      fuselageHalfWidth: 0.582,
+      wingBand: [-2.805, 0.195],
+      tailStartZ: -3.76,
+      parts: {
+        body: {
+          nodes: ["body"],
+          min: [-0.781, -1.144, -4.652],
+          max: [0.784, 1.276, 6.493]
+        },
+        wing_left: {
+          nodes: ["wing_left", "aileron_left"],
+          min: [0.547, -0.322, -4.552],
+          max: [4.8, 0.427, 0.74]
+        },
+        wing_right: {
+          nodes: ["wing_right", "aileron_right"],
+          min: [-4.789, -0.323, -4.561],
+          max: [-0.542, 0.427, 0.654]
+        },
+        tail: {
+          nodes: ["tail", "elevator", "rudder"],
+          min: [-2.843, -0.429, -6.165],
+          max: [2.842, 3.305, -3.123]
+        },
+        gear: {
+          nodes: ["gear_retract"],
+          min: [-1.336, -1.736, -1.154],
+          max: [1.336, -0.296, 2.871]
+        }
+      }
+    }
   },
   t6texan2: {
     url: "models/fg/t6texan2.glb",
@@ -338,10 +695,42 @@ export const FG_MODELS: Record<"c172p"|"c182"|"pa28"|"J3Cub"|"c310"|"DHC6"|"p51d
         position: [0.0, -0.562, 2.979]
       }
     ],
-    parts: ["body", "gear_retract", "aileron_left", "aileron_right", "elevator", "flap_left_1", "flap_left_2", "flap_left", "flap_right_1", "flap_right_2", "flap_right", "propeller_blades", "propeller_disc", "propeller", "rudder"],
+    parts: ["body", "wing_left", "wing_right", "tail", "gear_retract", "aileron_left", "aileron_right", "elevator", "flap_left_1", "flap_left_2", "flap_left", "flap_right_1", "flap_right_2", "flap_right", "propeller_blades", "propeller_disc", "propeller", "rudder"],
     retractableGear: true,
     triangles: 30290,
-    bytes: 1203912,
-    notes: "Aligned on the JSBSim main-gear contact points; the nose wheel then differs from the JSBSim nose contact by +125 cm fore/aft (+ = model wheel further aft) and -8 cm vertically (+ = model tyre higher). The JSBSim t6texan2 gear geometry does not match this model: JSBSim main-gear track 4.14 m vs 2.53 m in the model, wheelbase 3.58 m vs 2.33 m (the JSBSim nose contact is 1.25 m ahead of the model's nose wheel), and the JSBSim CG is 2.03 m above the wheels, which puts it near the front cockpit of this model. Aligned on the main wheels anyway. flap_left / flap_right: the outer flap plus one half of the centre flap under the fuselage, as child nodes with their own hinges. gear_retract also holds the gear doors: hiding it with the gear up leaves the wheel-bay openings visible. Main-gear track: model 2.53 m, JSBSim 4.14 m. flap_left: several segments: turning this node moves them all about the hinge of flap_left_1 (exact for it, approximate for the others); the children have exact hinges. flap_right: several segments: turning this node moves them all about the hinge of flap_right_1 (exact for it, approximate for the others); the children have exact hinges."
+    bytes: 1215156,
+    notes: "Aligned on the JSBSim main-gear contact points; the nose wheel then differs from the JSBSim nose contact by +125 cm fore/aft (+ = model wheel further aft) and -8 cm vertically (+ = model tyre higher). The JSBSim t6texan2 gear geometry does not match this model: JSBSim main-gear track 4.14 m vs 2.53 m in the model, wheelbase 3.58 m vs 2.33 m (the JSBSim nose contact is 1.25 m ahead of the model's nose wheel), and the JSBSim CG is 2.03 m above the wheels, which puts it near the front cockpit of this model. Aligned on the main wheels anyway. flap_left / flap_right: the outer flap plus one half of the centre flap under the fuselage, as child nodes with their own hinges. gear_retract also holds the gear doors: hiding it with the gear up leaves the wheel-bay openings visible. Main-gear track: model 2.53 m, JSBSim 4.14 m. flap_left: several segments: turning this node moves them all about the hinge of flap_left_1 (exact for it, approximate for the others); the children have exact hinges. flap_right: several segments: turning this node moves them all about the hinge of flap_right_1 (exact for it, approximate for the others); the children have exact hinges.",
+    crash: {
+      fuselageHalfWidth: 0.433,
+      wingBand: [-1.526, -0.026],
+      tailStartZ: -4.655,
+      parts: {
+        body: {
+          nodes: ["body", "propeller"],
+          min: [-0.52, -1.673, -5.11],
+          max: [0.52, 0.548, 2.952]
+        },
+        wing_left: {
+          nodes: ["wing_left", "aileron_left", "flap_left"],
+          min: [0.265, -1.334, -1.747],
+          max: [5.092, -0.66, 0.073]
+        },
+        wing_right: {
+          nodes: ["wing_right", "aileron_right", "flap_right"],
+          min: [-5.092, -1.334, -1.747],
+          max: [-0.265, -0.66, 0.073]
+        },
+        tail: {
+          nodes: ["tail", "elevator", "rudder"],
+          min: [-1.785, -1.033, -6.451],
+          max: [1.785, 1.024, -4.255]
+        },
+        gear: {
+          nodes: ["gear_retract"],
+          min: [-1.33, -2.094, -1.006],
+          max: [1.33, -1.092, 1.806]
+        }
+      }
+    }
   },
 };

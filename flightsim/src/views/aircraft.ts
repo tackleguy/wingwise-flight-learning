@@ -39,6 +39,8 @@ import { D2R, FT_PER_M, FT_PER_NM, M_PER_FT, R2D, clamp, destination, norm360, s
 import type { Sim } from "@/core/sim";
 import { daylight, sunPosition } from "@/core/sun";
 import { aircraftMatrix, type World } from "@/world/world";
+import { FG_MODELS } from "@/aircraft/fg-models.gen";
+import type { CrashModule } from "@/crash";
 import { approach, gearShiftM, type RenderPose } from "./math";
 import { visualSpecFor, type LightKey, type VisualSpec } from "./model-spec";
 import { TRAINER_META } from "./trainer-meta";
@@ -305,6 +307,12 @@ export class AircraftVisual {
   private readonly gearApplied = [99, 99, 99];
   private cabinNode: ModelNode | undefined;
   private cockpitNode: ModelNode | undefined;
+  /** Crash physics: the model's nodes by name (pieces that can break off), their animation matrices, and those moved or hidden. */
+  private readonly crashNodes = new Map<string, ModelNode>();
+  private readonly nodeBase = new Map<ModelNode, Matrix4>();
+  private readonly crashTouched = new Set<ModelNode>();
+  private readonly deltaM = new Matrix4();
+  private readonly crashM = new Matrix4();
   private interior = false;
   private interiorApplied: boolean | null = null;
   private propAngle = 0;
@@ -465,6 +473,18 @@ export class AircraftVisual {
     this.extraProps.length = 0;
     for (const p of this.spec.propellers.slice(1)) this.extraProps.push({ spin: get(p.spin), blades: get(p.blades), disc: get(p.disc) });
     this.gearRetractNode = this.spec.gearNode ? get("gear_retract") : undefined;
+    this.crashNodes.clear();
+    this.nodeBase.clear();
+    this.crashTouched.clear();
+    const crashMeta = (FG_MODELS as Record<string, { crash?: { parts: Record<string, { nodes: string[] } | undefined> } } | undefined>)[this.spec.id]?.crash;
+    if (this.spec.fg && crashMeta) {
+      for (const part of Object.values(crashMeta.parts)) {
+        for (const name of part?.nodes ?? []) {
+          const node = get(name);
+          if (node) this.crashNodes.set(name, node);
+        }
+      }
+    }
     this.hingeDeg.elevator = this.hingeDeg.rudder = this.hingeDeg.aileronLeft = this.hingeDeg.aileronRight = 999;
     this.hingeDeg.flapLeft = this.hingeDeg.flapRight = this.hingeDeg.propeller = this.hingeDeg.propellerBlades = 999;
     // Light positions come from the model's empty "light_*" nodes when present (glTF x,y,z = left, up, nose).
@@ -490,7 +510,49 @@ export class AircraftVisual {
     Matrix3.fromRotationX(deg * D2R, this.rot3);
     Matrix4.fromRotationTranslation(this.rot3, Cartesian3.ZERO, this.rot4);
     Matrix4.multiply(node.originalMatrix, this.rot4, this.nodeM);
+    this.rememberBase(node, this.nodeM);
     node.matrix = this.nodeM;
+  }
+
+  /** The node's own (animation) matrix, kept so a broken-off piece can be moved on top of it. */
+  private rememberBase(node: ModelNode, m: Matrix4): void {
+    let b = this.nodeBase.get(node);
+    if (!b) this.nodeBase.set(node, (b = new Matrix4()));
+    Matrix4.clone(m, b);
+  }
+
+  /**
+   * Crash physics: draw broken-off pieces where they are (their pose relative to the fuselage comes
+   * from the crash module), hide the ones that are gone; put everything back after a new start.
+   */
+  private applyCrash(sim: Sim): void {
+    const parts = sim.module<CrashModule>("crash")?.parts ?? null;
+    if (!parts) {
+      if (this.crashTouched.size) {
+        for (const node of this.crashTouched) {
+          node.matrix = this.nodeBase.get(node) ?? node.originalMatrix;
+          node.show = true;
+        }
+        this.crashTouched.clear();
+        this.interiorApplied = null;
+      }
+      return;
+    }
+    for (const p of parts) {
+      if (!p.detached) continue;
+      Matrix4.unpack(p.delta as unknown as number[], 0, this.deltaM);
+      for (const name of p.nodes) {
+        const node = this.crashNodes.get(name);
+        if (!node) continue;
+        this.crashTouched.add(node);
+        if (p.hidden) {
+          if (node.show) node.show = false;
+          continue;
+        }
+        Matrix4.multiply(this.deltaM, this.nodeBase.get(node) ?? node.originalMatrix, this.crashM);
+        node.matrix = this.crashM;
+      }
+    }
   }
 
   /** Turn a node about its own local +X axis (no change threshold: used for the extra propellers). */
@@ -498,6 +560,7 @@ export class AircraftVisual {
     Matrix3.fromRotationX(deg * D2R, this.rot3);
     Matrix4.fromRotationTranslation(this.rot3, Cartesian3.ZERO, this.rot4);
     Matrix4.multiply(node.originalMatrix, this.rot4, this.nodeM);
+    this.rememberBase(node, this.nodeM);
     node.matrix = this.nodeM;
   }
 
@@ -642,6 +705,7 @@ export class AircraftVisual {
         if (p.spin) this.spin(p.spin, ang);
         if (p.blades && blades && !this.spec.fg) this.spin(p.blades, ang);
       }
+      this.applyCrash(sim);
     }
 
     // ---- light glows

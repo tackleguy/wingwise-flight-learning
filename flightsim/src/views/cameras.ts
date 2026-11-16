@@ -215,6 +215,20 @@ export class CameraRig {
     }
   }
 
+  /** After a crash: orbit the wreck from a little above and far enough back to see the pieces scatter. */
+  watchCrash(sim: Sim): void {
+    if (this.mode !== "free") this.setMode("free", sim);
+    this.freeStay = false;
+    this.freeElT = 24;
+    this.freeDistT = Math.max(32, this.spanM * 3.2);
+  }
+
+  /** The free view's usual angle and distance again (after watching a crash). */
+  resetFreeOrbit(): void {
+    this.freeElT = FREE.elevation;
+    this.freeDistT = FREE.distance;
+  }
+
   /** Free view: keep the camera where it is and watch the aircraft (true), or go back to orbiting it (false). */
   setFreeStay(stay: boolean, sim: Sim): void {
     if (stay === this.freeStay) return;

@@ -107,3 +107,21 @@ Choices made while building the SkyReady Flight Simulator, in plain language, ne
   the account's scores back, so they show on any device. The table is created through Lovable
   (the site's database is managed there); its definition is in the site's `docs/ARCHITECTURE.md`.
 - Details: `docs/notes/tests.md`.
+
+## Crash physics (owner's request, November 2026)
+- The owner asked for crash physics with open-source software (free). **Rapier** (Apache-2.0,
+  maintained, WebAssembly) was chosen over cannon-es (MIT, last release 2022, no continuous collision
+  detection — fast pieces would pass through the ground) and ammo.js / Jolt (bigger downloads).
+  Version 0.19.3 (about 0.8 MB compressed) is half the size of the newest and has everything needed.
+  It is loaded in the background after the first start, never on the first page load.
+- **JSBSim still decides when it is a crash** (the existing rules in `src/core/sim.ts`); the crash
+  physics only takes over from that moment. JSBSim cannot break an aircraft apart, and a rigid-body
+  engine cannot fly one: each does what it is good at.
+- **Pieces come from the 3D model itself.** The converter splits every model into fuselage, wings,
+  tail and fixed landing gear by its shape (no per-aircraft hand work) and records a collision box
+  for each; the same nodes are moved when a piece breaks off, so what you see matches the physics.
+- **Strengths are simple impulse limits** (`STRENGTH` in `src/crash/wreck.ts`), checked by tests:
+  standing still or a firm landing breaks nothing; about 1,000 ft/min breaks the landing gear; a
+  steep dive tears off wings and tail. They are for a believable picture, not engineering data.
+- **Nothing gory**: dust, a little smoke, a thump — no fire, no people. The camera goes outside to
+  show what happened, which is the learning point.

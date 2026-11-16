@@ -233,9 +233,13 @@ export interface SystemsState {
 
 // ---------------------------------------------------------------- truth state
 
+/** What kind of crash it was (decides what the crash physics starts with already broken). */
+export type CrashCause = "unstable" | "terrain" | "hard-landing" | "wing-strike" | "nose-over" | "nose-strike" | "engine-strike" | "propeller-strike" | "body-strike" | "overturn";
+
 export interface CrashInfo {
   reason: string;
   timeSec: number;
+  cause?: CrashCause;
 }
 
 export interface SimState {
@@ -402,6 +406,8 @@ export interface SimEvents {
   liftoff: { kcas: number };
   touchdown: TouchdownInfo;
   crash: CrashInfo;
+  /** After a crash: the wreck has come to rest (src/crash). */
+  crashSettled: { timeSec: number; piecesOff: number };
   stall: { kcas: number; altMslFt: number };
   stallRecovered: { altitudeLostFt: number };
   engineStart: Record<string, never>;

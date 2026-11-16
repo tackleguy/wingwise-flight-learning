@@ -17,6 +17,7 @@
     "data": "node scripts/build-data.mjs"
   },
   "dependencies": {
+    "@dimforge/rapier3d-compat": "0.19.3",
     "@mapbox/vector-tile": "^2.0.3",
     "cesium": "1.147.0",
     "geomagnetism": "0.2.0",

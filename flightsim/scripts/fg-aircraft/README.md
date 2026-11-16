@@ -39,6 +39,17 @@ python3 -I scripts/fg-aircraft/convert.py --inspect c182  # list objects, animat
   `--revisions` records each folder's last-change revision (used in the credits).
 - `FG_OUT=/some/dir convert.py …` writes experiments elsewhere; `FG_SERVE_ROOT` lets `view.cjs` serve such a folder.
 
+## Crash pieces
+
+`split_airframe()` splits every model's static airframe into the pieces the crash physics can break
+off (`body`, `wing_left`, `wing_right`, `tail`, and for fixed gear `gear_left` / `gear_right` /
+`gear_nose` / `gear_tail`), measured from the shape alone: the wing band (widest slices), the fuselage
+width just ahead of and behind the wing, the tail from the stabiliser or fin leading edge. Moving
+nodes go with the piece under them. Each piece's nodes and area-weighted collision box are written as
+`crash` into `fg-models.gen.ts`. Check by eye: `node scripts/fg-aircraft/view.cjs --views=parts`
+(each piece in its own colour, pulled apart). Per-aircraft overrides: `cfg["crash_split"]`
+(`fuselageHalfWidth`, `tailStartZ`).
+
 ## What the converter does
 
 1. **Load** the model XML named by the `-set.xml` (`/sim/model/path`), with `include=`, `alias=`

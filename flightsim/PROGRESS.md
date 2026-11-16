@@ -18,6 +18,11 @@
   stall); failure effects and an electrical system (`src/systems/failures.ts`). Start screen →
   Tests tab, or `?tab=tests`. Notes: `docs/notes/tests.md`.
 
+- Crash physics (November 2026): after a crash the aircraft is handed to a rigid-body simulation
+  (Rapier, open source) — it keeps its speed and spin, hits, slides and tumbles; landing gear, wings
+  and tail break off; dust, smoke and impact sounds; the camera watches from outside. The 3D models
+  are split into those pieces by `scripts/fg-aircraft/convert.py`. Notes: `docs/notes/crash.md`.
+
 ## In progress
 - Feature modules built in parallel (see the ownership table in `ARCHITECTURE.md`); each writes
   `docs/notes/<module>.md`.

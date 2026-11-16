@@ -50,6 +50,8 @@ The World Flight Simulator (`flightsim/`, served at `/sim/`) has its own scored 
 preflight (walk-around, engine start and checks), failures, weather and skill tests in the
 Cessna 172P, with results kept in the browser and, for signed-in pilots, in their account
 (`sim_test_results`, see Persistence). See `flightsim/docs/notes/tests.md`.
+After a crash it hands the aircraft to a rigid-body simulation (Rapier, open source): it slides,
+tumbles and breaks into pieces — see `flightsim/docs/notes/crash.md`.
 
 Headless tests: `bunx vitest run src/sim/sim.test.ts`.
 

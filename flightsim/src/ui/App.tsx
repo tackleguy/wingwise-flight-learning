@@ -11,6 +11,7 @@ import { basicKeyboard } from "@/dev/basic";
 import { createInstruments } from "@/instruments";
 import { CockpitPanel, ExplainCard, type InstrumentId } from "@/panel";
 import { createScenery } from "@/scenery";
+import { createCrash } from "@/crash";
 import { createSky, type Sky } from "@/sky";
 import { createFailureEffects } from "@/systems/failures";
 import { PREFIX as STORAGE_PREFIX } from "@/core/storage";
@@ -107,6 +108,8 @@ export function App() {
         sim.use(createInstruments());
         const sky = sim.use(createSky(world));
         sim.use(createScenery(world));
+        // Crash physics (src/crash): after a crash the aircraft tumbles, slides and breaks up; before the views, which draw it.
+        sim.use(createCrash(world));
         const views = sim.use(createViews(world));
         sim.use(basicKeyboard());
         // Electrical system (battery, alternator, buses) and what injected failures do (see src/systems/failures.ts).
@@ -124,14 +127,31 @@ export function App() {
         offs.push(
           training.onResult((r) => {
             setScores(training.results());
-            setResult(r);
-            if (r.id !== "walkaround") sim.setPaused(true);
+            const show = () => {
+              setResult(r);
+              if (r.id !== "walkaround") sim.setPaused(true);
+            };
+            if (!sim.state.crash) return show();
+            // after a crash, let the wreck come to rest first (at most 12 s)
+            let done = false;
+            const once = () => {
+              if (done) return;
+              done = true;
+              offSettled();
+              offSpawn();
+              clearTimeout(timer);
+              show();
+            };
+            const offSettled = sim.events.on("crashSettled", once);
+            const offSpawn = sim.events.on("spawn", once); // restarted before it came to rest
+            const timer = setTimeout(once, 12000);
           }),
         );
         offs.push(views.attach(worldEl.current!));
         offs.push(sim.events.on("message", (m) => setToast(m.text)));
         offs.push(sim.events.on("pause", (p) => setPaused(p.paused)));
-        offs.push(sim.events.on("crash", () => setToast("The aircraft was damaged. Press R to restart on short final, or M for the menu.")));
+        offs.push(sim.events.on("crash", (c) => setToast(`Crash: ${c.reason}`)));
+        offs.push(sim.events.on("crashSettled", () => setToast("The aircraft has come to rest. Press R to restart on short final, or M for the menu.")));
         offs.push(sim.events.on("stall", () => setToast("STALL — lower the nose, add full power, level the wings.")));
         mods.current = { rt, weather, sky, views, training };
         (window as unknown as { skyready: unknown }).skyready = { rt, sim, world, weather, sky, views };

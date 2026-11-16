@@ -606,6 +606,213 @@ def find_wheels(entries, cfg, aux_kind):
     return out
 
 
+GEARISH_RE = r"wheel|tyre|tire|strut|gear|\bleg|axle|brake|fairing|pant|spat|oleo|fork|skid"
+
+
+def split_airframe(static, node_defs, wheel_meshes, to_gltf, cfg, retract, gear_pieces):
+    """Crash physics: split the static airframe into the pieces that can break off.
+
+    Returns ({node name: [Piece]}, crash meta). Nodes: body (fuselage), wing_left, wing_right, tail and,
+    for fixed landing gear, gear_left / gear_right / gear_nose (or gear_tail). Everything is decided from
+    the geometry (glTF frame: +X left, +Y up, +Z nose; origin at the CG), so it works for every model:
+      - the wing band is where the model is widest (fore/aft slices wider than 55 % of the half span),
+      - the fuselage half width is the narrow part behind the wing (tail cone),
+      - the tail starts at the leading edge of the horizontal stabiliser (the last wide slices),
+      - wings are everything outboard of the fuselage in the wing band (and engines/nacelles far out),
+      - landing gear = wheels and gear-named objects low down (fixed gear only).
+    Moving nodes (ailerons, flaps, elevator, rudder, propellers) belong to the part they sit on.
+    `cfg["crash_split"]` can override the measured numbers (fuselageHalfWidth, tailStartZ).
+    """
+    ov = cfg.get("crash_split", {})
+    tris = []  # (piece, tri_idx, centroids, areas, gearish)
+    for p in static:
+        ti = p.tri_idx()
+        if len(ti) == 0:
+            continue
+        P = to_gltf(p.mesh.pos[(ti[:, None] * 3 + np.arange(3)[None]).reshape(-1)]).reshape(-1, 3, 3)
+        C = P.mean(axis=1)
+        A = 0.5 * np.linalg.norm(np.cross(P[:, 1] - P[:, 0], P[:, 2] - P[:, 0]), axis=1)
+        names = " ".join(getattr(p.mesh, "names", None) or [p.mesh.name or ""])
+        gearish = (id(p.mesh) in wheel_meshes or bool(re.search(GEARISH_RE, names, re.I))) and float(np.median(C[:, 1])) < -0.25
+        tris.append((p, ti, C, A, gearish))
+    # the outline includes the moving surfaces (an all-moving stabilator is the whole tailplane)
+    moving_C = []
+    for name, pieces, Rm, t, ex, kids in node_defs:
+        for q in list(pieces) + [x for kd in kids for x in kd[1]]:
+            ti = q.tri_idx()
+            if len(ti):
+                moving_C.append(to_gltf(q.mesh.pos[(ti[:, None] * 3 + np.arange(3)[None]).reshape(-1)]).reshape(-1, 3, 3).mean(axis=1))
+    C_all = np.concatenate([t[2] for t in tris if not t[4]] + moving_C)
+    A_all = np.concatenate([t[3] for t in tris if not t[4]] + [np.full(len(m), 1e-3) for m in moving_C])
+    ax = np.abs(C_all[:, 0])
+    s = float(ax.max())
+    # fore/aft slices of 10 cm: the widest point of each
+    z0, z1 = float(C_all[:, 2].min()), float(C_all[:, 2].max())
+    nb = max(1, int(np.ceil((z1 - z0) / 0.1)))
+    bi = np.clip(((C_all[:, 2] - z0) / 0.1).astype(int), 0, nb - 1)
+    ext = np.zeros(nb)
+    np.maximum.at(ext, bi, ax)
+    zc = z0 + (np.arange(nb) + 0.5) * 0.1
+    # wing band: the cluster of wide slices around the widest one (gaps of up to 3 slices allowed)
+    wide = ext > 0.55 * s
+    k = int(np.argmax(ext))
+    lo_i = hi_i = k
+    gap = 0
+    i = k
+    while i > 0 and gap <= 3:
+        i -= 1
+        gap = 0 if wide[i] else gap + 1
+        if wide[i]:
+            lo_i = i
+    gap = 0
+    i = k
+    while i < nb - 1 and gap <= 3:
+        i += 1
+        gap = 0 if wide[i] else gap + 1
+        if wide[i]:
+            hi_i = i
+    zw_lo, zw_hi = float(zc[lo_i] - 0.05), float(zc[hi_i] + 0.05)
+    outer = ax > 0.7 * s
+    yw = float(np.median(C_all[outer, 1])) if outer.any() else 0.0
+    # fuselage half width: the cabin just in front of and just behind the wing (1.5 m each way), close to
+    # the centre line (engines and nacelles further out are left out); the median of the slices' widths
+    near_wing = ((C_all[:, 2] > zw_hi) & (C_all[:, 2] < zw_hi + 1.5)) | ((C_all[:, 2] < zw_lo) & (C_all[:, 2] > zw_lo - 1.5))
+    cab = near_wing & (ax < 0.25 * s)
+    if cab.sum() > 20:
+        cb = np.clip(((C_all[cab, 2] - z0) / 0.1).astype(int), 0, nb - 1)
+        w = np.zeros(nb)
+        np.maximum.at(w, cb, ax[cab])
+        fw = float(np.median(w[w > 0]))
+    else:
+        aft = ext[(zc < zw_lo) & (ext > 0)]
+        fw = float(np.percentile(aft, 50)) if len(aft) else 0.6
+    fw = float(ov.get("fuselageHalfWidth", min(max(fw, 0.35), 0.25 * s)))
+    # tail: from the leading edge of the horizontal stabiliser (the last wide slices) to the end
+    zt = ov.get("tailStartZ")
+    if zt is None:
+        stab = (zc < zw_lo - 0.2) & (ext > max(1.7 * fw, fw + 0.6))
+        if stab.any():
+            idx = np.nonzero(stab)[0]
+            first = idx.min()  # the aft-most wide slice
+            j = first
+            while j + 1 < nb and (stab[j + 1] or (j + 2 < nb and stab[j + 2])):
+                j += 1
+            # swept stabilisers: carry on forward to where the stabiliser root begins (wider than the fuselage)
+            while j + 1 < nb and zc[j + 1] < zw_lo - 0.5 and ext[j + 1] > fw * 1.25:
+                j += 1
+            zt = float(zc[j] + 0.15)
+        else:
+            zt = None
+        # the fin: where it rises clearly above the top of the cabin (swept fins and stabilisers start
+        # further forward than their widest slices)
+        cabin = (C_all[:, 2] > zw_lo) & (C_all[:, 2] < zw_hi) & (ax < fw)
+        if zt is not None and cabin.sum() > 20 and ov.get("tailStartZ") is None:
+            top = float(np.percentile(C_all[cabin, 1], 95))
+            fin = (C_all[:, 2] < zw_lo - 0.5) & (C_all[:, 1] > top + 0.3) & (ax < fw)
+            if fin.sum() > 5:
+                # area-weighted: aerials, beacons and handles on the roof do not count
+                o = np.argsort(C_all[fin, 2])
+                cw = np.cumsum(A_all[fin][o])
+                z_fin = float(C_all[fin, 2][o][min(len(o) - 1, np.searchsorted(cw, 0.97 * cw[-1]))])
+                zt = max(zt, z_fin + 0.1)
+    if zt is not None and zt > zw_lo - 0.2:
+        zt = None
+
+    def region(C):
+        x, y, z = C[:, 0], C[:, 1], C[:, 2]
+        axx = np.abs(x)
+        tail = (z < zt) if zt is not None else np.zeros(len(C), bool)
+        far = (axx > 0.3 * s) & (z > zw_lo - 1.0) & (z < zw_hi + 4.5)  # engine pods reach well ahead of the wing
+        near = (axx > fw * 1.1) & (z > zw_lo - 0.25) & (z < zw_hi + 0.25) & (y > yw - 0.7)
+        wing = ~tail & (axx > fw * 1.1) & (far | near)
+        out = np.full(len(C), "body", dtype=object)
+        out[tail] = "tail"
+        out[wing & (x > 0)] = "wing_left"
+        out[wing & (x <= 0)] = "wing_right"
+        return out
+
+    groups = {}
+    for p, ti, C, A, gearish in tris:
+        if gearish and not retract:
+            c = C.mean(axis=0)
+            key = ("gear_left" if c[0] > 0 else "gear_right") if abs(c[0]) > 0.3 else ("gear_nose" if c[2] > 0 else "gear_tail")
+            groups.setdefault(key, []).append(p)
+            continue
+        reg = region(C)
+        T = len(p.mesh.pos) // 3
+        for key in ("body", "wing_left", "wing_right", "tail"):
+            sel = ti[reg == key]
+            if len(sel) == 0:
+                continue
+            if len(sel) == T:
+                groups.setdefault(key, []).append(Piece(p.mesh))
+            else:
+                mask = np.zeros(T, bool)
+                mask[sel] = True
+                groups.setdefault(key, []).append(Piece(p.mesh, mask))
+
+    def pts(pieces):
+        return to_gltf(np.concatenate([q.points() for q in pieces])) if pieces else np.zeros((0, 3))
+
+    def pts_w(pieces):
+        """vertices and their weights (a third of their triangle's area each)"""
+        if not pieces:
+            return np.zeros((0, 3)), np.zeros(0)
+        P = pts(pieces)
+        T = P.reshape(-1, 3, 3)
+        A = 0.5 * np.linalg.norm(np.cross(T[:, 1] - T[:, 0], T[:, 2] - T[:, 0]), axis=1)
+        return P, np.repeat(A / 3, 3)
+
+    def wbox(P, w, q=0.01):
+        """collision box: area-weighted 1 %…99 % range on each axis (thin struts, aerials and handles do not stretch it)"""
+        lo, hi = np.zeros(3), np.zeros(3)
+        for a in range(3):
+            o = np.argsort(P[:, a])
+            cw = np.cumsum(w[o])
+            tot = cw[-1] if cw[-1] > 0 else 1
+            lo[a] = P[o[min(len(o) - 1, np.searchsorted(cw, q * tot))], a]
+            hi[a] = P[o[min(len(o) - 1, np.searchsorted(cw, (1 - q) * tot))], a]
+        return lo, hi
+
+    # moving nodes go with the part under their centre
+    members = {k: [k] for k in groups}
+    extra_pts = {}
+    for name, pieces, Rm, t, ex, kids in node_defs:
+        allp = list(pieces) + [q for kd in kids for q in kd[1]]
+        if not allp:
+            continue
+        P = pts(allp)
+        part = region(P.mean(axis=0)[None])[0]
+        members.setdefault(part, []).append(name)
+        extra_pts.setdefault(part, []).append(pts_w(allp))
+    parts = {}
+    for key in ("body", "wing_left", "wing_right", "tail", "gear_left", "gear_right", "gear_nose", "gear_tail"):
+        if key not in groups and key not in members:
+            continue
+        pw = [pts_w(groups.get(key, []))] + extra_pts.get(key, [])
+        P = np.concatenate([x[0] for x in pw])
+        W = np.concatenate([x[1] for x in pw])
+        if len(P) == 0:
+            continue
+        if key == "body":
+            # the fuselage box: leave out what sticks out sideways (wing-strut stubs, steps)
+            core = np.abs(P[:, 0]) <= max(fw * 1.4, 0.5)
+            if core.sum() > 10:
+                P, W = P[core], W[core]
+        lo, hi = wbox(P, W, 0.005 if key.startswith("gear") else 0.01)
+        parts[key] = {"nodes": members.get(key, []), "min": fmt(lo), "max": fmt(hi)}
+    if retract and gear_pieces:
+        lo, hi = wbox(*pts_w(gear_pieces), 0.005)
+        parts["gear"] = {"nodes": ["gear_retract"], "min": fmt(lo), "max": fmt(hi)}
+    meta = {
+        "fuselageHalfWidth": round(fw, 3),
+        "wingBand": [round(zw_lo, 3), round(zw_hi, 3)],
+        "tailStartZ": None if zt is None else round(float(zt), 3),
+        "parts": parts,
+    }
+    return groups, meta
+
+
 def build(aid, tex_max=None, quiet=False):
     cfg = AIRCRAFT[aid]
     t0 = time.time()
@@ -983,12 +1190,26 @@ def build(aid, tex_max=None, quiet=False):
 
     node_ids = []
     I3 = np.eye(3)
-    body_mesh = make_mesh("body", static, I3, np.zeros(3))
-    node_ids.append(builder.add_node("body", body_mesh))
+    # the static airframe in the pieces that can break off in a crash (see split_airframe)
+    wheel_meshes = {id(q.mesh) for v in wheels.values() for q in v}
+    split, crash_meta = split_airframe(static, node_defs, wheel_meshes, to_gltf, cfg, bool(gear), gear)
+    if not quiet:
+        log(f"   crash parts: fuselage half width {crash_meta['fuselageHalfWidth']} m, wing band z {crash_meta['wingBand']}, tail from z {crash_meta['tailStartZ']}; "
+            + "; ".join(f"{k}: {sum(len(q.tri_idx()) for q in v)} tris" for k, v in split.items())
+            + " | moving: " + "; ".join(f"{k}: {', '.join(v['nodes'][1:]) or '-'}" for k, v in crash_meta["parts"].items()))
+    parts = []
+    for name in ("body", "wing_left", "wing_right", "tail", "gear_left", "gear_right", "gear_nose", "gear_tail"):
+        if name not in split:
+            continue
+        mesh = make_mesh(name, split[name], I3, np.zeros(3))
+        if mesh is None:
+            continue
+        node_ids.append(builder.add_node(name, mesh, extras={"crashPart": name}))
+        parts.append(name)
     if gear:
         gm = make_mesh("gear_retract", gear, I3, np.zeros(3))
         node_ids.append(builder.add_node("gear_retract", gm, extras={"note": "landing gear legs, wheels and doors; hide when the gear is up"}))
-    parts = ["body"] + (["gear_retract"] if gear else [])
+        parts.append("gear_retract")
     for name, pieces, Rm, t, extras, kids in node_defs:
         mesh = make_mesh(name, pieces, Rm, t)
         kid_ids = []
@@ -1034,6 +1255,7 @@ def build(aid, tex_max=None, quiet=False):
         "T": T, "aux_err": aux_err, "aux_kind": aux_kind, "track": (track_model, track_jsb), "vrp_note": vrp_note,
         "jsb": jsb, "con": con, "tex_bytes": tex_bytes, "secs": time.time() - t0, "missing_tex": ml.missing_textures,
         "ground_y": float(to_gltf(jsb_main[None])[0][1]),
+        "crash": crash_meta,
     }
     return info
 
@@ -1076,6 +1298,7 @@ def meta_of(aid, info):
         "triangles": int(info["tris"]),
         "bytes": len(info["data"]),
         "notes": " ".join(notes),
+        "crash": info.get("crash"),
     }
 
 
@@ -1190,6 +1413,15 @@ def write_meta_ts(failures):
         "  triangles: number;",
         "  bytes: number;",
         "  notes: string;",
+        "  /** Pieces that can break off in a crash: the nodes of each piece and its collision box (glTF frame). */",
+        "  crash?: FgCrashMeta;",
+        "}",
+        "",
+        "export interface FgCrashMeta {",
+        "  fuselageHalfWidth: number;",
+        "  wingBand: [number, number]; // glTF z range of the wing (aft, front)",
+        "  tailStartZ: number | null; // the tail is everything aft of this (glTF z)",
+        "  parts: Partial<Record<\"body\" | \"wing_left\" | \"wing_right\" | \"tail\" | \"gear_left\" | \"gear_right\" | \"gear_nose\" | \"gear_tail\" | \"gear\", { nodes: string[]; min: [number, number, number]; max: [number, number, number] }>>;",
         "}",
         "",
         f"export const FG_MODELS: Record<{ids}, FgModelMeta> = {{",

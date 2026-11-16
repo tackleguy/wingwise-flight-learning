@@ -17,7 +17,7 @@ import { magneticVariation } from "./magvar";
 import { D2R, FPS_PER_KT, R2D, clamp, densityAltitudeFt, isaTempC, norm360, pressureAltitudeFt, pressureAtAltitudeInHg } from "./math";
 import { planSpawn, type SpawnPlan } from "./spawn";
 import { loadJson, saveJson } from "./storage";
-import type { ControlState, Environment, Settings, SimEvents, SimState, SpawnRequest, SpawnResult } from "./types";
+import type { ControlState, CrashCause, Environment, Settings, SimEvents, SimState, SpawnRequest, SpawnResult } from "./types";
 
 /** A feature module plugged into the simulator. Every hook is optional. */
 export interface SimModule {
@@ -424,7 +424,7 @@ export class Sim {
     const ok = fdm.step(1);
     this.readTruth(dt);
     if (!ok || !Number.isFinite(s.lat + s.lon + s.altMslFt + s.pitch + s.roll)) {
-      this.crash("The flight model became unstable.");
+      this.crash("The flight model became unstable.", "unstable");
       return;
     }
     this.detect(dt);
@@ -500,10 +500,10 @@ export class Sim {
     s.inCloud = this.stepCount % 6 === 0 ? cloudDensityAt(this.env, s.lat, s.lon, s.altMslFt) : s.inCloud;
   }
 
-  private crash(reason: string): void {
+  private crash(reason: string, cause: CrashCause): void {
     const s = this.state;
     if (s.crash) return;
-    s.crash = { reason, timeSec: s.time };
+    s.crash = { reason, timeSec: s.time, cause };
     this.events.emit("crash", s.crash);
   }
 
@@ -515,7 +515,7 @@ export class Sim {
     // --- flew into rising terrain
     const ac = this.aircraft;
     if (!s.onGround && this.wasAirborne && s.altMslFt - ac.cgHeightFt < this.terrainFt - 6) {
-      this.crash("Flew into terrain.");
+      this.crash("Flew into terrain.", "terrain");
       return;
     }
 
@@ -536,9 +536,9 @@ export class Sim {
           gLoad: s.nz,
         };
         this.events.emit("touchdown", info);
-        if (vs < -1000) this.crash(`Hit the ground too hard (${Math.round(-vs)} feet per minute).`);
-        else if (Math.abs(s.roll) > 25) this.crash("A wing struck the ground on touchdown.");
-        else if (s.pitch < -12) this.crash("Landed on the nose wheel and nosed over.");
+        if (vs < -1000) this.crash(`Hit the ground too hard (${Math.round(-vs)} feet per minute).`, "hard-landing");
+        else if (Math.abs(s.roll) > 25) this.crash("A wing struck the ground on touchdown.", "wing-strike");
+        else if (s.pitch < -12) this.crash("Landed on the nose wheel and nosed over.", "nose-over");
         else if (vs < -600) this.message(`Hard landing: ${Math.round(-vs)} feet per minute.`, "warn");
       }
       if (this.wasAirborne) {
@@ -561,12 +561,12 @@ export class Sim {
           }
           if (struck === null || st.part === "wing") struck = st.part;
         }
-        if (struck === "wing") this.crash("A wing tip struck the ground.");
-        else if (struck === "nose") this.crash("The nose struck the ground.");
-        else if (struck === "engine") this.crash("An engine struck the ground.");
-        else if (struck === "propeller") this.crash("The propeller struck the ground.");
-        else if (struck === "body") this.crash("The aircraft's body struck the ground.");
-        else if (Math.abs(s.roll) > 40 || s.pitch < -25 || s.pitch > 40) this.crash("The aircraft overturned.");
+        if (struck === "wing") this.crash("A wing tip struck the ground.", "wing-strike");
+        else if (struck === "nose") this.crash("The nose struck the ground.", "nose-strike");
+        else if (struck === "engine") this.crash("An engine struck the ground.", "engine-strike");
+        else if (struck === "propeller") this.crash("The propeller struck the ground.", "propeller-strike");
+        else if (struck === "body") this.crash("The aircraft's body struck the ground.", "body-strike");
+        else if (Math.abs(s.roll) > 40 || s.pitch < -25 || s.pitch > 40) this.crash("The aircraft overturned.", "overturn");
       }
     } else {
       this.airborneSec += dt;

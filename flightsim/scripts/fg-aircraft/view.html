@@ -136,6 +136,24 @@ if (view === "flapsDown") {
   }
 }
 
+if (view === "parts" && meta.crash) {
+  // crash pieces: each in its own colour, pulled apart a little (body grey, left wing red, right wing
+  // green, tail blue, landing gear yellow) — checks scripts/fg-aircraft/convert.py split_airframe
+  const colours = { body: 0x9a9a9a, wing_left: 0xd03030, wing_right: 0x30a040, tail: 0x3060d0, gear_left: 0xe0c020, gear_right: 0xe0c020, gear_nose: 0xe0c020, gear_tail: 0xe0c020, gear: 0xe0c020 };
+  const pull = { wing_left: [1, 0, 0], wing_right: [-1, 0, 0], tail: [0, 0.3, -1.5], gear_left: [0.6, -0.8, 0], gear_right: [-0.6, -0.8, 0], gear_nose: [0, -0.8, 0.6], gear_tail: [0, -0.8, -0.6], gear: [0, -0.8, 0] };
+  for (const [part, info] of Object.entries(meta.crash.parts)) {
+    for (const name of info.nodes) {
+      const n = root.getObjectByName(name);
+      if (!n) continue;
+      n.traverse((o) => {
+        if (o.isMesh) o.material = new THREE.MeshLambertMaterial({ color: colours[part] ?? 0xff00ff, side: THREE.DoubleSide });
+      });
+      const p = pull[part];
+      if (p) n.position.add(new THREE.Vector3(...p).multiplyScalar(size * 0.06));
+    }
+  }
+}
+
 const [lo, hi] = meta.bounds;
 let c = new THREE.Vector3((lo[0] + hi[0]) / 2, (lo[1] + hi[1]) / 2, (lo[2] + hi[2]) / 2);
 let D = size * 1.25;
@@ -146,7 +164,7 @@ const cam = new THREE.PerspectiveCamera(30, W / H, 0.05, 1000);
 const dirs = {
   left: [1, 0.02, 0], front: [0.75, 0.38, 1], top: [0, 1, 0.0001], rear: [0, 0.18, -1],
   deflect: [0.8, 0.65, -0.9], deflectRear: [0, 0.25, -1], right: [-1, 0.02, 0], below: [0.3, -0.6, 0.6],
-  deflectTail: [0.9, 0.35, -0.8], deflectWing: [0.35, 0.12, -1], flapsDown: [0.55, -0.35, -1], nose: [0.8, 0.45, 1],
+  deflectTail: [0.9, 0.35, -0.8], deflectWing: [0.35, 0.12, -1], flapsDown: [0.55, -0.35, -1], nose: [0.8, 0.45, 1], parts: [0.8, 0.55, 0.9],
 };
 const dv = new THREE.Vector3(...(dirs[view] || dirs.left)).normalize();
 cam.position.copy(c).addScaledVector(dv, D * (view === "top" ? 1.55 : view === "left" || view === "right" ? 1.45 : 1.3));
