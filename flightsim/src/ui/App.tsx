@@ -13,7 +13,8 @@ import { CockpitPanel, ExplainCard, type InstrumentId } from "@/panel";
 import { createScenery } from "@/scenery";
 import { createSky, type Sky } from "@/sky";
 import { createFailureEffects } from "@/systems/failures";
-import { createTraining, getTest, makeInspection, prepareTestFlight, type InspectionItem, type StoredResult, type TestDef, type TestResult, type TrainingModule } from "@/training";
+import { PREFIX as STORAGE_PREFIX } from "@/core/storage";
+import { RESULTS_KEY, createTraining, getTest, makeInspection, prepareTestFlight, type InspectionItem, type StoredResult, type TestDef, type TestResult, type TrainingModule } from "@/training";
 import { Debrief } from "@/training/ui/Debrief";
 import { TestHud } from "@/training/ui/TestHud";
 import { TestsMenu } from "@/training/ui/TestsMenu";
@@ -113,6 +114,13 @@ export function App() {
         // Tests mode: scored exercises (src/training)
         const training = sim.use(createTraining());
         setScores(training.results());
+        // The website merges the scores saved in the pilot's account into this device's list
+        // (from another page or tab of the same site): show them as soon as they arrive.
+        const onStorage = (e: StorageEvent) => {
+          if (e.key === null || e.key === STORAGE_PREFIX + RESULTS_KEY) setScores(training.results());
+        };
+        window.addEventListener("storage", onStorage);
+        offs.push(() => window.removeEventListener("storage", onStorage));
         offs.push(
           training.onResult((r) => {
             setScores(training.results());

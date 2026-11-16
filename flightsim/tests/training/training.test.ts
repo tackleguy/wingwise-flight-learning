@@ -2,7 +2,7 @@
  * The Tests mode: scoring, the walk-around grading, the failure effects, and several tests flown
  * end to end by the scripted test pilot (real simulator core, real JSBSim, flat ground).
  */
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type { Sim } from "@/core/sim";
 import { createInstruments } from "@/instruments";
 import { createFailureEffects } from "@/systems/failures";
@@ -99,6 +99,28 @@ describe("scoring", () => {
     expect(Math.abs(mid.alongFt - rw.lengthFt / 2)).toBeLessThan(60);
     expect(Math.abs(mid.rightFt)).toBeLessThan(10);
     expect(runwayPosition(rw, i, end.lat + 0.01, end.lon).onRunway).toBe(false);
+  });
+});
+
+describe("saved results", () => {
+  it("keep the best score per test and every attempt for the account upload", () => {
+    const store = new Map<string, string>();
+    vi.stubGlobal("localStorage", { getItem: (k: string) => store.get(k) ?? null, setItem: (k: string, v: string) => void store.set(k, v), removeItem: (k: string) => void store.delete(k) });
+    try {
+      const training = createTraining();
+      const items = makeInspection(() => 0.5);
+      const bad = gradeInspection(items, {}, null);
+      const good = gradeInspection(items, Object.fromEntries(items.map((i) => [i.id, i.problem ? "problem" : "ok"])), correctDecision(items));
+      training.record(good);
+      training.record(bad);
+      const all = training.results();
+      expect(all.walkaround).toMatchObject({ best: 100, passed: true, attempts: 2 });
+      expect(all.walkaround!.last.score).toBe(bad.score);
+      const outbox = JSON.parse(store.get("skyready.sim.testsOutbox")!) as { score: number }[];
+      expect(outbox.map((r) => r.score)).toEqual([100, bad.score]);
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 });
 

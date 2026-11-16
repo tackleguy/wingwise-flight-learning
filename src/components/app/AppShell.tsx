@@ -2,6 +2,7 @@ import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/lib/account";
+import { useSimTestsSync } from "@/lib/sim-tests-sync";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -321,6 +322,8 @@ function useSpotlightPointer() {
 export function AppShell({ children }: { children: ReactNode }) {
   useApplyAccessibility();
   useSpotlightPointer();
+  // Upload the World Flight Simulator's Tests scores to the signed-in pilot's account.
+  useSimTestsSync();
   return (
     <SidebarProvider>
       <Sidebar collapsible="icon" variant="sidebar">

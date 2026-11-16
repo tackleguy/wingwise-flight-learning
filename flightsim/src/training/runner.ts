@@ -49,7 +49,14 @@ export interface TrainingModule extends SimModule {
   onResult(fn: (r: TestResult) => void): () => void;
 }
 
-const STORAGE_KEY = "tests";
+/** Best score, pass and attempts per test (key `skyready.sim.tests`). */
+export const RESULTS_KEY = "tests";
+/**
+ * Every finished attempt that the website has not uploaded to the pilot's account yet (key
+ * `skyready.sim.testsOutbox`). The website (src/lib/sim-tests-sync.ts in the site) empties it.
+ */
+export const OUTBOX_KEY = "testsOutbox";
+const OUTBOX_MAX = 200;
 
 /** Score: share of the objectives' points earned; passed when ≥ PASS_SCORE and every critical objective passed. */
 export function scoreObjectives(objectives: readonly Objective[]): { score: number; passed: boolean } {
@@ -74,10 +81,12 @@ export function createTraining(): TrainingModule {
   };
 
   const store = (r: TestResult) => {
-    const all = loadJson<Record<string, StoredResult>>(STORAGE_KEY, {});
+    const all = loadJson<Record<string, StoredResult>>(RESULTS_KEY, {});
     const prev = all[r.id];
     all[r.id] = { best: Math.max(prev?.best ?? 0, r.score), passed: (prev?.passed ?? false) || r.passed, attempts: (prev?.attempts ?? 0) + 1, last: r };
-    saveJson(STORAGE_KEY, all);
+    saveJson(RESULTS_KEY, all);
+    const outbox = loadJson<TestResult[]>(OUTBOX_KEY, []);
+    saveJson(OUTBOX_KEY, [...(Array.isArray(outbox) ? outbox : []), r].slice(-OUTBOX_MAX));
     for (const fn of [...listeners]) fn(r);
   };
 
@@ -163,7 +172,7 @@ export function createTraining(): TrainingModule {
     },
 
     results() {
-      return loadJson<Record<string, StoredResult>>(STORAGE_KEY, {});
+      return loadJson<Record<string, StoredResult>>(RESULTS_KEY, {});
     },
 
     onResult(fn) {

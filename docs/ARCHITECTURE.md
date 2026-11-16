@@ -48,7 +48,8 @@ objectives (`src/sim/objectives.ts`). Flights are scored and written to the logb
 
 The World Flight Simulator (`flightsim/`, served at `/sim/`) has its own scored **Tests** tab:
 preflight (walk-around, engine start and checks), failures, weather and skill tests in the
-Cessna 172P, with results kept in the browser. See `flightsim/docs/notes/tests.md`.
+Cessna 172P, with results kept in the browser and, for signed-in pilots, in their account
+(`sim_test_results`, see Persistence). See `flightsim/docs/notes/tests.md`.
 
 Headless tests: `bunx vitest run src/sim/sim.test.ts`.
 
@@ -80,6 +81,42 @@ Postgres backend (Lovable Cloud) without changing the UI.
 | `certificates_of_completion`       | `id`, `user_id`, `track_id`, `checkride_id`, `issued_at` (training completion only — not FAA credentials)                                                                                                                  |
 
 All user tables use row-level security: `user_id = auth.uid()`.
+
+### Simulator Tests scores in the account (`sim_test_results`)
+
+The World Flight Simulator (`flightsim/`, at `/sim/` on the same site) saves Tests results on the
+device: `skyready.sim.tests` (best score per test) and `skyready.sim.testsOutbox` (finished
+attempts not uploaded yet). `src/lib/sim-tests-sync.ts` (run from `AppShell` while signed in)
+uploads the outbox to `sim_test_results` and merges the account's results back into the device's
+list, so scores follow the pilot to any device. The device copy stays the simulator's working store
+(it works signed out and offline). Until the table exists the sync reports "not set up" and keeps
+everything on the device. The table, to be created through Lovable:
+
+```sql
+CREATE TABLE public.sim_test_results (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL DEFAULT auth.uid() REFERENCES auth.users(id) ON DELETE CASCADE,
+  test_id text NOT NULL,
+  title text NOT NULL,
+  score integer NOT NULL CHECK (score BETWEEN 0 AND 100),
+  passed boolean NOT NULL,
+  duration_sec integer NOT NULL DEFAULT 0,
+  ended_because text NOT NULL DEFAULT '',
+  objectives jsonb NOT NULL DEFAULT '[]'::jsonb,
+  flown_at timestamptz NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE (user_id, test_id, flown_at)
+);
+CREATE INDEX sim_test_results_user_flown_idx ON public.sim_test_results (user_id, flown_at);
+GRANT SELECT, INSERT, DELETE ON public.sim_test_results TO authenticated;
+GRANT ALL ON public.sim_test_results TO service_role;
+ALTER TABLE public.sim_test_results ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "own sim test results read" ON public.sim_test_results FOR SELECT TO authenticated USING (auth.uid() = user_id);
+CREATE POLICY "own sim test results insert" ON public.sim_test_results FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "own sim test results delete" ON public.sim_test_results FOR DELETE TO authenticated USING (auth.uid() = user_id);
+```
+
+One row per finished attempt; the unique key makes uploading the same attempt twice harmless.
 
 ## AI services (all local)
 

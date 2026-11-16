@@ -102,6 +102,8 @@ Choices made while building the SkyReady Flight Simulator, in plain language, ne
   the flight for (damage, flying an aircraft that must not fly).
 - **The walk-around is a described inspection, not 3D**: the FlightGear model has no detail for
   fuel samples, oil, hinges; the decisions it teaches (fix it, or do not fly) are the same.
-- Results stay in the browser only; the main site's database is managed by Lovable and was not
-  changed.
+- Results are kept in the browser (the simulator works signed out and offline). For signed-in
+  pilots the website uploads every finished attempt to the `sim_test_results` table and merges
+  the account's scores back, so they show on any device. The table is created through Lovable
+  (the site's database is managed there); its definition is in the site's `docs/ARCHITECTURE.md`.
 - Details: `docs/notes/tests.md`.

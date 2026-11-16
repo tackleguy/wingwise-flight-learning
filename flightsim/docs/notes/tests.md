@@ -20,7 +20,11 @@ against a handbook):
 Each test has a briefing, a time limit, scored **objectives** (each worth points; some are
 **essential**), and ends with a **debrief** (what passed, what failed and why, tips). Pass mark:
 80 % and every essential objective passed. The best score, pass and number of attempts are kept
-in the browser (`localStorage`, key `skyready.sim.tests`).
+in the browser (`localStorage`, key `skyready.sim.tests`); every finished attempt also goes to
+`skyready.sim.testsOutbox`, which the website uploads to the pilot's account when they are signed
+in (`src/lib/sim-tests-sync.ts` in the site; table `sim_test_results`, see the site's
+`docs/ARCHITECTURE.md` → Persistence). The account's scores are merged back, so they show on any
+device.
 
 | file | contents |
 | --- | --- |
@@ -102,4 +106,3 @@ copied from them.
 - Random failures in free flight ("surprise me").
 - Tests for the other aircraft (needs their handbook numbers checked first).
 - A replay of the flight with the moments each objective was judged.
-- Progress across devices (needs an account and the site's database).

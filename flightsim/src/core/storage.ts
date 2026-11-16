@@ -1,5 +1,6 @@
 /** Versioned localStorage helper. Everything the simulator remembers lives under "skyready.sim.*". */
-const PREFIX = "skyready.sim.";
+/** Exported so other pages of the same site (and storage events) can find these keys. */
+export const PREFIX = "skyready.sim.";
 /**
  * The project used to be called TeachX and saved under "teachx.sim.*". A value still under its old
  * name is moved to the new name the first time it is read, so nobody loses their settings.
