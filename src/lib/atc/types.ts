@@ -183,6 +183,21 @@ export interface AtisInfo {
   phrase: Phrase;
 }
 
+export interface AirportLegContext {
+  airport: Airport;
+  /** Spoken short airport name, e.g. "Palo Alto". */
+  airportName: string;
+  runway: RunwayInfo;
+  altRunway: RunwayInfo | null;
+  atis: AtisInfo;
+  atisFreq: number | null;
+  facilities: Partial<Record<FacilityKey, Facility>>;
+  taxiRoute: string[];
+  patternAltitude: number;
+  interceptAltitude: number;
+  approachName: string;
+}
+
 export interface ScenarioContext {
   airport: Airport;
   /** Spoken short airport name, e.g. "Palo Alto". */

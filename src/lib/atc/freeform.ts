@@ -13,15 +13,20 @@
  *
  * SIMULATED FOR TRAINING ONLY.
  */
-import { allRunwayEnds } from "@/lib/data/airports";
-import { norm180, norm360 } from "@/lib/geo";
+import { AIRPORTS, allRunwayEnds, getAirport } from "@/lib/data/airports";
+import type { Airport } from "@/lib/data/types";
+import { bearingDeg, distanceNm, norm180, norm360 } from "@/lib/geo";
 import type { SavedFlightPlan } from "@/lib/store";
 import {
+  airportSpokenName,
   approachPhrase,
+  buildAirportLegContext,
   buildContext,
   compassWord,
   facilityDirectory,
+  facilityDirectoryForFields,
   facilityOf,
+  makeRng,
 } from "./context";
 import {
   blockedItem,
@@ -63,6 +68,7 @@ import {
   wind,
 } from "./phrase";
 import type {
+  AirportLegContext,
   Clearance,
   Difficulty,
   EvalItem,
@@ -76,14 +82,38 @@ import type {
 } from "./types";
 
 export type FreeGoalId =
-  "vfr-departure-ff" | "ifr-departure" | "vfr-arrival" | "ifr-arrival" | "pattern" | "custom";
+  | "vfr-full-flight"
+  | "ifr-full-flight"
+  | "vfr-departure-ff"
+  | "ifr-departure"
+  | "vfr-arrival"
+  | "ifr-arrival"
+  | "pattern"
+  | "custom";
 
 export const FREE_GOALS: {
   id: FreeGoalId;
   label: string;
   rules: "VFR" | "IFR" | "any";
+  fullFlight?: boolean;
   describe: (dest: string) => string;
 }[] = [
+  {
+    id: "vfr-full-flight",
+    label: "Full VFR cross-country flight",
+    rules: "VFR",
+    fullFlight: true,
+    describe: (d) =>
+      `Full VFR flight to ${d}: taxi, takeoff, flight following, arrival, landing & taxi in`,
+  },
+  {
+    id: "ifr-full-flight",
+    label: "Full IFR cross-country flight",
+    rules: "IFR",
+    fullFlight: true,
+    describe: (d) =>
+      `Full IFR flight to ${d}: clearance, taxi, takeoff, center, approach, landing & taxi in`,
+  },
   {
     id: "vfr-departure-ff",
     label: "VFR departure with flight following",
@@ -122,7 +152,9 @@ export const FREE_GOALS: {
   },
 ];
 
-type Phase =
+export type FlightLeg = "departure" | "enroute" | "destination";
+
+export type FreePhase =
   | "ramp"
   | "taxiing"
   | "holding-short"
@@ -135,15 +167,19 @@ type Phase =
   | "parked"
   | "arrival";
 
-type PendingTag =
+export type PendingTag =
   | "clearance"
   | "taxi"
   | "takeoff"
   | "handoff"
   | "squawk"
   | "climb"
+  | "altitude"
+  | "vectors"
+  | "runway"
   | "pattern-entry"
   | "landing"
+  | "go-around"
   | "exit"
   | "app-desc"
   | "app-vector"
@@ -162,12 +198,17 @@ export interface PendingReadback {
 
 export interface FreeState {
   ctx: ScenarioContext;
+  /** Original departure airport leg context (used when switching legs). */
+  dep: AirportLegContext;
+  /** Destination airport leg context for cross-country flights (null for local/arrival). */
+  dest: AirportLegContext | null;
+  leg: FlightLeg;
   goalId: FreeGoalId;
   goal: string;
   rules: "VFR" | "IFR";
   difficulty: Difficulty;
   personality: Personality;
-  phase: Phase;
+  phase: FreePhase;
   currentStation: FacilityKey;
   clearance: Clearance | null;
   pending: PendingReadback | null;
@@ -197,6 +238,7 @@ export interface FreeReply {
 
 export interface FreeSetup {
   airportIcao: string;
+  destinationIcao?: string;
   aircraftId: string;
   callsign: string;
   rules: "VFR" | "IFR";
@@ -216,22 +258,138 @@ const capFirst = (p: Phrase): Phrase => ({
 const r10 = (d: number) => Math.round(norm360(d) / 10) * 10 || 360;
 const side = (from: number, to: number) => (norm180(to - from) >= 0 ? "right" : "left");
 
+export function legFromCtx(ctx: ScenarioContext): AirportLegContext {
+  return {
+    airport: ctx.airport,
+    airportName: ctx.airportName,
+    runway: ctx.runway,
+    altRunway: ctx.altRunway,
+    atis: ctx.atis,
+    atisFreq: ctx.atisFreq,
+    facilities: ctx.facilities,
+    taxiRoute: ctx.taxiRoute,
+    patternAltitude: ctx.patternAltitude,
+    interceptAltitude: ctx.interceptAltitude,
+    approachName: ctx.approachName,
+  };
+}
+
+export function landingStation(ctx: ScenarioContext): FacilityKey {
+  return ctx.airport.towered ? "tower" : "ctaf";
+}
+
+export function groundStation(ctx: ScenarioContext): FacilityKey | null {
+  return ctx.airport.towered ? "ground" : null;
+}
+
+export function switchToLeg(s: FreeState, targetLeg: FlightLeg): FreeState {
+  if (targetLeg === "destination" && s.dest) {
+    const d = s.dest;
+    return {
+      ...s,
+      leg: "destination",
+      ctx: {
+        ...s.ctx,
+        airport: d.airport,
+        airportName: d.airportName,
+        runway: d.runway,
+        altRunway: d.altRunway,
+        atis: d.atis,
+        atisFreq: d.atisFreq,
+        facilities: d.facilities,
+        taxiRoute: d.taxiRoute,
+        patternAltitude: d.patternAltitude,
+        interceptAltitude: d.interceptAltitude,
+        approachName: d.approachName,
+        abbrevBy: {},
+      },
+    };
+  }
+  if (targetLeg === "departure") {
+    const d = s.dep;
+    return {
+      ...s,
+      leg: "departure",
+      ctx: {
+        ...s.ctx,
+        airport: d.airport,
+        airportName: d.airportName,
+        runway: d.runway,
+        altRunway: d.altRunway,
+        atis: d.atis,
+        atisFreq: d.atisFreq,
+        facilities: d.facilities,
+        taxiRoute: d.taxiRoute,
+        patternAltitude: d.patternAltitude,
+        interceptAltitude: d.interceptAltitude,
+        approachName: d.approachName,
+        abbrevBy: {},
+      },
+    };
+  }
+  return { ...s, leg: targetLeg };
+}
+
+export function switchDestinationAirport(s: FreeState, ap: Airport): FreeState {
+  const destLeg = buildAirportLegContext(ap, {
+    rng: makeRng(Date.now()),
+    preferIls: s.rules === "IFR",
+    ifrWeather: s.rules === "IFR",
+  });
+  const dist = Math.round(distanceNm(s.ctx.airport.lat, s.ctx.airport.lon, ap.lat, ap.lon));
+  const brg = Math.round(
+    norm360(
+      bearingDeg(s.ctx.airport.lat, s.ctx.airport.lon, ap.lat, ap.lon) - s.ctx.airport.magVar,
+    ),
+  );
+  const next: FreeState = {
+    ...s,
+    dest: destLeg,
+    ctx: {
+      ...s.ctx,
+      destination: {
+        icao: ap.icao,
+        name: airportSpokenName(ap),
+        bearing: brg,
+        distanceNm: dist,
+      },
+    },
+  };
+  return s.leg === "destination" ? switchToLeg(next, "destination") : next;
+}
+
 export function createFreeState(o: FreeSetup): { state: FreeState; replies: FreeReply[] } {
   const plan = o.plan ?? null;
   const rules = plan ? plan.rules : o.rules;
+  const destPref = o.destinationIcao ?? plan?.destination;
   const base = buildContext({
     airportIcao: o.airportIcao,
     aircraftId: o.aircraftId,
     callsign: o.callsign,
     rules,
-    ...(plan?.destination ? { destinationIcao: plan.destination } : {}),
-    ...(o.goalId === "ifr-arrival" ? { preferIls: true, ifrWeather: true } : {}),
+    ...(destPref ? { destinationIcao: destPref } : {}),
+    ...(o.goalId === "ifr-arrival" || o.goalId === "ifr-full-flight"
+      ? { preferIls: true, ifrWeather: true }
+      : {}),
     ...(o.goalId === "ifr-departure" ? { ifrWeather: true } : {}),
   });
   const ctx: ScenarioContext =
     plan?.cruiseAltFt && plan.cruiseAltFt >= 1000
       ? { ...base, ifrCruise: plan.cruiseAltFt, vfrCruise: plan.cruiseAltFt }
       : base;
+  const dep = legFromCtx(ctx);
+  const arrivalOnly =
+    o.goalId === "vfr-arrival" || o.goalId === "ifr-arrival" || o.goalId === "pattern";
+  const destAp = !arrivalOnly ? getAirport(ctx.destination.icao) : undefined;
+  const dest =
+    destAp && destAp.icao !== ctx.airport.icao
+      ? buildAirportLegContext(destAp, {
+          rng: makeRng(Date.now() + 97),
+          preferIls: rules === "IFR",
+          ifrWeather: rules === "IFR",
+        })
+      : null;
+
   const goalDef = FREE_GOALS.find((g) => g.id === o.goalId) ?? FREE_GOALS[0];
   const goal =
     o.goalId === "custom" && o.customGoal?.trim()
@@ -239,8 +397,10 @@ export function createFreeState(o: FreeSetup): { state: FreeState; replies: Free
       : (goalDef?.describe(`${ctx.destination.name} (${ctx.destination.icao})`) ??
         "Radio practice");
 
-  let phase: Phase = "ramp";
-  let currentStation: FacilityKey = rules === "IFR" ? "clearance" : "ground";
+  let phase: FreePhase = "ramp";
+  let leg: FlightLeg = "departure";
+  let currentStation: FacilityKey =
+    rules === "IFR" ? "clearance" : ctx.airport.towered ? "ground" : "ctaf";
   let c: ScenarioContext = {
     ...ctx,
     position: `${ctx.parking}, ${ctx.airportName}`,
@@ -249,7 +409,8 @@ export function createFreeState(o: FreeSetup): { state: FreeState; replies: Free
   };
   if (o.goalId === "vfr-arrival") {
     phase = "inbound";
-    currentStation = "tower";
+    leg = "destination";
+    currentStation = landingStation(ctx);
     c = {
       ...ctx,
       positionMiles: 10,
@@ -259,6 +420,7 @@ export function createFreeState(o: FreeSetup): { state: FreeState; replies: Free
     };
   } else if (o.goalId === "ifr-arrival") {
     phase = "arrival";
+    leg = "destination";
     currentStation = "approach";
     c = {
       ...ctx,
@@ -273,6 +435,9 @@ export function createFreeState(o: FreeSetup): { state: FreeState; replies: Free
 
   const state: FreeState = {
     ctx: c,
+    dep,
+    dest,
+    leg,
     goalId: o.goalId,
     goal,
     rules,
@@ -294,7 +459,15 @@ export function createFreeState(o: FreeSetup): { state: FreeState; replies: Free
           route: plan.route,
           cruiseAltFt: plan.cruiseAltFt,
         }
-      : null,
+      : o.goalId === "ifr-full-flight" || o.goalId === "vfr-full-flight"
+        ? {
+            rules,
+            departure: c.airport.icao,
+            destination: c.destination.icao,
+            route: [],
+            cruiseAltFt: rules === "IFR" ? c.ifrCruise : c.vfrCruise,
+          }
+        : null,
     evals: [],
     turn: 0,
   };
@@ -325,10 +498,12 @@ function startHint(s: FreeState, f: Facility): string {
   const c = s.ctx;
   switch (s.phase) {
     case "inbound":
-      return `You're ${c.position} at ${alt(c.altitude).text} ft. Get the ATIS, then call ${f.name} on ${formatFreqShort(f.mhz)} before entering the Class D.`;
+      return `You're ${c.position} at ${alt(c.altitude).text} ft. Get the ATIS, then call ${f.name} on ${formatFreqShort(f.mhz)} before entering the ${c.airport.towered ? `Class ${c.airport.airspace}` : "traffic pattern"}.`;
     case "arrival":
       return `IFR inbound, ${c.position} at ${alt(c.altitude).text} ft. Check in with ${f.name} on ${formatFreqShort(f.mhz)}.`;
     default:
+      if (!c.airport.towered && s.rules === "VFR")
+        return `You're at ${c.parking} at untowered ${c.airport.icao}. Check AWOS if available, then self-announce taxi and takeoff intentions on ${f.name} (${formatFreqShort(f.mhz)}).`;
       return s.rules === "IFR"
         ? `You're at ${c.parking} with an IFR flight plan to ${c.destination.name}${s.flightPlan ? ` (route: ${s.flightPlan.route.join(" ") || "direct"}, ${alt(s.flightPlan.cruiseAltFt).text} ft)` : ""}. Get the ATIS, then request your clearance from ${f.name} on ${formatFreqShort(f.mhz)}.`
         : `You're at ${c.parking}. Get the ATIS, then call ${f.name} on ${formatFreqShort(f.mhz)} for taxi.`;
@@ -340,26 +515,60 @@ function sys(text: string, tone: FreeReply["tone"] = "info", delayMs = 0): FreeR
 }
 
 export function freeDirectory(s: FreeState) {
-  return facilityDirectory(s.ctx);
+  const base = facilityDirectory(s.ctx);
+  const seen = new Set(base.map((d) => `${d.name}|${d.mhz}`));
+  const extraAirport =
+    s.leg === "destination" ? (s.dep.airport.icao !== s.ctx.airport.icao ? s.dep : null) : s.dest;
+  if (!extraAirport) return base;
+  const extra = facilityDirectoryForFields(
+    extraAirport.airportName,
+    extraAirport.atisFreq,
+    extraAirport.facilities,
+    extraAirport.airport.towered,
+  ).filter((d) => {
+    const k = `${d.name}|${d.mhz}`;
+    if (seen.has(k)) return false;
+    seen.add(k);
+    return true;
+  });
+  return [...base, ...extra];
 }
 
 export function facilityAt(s: FreeState, mhz: number): Facility | null {
   const order: FacilityKey[] = [
     s.currentStation,
-    "clearance",
     "ground",
     "tower",
+    "ctaf",
+    "clearance",
     "departure",
     "approach",
     "center",
     "fss",
-    "ctaf",
   ];
   for (const k of order) {
     const f = s.ctx.facilities[k];
     if (f && freqEquals(f.mhz, mhz)) return f;
   }
+  const other = s.leg === "destination" ? s.dep : s.dest;
+  if (other) {
+    for (const k of order) {
+      const f = other.facilities[k];
+      if (f && freqEquals(f.mhz, mhz)) return f;
+    }
+  }
   return null;
+}
+
+function isDestFacility(s: FreeState, f: Facility): boolean {
+  if (!s.dest || s.leg === "destination") return false;
+  const inCurrent = Object.values(s.ctx.facilities).some(
+    (cf) => cf && cf.name === f.name && freqEquals(cf.mhz, f.mhz),
+  );
+  if (inCurrent) return false;
+  return Object.values(s.dest.facilities).some(
+    (df) => df && df.name === f.name && freqEquals(df.mhz, f.mhz),
+  );
 }
 
 // ---------------- instruction → readback expectations ----------------
@@ -598,9 +807,32 @@ export function evaluatePilot(
 
 // ---------------- scripted controller ----------------
 
-function intentOf(p: ParsedTransmission) {
-  if (hasAny(p, ["mayday", "pan pan"])) return "emergency";
+function intentOf(p: ParsedTransmission, s?: FreeState) {
+  if (hasAny(p, ["mayday", "pan pan", "engine failure", "declaring emergency"])) return "emergency";
+  if (
+    s?.emergency &&
+    hasAny(p, ["souls", "fuel", "minutes", "hours", "on board", "person", "people"])
+  )
+    return "emergency-info";
   if (hasAny(p, ["say again"])) return "say-again";
+  if (hasAny(p, ["radio check", "how do you read"])) return "radio-check";
+  if (hasAny(p, ["going around", "go around", "missed approach", "executing missed"]))
+    return "go-around";
+  if (hasAny(p, ["divert", "diverting", "diversion", "change destination"])) return "divert";
+  if (hasAny(p, ["progressive taxi", "unfamiliar", "which taxiway", "taxi instructions"]))
+    return "progressive-taxi";
+  if (hasAny(p, ["cancel ifr", "cancel flight following", "terminate radar", "cancel advisories"]))
+    return "cancel-service";
+  if (
+    hasAny(p, ["wind check", "say winds", "say wind", "altimeter", "weather", "say atis"]) ||
+    (hasPhrase(p, "current winds") && !hasPhrase(p, "taxi"))
+  )
+    return "weather-check";
+  if (
+    hasAny(p, ["where am i", "say position", "distance to", "how far"]) &&
+    !hasPhrase(p, "inbound")
+  )
+    return "position-query";
   if (
     hasAny(p, ["ready to copy", "request clearance", "clearance"]) ||
     (hasPhrase(p, "ifr to") && !hasPhrase(p, "taxi"))
@@ -617,16 +849,50 @@ function intentOf(p: ParsedTransmission) {
     ])
   )
     return "freq-change";
-  if (hasAny(p, ["taxi"])) return "taxi";
+  if (hasAny(p, ["taxi", "taxiing"])) return "taxi";
   if (hasAny(p, ["ready for departure", "ready for takeoff", "ready to go", "holding short"]))
     return "ready";
   if (hasAny(p, ["flight following", "advisories", "request vfr"])) return "flight-following";
   if (hasAny(p, ["traffic in sight", "negative contact", "looking", "have the traffic"]))
     return "traffic";
   if (hasAny(p, ["established"])) return "established";
+  if (hasAny(p, ["different runway", "opposite direction", "request runway", "change runway"]))
+    return "runway-request";
+  if (
+    hasAny(p, [
+      "request higher",
+      "request lower",
+      "request climb",
+      "request descent",
+      "request altitude",
+    ]) ||
+    (hasAny(p, ["climb to", "descend to", "request"]) && readAltitudes(p).length > 0)
+  )
+    return "altitude-request";
+  if (
+    hasAny(p, [
+      "request vector",
+      "request vectors",
+      "vectors to",
+      "vectors for",
+      "direct to",
+      "proceed direct",
+    ])
+  )
+    return "vectors-direct";
   if (hasAny(p, ["downwind", "base", "final", "midfield", "crosswind", "upwind"]))
     return "position";
-  if (hasAny(p, ["landing", "inbound", "full stop", "touch and go", "with information", "option"]))
+  if (
+    hasAny(p, [
+      "landing",
+      "inbound",
+      "full stop",
+      "touch and go",
+      "with information",
+      "option",
+      "closed traffic",
+    ])
+  )
     return "inbound";
   if (hasAny(p, ["request"])) return "request";
   if (readAltitudes(p).length) return "check-in";
@@ -636,7 +902,18 @@ function intentOf(p: ParsedTransmission) {
 
 const INTENT_TITLE: Record<string, string> = {
   emergency: "Emergency call",
+  "emergency-info": "Emergency details",
   "say-again": "Say again",
+  "radio-check": "Radio check",
+  "go-around": "Go-around / missed approach",
+  divert: "Diversion request",
+  "progressive-taxi": "Progressive taxi request",
+  "cancel-service": "Cancel radar/IFR service",
+  "weather-check": "Weather / altimeter check",
+  "position-query": "Position query",
+  "runway-request": "Runway request",
+  "altitude-request": "Altitude change request",
+  "vectors-direct": "Vectors / direct-to request",
   clearance: "IFR clearance request",
   "clear-runway": "Clear of runway",
   "freq-change": "Frequency change request",
@@ -659,6 +936,8 @@ function example(s: FreeState, intent: string, f: Facility): string {
   const cs = csPhrase(c.cs, !!c.abbrevBy[f.key]).text;
   switch (intent) {
     case "taxi":
+      if (f.key === "ctaf")
+        return `${f.name}, ${cs}, at ${c.parking}, taxiing to runway ${c.runway.id}${s.rules === "VFR" ? `, VFR departure to the ${compassWord(c.departureHeading)}` : ""}.`;
       return s.rules === "IFR"
         ? `${f.name}, ${cs}, at ${c.parking}, with information ${PHONETIC[c.atis.letter]}, ready to taxi, IFR to ${c.destination.name}.`
         : `${f.name}, ${cs}, at ${c.parking}, with information ${PHONETIC[c.atis.letter]}, request taxi, VFR departure to the ${compassWord(c.departureHeading)}.`;
@@ -674,12 +953,16 @@ function example(s: FreeState, intent: string, f: Facility): string {
       return `${f.name}, ${cs}, ${c.position}, ${alt(c.altitude).text}, with information ${PHONETIC[c.atis.letter]}, inbound for landing.`;
     case "check-in":
       return `${f.name}, ${cs}, ${alt(c.altitude).text}.`;
+    case "weather-check":
+      return `${f.name}, ${cs}, request altimeter and current winds.`;
+    case "altitude-request":
+      return `${f.name}, ${cs}, request ${alt(c.altitude + 2000).text}.`;
     default:
       return `${f.name}, ${cs}, <position>, <request>.`;
   }
 }
 
-function readbackExample(s: FreeState, pend: PendingReadback, f: Facility): string {
+export function readbackExample(s: FreeState, pend: PendingReadback, f: Facility): string {
   const cs = csPhrase(s.ctx.cs, true).text;
   const parts = pend.expects.map((e) => {
     switch (e.kind) {
@@ -782,18 +1065,21 @@ function makeClearance(s: FreeState): Clearance {
 function afterReadback(c: Ctl, pend: PendingReadback) {
   const ctx = c.s.ctx;
   const vfr = c.s.rules === "VFR";
+  const isFullFlight = c.s.goalId === "vfr-full-flight" || c.s.goalId === "ifr-full-flight";
   switch (pend.tag) {
     case "clearance": {
       const viaGround = !!facilityOf(ctx, "clearance").note;
+      const gnd = groundStation(ctx);
       atc(c, pend.facility, (cs) =>
-        viaGround
+        viaGround || !gnd
           ? ph`${cs}, readback correct. Advise ready to taxi.`
           : ph`${cs}, readback correct. Contact ${facilityOf(ctx, "ground").name} ${freq(facilityOf(ctx, "ground").mhz)} when ready to taxi.`,
       );
-      c.s = { ...c.s, currentStation: "ground" };
+      c.s = { ...c.s, currentStation: gnd ?? landingStation(ctx) };
       break;
     }
-    case "taxi":
+    case "taxi": {
+      const twrKey = landingStation(ctx);
       c.s = {
         ...c.s,
         phase: "holding-short",
@@ -801,10 +1087,11 @@ function afterReadback(c: Ctl, pend: PendingReadback) {
       };
       note(
         c,
-        `You taxi to runway ${ctx.runway.id} and complete the run-up. Holding short. Contact ${facilityOf(ctx, "tower").name} ${formatFreqShort(facilityOf(ctx, "tower").mhz)} when ready.`,
+        `You taxi to runway ${ctx.runway.id} and complete the run-up. Holding short. Contact ${facilityOf(ctx, twrKey).name} ${formatFreqShort(facilityOf(ctx, twrKey).mhz)} when ready.`,
       );
-      c.s = { ...c.s, currentStation: "tower" };
+      c.s = { ...c.s, currentStation: twrKey };
       break;
+    }
     case "takeoff": {
       const airborneAlt = Math.round((ctx.airport.elevationFt + 900) / 100) * 100;
       c.s = {
@@ -815,25 +1102,41 @@ function afterReadback(c: Ctl, pend: PendingReadback) {
       note(c, `Airborne — climbing through ${alt(airborneAlt).text} ft.`);
       c.delay = 3500;
       if (c.s.goalId === "pattern") {
-        atc(c, "tower", (cs) => ph`${cs}, report midfield ${ctx.runway.pattern} downwind.`);
-      } else if (!vfr || c.s.goalId === "vfr-departure-ff") {
         atc(
           c,
-          "tower",
+          landingStation(ctx),
+          (cs) => ph`${cs}, report midfield ${ctx.runway.pattern} downwind.`,
+        );
+      } else if (!vfr || c.s.goalId === "vfr-departure-ff" || c.s.goalId === "vfr-full-flight") {
+        atc(
+          c,
+          landingStation(ctx),
           (cs) =>
             ph`${cs}, contact ${facilityOf(ctx, "departure").name} ${freq(facilityOf(ctx, "departure").mhz)}.`,
           { tag: "handoff", next: "departure" },
         );
       } else {
-        atc(c, "tower", (cs) => ph`${cs}, frequency change approved.`);
-        c.s = { ...c.s, phase: "enroute" };
+        atc(c, landingStation(ctx), (cs) => ph`${cs}, frequency change approved.`);
+        c.s = { ...c.s, phase: "enroute", leg: "enroute" };
         goalDone(c, "VFR departure complete.");
       }
       break;
     }
     case "handoff": {
       const next = pend.next ?? "departure";
-      const nf = facilityOf(ctx, next);
+      const destNext = c.s.dest?.facilities[next];
+      if (
+        c.s.dest &&
+        c.s.leg !== "destination" &&
+        destNext &&
+        isDestFacility(c.s, destNext) &&
+        pend.instruction.includes(destNext.name) &&
+        pend.instruction.includes(formatFreqShort(destNext.mhz))
+      ) {
+        c.s = switchToLeg(c.s, "destination");
+      }
+      const nextCtx = c.s.ctx;
+      const nf = facilityOf(nextCtx, next);
       c.s = {
         ...c.s,
         currentStation: next,
@@ -846,7 +1149,7 @@ function afterReadback(c: Ctl, pend: PendingReadback) {
             ...c.s.ctx,
             altitude: Math.max(
               c.s.ctx.altitude,
-              Math.round((ctx.airport.elevationFt + 1500) / 100) * 100,
+              Math.round((nextCtx.airport.elevationFt + 1500) / 100) * 100,
             ),
           },
         };
@@ -858,14 +1161,30 @@ function afterReadback(c: Ctl, pend: PendingReadback) {
       break;
     }
     case "squawk":
-      c.s = { ...c.s, ffActive: true, phase: "enroute", ctx: { ...c.s.ctx, squawk: ctx.squawk } };
-      atc(c, c.s.currentStation, (cs) => ph`${cs}, radar contact, ${ctx.position}. Maintain VFR.`);
+      c.s = {
+        ...c.s,
+        ffActive: true,
+        phase: "enroute",
+        leg: c.s.leg === "departure" ? "enroute" : c.s.leg,
+        ctx: { ...c.s.ctx, squawk: ctx.squawk },
+      };
+      atc(
+        c,
+        c.s.currentStation,
+        (cs) => ph`${cs}, radar contact, ${c.s.ctx.position}. Maintain VFR.`,
+      );
       if (c.s.goalId === "vfr-departure-ff") goalDone(c, "flight following established.");
+      else if (c.s.goalId === "vfr-full-flight" && c.s.dest)
+        note(
+          c,
+          `Flight following established enroute to ${c.s.dest.airportName}. Talk with ${facilityOf(ctx, c.s.currentStation).name}, or use “Approach destination” when ready for arrival.`,
+        );
       break;
     case "climb":
       c.s = {
         ...c.s,
         phase: "enroute",
+        leg: c.s.leg === "departure" ? "enroute" : c.s.leg,
         ctx: { ...c.s.ctx, altitude: c.s.clearance?.expectAltitude ?? ctx.ifrCruise },
       };
       c.delay = 5000;
@@ -877,6 +1196,16 @@ function afterReadback(c: Ctl, pend: PendingReadback) {
         { tag: "handoff", next: "center" },
       );
       break;
+    case "altitude": {
+      const assigned = readAltitudes(parseTransmission(pend.instruction))[0];
+      if (assigned) c.s = { ...c.s, ctx: { ...c.s.ctx, altitude: assigned } };
+      break;
+    }
+    case "vectors": {
+      const assignedHdg = readHeadings(parseTransmission(pend.instruction))[0];
+      if (assignedHdg) c.s = { ...c.s, ctx: { ...c.s.ctx, heading: assignedHdg.deg } };
+      break;
+    }
     case "pattern-entry":
       c.s = {
         ...c.s,
@@ -890,7 +1219,7 @@ function afterReadback(c: Ctl, pend: PendingReadback) {
       if (c.s.difficulty === "beginner")
         note(c, "Fly the pattern entry, then report midfield downwind as instructed.");
       break;
-    case "landing":
+    case "landing": {
       c.s = {
         ...c.s,
         phase: "landed",
@@ -905,18 +1234,28 @@ function afterReadback(c: Ctl, pend: PendingReadback) {
       if (c.s.goalId === "pattern" && !c.s.goalReached) {
         goalDone(c, "pattern work complete.");
       }
-      atc(
-        c,
-        "tower",
-        (cs) =>
-          ph`${cs}, turn ${ctx.runway.pattern} at ${letter(ctx.taxiRoute[0] ?? "A")}, contact ${facilityOf(ctx, "ground").name} ${freq(facilityOf(ctx, "ground").mhz)}.`,
-        { tag: "handoff", next: "ground" },
-      );
+      const gnd = groundStation(ctx);
+      if (gnd) {
+        atc(
+          c,
+          "tower",
+          (cs) =>
+            ph`${cs}, turn ${ctx.runway.pattern} at ${letter(ctx.taxiRoute[0] ?? "A")}, contact ${facilityOf(ctx, "ground").name} ${freq(facilityOf(ctx, "ground").mhz)}.`,
+          { tag: "handoff", next: "ground" },
+        );
+      } else {
+        note(
+          c,
+          `Untowered field: exit the runway and announce clear of runway ${ctx.runway.id} on ${facilityOf(ctx, "ctaf").name}.`,
+        );
+        if (isFullFlight) c.s = { ...c.s, currentStation: "ctaf" };
+      }
       break;
+    }
     case "app-desc": {
       c.s = {
         ...c.s,
-        phase: "enroute",
+        phase: "arrival",
         ctx: {
           ...c.s.ctx,
           altitude: readAltitudes(parseTransmission(pend.instruction))[0] ?? ctx.altitude,
@@ -947,20 +1286,42 @@ function afterReadback(c: Ctl, pend: PendingReadback) {
       c.s = { ...c.s, ctx: { ...c.s.ctx, heading: ic, altitude: ctx.interceptAltitude } };
       break;
     }
-    case "app-clear":
+    case "app-clear": {
+      const twrKey = landingStation(ctx);
       c.s = {
         ...c.s,
         phase: "final",
         ctx: { ...c.s.ctx, position: `established on the ${approachPhrase(ctx.runway).text}` },
       };
       c.delay = 5000;
-      atc(
-        c,
-        c.s.currentStation,
-        (cs) =>
-          ph`${cs}, contact ${facilityOf(ctx, "tower").name} ${freq(facilityOf(ctx, "tower").mhz)}.`,
-        { tag: "handoff", next: "tower" },
-      );
+      if (ctx.airport.towered) {
+        atc(
+          c,
+          c.s.currentStation,
+          (cs) =>
+            ph`${cs}, contact ${facilityOf(ctx, "tower").name} ${freq(facilityOf(ctx, "tower").mhz)}.`,
+          { tag: "handoff", next: "tower" },
+        );
+      } else {
+        atc(
+          c,
+          c.s.currentStation,
+          (cs) =>
+            ph`${cs}, radar service terminated, change to advisory frequency ${freq(facilityOf(ctx, "ctaf").mhz)} approved.`,
+          { tag: "handoff", next: twrKey },
+        );
+      }
+      break;
+    }
+    case "go-around":
+      c.s = {
+        ...c.s,
+        phase: c.s.rules === "IFR" ? "arrival" : "pattern",
+        ctx: {
+          ...c.s.ctx,
+          altitude: c.s.rules === "IFR" ? ctx.interceptAltitude : ctx.patternAltitude,
+        },
+      };
       break;
     case "emergency":
       note(c, "ATC is giving you priority handling. Continue to the airport and land.", "caution");
@@ -978,16 +1339,29 @@ export function scriptedTurn(
   text: string,
   f: Facility,
 ): { state: FreeState; replies: FreeReply[]; evaluation: TransmissionEval } {
+  // If pilot tuned a destination facility before the leg switched, switch active airport context cleanly.
+  let working = s0;
+  if (working.dest && working.leg !== "destination" && isDestFacility(working, f)) {
+    working = switchToLeg(working, "destination");
+  }
+
   const c: Ctl = {
-    s: { ...s0, turn: s0.turn + 1 },
+    s: { ...working, turn: working.turn + 1 },
     out: [],
-    delay: personalityDelay(s0.personality),
+    delay: personalityDelay(working.personality),
   };
-  const coach = s0.difficulty === "beginner";
+  const coach = working.difficulty === "beginner";
   const ev0 = evaluatePilot(c.s, text, f);
   const p = ev0.parsed;
-  const pend = c.s.pending && c.s.pending.facility === f.key ? c.s.pending : null;
-  const intent = pend ? "readback" : intentOf(p);
+  const rawIntent = intentOf(p, c.s);
+  // Urgent or clarification calls bypass an unrelated pending readback.
+  const bypassPending =
+    rawIntent === "emergency" ||
+    rawIntent === "go-around" ||
+    rawIntent === "say-again" ||
+    rawIntent === "radio-check";
+  const pend = !bypassPending && c.s.pending && c.s.pending.facility === f.key ? c.s.pending : null;
+  const intent = pend ? "readback" : rawIntent;
   const ctx = c.s.ctx;
   const vfr = c.s.rules === "VFR";
   const exampleText = pend ? readbackExample(c.s, pend, f) : example(c.s, intent, f);
@@ -1002,7 +1376,7 @@ export function scriptedTurn(
   c.s = { ...c.s, evals: [...c.s.evals, evaluation] };
   const missingCs = ev0.items.some((i) => i.label === "Callsign" && !i.ok);
 
-  if (missingCs) {
+  if (missingCs && f.key !== "ctaf") {
     atc(c, f.key, () =>
       pend
         ? ph`Station reading back, say callsign.`
@@ -1045,7 +1419,7 @@ export function scriptedTurn(
   switch (intent) {
     case "emergency": {
       const word = hasPhrase(p, "mayday") ? "Mayday" : "Pan-Pan";
-      c.s = { ...c.s, emergency: true };
+      c.s = { ...c.s, emergency: true, pending: null };
       const toApt = r10(dirDeg(ctx.positionDir) + 180);
       atc(
         c,
@@ -1056,6 +1430,15 @@ export function scriptedTurn(
       );
       break;
     }
+    case "emergency-info":
+      atc(
+        c,
+        f.key,
+        (cs) =>
+          ph`${cs}, roger, emergency equipment standing by at ${ctx.airportName}, cleared to land any runway.`,
+      );
+      c.s = { ...c.s, pending: null, phase: "final" };
+      break;
     case "say-again":
       if (c.s.evals.length > 1)
         atc(
@@ -1065,6 +1448,183 @@ export function scriptedTurn(
         );
       else atc(c, f.key, (cs) => ph`${cs}, say request.`);
       break;
+    case "radio-check":
+      atc(c, f.key, (cs) =>
+        c.s.personality === "instructor"
+          ? ph`${cs}, ${f.name}, reading you loud and clear.`
+          : ph`${cs}, ${f.name}, five by five.`,
+      );
+      break;
+    case "weather-check":
+      atc(
+        c,
+        f.key,
+        (cs) =>
+          ph`${cs}, ${f.name}, ${wind(ctx.atis.windDirMag, ctx.atis.windKt)}, ${ctx.airportName} altimeter ${altimeter(ctx.atis.altimeter)}, ${ctx.atis.sky.toLowerCase()}, information ${letter(ctx.atis.letter)} current.`,
+      );
+      break;
+    case "position-query":
+      atc(
+        c,
+        f.key,
+        (cs) => ph`${cs}, ${f.name}, you are ${ctx.position}, altitude ${alt(ctx.altitude)} feet.`,
+      );
+      break;
+    case "go-around": {
+      c.s = { ...c.s, pending: null };
+      if (f.key === "ctaf") {
+        c.s = { ...c.s, phase: "pattern" };
+        note(c, `Self-announced go-around on ${f.name}. Re-enter ${ctx.runway.pattern} traffic.`);
+        break;
+      }
+      if (c.s.rules === "IFR") {
+        const missedAlt = ctx.interceptAltitude;
+        atc(
+          c,
+          f.key,
+          (cs) =>
+            ph`${cs}, roger, climb and maintain ${alt(missedAlt)}, fly runway heading, contact ${facilityOf(ctx, "approach").name} ${freq(facilityOf(ctx, "approach").mhz)}.`,
+          { tag: "go-around" },
+        );
+        c.s = { ...c.s, phase: "arrival", currentStation: "approach" };
+      } else {
+        atc(
+          c,
+          f.key,
+          (cs) =>
+            ph`${cs}, roger, make ${ctx.runway.pattern} traffic runway ${rwy(ctx.runway.id)}, report midfield downwind.`,
+          { tag: "go-around" },
+        );
+        c.s = { ...c.s, phase: "pattern" };
+      }
+      break;
+    }
+    case "divert": {
+      const tokens = p.tokens.map((t) => t.toUpperCase());
+      const matched = AIRPORTS.find(
+        (a) =>
+          a.icao !== ctx.airport.icao &&
+          (tokens.includes(a.icao) ||
+            tokens.includes(a.iata ?? "") ||
+            p.canon.includes(a.city.toLowerCase())),
+      );
+      const target = matched ?? AIRPORTS.find((a) => a.icao !== ctx.airport.icao);
+      if (!target) {
+        atc(c, f.key, (cs) => ph`${cs}, say requested diversion airport.`);
+        break;
+      }
+      c.s = switchDestinationAirport(c.s, target);
+      const d = c.s.ctx.destination;
+      const appFac = facilityOf(
+        c.s.dest?.facilities ? { ...c.s.ctx, facilities: c.s.dest.facilities } : c.s.ctx,
+        c.s.dest?.airport.towered ? "approach" : "ctaf",
+      );
+      atc(
+        c,
+        f.key,
+        (cs) =>
+          ph`${cs}, roger, cleared direct ${d.name}, heading ${hdg(d.bearing)}, ${d.distanceNm} miles. Contact ${appFac.name} ${freq(appFac.mhz)} approaching the airport.`,
+        { tag: "vectors" },
+      );
+      c.s = { ...c.s, phase: "enroute", leg: "enroute" };
+      break;
+    }
+    case "progressive-taxi": {
+      const gnd = groundStation(ctx);
+      if (gnd && f.key !== "ground") {
+        redirect("ground");
+        break;
+      }
+      const routeStr = ctx.taxiRoute.map((t) => PHONETIC[t] ?? t).join(", then ");
+      atc(
+        c,
+        f.key,
+        (cs) =>
+          c.s.phase === "landed"
+            ? ph`${cs}, turn onto taxiway ${route(ctx.taxiRoute)}, continue straight to ${ctx.parking}.`
+            : ph`${cs}, turn onto ${routeStr || "Alpha"}, follow it to the hold short line for runway ${rwy(ctx.runway.id)}.`,
+        c.s.phase === "landed" ? undefined : { tag: "taxi" },
+      );
+      break;
+    }
+    case "cancel-service":
+      if (c.s.rules === "IFR") {
+        c.s = { ...c.s, rules: "VFR", clearance: null, ffActive: false };
+        atc(
+          c,
+          f.key,
+          (cs) => ph`${cs}, IFR cancellation received, squawk VFR, frequency change approved.`,
+        );
+      } else {
+        c.s = { ...c.s, ffActive: false };
+        atc(
+          c,
+          f.key,
+          (cs) => ph`${cs}, radar service terminated, squawk VFR, frequency change approved.`,
+        );
+      }
+      break;
+    case "runway-request": {
+      const reqRwy = readRunways(p)[0];
+      const end = reqRwy
+        ? allRunwayEnds(ctx.airport).find((e) => usRunway(e.end.id) === reqRwy)
+        : allRunwayEnds(ctx.airport).find((e) => usRunway(e.end.id) !== ctx.runway.id);
+      if (!end) {
+        atc(c, f.key, (cs) => ph`${cs}, unable that runway, runway ${rwy(ctx.runway.id)} in use.`);
+        break;
+      }
+      const newRwy = {
+        id: usRunway(end.end.id),
+        dataId: end.end.id,
+        magHeading: Math.round(norm360(end.end.trueHeading - ctx.airport.magVar)),
+        pattern: end.end.pattern,
+        ils: end.end.ils ? { freq: end.end.ils.freq, ident: end.end.ils.ident } : null,
+      };
+      c.s = { ...c.s, ctx: { ...ctx, runway: newRwy } };
+      atc(c, f.key, (cs) => ph`${cs}, approved, expect runway ${rwy(newRwy.id)}.`, {
+        tag: "runway",
+      });
+      break;
+    }
+    case "altitude-request": {
+      if (f.key !== "departure" && f.key !== "approach" && f.key !== "center") {
+        redirect(c.s.rules === "IFR" ? "center" : "approach");
+        break;
+      }
+      const reqAlt = readAltitudes(p)[0];
+      const nextAlt =
+        reqAlt ??
+        (hasAny(p, ["higher", "climb"])
+          ? ctx.altitude + 2000
+          : Math.max(2500, ctx.altitude - 2000));
+      const verb = nextAlt >= ctx.altitude ? "climb and maintain" : "descend and maintain";
+      atc(
+        c,
+        f.key,
+        (cs) =>
+          ph`${cs}, ${verb === "climb and maintain" ? "climb and maintain" : "descend and maintain"} ${alt(nextAlt)}.`,
+        { tag: "altitude" },
+      );
+      break;
+    }
+    case "vectors-direct": {
+      if (f.key !== "departure" && f.key !== "approach" && f.key !== "center") {
+        redirect("approach");
+        break;
+      }
+      const h =
+        c.s.leg === "destination" && c.s.dest ? r10(c.s.ctx.heading) : r10(ctx.destination.bearing);
+      atc(
+        c,
+        f.key,
+        (cs) =>
+          hasAny(p, ["direct"])
+            ? ph`${cs}, cleared direct ${ctx.destination.name}, own navigation.`
+            : ph`${cs}, turn ${side(ctx.heading, h)} heading ${hdg(h)}, radar vectors.`,
+        hasAny(p, ["direct"]) ? undefined : { tag: "vectors" },
+      );
+      break;
+    }
     case "clearance":
       if (f.key !== "clearance" && f.key !== "ground") {
         redirect("clearance");
@@ -1116,16 +1676,31 @@ export function scriptedTurn(
       }
       break;
     case "taxi":
+      if (f.key === "ctaf") {
+        if (c.s.phase === "landed") {
+          c.s = { ...c.s, phase: "parked" };
+          goalDone(c, `landed at ${ctx.airportName} and taxied clear.`);
+        } else {
+          c.s = { ...c.s, phase: "holding-short" };
+          note(
+            c,
+            `Self-announced taxi on ${f.name}. Announce departure on runway ${ctx.runway.id}.`,
+          );
+        }
+        break;
+      }
       if (f.key !== "ground" && !(f.key === "clearance" && facilityOf(ctx, "clearance").note)) {
-        if (f.key === "tower" && (c.s.phase === "landed" || c.s.phase === "parked"))
-          redirect("ground");
-        else redirect("ground");
+        redirect("ground");
         break;
       }
       if (c.s.phase === "landed") {
         atc(c, f.key, (cs) => ph`${cs}, taxi to ${ctx.parking} via ${route(ctx.taxiRoute)}.`);
         c.s = { ...c.s, phase: "parked" };
-        goalDone(c, "taxied to parking.");
+        const fullMsg =
+          c.s.goalId === "vfr-full-flight" || c.s.goalId === "ifr-full-flight"
+            ? `full flight complete at ${ctx.airportName} — taxied to parking.`
+            : "landed and taxied in.";
+        goalDone(c, fullMsg);
         break;
       }
       if (c.s.rules === "IFR" && !c.s.clearance) {
@@ -1148,6 +1723,21 @@ export function scriptedTurn(
       c.s = { ...c.s, phase: "taxiing" };
       break;
     case "ready":
+      if (f.key === "ctaf") {
+        const airborneAlt = Math.round((ctx.airport.elevationFt + 900) / 100) * 100;
+        c.s = {
+          ...c.s,
+          phase: c.s.goalId === "pattern" ? "pattern" : "airborne",
+          leg: c.s.goalId === "pattern" ? c.s.leg : "enroute",
+          currentStation: c.s.goalId === "vfr-full-flight" || !vfr ? "departure" : "ctaf",
+          ctx: { ...ctx, position: `departing runway ${ctx.runway.id}`, altitude: airborneAlt },
+        };
+        note(
+          c,
+          `Self-announced departing runway ${ctx.runway.id} on ${f.name}.${c.s.goalId === "vfr-full-flight" || !vfr ? ` Contact ${facilityOf(ctx, "departure").name} ${formatFreqShort(facilityOf(ctx, "departure").mhz)} airborne.` : ""}`,
+        );
+        break;
+      }
       if (f.key !== "tower") {
         redirect("tower");
         break;
@@ -1158,7 +1748,7 @@ export function scriptedTurn(
       }
       {
         const dep =
-          c.s.goalId === "pattern"
+          c.s.goalId === "pattern" || hasAny(p, ["closed traffic"])
             ? ph`make ${ctx.runway.pattern} closed traffic`
             : vfr
               ? ph`${side(ctx.runway.magHeading, ctx.departureHeading)} downwind departure approved`
@@ -1207,7 +1797,11 @@ export function scriptedTurn(
           { tag: "squawk" },
         );
       } else if (f.key === "departure" || f.key === "approach" || f.key === "center") {
-        if (c.s.phase === "arrival" || (c.s.goalId === "ifr-arrival" && f.key === "approach")) {
+        if (
+          c.s.phase === "arrival" ||
+          (c.s.goalId === "ifr-arrival" && f.key === "approach") ||
+          (c.s.leg === "destination" && f.key === "approach" && c.s.rules === "IFR")
+        ) {
           const d = Math.max(ctx.interceptAltitude + 1000, ctx.altitude - 2000);
           atc(
             c,
@@ -1226,9 +1820,14 @@ export function scriptedTurn(
           );
         } else if (f.key === "center") {
           atc(c, f.key, (cs) => ph`${cs}, ${f.name}, roger.`);
-          c.s = { ...c.s, phase: "enroute" };
+          c.s = { ...c.s, phase: "enroute", leg: c.s.leg === "departure" ? "enroute" : c.s.leg };
           if (c.s.goalId === "ifr-departure")
             goalDone(c, "IFR departure complete and handed off to Center.");
+          else if (c.s.goalId === "ifr-full-flight" && c.s.dest && c.s.leg !== "destination")
+            note(
+              c,
+              `With ${f.name} enroute to ${c.s.dest.airportName}. Request altitude/weather, or use “Approach destination” when ready for arrival.`,
+            );
         } else if (intent === "request" || hasAny(p, ["flight following"])) {
           atc(c, f.key, (cs) => ph`${cs}, ${f.name}, go ahead.`);
         } else {
@@ -1254,12 +1853,22 @@ export function scriptedTurn(
             ph`${cs}, ${f.name}, enter ${ctx.runway.pattern} downwind runway ${rwy(ctx.runway.id)}, report midfield downwind.`,
           { tag: "pattern-entry" },
         );
+      } else if (f.key === "ctaf") {
+        note(c, `Transmitted on ${f.name} (${formatFreqShort(f.mhz)}).`);
       } else {
         atc(c, f.key, (cs) => ph`${cs}, ${f.name}, say request.`);
       }
       break;
     case "inbound":
     case "established":
+      if (f.key === "ctaf") {
+        c.s = { ...c.s, phase: hasAny(p, ["final"]) ? "final" : "pattern" };
+        note(
+          c,
+          `Self-announced on ${f.name}. Land on runway ${ctx.runway.id}, then report clear of the runway.`,
+        );
+        break;
+      }
       if ((f.key === "approach" || f.key === "center") && c.s.phase === "arrival") {
         const d = Math.max(ctx.interceptAltitude + 1000, ctx.altitude - 2000);
         atc(
@@ -1269,7 +1878,10 @@ export function scriptedTurn(
             ph`${cs}, ${f.name}, descend and maintain ${alt(d)}, ${ctx.airportName} altimeter ${altimeter(ctx.atis.altimeter)}, expect vectors ${approachPhrase(ctx.runway)} approach.`,
           { tag: "app-desc" },
         );
-      } else if (f.key === "tower" && (c.s.phase === "inbound" || c.s.phase === "enroute")) {
+      } else if (
+        f.key === "tower" &&
+        (c.s.phase === "inbound" || c.s.phase === "enroute" || c.s.phase === "airborne")
+      ) {
         c.s = { ...c.s, phase: "inbound" };
         atc(
           c,
@@ -1283,24 +1895,35 @@ export function scriptedTurn(
           c,
           "tower",
           (cs) =>
-            ph`${cs}, ${f.name}, ${wind(ctx.atis.windDirMag, ctx.atis.windKt)}, runway ${rwy(ctx.runway.id)}, cleared to land.`,
+            ph`${cs}, ${f.name}, ${wind(ctx.atis.windDirMag, ctx.atis.windKt)}, runway ${rwy(ctx.runway.id)}, ${hasAny(p, ["touch and go", "option"]) ? "cleared touch-and-go" : "cleared to land"}.`,
           { tag: "landing" },
         );
       } else if (intent === "established" && (f.key === "approach" || f.key === "departure")) {
+        const twr = landingStation(ctx);
         atc(
           c,
           f.key,
           (cs) =>
-            ph`${cs}, roger, contact ${facilityOf(ctx, "tower").name} ${freq(facilityOf(ctx, "tower").mhz)}.`,
-          { tag: "handoff", next: "tower" },
+            ctx.airport.towered
+              ? ph`${cs}, roger, contact ${facilityOf(ctx, "tower").name} ${freq(facilityOf(ctx, "tower").mhz)}.`
+              : ph`${cs}, roger, radar service terminated, change to advisory frequency ${freq(facilityOf(ctx, "ctaf").mhz)} approved.`,
+          { tag: "handoff", next: twr },
         );
       } else if (f.key === "approach" || f.key === "departure" || f.key === "center") {
+        // If pilot reports inbound to destination while still on Center/Departure, switch to dest!
+        if (c.s.dest && c.s.leg !== "destination") {
+          c.s = switchToLeg(c.s, "destination");
+        }
+        const dCtx = c.s.ctx;
+        const twr = landingStation(dCtx);
         atc(
           c,
           f.key,
           (cs) =>
-            ph`${cs}, ${f.name}, ${ctx.airportName} altimeter ${altimeter(ctx.atis.altimeter)}, contact ${facilityOf(ctx, "tower").name} ${freq(facilityOf(ctx, "tower").mhz)} for landing.`,
-          { tag: "handoff", next: "tower" },
+            dCtx.airport.towered
+              ? ph`${cs}, ${f.name}, ${dCtx.airportName} altimeter ${altimeter(dCtx.atis.altimeter)}, contact ${facilityOf(dCtx, "tower").name} ${freq(facilityOf(dCtx, "tower").mhz)} for landing.`
+              : ph`${cs}, ${f.name}, ${dCtx.airportName} altimeter ${altimeter(dCtx.atis.altimeter)}, radar service terminated, change to ${facilityOf(dCtx, "ctaf").name} ${freq(facilityOf(dCtx, "ctaf").mhz)} approved.`,
+          { tag: "handoff", next: twr },
         );
         c.s = { ...c.s, phase: "inbound" };
       } else {
@@ -1308,6 +1931,11 @@ export function scriptedTurn(
       }
       break;
     case "position":
+      if (f.key === "ctaf") {
+        c.s = { ...c.s, phase: hasAny(p, ["final"]) ? "final" : "pattern" };
+        note(c, `Self-announced pattern position on ${f.name}.`);
+        break;
+      }
       if (f.key !== "tower") {
         atc(c, f.key, (cs) => ph`${cs}, ${f.name}, roger.`);
         break;
@@ -1325,8 +1953,13 @@ export function scriptedTurn(
         );
       c.s = { ...c.s, phase: "final" };
       break;
-    case "clear-runway":
-      if (f.key !== "ground") {
+    case "clear-runway": {
+      if (f.key === "ctaf") {
+        c.s = { ...c.s, phase: "parked" };
+        goalDone(c, `landed at ${ctx.airportName} and clear of the runway.`);
+        break;
+      }
+      if (f.key !== "ground" && !(f.key === "clearance" && facilityOf(ctx, "clearance").note)) {
         redirect("ground");
         break;
       }
@@ -1336,8 +1969,13 @@ export function scriptedTurn(
         (cs) => ph`${cs}, ${f.name}, taxi to ${ctx.parking} via ${route(ctx.taxiRoute)}.`,
       );
       c.s = { ...c.s, phase: "parked" };
-      goalDone(c, "landed and taxied in.");
+      const doneMsg =
+        c.s.goalId === "vfr-full-flight" || c.s.goalId === "ifr-full-flight"
+          ? `full flight complete at ${ctx.airportName} — landed and taxied to parking.`
+          : "landed and taxied in.";
+      goalDone(c, doneMsg);
       break;
+    }
     case "freq-change":
       atc(c, f.key, (cs) =>
         c.s.rules === "VFR"
@@ -1352,10 +1990,15 @@ export function scriptedTurn(
     case "ack":
       if (c.s.emergency)
         atc(c, f.key, (cs) => ph`${cs}, roger, emergency equipment will be standing by.`);
+      else if (f.key !== "ctaf") atc(c, f.key, (cs) => ph`${cs}, roger.`);
       break;
     default:
-      atc(c, f.key, (cs) => ph`${cs}, ${f.name}, say again.`);
-      if (coach) note(c, `Not sure what you need? Try: “${exampleText}”`, "info");
+      if (f.key === "ctaf") {
+        note(c, `Advisory transmitted on ${f.name}.`);
+      } else {
+        atc(c, f.key, (cs) => ph`${cs}, ${f.name}, say again.`);
+        if (coach) note(c, `Not sure what you need? Try: “${exampleText}”`, "info");
+      }
   }
   if (coach && ev0.items.some((i) => !i.ok && i.label !== "Callsign")) {
     const tips = ev0.items
@@ -1421,13 +2064,18 @@ export function blockedTurn(
 
 // ---------------- AI support ----------------
 
-export function aiStateSnapshot(s: FreeState): Record<string, unknown> {
+export function aiStateSnapshot(
+  s: FreeState,
+  telemetry?: Record<string, unknown>,
+): Record<string, unknown> {
   const c = s.ctx;
   const dir = freeDirectory(s);
   return {
+    leg: s.leg,
     airport: {
       icao: c.airport.icao,
       name: c.airport.name,
+      towered: c.airport.towered,
       elevationFt: c.airport.elevationFt,
       airspace: `Class ${c.airport.airspace}`,
     },
@@ -1436,7 +2084,14 @@ export function aiStateSnapshot(s: FreeState): Record<string, unknown> {
     trafficPattern: `${c.runway.pattern} traffic for runway ${c.runway.id}, pattern altitude ${c.patternAltitude} ft`,
     taxiways: c.airport.taxiways,
     parking: c.parking,
-    atis: { letter: c.atis.letter, text: c.atis.phrase.text },
+    atis: {
+      letter: c.atis.letter,
+      windDirMag: c.atis.windDirMag,
+      windKt: c.atis.windKt,
+      altimeter: c.atis.altimeter,
+      sky: c.atis.sky,
+      text: c.atis.phrase.text,
+    },
     stations: dir.map((d) => ({
       name: d.name,
       type: d.station,
@@ -1451,17 +2106,47 @@ export function aiStateSnapshot(s: FreeState): Record<string, unknown> {
       equipment: `/${c.aircraft.equip}`,
     },
     flightRules: s.rules,
+    flightFollowingActive: s.ffActive,
     phase: s.phase,
     position: c.position,
     altitudeFt: c.altitude,
     headingMag: c.heading,
-    squawk: s.ffActive || s.clearance ? c.squawk : "1200",
+    squawk: s.emergency ? "7700" : s.ffActive || s.clearance ? c.squawk : "1200",
+    departureAirport: {
+      icao: s.dep.airport.icao,
+      name: s.dep.airportName,
+      runwayInUse: s.dep.runway.id,
+    },
     destination: {
       icao: c.destination.icao,
       name: c.destination.name,
       bearingMag: c.destination.bearing,
       distanceNm: c.destination.distanceNm,
     },
+    ...(s.dest
+      ? {
+          destinationAirport: {
+            icao: s.dest.airport.icao,
+            name: s.dest.airportName,
+            towered: s.dest.airport.towered,
+            elevationFt: s.dest.airport.elevationFt,
+            runwayInUse: s.dest.runway.id,
+            runwaysAvailable: allRunwayEnds(s.dest.airport).map((e) => usRunway(e.end.id)),
+            trafficPattern: `${s.dest.runway.pattern} traffic for runway ${s.dest.runway.id}, pattern altitude ${s.dest.patternAltitude} ft`,
+            atis: { letter: s.dest.atis.letter, text: s.dest.atis.phrase.text },
+            stations: facilityDirectoryForFields(
+              s.dest.airportName,
+              s.dest.atisFreq,
+              s.dest.facilities,
+              s.dest.airport.towered,
+            ).map((d) => ({
+              name: d.name,
+              type: d.station,
+              frequency: formatFreqShort(d.mhz),
+            })),
+          },
+        }
+      : {}),
     flightPlan: s.flightPlan,
     activeClearance: s.clearance
       ? {
@@ -1485,6 +2170,7 @@ export function aiStateSnapshot(s: FreeState): Record<string, unknown> {
     pendingReadback: s.pending ? s.pending.instruction : null,
     emergencyDeclared: s.emergency,
     goalReached: s.goalReached,
+    ...(telemetry ? { telemetry } : {}),
   };
 }
 
@@ -1518,7 +2204,7 @@ export function applyAiTurn(
       issues: string[];
     }
   | { ok: false; reason: string } {
-  const ctx = s0.ctx;
+  const ctx0 = s0.ctx;
   const dir = freeDirectory(s0);
   const transmission =
     typeof json.transmission === "string" ? json.transmission.trim().replace(/\s+/g, " ") : null;
@@ -1526,14 +2212,43 @@ export function applyAiTurn(
   if (transmission.length > 500) return { ok: false, reason: "transmission too long" };
   if (META_RE.test(transmission)) return { ok: false, reason: "off-role transmission" };
 
-  // Guardrail: runways and frequencies mentioned must exist here.
+  const u = json.stateUpdates && typeof json.stateUpdates === "object" ? json.stateUpdates : {};
+  const divertCode = typeof u["divertTo"] === "string" ? u["divertTo"].trim().toUpperCase() : "";
+  const divertAp = divertCode ? getAirport(divertCode) : undefined;
+
+  // Guardrail: runways and frequencies mentioned must exist at departure, destination, or divert airport.
+  const allAps: Airport[] = [ctx0.airport];
+  if (s0.dep.airport.icao !== ctx0.airport.icao) allAps.push(s0.dep.airport);
+  if (s0.dest && s0.dest.airport.icao !== ctx0.airport.icao) allAps.push(s0.dest.airport);
+  if (divertAp && !allAps.some((a) => a.icao === divertAp.icao)) allAps.push(divertAp);
+
   const parsed = parseTransmission(transmission);
-  const validRunways = new Set(allRunwayEnds(ctx.airport).map((e) => usRunway(e.end.id)));
+  const validRunways = new Set(
+    allAps.flatMap((ap) => allRunwayEnds(ap).map((e) => usRunway(e.end.id))),
+  );
   for (const r of readRunways(parsed))
     if (!validRunways.has(r)) return { ok: false, reason: `unknown runway ${r}` };
+
+  const divertDir = divertAp
+    ? (() => {
+        const leg = buildAirportLegContext(divertAp, {
+          preferIls: s0.rules === "IFR",
+          ifrWeather: s0.rules === "IFR",
+        });
+        return facilityDirectoryForFields(
+          leg.airportName,
+          leg.atisFreq,
+          leg.facilities,
+          leg.airport.towered,
+        );
+      })()
+    : [];
   const validFreqs = [
     ...dir.map((d) => d.mhz),
-    ...allRunwayEnds(ctx.airport).flatMap((e) => (e.end.ils ? [e.end.ils.freq] : [])),
+    ...divertDir.map((d) => d.mhz),
+    ...allAps.flatMap((ap) =>
+      allRunwayEnds(ap).flatMap((e) => (e.end.ils ? [e.end.ils.freq] : [])),
+    ),
   ];
   for (const fr of readFrequencies(parsed))
     if (!validFreqs.some((v) => freqEquals(v, fr)))
@@ -1544,15 +2259,19 @@ export function applyAiTurn(
   for (const h of readHeadings(parsed))
     if (h.deg < 1 || h.deg > 360) return { ok: false, reason: "invalid heading" };
 
-  // Station must be a known facility (default: the one the pilot called).
+  // Station must be a known facility across active, departure, or destination (default: the one called).
   const stationName = typeof json.station === "string" ? json.station.toLowerCase() : "";
+  const allFacilities = [
+    ...Object.values(ctx0.facilities),
+    ...Object.values(s0.dep.facilities),
+    ...(s0.dest ? Object.values(s0.dest.facilities) : []),
+  ].filter((x): x is Facility => !!x);
   const replyFac =
-    (Object.values(ctx.facilities).find(
+    allFacilities.find(
       (x) =>
-        x &&
         stationName &&
         (x.name.toLowerCase() === stationName || stationName.includes(x.name.toLowerCase())),
-    ) as Facility | undefined) ?? f;
+    ) ?? f;
 
   // Evaluate the pilot (locally) + AI score/issues.
   const aiScore =
@@ -1578,10 +2297,21 @@ export function applyAiTurn(
     aiScore,
   );
 
-  // Apply sanitised state updates.
-  let c: ScenarioContext = { ...ctx, abbrevBy: { ...ctx.abbrevBy, [replyFac.key]: true } };
+  // Apply sanitised state updates (handles leg switching and diversions before context fields).
   let s: FreeState = { ...s1, evals: [...s1.evals, evaluation] };
-  const u = json.stateUpdates && typeof json.stateUpdates === "object" ? json.stateUpdates : {};
+  if (divertAp && divertAp.icao !== s.ctx.airport.icao) {
+    s = switchDestinationAirport(s, divertAp);
+  }
+  if (typeof u["leg"] === "string") {
+    const legVal = u["leg"].toLowerCase();
+    if (legVal === "departure" || legVal === "enroute" || legVal === "destination") {
+      s = switchToLeg(s, legVal);
+    }
+  } else if (isDestFacility(s, replyFac) && s.dest) {
+    s = switchToLeg(s, "destination");
+  }
+
+  let c: ScenarioContext = { ...s.ctx, abbrevBy: { ...s.ctx.abbrevBy, [replyFac.key]: true } };
   const num = (v: unknown) =>
     typeof v === "number" && Number.isFinite(v)
       ? v
@@ -1594,8 +2324,9 @@ export function applyAiTurn(
   if (altU !== null && altU >= 0 && altU <= maxAlt) c = { ...c, altitude: Math.round(altU) };
   const hdgU = num(u["heading"]);
   if (hdgU !== null && hdgU >= 1 && hdgU <= 360) c = { ...c, heading: Math.round(hdgU) };
-  if (typeof u["runway"] === "string" && validRunways.has(usRunway(u["runway"]))) {
-    const end = allRunwayEnds(ctx.airport).find(
+  const activeValidRunways = new Set(allRunwayEnds(c.airport).map((e) => usRunway(e.end.id)));
+  if (typeof u["runway"] === "string" && activeValidRunways.has(usRunway(u["runway"]))) {
+    const end = allRunwayEnds(c.airport).find(
       (e) => usRunway(e.end.id) === usRunway(String(u["runway"])),
     );
     if (end)
@@ -1605,7 +2336,7 @@ export function applyAiTurn(
           ...c.runway,
           id: usRunway(end.end.id),
           dataId: end.end.id,
-          magHeading: Math.round(norm360(end.end.trueHeading - ctx.airport.magVar)),
+          magHeading: Math.round(norm360(end.end.trueHeading - c.airport.magVar)),
           pattern: end.end.pattern,
           ils: end.end.ils ? { freq: end.end.ils.freq, ident: end.end.ils.ident } : null,
         },
@@ -1617,18 +2348,23 @@ export function applyAiTurn(
     (s.emergency || !["7500", "7600", "7700"].includes(u["squawk"]))
   )
     c = { ...c, squawk: u["squawk"] };
+  if (typeof u["ffActive"] === "boolean") s = { ...s, ffActive: u["ffActive"] };
   const stationU = typeof u["currentStation"] === "string" ? u["currentStation"].toLowerCase() : "";
   const freqU = num(u["frequency"]);
-  const nextFac = (Object.values(ctx.facilities) as (Facility | undefined)[]).find(
+  const nextFacCandidates = [
+    ...Object.values(c.facilities),
+    ...(s.dest ? Object.values(s.dest.facilities) : []),
+    ...Object.values(s.dep.facilities),
+  ].filter((x): x is Facility => !!x);
+  const nextFac = nextFacCandidates.find(
     (x) =>
-      x &&
-      ((stationU && x.name.toLowerCase() === stationU) ||
-        (freqU !== null && freqEquals(x.mhz, freqU))),
+      (stationU && x.name.toLowerCase() === stationU) ||
+      (freqU !== null && freqEquals(x.mhz, freqU)),
   );
   if (nextFac) s = { ...s, currentStation: nextFac.key };
   if (typeof u["phase"] === "string") {
     const ph0 = u["phase"].toLowerCase();
-    const phases: Phase[] = [
+    const phases: FreePhase[] = [
       "ramp",
       "taxiing",
       "holding-short",
@@ -1671,6 +2407,9 @@ export function applyAiTurn(
     }
   }
   if (hasAny(parseTransmission(text), ["mayday", "pan pan"])) s = { ...s, emergency: true };
+  if (s.phase === "parked" && (!s.dest || s.leg === "destination")) {
+    s = { ...s, goalReached: true };
+  }
 
   // Pending readback from the AI instruction.
   const expects = transmission ? extractReadback(transmission, c) : [];
@@ -1699,6 +2438,68 @@ export function applyAiTurn(
   return { ok: true, state: s, replies, evaluation, hint, issues };
 }
 
+/**
+ * Advance a multi-leg flight from departure/enroute to the destination arrival leg
+ * (used in /ai-atc so pilots can fly end-to-end into the destination airport).
+ */
+export function advanceFreeFlight(s: FreeState): { state: FreeState; replies: FreeReply[] } {
+  if (!s.dest || s.leg === "destination") return { state: s, replies: [] };
+  const prevCenter = facilityOf(s.ctx, s.currentStation);
+  const inboundBrg = s.ctx.destination.bearing;
+  const fromDestWord = compassWord(norm360(inboundBrg + 180));
+  const switched = switchToLeg(s, "destination");
+  const dCtx = switched.ctx;
+  const ifr = switched.rules === "IFR";
+  const milesOut = ifr ? 18 : 12;
+  const nextAlt = ifr
+    ? Math.max(
+        dCtx.interceptAltitude + 2000,
+        Math.round((dCtx.airport.elevationFt + 4000) / 1000) * 1000,
+      )
+    : Math.round((dCtx.patternAltitude + 1500) / 500) * 500;
+  const nextPhase: FreePhase = ifr ? "arrival" : "inbound";
+  const nextStation: FacilityKey = ifr
+    ? "approach"
+    : switched.ffActive && dCtx.facilities.approach
+      ? "approach"
+      : landingStation(dCtx);
+  const nextFac = facilityOf(dCtx, nextStation);
+
+  const nextState: FreeState = {
+    ...switched,
+    phase: nextPhase,
+    currentStation: nextStation,
+    pending: null,
+    ffAsked: false,
+    ctx: {
+      ...dCtx,
+      positionMiles: milesOut,
+      positionDir: fromDestWord,
+      position: `${milesOut} miles ${fromDestWord} of ${dCtx.airportName}`,
+      altitude: nextAlt,
+      heading: r10(inboundBrg),
+    },
+  };
+
+  const replies: FreeReply[] = [];
+  if (ifr || switched.ffActive) {
+    const p = ph`${dCtx.cs.full}, contact ${nextFac.name} ${freq(nextFac.mhz)}, ${dCtx.airportName} altimeter ${altimeter(dCtx.atis.altimeter)}.`;
+    replies.push({
+      kind: "atc",
+      facility: prevCenter,
+      phrase: capFirst(p),
+      delayMs: 250,
+    });
+  }
+  replies.push(
+    sys(
+      `Approaching ${dCtx.airport.icao} (${dCtx.airportName}) — ${milesOut} miles ${fromDestWord} at ${alt(nextAlt).text} ft, runway ${dCtx.runway.id} in use${dCtx.atisFreq ? `, ATIS ${formatFreqShort(dCtx.atisFreq)}` : ""}. Tune ${nextFac.name} (${formatFreqShort(nextFac.mhz)}).`,
+      "info",
+    ),
+  );
+  return { state: nextState, replies };
+}
+
 export function freeReport(s: FreeState): SessionReport {
   return buildReport(s.evals);
 }
@@ -1711,36 +2512,60 @@ export function freeHint(s: FreeState): string {
   const c = s.ctx;
   if (s.ffAsked) return `Give your details: “${example(s, "ff-details", f)}”`;
   if (
+    f.key !== "ctaf" &&
     !c.abbrevBy[s.currentStation] &&
     !["ramp", "inbound", "arrival", "holding-short", "taxiing", "landed"].includes(s.phase)
   )
     return `Check in with ${f.name} (${formatFreqShort(f.mhz)}): “${f.name}, ${csPhrase(c.cs, false).text}, ${alt(c.altitude).text}${s.phase === "airborne" ? ` climbing ${alt(s.clearance?.altitude ?? c.vfrCruise).text}` : ""}.”`;
   switch (s.phase) {
     case "ramp":
+      if (!c.airport.towered && s.rules === "VFR")
+        return `Self-announce taxi on ${facilityOf(c, "ctaf").name} (${formatFreqShort(facilityOf(c, "ctaf").mhz)}): “${example(s, "taxi", facilityOf(c, "ctaf"))}”`;
       return s.rules === "IFR" && !s.clearance
         ? `Call ${f.name} (${formatFreqShort(f.mhz)}): “${example(s, "clearance", f)}”`
         : `Call ${facilityOf(c, "ground").name}: “${example(s, "taxi", facilityOf(c, "ground"))}”`;
     case "holding-short":
-    case "taxiing":
-      return `Switch to ${facilityOf(c, "tower").name} (${formatFreqShort(facilityOf(c, "tower").mhz)}): “${example(s, "ready", facilityOf(c, "tower"))}”`;
+    case "taxiing": {
+      const twr = facilityOf(c, landingStation(c));
+      return `Switch to ${twr.name} (${formatFreqShort(twr.mhz)}): “${example(s, "ready", twr)}”`;
+    }
     case "airborne":
+      if (s.dest && s.leg !== "destination" && (s.ffActive || s.rules === "IFR"))
+        return `Climbing enroute to ${s.dest.airportName}. Check in with ${f.name}, or use “Approach destination” when ready to descend.`;
       return s.rules === "VFR" && !s.ffActive
         ? `Request flight following: “${example(s, "flight-following", f)}”`
         : `Respond to ${f.name}'s instructions.`;
     case "enroute":
+      if (s.dest && s.leg !== "destination")
+        return `Enroute to ${s.dest.airportName} (${s.dest.airport.icao}) with ${f.name}. Ask for altitude, weather, or press “Approach destination” for arrival.`;
       return s.rules === "VFR" && !s.ffActive
         ? `Request flight following: “${example(s, "flight-following", facilityOf(c, "approach"))}”`
         : "Fly the route; respond to any calls. Request a frequency change when leaving the area.";
-    case "inbound":
-      return `Call ${facilityOf(c, "tower").name}: “${example(s, "inbound", facilityOf(c, "tower"))}”`;
+    case "inbound": {
+      const twr = facilityOf(c, landingStation(c));
+      return `${c.airport.towered ? "Call" : "Self-announce on"} ${twr.name} (${formatFreqShort(twr.mhz)}): “${example(s, "inbound", twr)}”`;
+    }
     case "arrival":
-      return `Check in with ${f.name}: “${f.name}, ${csPhrase(c.cs, false).text}, ${alt(c.altitude).text}, with information ${PHONETIC[c.atis.letter]}.”`;
-    case "pattern":
-      return `Report your position in the pattern: “${facilityOf(c, "tower").name}, ${csPhrase(c.cs, true).text}, midfield ${c.runway.pattern} downwind runway ${c.runway.id}.”`;
-    case "final":
-      return `Check in / report final with ${facilityOf(c, "tower").name}, then read back the landing clearance.`;
-    case "landed":
-      return `After exiting: “${facilityOf(c, "ground").name}, ${csPhrase(c.cs, false).text}, clear of runway ${c.runway.id} at ${PHONETIC[c.taxiRoute[0] ?? "A"]}, taxi to parking.”`;
+      return `Check in with ${f.name} (${formatFreqShort(f.mhz)}): “${f.name}, ${csPhrase(c.cs, false).text}, ${alt(c.altitude).text}, with information ${PHONETIC[c.atis.letter]}.”`;
+    case "pattern": {
+      const twr = facilityOf(c, landingStation(c));
+      return `Report your position in the pattern on ${twr.name}: “${twr.name}, ${csPhrase(c.cs, true).text}, midfield ${c.runway.pattern} downwind runway ${c.runway.id}.”`;
+    }
+    case "final": {
+      const twr = facilityOf(c, landingStation(c));
+      return c.airport.towered
+        ? `Check in / report final with ${twr.name}, then read back the landing clearance.`
+        : `Report final on ${twr.name}, then report clear of runway ${c.runway.id}.`;
+    }
+    case "landed": {
+      const gnd = groundStation(c);
+      if (!gnd) {
+        const ctaf = facilityOf(c, "ctaf");
+        return `Announce clear of runway ${c.runway.id} on ${ctaf.name}: “${ctaf.name}, ${csPhrase(c.cs, false).text}, clear of runway ${c.runway.id}, ${c.airportName}.”`;
+      }
+      const gndF = facilityOf(c, gnd);
+      return `After exiting: “${gndF.name} (${formatFreqShort(gndF.mhz)}), ${csPhrase(c.cs, false).text}, clear of runway ${c.runway.id} at ${PHONETIC[c.taxiRoute[0] ?? "A"]}, taxi to parking.”`;
+    }
     default:
       return "Goal reached — press End & score, or keep practising.";
   }

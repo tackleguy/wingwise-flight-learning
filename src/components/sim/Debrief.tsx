@@ -4,6 +4,7 @@ import {
   ClipboardCheck,
   GraduationCap,
   Notebook,
+  Radio,
   RotateCcw,
   Sparkles,
   XCircle,
@@ -25,6 +26,14 @@ export interface DebriefData {
   landings: number;
   maxAlt: number;
   realSec: number;
+  atc?: {
+    score: number;
+    grade: string;
+    transmissions: number;
+    engine: "ai" | "scripted";
+    airport: string;
+    destination?: string;
+  };
 }
 
 function grade(score: number) {
@@ -144,6 +153,35 @@ export function Debrief({
                 </li>
               ))}
             </ul>
+            {data.atc ? (
+              <div className="mt-4 rounded border bg-muted/30 p-3 text-xs">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="flex items-center gap-1.5 font-semibold">
+                    <Radio className="size-3.5 text-primary" /> Radio communications (
+                    {data.atc.airport}
+                    {data.atc.destination ? ` → ${data.atc.destination}` : ""})
+                  </span>
+                  <span
+                    className={cn(
+                      "font-mono font-bold",
+                      data.atc.score >= 80
+                        ? "text-ok"
+                        : data.atc.score >= 60
+                          ? "text-caution"
+                          : "text-warning",
+                    )}
+                  >
+                    {Math.round(data.atc.score)}% · {data.atc.grade}
+                  </span>
+                </div>
+                <p className="mt-1 text-muted-foreground">
+                  {data.atc.transmissions} pilot call
+                  {data.atc.transmissions === 1 ? "" : "s"} ·{" "}
+                  {data.atc.engine === "ai" ? "Communicator AI" : "Scripted controller"} · saved to
+                  your ATC record
+                </p>
+              </div>
+            ) : null}
             <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">
               Simulated flight time is recorded for training tracking only. It is not loggable
               flight time under 14 CFR 61.51.

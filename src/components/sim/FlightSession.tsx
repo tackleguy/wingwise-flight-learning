@@ -6,6 +6,7 @@ import {
   Flag,
   Pause,
   Play,
+  Radio,
   RotateCcw,
   XCircle,
   Video,
@@ -24,6 +25,7 @@ import {
 } from "@/sim/scenarios";
 import type { SimEvent } from "@/sim/types";
 import { actions, useStore, type FlightLog } from "@/lib/store";
+import { formatFreqShort } from "@/lib/atc/frequency";
 import { getPerf } from "@/lib/data/aircraft-perf";
 import { distanceNm } from "@/lib/geo";
 import { cn } from "@/lib/utils";
@@ -34,6 +36,7 @@ import { CockpitControls, VirtualYoke } from "./CockpitControls";
 import { InstrumentPanel } from "./InstrumentPanel";
 import { FlightDataStrip } from "./FlightDataStrip";
 import { Debrief, type DebriefData } from "./Debrief";
+import { SimAtcPanel, type SimAtcSummary } from "./SimAtcPanel";
 
 const CAMERA_LABEL: Record<CameraMode, string> = {
   cockpit: "Cockpit",
@@ -102,6 +105,13 @@ function ActiveFlight({
   const settings = useStore((s) => s.settings);
   const [camera, setCamera] = useState<CameraMode>("cockpit");
   const [panelOpen, setPanelOpen] = useState(true);
+  const [atcOpen, setAtcOpen] = useState(false);
+  const [atcHud, setAtcHud] = useState<{
+    activeFreq: number;
+    stationName: string;
+    unread: number;
+  }>({ activeFreq: 118.6, stationName: "ATC", unread: 0 });
+  const atcSummaryRef = useRef<(() => SimAtcSummary | null) | null>(null);
   const [showObjectives, setShowObjectives] = useState(false);
   const [coarsePointer, setCoarsePointer] = useState(false);
   useEffect(() => {
@@ -197,6 +207,8 @@ function ActiveFlight({
       };
       if (checkrideId) log.checkrideId = checkrideId;
       const flightId = actions.logFlight(log);
+      const atcSum = atcSummaryRef.current?.() ?? null;
+      if (atcSum) actions.recordAtc(atcSum.recordPayload);
       setDebrief({
         flightId,
         score,
@@ -208,6 +220,18 @@ function ActiveFlight({
         landings: stats.current.landings,
         maxAlt: stats.current.maxAlt,
         realSec: (Date.now() - startedAt.current) / 1000,
+        ...(atcSum
+          ? {
+              atc: {
+                score: atcSum.score,
+                grade: atcSum.grade,
+                transmissions: atcSum.transmissions,
+                engine: atcSum.engine,
+                airport: atcSum.airport,
+                ...(atcSum.destination ? { destination: atcSum.destination } : {}),
+              },
+            }
+          : {}),
       });
     },
     [engine, built, scenario, checkrideId],
@@ -362,8 +386,22 @@ function ActiveFlight({
           engine={engine}
           camera={camera}
           onCamera={setCamera}
+          atcOpen={atcOpen}
+          atcHud={atcHud}
+          onToggleAtc={() => setAtcOpen((v) => !v)}
           onEnd={() => finish("manual")}
           onRestart={onRestart}
+        />
+
+        <SimAtcPanel
+          engine={engine}
+          scenario={scenario}
+          built={built}
+          open={atcOpen}
+          ended={Boolean(debrief)}
+          onOpenChange={setAtcOpen}
+          onHudUpdate={setAtcHud}
+          summaryRef={atcSummaryRef}
         />
 
         {/* Messages */}
@@ -457,12 +495,18 @@ function TopRight({
   engine,
   camera,
   onCamera,
+  atcOpen,
+  atcHud,
+  onToggleAtc,
   onEnd,
   onRestart,
 }: {
   engine: SimEngine;
   camera: CameraMode;
   onCamera: (c: CameraMode) => void;
+  atcOpen: boolean;
+  atcHud: { activeFreq: number; stationName: string; unread: number };
+  onToggleAtc: () => void;
   onEnd: () => void;
   onRestart: () => void;
 }) {
@@ -504,7 +548,28 @@ function TopRight({
           </button>
         ))}
       </div>
-      <div className="flex gap-1">
+      <div className="flex flex-wrap justify-end gap-1">
+        <Button
+          size="sm"
+          variant={atcOpen ? "default" : "secondary"}
+          className={cn(
+            "relative h-7 gap-1.5",
+            !atcOpen && "bg-black/60 text-white hover:bg-black/80",
+          )}
+          onClick={onToggleAtc}
+          title={`Toggle ATC Radio (${atcHud.stationName})`}
+        >
+          <Radio className="size-3.5 text-cyan" />
+          <span>ATC</span>
+          <span className="font-mono text-[10px] opacity-80">
+            {formatFreqShort(atcHud.activeFreq)}
+          </span>
+          {!atcOpen && atcHud.unread > 0 ? (
+            <span className="ml-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-ok px-1 font-mono text-[10px] font-bold text-black">
+              {atcHud.unread}
+            </span>
+          ) : null}
+        </Button>
         <Button
           size="sm"
           variant="secondary"
