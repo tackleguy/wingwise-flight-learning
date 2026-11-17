@@ -749,7 +749,8 @@ export class AircraftVisual {
     const camDist = Cartesian3.distance(cam, Matrix4.getTranslation(this.bodyMatrix, this.v3));
     const lift = (0.06 + camDist * 0.0012) * FT_PER_M; // a few centimetres above the surface, more when seen from far away
     const shadowAlpha = 0.6 * (1 - smoothstep(70, 300, aglFt)) * (0.25 + 0.75 * day) * (1 - 0.5 * overcast);
-    if (ground0 !== null && shadowAlpha > 0.01 && this.ready) {
+    // (after a crash the aircraft-shaped shadow would show wings that are gone: none then)
+    if (ground0 !== null && shadowAlpha > 0.01 && this.ready && !s.crash) {
       if (this.frameNo % 5 === 0 || aglFt < 3) this.sampleSlope(pose, ground0);
       const hM = Math.max(0, pose.altMslFt - cgHeightFt - ground0) * M_PER_FT;
       const soft = 0.1 + hM * 0.07;

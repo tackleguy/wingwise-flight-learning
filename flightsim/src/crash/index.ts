@@ -45,7 +45,11 @@ function airframeOf(sim: Sim): Airframe {
   const massKg = (sim.state.weightLb > 100 ? sim.state.weightLb : 2300) * LB;
   const gearDown = sim.state.gearPosNorm > 0.5;
   if (meta?.crash) {
-    const parts: AirframePart[] = Object.entries(meta.crash.parts).map(([name, p]) => ({ name: name as PartName, nodes: p!.nodes, min: p!.min, max: p!.max }));
+    const parts: AirframePart[] = [];
+    for (const [name, p] of Object.entries(meta.crash.parts as Record<string, (AirframePart & { parent?: string; retractable?: boolean }) | undefined>)) {
+      if (!p) continue;
+      parts.push({ name, nodes: p.nodes, min: p.min, max: p.max, ...(p.parent ? { parent: p.parent } : {}), ...(p.retractable ? { retractable: true } : {}) });
+    }
     return { massKg, gearDown, parts };
   }
   const b = meta?.bounds ?? [

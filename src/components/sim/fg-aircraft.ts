@@ -53,7 +53,16 @@ export interface FgAircraft {
 export interface FgCrashMeta {
   parts: Record<
     string,
-    { nodes: string[]; min: [number, number, number]; max: [number, number, number] } | undefined
+    | {
+        nodes: string[];
+        min: [number, number, number];
+        max: [number, number, number];
+        /** The piece it hangs on (the fuselage when missing). */
+        parent?: string;
+        /** Retractable landing gear (absent when the gear is up). */
+        retractable?: boolean;
+      }
+    | undefined
   >;
 }
 

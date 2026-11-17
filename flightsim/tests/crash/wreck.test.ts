@@ -19,7 +19,7 @@ function airframe(id: "c172p" | "pa28" | "A320" = "c172p", gearDown = true): Air
   return {
     massKg: (id === "A320" ? 140000 : 2300) * LB,
     gearDown,
-    parts: Object.entries(parts).map(([name, p]) => ({ name: name as PartName, nodes: p!.nodes, min: p!.min, max: p!.max })),
+    parts: Object.entries(parts).map(([name, p]) => ({ name: name as PartName, nodes: p!.nodes, min: p!.min, max: p!.max, ...(p!.parent ? { parent: p!.parent } : {}), ...(p!.retractable ? { retractable: true } : {}) })),
   };
 }
 
@@ -97,13 +97,13 @@ describe("crash physics", () => {
   });
 
   it("a very hard landing (1,500 ft/min) breaks the landing gear and the aircraft comes down on its fuselage", () => {
-    const s = start({ vEastKt: 55, vsFpm: -1500, pitch: 4 });
+    const s = start({ vEastKt: 55, vsFpm: -1500, pitch: 9 }); // main wheels first, as in a flare
     const w = Wreck.create(R, airframe(), s, flat);
     const impacts = run(w);
     expect(w.settled).toBe(true);
     // a main leg breaks (often only one: the aircraft then leans over onto that side)
     expect(detached(w).filter((n) => n === "gear_left" || n === "gear_right").length).toBeGreaterThan(0);
-    const lowest = Math.min(w.clearanceM("body"), w.clearanceM("wing_left"), w.clearanceM("wing_right"));
+    const lowest = Math.min(...["body", "fuselage_rear", "wing_left_inner", "wing_right_inner", "wing_left_outer", "wing_right_outer"].map((n) => w.clearanceM(n)).filter(Number.isFinite));
     expect(lowest).toBeLessThan(0.15); // down on the fuselage or a wing
     expect(lowest).toBeGreaterThan(-0.15); // …not in the ground
     expect(Math.abs(w.pose().roll)).toBeLessThan(45);
@@ -135,8 +135,10 @@ describe("crash physics", () => {
     const impacts = run(w);
     expect(w.settled).toBe(true);
     const gone = detached(w);
-    expect(gone.length).toBeGreaterThanOrEqual(2);
-    expect(gone.some((n) => n.startsWith("wing") || n === "tail")).toBe(true);
+    expect(gone.length).toBeGreaterThanOrEqual(8); // many pieces: wings, tips, tail surfaces, gear, propeller…
+    expect(gone.some((n) => n.startsWith("wing"))).toBe(true);
+    // pieces fly off on their own, not all as one lump
+    expect(new Set(Object.values(w.carriers())).size).toBeGreaterThanOrEqual(4);
     expect(impacts.length).toBeGreaterThan(2);
     expect(Math.max(...impacts.map((i) => i.strength))).toBeGreaterThan(0.5);
     for (const p of w.parts) if (!p.hidden) expect(w.clearanceM(p.name), p.name).toBeGreaterThan(-0.3);
@@ -147,7 +149,7 @@ describe("crash physics", () => {
   });
 
   it("a break-up in the air (wings gone at 1,500 ft, 150 kt) falls, lands where it should and comes to rest", () => {
-    const s = start({ altMslFt: 1600, vEastKt: 150, vsFpm: -500, pitch: -5, broken: ["wing_left", "wing_right"] });
+    const s = start({ altMslFt: 1600, vEastKt: 150, vsFpm: -500, pitch: -5, broken: ["wing_left_inner", "wing_right_inner"] });
     const w = Wreck.create(R, airframe(), s, flat);
     run(w, 90);
     expect(w.settled).toBe(true);
@@ -155,6 +157,34 @@ describe("crash physics", () => {
     expect(w.clearanceM("body")).toBeGreaterThan(-0.3);
     expect(distanceM(w, s)).toBeGreaterThan(300); // it carried on a long way while falling
     w.dispose();
+  });
+
+  it("a piece that breaks off takes what hangs on it along (an inner wing takes its tip, aileron and flap)", () => {
+    const w = Wreck.create(R, airframe(), start({ altMslFt: 1100, broken: ["wing_left_inner"] }), flat);
+    const c = w.carriers();
+    expect(c["wing_left_inner"]).toBe("wing_left_inner");
+    expect(c["wing_left_outer"]).toBe("wing_left_inner");
+    expect(c["aileron_left"]).toBe("wing_left_inner");
+    expect(c["flap_left"]).toBe("wing_left_inner");
+    expect(c["wing_right_outer"]).toBe("body"); // the other wing stays
+    expect(c["elevator"]).toBe("body");
+    w.dispose();
+  });
+
+  it("every model's pieces hang together in one tree from the fuselage", () => {
+    for (const [id, m] of Object.entries(FG_MODELS)) {
+      const parts = m.crash!.parts;
+      expect(parts["body"], id).toBeDefined();
+      expect(Object.keys(parts).length, id).toBeGreaterThanOrEqual(12);
+      for (const [name, p] of Object.entries(parts)) {
+        if (name === "body") continue;
+        // following the parents always reaches the fuselage
+        let at: string | undefined = name;
+        for (let i = 0; i < 10 && at && at !== "body"; i++) at = parts[at]?.parent ?? "body";
+        expect(at, `${id} ${name}`).toBe("body");
+        expect(p!.nodes.length, `${id} ${name}`).toBeGreaterThan(0);
+      }
+    }
   });
 
   it("a gear-up landing with retractable gear slides on the belly (A320)", () => {

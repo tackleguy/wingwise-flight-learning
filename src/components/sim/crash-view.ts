@@ -59,7 +59,8 @@ function loadPhysics(): Promise<Rapier> {
 
 /** Pieces already broken by what caused the crash. */
 function brokenBy(m: CrashMotion): PartName[] {
-  if (m.structural) return ["wing_left", "wing_right"];
+  // a break-up in the air: the wings come off at the root (older model files: the whole wings)
+  if (m.structural) return ["wing_left_inner", "wing_right_inner", "wing_left", "wing_right"];
   if (/hard impact/i.test(m.reason))
     return ["gear_left", "gear_right", "gear_nose", "gear_tail", "gear"];
   if (/nose-first/i.test(m.reason)) return ["gear_nose"];
@@ -78,6 +79,8 @@ function airframeOf(m: CrashMotion, fg: FgAircraft | null, spanM: number): Airfr
         nodes: p.nodes,
         min: [p.min[0] * k, p.min[1] * k, p.min[2] * k],
         max: [p.max[0] * k, p.max[1] * k, p.max[2] * k],
+        ...(p.parent ? { parent: p.parent } : {}),
+        ...(p.retractable ? { retractable: true } : {}),
       });
     }
   }

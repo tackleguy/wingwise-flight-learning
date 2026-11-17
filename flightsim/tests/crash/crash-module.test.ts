@@ -11,14 +11,14 @@ describe("crash module", () => {
     const sim = makeSim(0);
     const crash = sim.use(createCrash(null));
     const apt = sim.data.getAirport("KLVK")!;
-    // 150 ft above the ground, 80 kt, then the nose is pushed hard down
-    await sim.spawn({ kind: "air", airportIdent: "KLVK", lat: apt.lat, lon: apt.lon, headingTrue: 250, altFtMsl: 150, kias: 80, engineRunning: true });
+    // 60 ft above the ground, 90 kt, then the nose is pushed down: a shallow dive into the ground
+    await sim.spawn({ kind: "air", airportIdent: "KLVK", lat: apt.lat, lon: apt.lon, headingTrue: 250, altFtMsl: 60, kias: 90, engineRunning: true });
     let settledEvents = 0;
     sim.events.on("crashSettled", () => settledEvents++);
     sim.controls.elevator = 1;
     sim.controls.throttle = 1;
     for (let t = 0; t < 30 && !sim.state.crash; t += 0.1) {
-      sim.controls.elevator = sim.state.pitch > -30 ? 1 : 0;
+      sim.controls.elevator = sim.state.pitch > -15 ? 0.4 : 0;
       sim.advance(0.1);
     }
     expect(sim.state.crash).not.toBeNull();

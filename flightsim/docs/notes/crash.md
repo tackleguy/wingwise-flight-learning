@@ -57,6 +57,20 @@ until it has come to rest. A structural failure in the air (overspeed, overload)
 wings broken off: they fold up and flutter down slower than the fuselage (more air drag for their
 mass); the ground grid is placed where the falling wreck will land (fall worked out with the same drag).
 
+### More pieces (November 2026)
+
+Every model is now split into about 18 pieces that hang on each other: front fuselage (`body`), rear
+fuselage, inner wings and wing tips, horizontal stabiliser and fin, ailerons, flaps, elevator, rudder,
+propellers and each landing-gear leg (retractable gear too: `gear_retract_left/right/nose` under the
+`gear_retract` node). The converter cuts the triangles exactly along the break lines (`clip_piece`), so
+long wing skins end where the tip breaks off, and records each piece's `parent`. In the physics each
+piece rides on a body (its "carrier"); a piece that breaks off takes everything hanging on it along,
+and those can break off again later (`carriers()`). New rules: a piece that gives way passes on no more
+push than it can take (the rest is taken back, so a snapping wheel does not kick the aircraft over); a
+body grinding along the ground loses spin (`CONTACT_SPIN_DAMPING`, the crumpling a rigid shape lacks);
+small surfaces only shake loose in violent blows (`SHOCK`); propellers are discs. After a crash the
+World Flight Simulator hides the aircraft-shaped shadow (it would show wings that are gone).
+
 ## 2. Decisions
 
 See `DECISIONS.md` → "Crash physics". In short: Rapier (maintained, CCD, small enough, Apache-2.0)

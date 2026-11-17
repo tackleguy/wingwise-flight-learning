@@ -609,7 +609,66 @@ def find_wheels(entries, cfg, aux_kind):
 GEARISH_RE = r"wheel|tyre|tire|strut|gear|\bleg|axle|brake|fairing|pant|spat|oleo|fork|skid"
 
 
-def split_airframe(static, node_defs, wheel_meshes, to_gltf, cfg, retract, gear_pieces):
+def clip_piece(p, planes, to_gltf):
+    """Cut a piece's triangles exactly along planes (axis 0..2 of the glTF frame = value), so a crash
+    piece ends at its break line even where the model has long triangles (wing skins from root to
+    tip). Positions, normals and texture coordinates are interpolated. Returns a Piece (a new mesh when
+    something was cut)."""
+    import copy as _copy
+    m = p.mesh
+    ti = p.tri_idx()
+    if len(ti) == 0 or not planes:
+        return p
+    corners = (ti[:, None] * 3 + np.arange(3)[None]).reshape(-1)
+    PF = m.pos[corners].reshape(-1, 3, 3)
+    PG = to_gltf(m.pos[corners]).reshape(-1, 3, 3)
+    NF = m.nrm[corners].reshape(-1, 3, 3)
+    UV = m.uv[corners].reshape(-1, 3, 2)
+    MAT = m.mat[ti]
+    DBL = m.double[ti]
+    cut = False
+    for axis, val in planes:
+        d = PG[:, :, axis] - val
+        crossing = (d.max(axis=1) > 1e-5) & (d.min(axis=1) < -1e-5)
+        if not crossing.any():
+            continue
+        cut = True
+        keep = ~crossing
+        out = {"PF": [PF[keep]], "PG": [PG[keep]], "NF": [NF[keep]], "UV": [UV[keep]], "MAT": [MAT[keep]], "DBL": [DBL[keep]]}
+        for i in np.nonzero(crossing)[0]:
+            di = d[i]
+            pos = di > 0
+            # the vertex alone on its side goes first (keeping the winding order)
+            lone = int(np.nonzero(pos)[0][0]) if pos.sum() == 1 else int(np.nonzero(~pos)[0][0])
+            order = [lone, (lone + 1) % 3, (lone + 2) % 3]
+            a, b, c = order
+            tab = di[a] / (di[a] - di[b])
+            tac = di[a] / (di[a] - di[c])
+
+            def lerp(X, u, v, t):
+                return X[i, u] + (X[i, v] - X[i, u]) * t
+
+            for X, key in ((PF, "PF"), (PG, "PG"), (NF, "NF"), (UV, "UV")):
+                va, vb, vc = X[i, a], X[i, b], X[i, c]
+                ab, ac = lerp(X, a, b, tab), lerp(X, a, c, tac)
+                out[key].append(np.stack([np.stack([va, ab, ac]), np.stack([ab, vb, vc]), np.stack([ab, vc, ac])]))
+            out["MAT"].append(np.repeat(MAT[i], 3))
+            out["DBL"].append(np.repeat(DBL[i], 3))
+        PF, PG, NF, UV = (np.concatenate(out[k]) for k in ("PF", "PG", "NF", "UV"))
+        MAT, DBL = np.concatenate(out["MAT"]), np.concatenate(out["DBL"])
+    if not cut:
+        return p
+    nm = _copy.copy(m)
+    nm.pos = PF.reshape(-1, 3)
+    nl = np.linalg.norm(NF, axis=2, keepdims=True)
+    nm.nrm = (NF / np.where(nl > 1e-9, nl, 1)).reshape(-1, 3)
+    nm.uv = UV.reshape(-1, 2)
+    nm.mat = MAT
+    nm.double = DBL
+    return Piece(nm)
+
+
+def split_airframe(static, node_defs, wheel_meshes, to_gltf, cfg, retract, gear_pieces, wheel_pos):
     """Crash physics: split the static airframe into the pieces that can break off.
 
     Returns ({node name: [Piece]}, crash meta). Nodes: body (fuselage), wing_left, wing_right, tail and,
@@ -718,6 +777,54 @@ def split_airframe(static, node_defs, wheel_meshes, to_gltf, cfg, retract, gear_
     if zt is not None and zt > zw_lo - 0.2:
         zt = None
 
+    # finer pieces: the rear fuselage (from just behind the wing), each wing in an inner part and a tip,
+    # the tail in horizontal stabiliser and fin (the moving surfaces show where they are)
+    zr = zw_lo - 0.25
+    if zr - (zt if zt is not None else z0) < 1.0:
+        zr = None
+    split_x = fw * 1.1 + 0.45 * (s - fw * 1.1)
+    # cut the static airframe exactly along the break lines (not the landing gear: it stays whole)
+    planes = [(0, split_x), (0, -split_x)] + ([(2, zr)] if zr is not None else []) + ([(2, zt)] if zt is not None else [])
+    cut_tris = []
+    for p, ti, C, A, gearish in tris:
+        if gearish:
+            cut_tris.append((p, ti, C, A, gearish))
+            continue
+        q = clip_piece(p, planes, to_gltf)
+        if q is p:
+            cut_tris.append((p, ti, C, A, gearish))
+            continue
+        qi = q.tri_idx()
+        P = to_gltf(q.mesh.pos).reshape(-1, 3, 3)
+        cut_tris.append((q, qi, P.mean(axis=1), 0.5 * np.linalg.norm(np.cross(P[:, 1] - P[:, 0], P[:, 2] - P[:, 0]), axis=1), gearish))
+    tris = cut_tris
+
+    def node_points(pred):
+        P = [to_gltf(np.concatenate([q.points() for q in list(pc) + [x for kd in kids for x in kd[1]]]))
+             for name, pc, Rm, t, ex, kids in node_defs if pred(name) and (list(pc) or kids)]
+        return np.concatenate(P) if P else np.zeros((0, 3))
+
+    elev = node_points(lambda n: n.startswith("elevator"))
+    rud = node_points(lambda n: n.startswith("rudder"))
+    tail_c = C_all[C_all[:, 2] < zt] if zt is not None else np.zeros((0, 3))
+    fin_x = max(0.3, 0.2 * fw)
+    if len(elev):
+        y_stab = float(np.median(elev[:, 1]))
+    elif len(tail_c):
+        wide_t = tail_c[np.abs(tail_c[:, 0]) > max(0.6, fw)]
+        y_stab = float(np.median(wide_t[:, 1])) if len(wide_t) else float(np.median(tail_c[:, 1]))
+    else:
+        y_stab = 0.0
+    stab_span = float(np.abs(tail_c[:, 0]).max()) if len(tail_c) else 1.0
+    stab_tol = max(0.5, 0.25 * stab_span)
+    y_fin = float(rud[:, 1].min()) - 0.15 if len(rud) else y_stab + 0.3
+    # the fin starts at the stabiliser (below it is the tail cone, which scrapes on a tail strike) —
+    # except on a T-tail, where the stabiliser sits on top of the fin
+    cabin_c = C_all[(C_all[:, 2] > zw_lo) & (C_all[:, 2] < zw_hi) & (ax < fw)]
+    roof = float(np.percentile(cabin_c[:, 1], 95)) if len(cabin_c) > 20 else y_stab
+    if y_stab < roof + 0.8:
+        y_fin = max(y_fin, y_stab - 0.2)
+
     def region(C):
         x, y, z = C[:, 0], C[:, 1], C[:, 2]
         axx = np.abs(x)
@@ -726,30 +833,47 @@ def split_airframe(static, node_defs, wheel_meshes, to_gltf, cfg, retract, gear_
         near = (axx > fw * 1.1) & (z > zw_lo - 0.25) & (z < zw_hi + 0.25) & (y > yw - 0.7)
         wing = ~tail & (axx > fw * 1.1) & (far | near)
         out = np.full(len(C), "body", dtype=object)
-        out[tail] = "tail"
-        out[wing & (x > 0)] = "wing_left"
-        out[wing & (x <= 0)] = "wing_right"
+        if zr is not None:
+            out[z < zr] = "fuselage_rear"
+        stab = tail & (axx > fin_x) & (np.abs(y - y_stab) < stab_tol)
+        fin = tail & ~stab & (axx <= fin_x) & (y >= y_fin)
+        out[stab] = "stab"
+        out[fin] = "fin"
+        for side, sel in (("left", x > 0), ("right", x <= 0)):
+            out[wing & sel & (axx <= split_x)] = f"wing_{side}_inner"
+            out[wing & sel & (axx > split_x)] = f"wing_{side}_outer"
         return out
+
+    # landing gear: each piece goes with the nearest wheel
+    gear_key = {"mainLeft": "gear_left", "mainRight": "gear_right", "nose": "gear_nose", "tail": "gear_tail"}
+
+    def nearest_wheel(c):
+        best, bk = None, None
+        for k, wp in wheel_pos.items():
+            d = (c[0] - wp[0]) ** 2 + (c[2] - wp[2]) ** 2
+            if k in gear_key and (best is None or d < best):
+                best, bk = d, gear_key[k]
+        return bk or ("gear_left" if c[0] > 0.3 else "gear_right" if c[0] < -0.3 else "gear_nose")
 
     groups = {}
     for p, ti, C, A, gearish in tris:
         if gearish and not retract:
-            c = C.mean(axis=0)
-            key = ("gear_left" if c[0] > 0 else "gear_right") if abs(c[0]) > 0.3 else ("gear_nose" if c[2] > 0 else "gear_tail")
-            groups.setdefault(key, []).append(p)
+            groups.setdefault(nearest_wheel(C.mean(axis=0)), []).append(p)
             continue
         reg = region(C)
         T = len(p.mesh.pos) // 3
-        for key in ("body", "wing_left", "wing_right", "tail"):
+        for key in sorted(set(reg)):
             sel = ti[reg == key]
-            if len(sel) == 0:
-                continue
             if len(sel) == T:
                 groups.setdefault(key, []).append(Piece(p.mesh))
             else:
                 mask = np.zeros(T, bool)
                 mask[sel] = True
                 groups.setdefault(key, []).append(Piece(p.mesh, mask))
+    gear_split = {}
+    for q in gear_pieces or []:
+        c = to_gltf(q.points()).mean(axis=0)
+        gear_split.setdefault("gear_retract_" + nearest_wheel(c)[len("gear_"):], []).append(q)
 
     def pts(pieces):
         return to_gltf(np.concatenate([q.points() for q in pieces])) if pieces else np.zeros((0, 3))
@@ -774,43 +898,90 @@ def split_airframe(static, node_defs, wheel_meshes, to_gltf, cfg, retract, gear_
             hi[a] = P[o[min(len(o) - 1, np.searchsorted(cw, (1 - q) * tot))], a]
         return lo, hi
 
-    # moving nodes go with the part under their centre
-    members = {k: [k] for k in groups}
-    extra_pts = {}
-    for name, pieces, Rm, t, ex, kids in node_defs:
-        allp = list(pieces) + [q for kd in kids for q in kd[1]]
-        if not allp:
-            continue
-        P = pts(allp)
-        part = region(P.mean(axis=0)[None])[0]
-        members.setdefault(part, []).append(name)
-        extra_pts.setdefault(part, []).append(pts_w(allp))
+    present = set(groups)
+    rear_or_body = "fuselage_rear" if "fuselage_rear" in present else "body"
+
+    def attach_to(region_name):
+        """the piece something hangs on, falling back to a bigger one when the model has no such piece"""
+        chain = {
+            "wing_left_outer": ["wing_left_outer", "wing_left_inner"], "wing_right_outer": ["wing_right_outer", "wing_right_inner"],
+            "wing_left_inner": ["wing_left_inner"], "wing_right_inner": ["wing_right_inner"],
+            "stab": ["stab", "fin", rear_or_body], "fin": ["fin", "stab", rear_or_body], "fuselage_rear": [rear_or_body],
+        }.get(region_name, [])
+        for c in chain:
+            if c in present:
+                return c
+        return "body"
+
+    parent = {"fuselage_rear": "body", "stab": rear_or_body, "fin": rear_or_body,
+              "wing_left_inner": "body", "wing_right_inner": "body",
+              "wing_left_outer": attach_to("wing_left_inner"), "wing_right_outer": attach_to("wing_right_inner")}
+    wing_low = yw - 0.9
+
+    def gear_parent(key, P):
+        # a main leg hangs on the wing when its top reaches up to the wing (low wings); else on the fuselage
+        if key in ("gear_left", "gear_right") and len(P) and float(P[:, 1].max()) > wing_low and float(np.abs(P[:, 0]).mean()) > fw * 1.1:
+            return attach_to("wing_left_inner" if key == "gear_left" else "wing_right_inner")
+        return "body"
+
     parts = {}
-    for key in ("body", "wing_left", "wing_right", "tail", "gear_left", "gear_right", "gear_nose", "gear_tail"):
-        if key not in groups and key not in members:
-            continue
-        pw = [pts_w(groups.get(key, []))] + extra_pts.get(key, [])
-        P = np.concatenate([x[0] for x in pw])
-        W = np.concatenate([x[1] for x in pw])
+
+    def add(key, nodes, P, W, par, extra=None):
         if len(P) == 0:
-            continue
+            return
         if key == "body":
             # the fuselage box: leave out what sticks out sideways (wing-strut stubs, steps)
             core = np.abs(P[:, 0]) <= max(fw * 1.4, 0.5)
             if core.sum() > 10:
                 P, W = P[core], W[core]
-        lo, hi = wbox(P, W, 0.005 if key.startswith("gear") else 0.01)
-        parts[key] = {"nodes": members.get(key, []), "min": fmt(lo), "max": fmt(hi)}
-    if retract and gear_pieces:
-        lo, hi = wbox(*pts_w(gear_pieces), 0.005)
-        parts["gear"] = {"nodes": ["gear_retract"], "min": fmt(lo), "max": fmt(hi)}
+        if key == "fin" and y_stab < roof + 0.8:
+            # the fin's box is the upright part above the stabiliser (the tail cone below it belongs to the fuselage)
+            up = P[:, 1] > y_stab + 0.1
+            if up.sum() > 10:
+                P, W = P[up], W[up]
+        lo, hi = wbox(P, W, 0.005 if key.startswith("gear") or key.startswith("propeller") else 0.01)
+        e = {"nodes": nodes, "min": fmt(lo), "max": fmt(hi)}
+        if par:
+            e["parent"] = par
+        if extra:
+            e.update(extra)
+        parts[key] = e
+
+    for key in ("body", "fuselage_rear", "wing_left_inner", "wing_left_outer", "wing_right_inner", "wing_right_outer", "stab", "fin"):
+        if key in groups:
+            P, W = pts_w(groups[key])
+            add(key, [key], P, W, None if key == "body" else parent.get(key, "body"))
+    for key in ("gear_left", "gear_right", "gear_nose", "gear_tail"):
+        if key in groups:
+            P, W = pts_w(groups[key])
+            add(key, [key], P, W, gear_parent(key, P))
+    for gname, pieces in gear_split.items():
+        key = "gear_" + gname[len("gear_retract_"):]
+        P, W = pts_w(pieces)
+        add(key, [gname], P, W, gear_parent(key, P), {"retractable": True})
+    # every moving surface and propeller is a piece of its own, hanging on what is under its centre
+    for name, pieces, Rm, t, ex, kids in node_defs:
+        allp = list(pieces) + [q for kd in kids for q in kd[1]]
+        if not allp:
+            continue
+        P, W = pts_w(allp)
+        reg = region(P.mean(axis=0)[None])[0]
+        if name.startswith("elevator"):
+            par = attach_to("stab")
+        elif name.startswith("rudder"):
+            par = attach_to("fin")
+        else:
+            par = attach_to(reg) if reg != "body" else ("fuselage_rear" if reg == "fuselage_rear" else "body")
+        add(name, [name], P, W, par)
     meta = {
         "fuselageHalfWidth": round(fw, 3),
         "wingBand": [round(zw_lo, 3), round(zw_hi, 3)],
         "tailStartZ": None if zt is None else round(float(zt), 3),
+        "rearStartZ": None if zr is None else round(float(zr), 3),
+        "wingSplitX": round(float(split_x), 3),
         "parts": parts,
     }
-    return groups, meta
+    return groups, gear_split, meta
 
 
 def build(aid, tex_max=None, quiet=False):
@@ -1192,13 +1363,15 @@ def build(aid, tex_max=None, quiet=False):
     I3 = np.eye(3)
     # the static airframe in the pieces that can break off in a crash (see split_airframe)
     wheel_meshes = {id(q.mesh) for v in wheels.values() for q in v}
-    split, crash_meta = split_airframe(static, node_defs, wheel_meshes, to_gltf, cfg, bool(gear), gear)
+    wheel_pos = {k: to_gltf(v[None])[0] for k, v in wb.items()}
+    split, gear_split, crash_meta = split_airframe(static, node_defs, wheel_meshes, to_gltf, cfg, bool(gear), gear, wheel_pos)
     if not quiet:
-        log(f"   crash parts: fuselage half width {crash_meta['fuselageHalfWidth']} m, wing band z {crash_meta['wingBand']}, tail from z {crash_meta['tailStartZ']}; "
-            + "; ".join(f"{k}: {sum(len(q.tri_idx()) for q in v)} tris" for k, v in split.items())
-            + " | moving: " + "; ".join(f"{k}: {', '.join(v['nodes'][1:]) or '-'}" for k, v in crash_meta["parts"].items()))
+        log(f"   crash pieces: fuselage half width {crash_meta['fuselageHalfWidth']} m, wing band z {crash_meta['wingBand']}, "
+            f"rear fuselage from z {crash_meta['rearStartZ']}, tail from z {crash_meta['tailStartZ']}, wing tips from |x| {crash_meta['wingSplitX']}; "
+            + ", ".join(f"{k}<{v.get('parent', '-')}" for k, v in crash_meta["parts"].items()))
     parts = []
-    for name in ("body", "wing_left", "wing_right", "tail", "gear_left", "gear_right", "gear_nose", "gear_tail"):
+    for name in ("body", "fuselage_rear", "wing_left_inner", "wing_left_outer", "wing_right_inner", "wing_right_outer", "stab", "fin",
+                 "gear_left", "gear_right", "gear_nose", "gear_tail"):
         if name not in split:
             continue
         mesh = make_mesh(name, split[name], I3, np.zeros(3))
@@ -1207,8 +1380,17 @@ def build(aid, tex_max=None, quiet=False):
         node_ids.append(builder.add_node(name, mesh, extras={"crashPart": name}))
         parts.append(name)
     if gear:
-        gm = make_mesh("gear_retract", gear, I3, np.zeros(3))
-        node_ids.append(builder.add_node("gear_retract", gm, extras={"note": "landing gear legs, wheels and doors; hide when the gear is up"}))
+        # one node per leg under "gear_retract" (hidden as a whole when the gear is up; each leg can break off)
+        kid_ids = []
+        for gname in ("gear_retract_left", "gear_retract_right", "gear_retract_nose", "gear_retract_tail"):
+            if gname not in gear_split:
+                continue
+            gm = make_mesh(gname, gear_split[gname], I3, np.zeros(3))
+            if gm is None:
+                continue
+            kid_ids.append(builder.add_node(gname, gm))
+            parts.append(gname)
+        node_ids.append(builder.add_node("gear_retract", None, children=kid_ids, extras={"note": "landing gear legs, wheels and doors (one child per leg); hide when the gear is up"}))
         parts.append("gear_retract")
     for name, pieces, Rm, t, extras, kids in node_defs:
         mesh = make_mesh(name, pieces, Rm, t)
@@ -1421,7 +1603,10 @@ def write_meta_ts(failures):
         "  fuselageHalfWidth: number;",
         "  wingBand: [number, number]; // glTF z range of the wing (aft, front)",
         "  tailStartZ: number | null; // the tail is everything aft of this (glTF z)",
-        "  parts: Partial<Record<\"body\" | \"wing_left\" | \"wing_right\" | \"tail\" | \"gear_left\" | \"gear_right\" | \"gear_nose\" | \"gear_tail\" | \"gear\", { nodes: string[]; min: [number, number, number]; max: [number, number, number] }>>;",
+        "  rearStartZ?: number | null; // the rear fuselage starts here (glTF z)",
+        "  wingSplitX?: number; // wing tips are outboard of this (|glTF x|)",
+        "  /** Each piece: its nodes, collision box, the piece it hangs on (none for the fuselage), retractable gear. */",
+        "  parts: Record<string, { nodes: string[]; min: [number, number, number]; max: [number, number, number]; parent?: string; retractable?: boolean } | undefined>;",
         "}",
         "",
         f"export const FG_MODELS: Record<{ids}, FgModelMeta> = {{",

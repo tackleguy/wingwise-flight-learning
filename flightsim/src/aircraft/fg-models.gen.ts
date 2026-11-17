@@ -31,7 +31,10 @@ export interface FgCrashMeta {
   fuselageHalfWidth: number;
   wingBand: [number, number]; // glTF z range of the wing (aft, front)
   tailStartZ: number | null; // the tail is everything aft of this (glTF z)
-  parts: Partial<Record<"body" | "wing_left" | "wing_right" | "tail" | "gear_left" | "gear_right" | "gear_nose" | "gear_tail" | "gear", { nodes: string[]; min: [number, number, number]; max: [number, number, number] }>>;
+  rearStartZ?: number | null; // the rear fuselage starts here (glTF z)
+  wingSplitX?: number; // wing tips are outboard of this (|glTF x|)
+  /** Each piece: its nodes, collision box, the piece it hangs on (none for the fuselage), retractable gear. */
+  parts: Record<string, { nodes: string[]; min: [number, number, number]; max: [number, number, number]; parent?: string; retractable?: boolean } | undefined>;
 }
 
 export const FG_MODELS: Record<"c172p"|"c182"|"pa28"|"J3Cub"|"c310"|"DHC6"|"p51d"|"A320"|"f16"|"t6texan2", FgModelMeta> = {
@@ -61,50 +64,124 @@ export const FG_MODELS: Record<"c172p"|"c182"|"pa28"|"J3Cub"|"c310"|"DHC6"|"p51d
         position: [-0.001, -0.174, 1.981]
       }
     ],
-    parts: ["body", "wing_left", "wing_right", "tail", "gear_left", "gear_right", "gear_nose", "aileron_left", "aileron_right", "elevator", "flap_left", "flap_right", "propeller_blades", "propeller_disc", "propeller", "rudder"],
+    parts: ["body", "fuselage_rear", "wing_left_inner", "wing_left_outer", "wing_right_inner", "wing_right_outer", "stab", "fin", "gear_left", "gear_right", "gear_nose", "aileron_left", "aileron_right", "elevator", "flap_left", "flap_right", "propeller_blades", "propeller_disc", "propeller", "rudder"],
     retractableGear: false,
-    triangles: 28368,
-    bytes: 1359376,
+    triangles: 28880,
+    bytes: 1390312,
     notes: "Aligned on the JSBSim main-gear contact points; the nose wheel then differs from the JSBSim nose contact by +1 cm fore/aft (+ = model wheel further aft) and -3 cm vertically (+ = model tyre higher). No wheel fairings (FlightGear's default for this model). Flaps: FlightGear moves them with a rotation plus a translation (Fowler-type); the flap nodes use the single pivot that gives FG's position at full flap (in between it is approximate).",
     crash: {
       fuselageHalfWidth: 0.499,
       wingBand: [-1.115, 0.285],
       tailStartZ: -4.115,
+      rearStartZ: -1.365,
+      wingSplitX: 2.849,
       parts: {
         body: {
-          nodes: ["body", "propeller"],
-          min: [-0.562, -1.048, -4.035],
-          max: [0.558, 0.704, 1.985]
+          nodes: ["body"],
+          min: [-0.548, -0.864, -1.349],
+          max: [0.549, 0.513, 1.822]
         },
-        wing_left: {
-          nodes: ["wing_left", "aileron_left", "flap_left"],
-          min: [0.49, 0.266, -1.351],
-          max: [5.585, 0.602, 0.29]
+        fuselage_rear: {
+          nodes: ["fuselage_rear"],
+          min: [-0.46, -0.754, -4.839],
+          max: [0.461, 0.298, -1.365],
+          parent: "body"
         },
-        wing_right: {
-          nodes: ["wing_right", "aileron_right", "flap_right"],
-          min: [-5.584, 0.266, -1.351],
-          max: [-0.484, 0.598, 0.294]
+        wing_left_inner: {
+          nodes: ["wing_left_inner"],
+          min: [0.49, -0.697, -1.014],
+          max: [2.849, 0.522, 0.3],
+          parent: "body"
         },
-        tail: {
-          nodes: ["tail", "elevator", "rudder"],
-          min: [-1.724, -0.423, -5.784],
-          max: [1.724, 1.289, -3.968]
+        wing_left_outer: {
+          nodes: ["wing_left_outer"],
+          min: [2.849, 0.341, -1.003],
+          max: [5.631, 0.602, 0.278],
+          parent: "wing_left_inner"
+        },
+        wing_right_inner: {
+          nodes: ["wing_right_inner"],
+          min: [-2.849, -0.697, -1.014],
+          max: [-0.484, 0.526, 0.3],
+          parent: "body"
+        },
+        wing_right_outer: {
+          nodes: ["wing_right_outer"],
+          min: [-5.63, 0.342, -1.003],
+          max: [-2.849, 0.602, 0.284],
+          parent: "wing_right_inner"
+        },
+        stab: {
+          nodes: ["stab"],
+          min: [-1.722, -0.234, -4.833],
+          max: [1.723, -0.156, -4.115],
+          parent: "fuselage_rear"
+        },
+        fin: {
+          nodes: ["fin"],
+          min: [-0.16, -0.085, -5.498],
+          max: [0.161, 1.312, -4.115],
+          parent: "fuselage_rear"
         },
         gear_left: {
           nodes: ["gear_left"],
           min: [0.368, -1.319, -0.732],
-          max: [1.185, -0.716, -0.295]
+          max: [1.185, -0.716, -0.295],
+          parent: "body"
         },
         gear_right: {
           nodes: ["gear_right"],
           min: [-1.184, -1.319, -0.721],
-          max: [-0.385, -0.715, -0.295]
+          max: [-0.385, -0.715, -0.295],
+          parent: "body"
         },
         gear_nose: {
           nodes: ["gear_nose"],
           min: [-0.097, -1.447, 0.991],
-          max: [0.095, -0.733, 1.345]
+          max: [0.095, -0.733, 1.345],
+          parent: "body"
+        },
+        aileron_left: {
+          nodes: ["aileron_left"],
+          min: [2.617, 0.307, -1.351],
+          max: [5.465, 0.52, -0.716],
+          parent: "wing_left_outer"
+        },
+        aileron_right: {
+          nodes: ["aileron_right"],
+          min: [-5.464, 0.307, -1.351],
+          max: [-2.616, 0.52, -0.716],
+          parent: "wing_right_outer"
+        },
+        elevator: {
+          nodes: ["elevator"],
+          min: [-1.77, -0.233, -5.393],
+          max: [1.771, -0.161, -4.616],
+          parent: "stab"
+        },
+        flap_left: {
+          nodes: ["flap_left"],
+          min: [0.519, 0.266, -1.351],
+          max: [2.616, 0.41, -0.791],
+          parent: "wing_left_inner"
+        },
+        flap_right: {
+          nodes: ["flap_right"],
+          min: [-2.614, 0.266, -1.351],
+          max: [-0.518, 0.411, -0.765],
+          parent: "wing_right_inner"
+        },
+        propeller: {
+          nodes: ["propeller"],
+          min: [-0.951, -1.122, 1.859],
+          max: [0.949, 0.778, 2.001],
+          parent: "body"
+        },
+        rudder: {
+          nodes: ["rudder"],
+          min: [-0.061, -0.406, -5.889],
+          max: [0.062, 1.286, -4.837],
+          parent: "fin"
         }
       }
     }
@@ -135,50 +212,124 @@ export const FG_MODELS: Record<"c172p"|"c182"|"pa28"|"J3Cub"|"c310"|"DHC6"|"p51d
         position: [-0.001, -0.307, 2.207]
       }
     ],
-    parts: ["body", "wing_left", "wing_right", "tail", "gear_left", "gear_right", "gear_nose", "aileron_left", "aileron_right", "elevator", "flap_left", "flap_right", "propeller_blades", "propeller_disc", "propeller", "rudder"],
+    parts: ["body", "fuselage_rear", "wing_left_inner", "wing_left_outer", "wing_right_inner", "wing_right_outer", "stab", "fin", "gear_left", "gear_right", "gear_nose", "aileron_left", "aileron_right", "elevator", "flap_left", "flap_right", "propeller_blades", "propeller_disc", "propeller", "rudder"],
     retractableGear: false,
-    triangles: 28359,
-    bytes: 1109708,
+    triangles: 29077,
+    bytes: 1141940,
     notes: "Aligned on the JSBSim main-gear contact points; the nose wheel then differs from the JSBSim nose contact by +2 cm fore/aft (+ = model wheel further aft) and -8 cm vertically (+ = model tyre higher). The spinner is static (it is not part of the propeller node; it is round, so this does not show). Main-gear track: model 2.62 m, JSBSim 2.18 m. Flaps: FlightGear moves them with a rotation plus a translation (Fowler-type); the flap nodes use the single pivot that gives FG's position at full flap (in between it is approximate).",
     crash: {
       fuselageHalfWidth: 0.57,
       wingBand: [-1.164, 0.436],
       tailStartZ: -3.964,
+      rearStartZ: -1.414,
+      wingSplitX: 2.805,
       parts: {
         body: {
-          nodes: ["body", "propeller"],
-          min: [-0.665, -1.236, -3.979],
-          max: [0.663, 0.631, 2.259]
+          nodes: ["body"],
+          min: [-0.657, -0.941, -1.377],
+          max: [0.656, 0.538, 2.304]
         },
-        wing_left: {
-          nodes: ["wing_left", "aileron_left", "flap_left"],
-          min: [0.631, -0.073, -1.202],
-          max: [5.362, 0.681, 0.372]
+        fuselage_rear: {
+          nodes: ["fuselage_rear"],
+          min: [-0.556, -0.696, -5.07],
+          max: [0.556, 0.429, -1.414],
+          parent: "body"
         },
-        wing_right: {
-          nodes: ["wing_right", "aileron_right", "flap_right"],
-          min: [-5.362, -0.073, -1.202],
-          max: [-0.631, 0.683, 0.378]
+        wing_left_inner: {
+          nodes: ["wing_left_inner"],
+          min: [0.627, -0.747, -0.879],
+          max: [2.805, 0.597, 0.383],
+          parent: "body"
         },
-        tail: {
-          nodes: ["tail", "elevator", "rudder"],
-          min: [-1.709, -0.236, -5.614],
-          max: [1.715, 1.625, -3.934]
+        wing_left_outer: {
+          nodes: ["wing_left_outer"],
+          min: [2.805, 0.429, -0.809],
+          max: [5.426, 0.684, 0.325],
+          parent: "wing_left_inner"
+        },
+        wing_right_inner: {
+          nodes: ["wing_right_inner"],
+          min: [-2.805, -0.747, -0.879],
+          max: [-0.627, 0.597, 0.383],
+          parent: "body"
+        },
+        wing_right_outer: {
+          nodes: ["wing_right_outer"],
+          min: [-5.426, 0.428, -0.851],
+          max: [-2.805, 0.684, 0.358],
+          parent: "wing_right_inner"
+        },
+        stab: {
+          nodes: ["stab"],
+          min: [-1.716, 0.058, -4.676],
+          max: [1.716, 0.117, -3.964],
+          parent: "fuselage_rear"
+        },
+        fin: {
+          nodes: ["fin"],
+          min: [-0.043, 0.2, -5.42],
+          max: [0.04, 1.688, -3.964],
+          parent: "fuselage_rear"
         },
         gear_left: {
           nodes: ["gear_left"],
           min: [0.433, -1.376, -0.899],
-          max: [1.437, -0.766, -0.08]
+          max: [1.437, -0.766, -0.08],
+          parent: "body"
         },
         gear_right: {
           nodes: ["gear_right"],
           min: [-1.431, -1.376, -0.899],
-          max: [-0.433, -0.766, -0.08]
+          max: [-0.433, -0.766, -0.08],
+          parent: "body"
         },
         gear_nose: {
           nodes: ["gear_nose"],
           min: [-0.153, -1.508, 0.682],
-          max: [0.153, -1.045, 1.503]
+          max: [0.153, -1.045, 1.503],
+          parent: "body"
+        },
+        aileron_left: {
+          nodes: ["aileron_left"],
+          min: [2.54, 0.452, -1.223],
+          max: [5.265, 0.641, -0.587],
+          parent: "wing_left_outer"
+        },
+        aileron_right: {
+          nodes: ["aileron_right"],
+          min: [-5.265, 0.452, -1.223],
+          max: [-2.54, 0.641, -0.587],
+          parent: "wing_right_outer"
+        },
+        elevator: {
+          nodes: ["elevator"],
+          min: [-1.761, 0.07, -5.228],
+          max: [1.767, 0.114, -4.501],
+          parent: "stab"
+        },
+        flap_left: {
+          nodes: ["flap_left"],
+          min: [0.648, 0.377, -1.223],
+          max: [2.542, 0.529, -0.698],
+          parent: "wing_left_inner"
+        },
+        flap_right: {
+          nodes: ["flap_right"],
+          min: [-2.542, 0.377, -1.223],
+          max: [-0.648, 0.529, -0.7],
+          parent: "wing_right_inner"
+        },
+        propeller: {
+          nodes: ["propeller"],
+          min: [-1.006, -1.312, 2.138],
+          max: [1.003, 0.695, 2.265],
+          parent: "body"
+        },
+        rudder: {
+          nodes: ["rudder"],
+          min: [-0.037, 0.212, -5.858],
+          max: [0.033, 1.701, -4.729],
+          parent: "fin"
         }
       }
     }
@@ -209,50 +360,118 @@ export const FG_MODELS: Record<"c172p"|"c182"|"pa28"|"J3Cub"|"c310"|"DHC6"|"p51d
         position: [0.0, 0.136, 1.972]
       }
     ],
-    parts: ["body", "wing_left", "wing_right", "tail", "gear_left", "gear_right", "gear_nose", "aileron_left", "aileron_right", "elevator", "flap_left", "flap_right", "propeller_blades", "propeller_disc", "propeller", "rudder"],
+    parts: ["body", "fuselage_rear", "wing_left_inner", "wing_left_outer", "wing_right_inner", "wing_right_outer", "fin", "gear_left", "gear_right", "gear_nose", "aileron_left", "aileron_right", "elevator", "flap_left", "flap_right", "propeller_blades", "propeller_disc", "propeller", "rudder"],
     retractableGear: false,
-    triangles: 40789,
-    bytes: 2051136,
+    triangles: 41691,
+    bytes: 2093144,
     notes: "Aligned on the JSBSim main-gear contact points; the nose wheel then differs from the JSBSim nose contact by +8 cm fore/aft (+ = model wheel further aft) and +19 cm vertically (+ = model tyre higher). The model is a PA-28-161 Warrior (tapered 35 ft wing) while the JSBSim pa28 is a PA-28-180 Cherokee (30 ft constant-chord wing). Not rescaled (that would shrink the fuselage too). The JSBSim nose contact is 19 cm lower than the model's nose tyre when the main wheels match: the JSBSim aircraft rests about 5.6 degrees nose-up, the model is drawn level. Model span 10.69 m vs JSBSim wingspan 9.14 m (+17%).",
     crash: {
       fuselageHalfWidth: 0.515,
       wingBand: [-1.332, 0.068],
       tailStartZ: -3.932,
+      rearStartZ: -1.582,
+      wingSplitX: 2.715,
       parts: {
         body: {
-          nodes: ["body", "propeller"],
-          min: [-0.648, -0.85, -4.269],
-          max: [0.648, 1.137, 1.935]
+          nodes: ["body"],
+          min: [-0.568, -0.429, -1.53],
+          max: [0.57, 0.873, 1.809]
         },
-        wing_left: {
-          nodes: ["wing_left", "aileron_left", "flap_left"],
-          min: [0.506, -0.36, -1.417],
-          max: [5.23, 0.391, 0.219]
+        fuselage_rear: {
+          nodes: ["fuselage_rear"],
+          min: [-0.505, -0.348, -4.57],
+          max: [0.542, 0.875, -1.582],
+          parent: "body"
         },
-        wing_right: {
-          nodes: ["wing_right", "aileron_right", "flap_right"],
-          min: [-5.231, -0.36, -1.417],
-          max: [-0.499, 0.391, 0.219]
+        wing_left_inner: {
+          nodes: ["wing_left_inner"],
+          min: [0.504, -0.364, -1.115],
+          max: [2.709, 0.296, 0.368],
+          parent: "body"
         },
-        tail: {
-          nodes: ["tail", "elevator", "rudder"],
-          min: [-1.818, 0.084, -4.892],
-          max: [1.844, 1.648, -3.96]
+        wing_left_outer: {
+          nodes: ["wing_left_outer"],
+          min: [2.715, -0.087, -1.071],
+          max: [5.324, 0.392, 0.104],
+          parent: "wing_left_inner"
+        },
+        wing_right_inner: {
+          nodes: ["wing_right_inner"],
+          min: [-2.709, -0.364, -1.115],
+          max: [-0.494, 0.149, 0.368],
+          parent: "body"
+        },
+        wing_right_outer: {
+          nodes: ["wing_right_outer"],
+          min: [-5.324, -0.087, -1.079],
+          max: [-2.715, 0.392, 0.104],
+          parent: "wing_right_inner"
+        },
+        fin: {
+          nodes: ["fin"],
+          min: [-0.153, 0.381, -4.624],
+          max: [0.178, 1.689, -3.932],
+          parent: "fuselage_rear"
         },
         gear_left: {
           nodes: ["gear_left"],
           min: [1.289, -1.073, -0.797],
-          max: [1.604, -0.174, -0.361]
+          max: [1.604, -0.174, -0.361],
+          parent: "wing_left_inner"
         },
         gear_right: {
           nodes: ["gear_right"],
           min: [-1.604, -1.073, -0.797],
-          max: [-1.286, -0.174, -0.361]
+          max: [-1.286, -0.174, -0.361],
+          parent: "wing_right_inner"
         },
         gear_nose: {
           nodes: ["gear_nose"],
           min: [-0.082, -1.078, 1.006],
-          max: [0.082, -0.25, 1.427]
+          max: [0.082, -0.25, 1.427],
+          parent: "body"
+        },
+        aileron_left: {
+          nodes: ["aileron_left"],
+          min: [2.594, -0.059, -1.417],
+          max: [5.131, 0.305, -0.984],
+          parent: "wing_left_outer"
+        },
+        aileron_right: {
+          nodes: ["aileron_right"],
+          min: [-5.131, -0.059, -1.417],
+          max: [-2.594, 0.305, -0.984],
+          parent: "wing_right_outer"
+        },
+        elevator: {
+          nodes: ["elevator"],
+          min: [-1.855, 0.241, -4.892],
+          max: [1.881, 0.315, -4.131],
+          parent: "fin"
+        },
+        flap_left: {
+          nodes: ["flap_left"],
+          min: [0.545, -0.329, -1.43],
+          max: [2.593, -0.005, -1.081],
+          parent: "wing_left_inner"
+        },
+        flap_right: {
+          nodes: ["flap_right"],
+          min: [-2.593, -0.329, -1.43],
+          max: [-0.542, -0.005, -1.081],
+          parent: "wing_right_inner"
+        },
+        propeller: {
+          nodes: ["propeller"],
+          min: [-0.999, -0.855, 1.82],
+          max: [0.999, 1.142, 2.123],
+          parent: "body"
+        },
+        rudder: {
+          nodes: ["rudder"],
+          min: [-0.005, 0.43, -4.929],
+          max: [0.079, 1.695, -4.349],
+          parent: "fin"
         }
       }
     }
@@ -283,55 +502,112 @@ export const FG_MODELS: Record<"c172p"|"c182"|"pa28"|"J3Cub"|"c310"|"DHC6"|"p51d
         position: [0.0, -0.031, 1.646]
       }
     ],
-    parts: ["body", "wing_left", "wing_right", "tail", "gear_left", "gear_right", "gear_nose", "gear_tail", "aileron_left", "aileron_right", "elevator", "propeller_blades", "propeller_disc", "propeller", "rudder"],
+    parts: ["body", "fuselage_rear", "wing_left_inner", "wing_left_outer", "wing_right_inner", "wing_right_outer", "stab", "fin", "gear_left", "gear_right", "gear_tail", "aileron_left", "aileron_right", "elevator", "propeller_blades", "propeller_disc", "propeller", "rudder"],
     retractableGear: false,
-    triangles: 38054,
-    bytes: 2323052,
+    triangles: 38446,
+    bytes: 2351332,
     notes: "Aligned on the JSBSim main-gear contact points; the tail wheel then differs from the JSBSim tail contact by +7 cm fore/aft (+ = model wheel further aft) and -7 cm vertically (+ = model tyre higher). No flaps (the real J-3 Cub has none). The steerable tail wheel is static (FG turns it with the rudder). Tail-dragger: in the level structural attitude the tail wheel is 1.1 m above the main-wheel contact height (as in JSBSim).",
     crash: {
       fuselageHalfWidth: 0.35,
       wingBand: [-1.293, 0.307],
       tailStartZ: -3.793,
+      rearStartZ: -1.543,
+      wingSplitX: 2.528,
       parts: {
         body: {
-          nodes: ["body", "propeller"],
-          min: [-0.366, -0.955, -3.7],
-          max: [0.369, 0.891, 1.648]
+          nodes: ["body"],
+          min: [-0.371, -0.7, -1.543],
+          max: [0.371, 0.647, 1.521]
         },
-        wing_left: {
-          nodes: ["wing_left", "aileron_left"],
-          min: [0.449, 0.064, -1.334],
-          max: [5.299, 0.701, 0.248]
+        fuselage_rear: {
+          nodes: ["fuselage_rear"],
+          min: [-0.329, -0.508, -4.674],
+          max: [0.325, 0.471, -1.543],
+          parent: "body"
         },
-        wing_right: {
-          nodes: ["wing_right", "aileron_right"],
-          min: [-5.29, 0.081, -1.335],
-          max: [-0.443, 0.715, 0.247]
+        wing_left_inner: {
+          nodes: ["wing_left_inner"],
+          min: [0.36, -0.547, -1.334],
+          max: [2.528, 0.668, 0.248],
+          parent: "body"
         },
-        tail: {
-          nodes: ["tail", "elevator", "rudder"],
-          min: [-1.413, -0.167, -5.162],
-          max: [1.421, 1.305, -3.782]
+        wing_left_outer: {
+          nodes: ["wing_left_outer"],
+          min: [2.528, 0.183, -1.01],
+          max: [5.325, 0.706, 0.248],
+          parent: "wing_left_inner"
+        },
+        wing_right_inner: {
+          nodes: ["wing_right_inner"],
+          min: [-2.528, -0.537, -1.335],
+          max: [-0.44, 0.676, 0.247],
+          parent: "body"
+        },
+        wing_right_outer: {
+          nodes: ["wing_right_outer"],
+          min: [-5.317, 0.21, -1.01],
+          max: [-2.528, 0.721, 0.247],
+          parent: "wing_right_inner"
+        },
+        stab: {
+          nodes: ["stab"],
+          min: [-1.413, -0.028, -4.597],
+          max: [1.421, 0.858, -3.892],
+          parent: "fuselage_rear"
+        },
+        fin: {
+          nodes: ["fin"],
+          min: [-0.032, 0.447, -4.62],
+          max: [0.026, 1.032, -3.828],
+          parent: "fuselage_rear"
         },
         gear_left: {
           nodes: ["gear_left"],
-          min: [0.252, -1.375, -0.329],
-          max: [1.011, -0.689, 0.463]
+          min: [0.004, -1.375, -0.327],
+          max: [1.011, -0.034, 0.889],
+          parent: "wing_left_inner"
         },
         gear_right: {
           nodes: ["gear_right"],
           min: [-1.011, -1.375, -0.327],
-          max: [-0.244, -0.698, 0.463]
-        },
-        gear_nose: {
-          nodes: ["gear_nose"],
-          min: [-0.491, -0.961, 0.107],
-          max: [0.347, -0.02, 0.895]
+          max: [-0.003, -0.03, 0.887],
+          parent: "wing_right_inner"
         },
         gear_tail: {
           nodes: ["gear_tail"],
           min: [-0.03, -0.347, -5.07],
-          max: [0.059, -0.163, -4.89]
+          max: [0.059, -0.163, -4.89],
+          parent: "body"
+        },
+        aileron_left: {
+          nodes: ["aileron_left"],
+          min: [2.106, 0.475, -1.315],
+          max: [4.771, 0.613, -0.892],
+          parent: "wing_left_outer"
+        },
+        aileron_right: {
+          nodes: ["aileron_right"],
+          min: [-4.763, 0.473, -1.319],
+          max: [-2.098, 0.618, -0.896],
+          parent: "wing_right_outer"
+        },
+        elevator: {
+          nodes: ["elevator"],
+          min: [-1.384, 0.26, -5.08],
+          max: [1.386, 0.297, -4.593],
+          parent: "stab"
+        },
+        propeller: {
+          nodes: ["propeller"],
+          min: [-0.94, -0.973, 1.59],
+          max: [0.94, 0.909, 1.683],
+          parent: "body"
+        },
+        rudder: {
+          nodes: ["rudder"],
+          min: [-0.031, -0.022, -5.172],
+          max: [0.03, 1.355, -4.251],
+          parent: "fin"
         }
       }
     }
@@ -367,40 +643,133 @@ export const FG_MODELS: Record<"c172p"|"c182"|"pa28"|"J3Cub"|"c310"|"DHC6"|"p51d
         position: [-1.659, 0.174, 1.487]
       }
     ],
-    parts: ["body", "wing_left", "wing_right", "tail", "gear_retract", "aileron_left", "aileron_right", "elevator", "flap_left", "flap_right", "propeller_blades", "propeller_disc", "propeller", "propeller_blades_2", "propeller_disc_2", "propeller_2", "rudder"],
+    parts: ["body", "fuselage_rear", "wing_left_inner", "wing_left_outer", "wing_right_inner", "wing_right_outer", "stab", "fin", "gear_retract_left", "gear_retract_right", "gear_retract_nose", "gear_retract", "aileron_left", "aileron_right", "elevator", "flap_left", "flap_right", "propeller_blades", "propeller_disc", "propeller", "propeller_blades_2", "propeller_disc_2", "propeller_2", "rudder"],
     retractableGear: true,
-    triangles: 1487,
-    bytes: 194804,
+    triangles: 1757,
+    bytes: 215904,
     notes: "Aligned on the JSBSim main-gear contact points; the nose wheel then differs from the JSBSim nose contact by +44 cm fore/aft (+ = model wheel further aft) and -12 cm vertically (+ = model tyre higher). Old, very simple model (about 1,500 triangles). Model wheelbase 2.38 m vs JSBSim 2.82 m, so the nose wheel is 44 cm behind the JSBSim nose contact. propeller = engine 0 = LEFT engine, propeller_2 = engine 1 = RIGHT engine. gear_retract also holds the nose-gear doors and the boarding step (FG retracts both with the gear).",
     crash: {
       fuselageHalfWidth: 0.503,
       wingBand: [-1.421, 1.179],
       tailStartZ: -4.421,
+      rearStartZ: -1.671,
+      wingSplitX: 2.719,
       parts: {
         body: {
           nodes: ["body"],
-          min: [-0.598, -0.239, -5.961],
-          max: [0.623, 1.147, 2.855]
+          min: [-0.607, -0.239, -1.671],
+          max: [0.63, 1.147, 2.856]
         },
-        wing_left: {
-          nodes: ["wing_left", "aileron_left", "flap_left", "propeller"],
-          min: [0.482, -0.496, -1.833],
-          max: [5.326, 1.008, 1.506]
+        fuselage_rear: {
+          nodes: ["fuselage_rear"],
+          min: [-0.526, -0.144, -5.96],
+          max: [0.552, 1.019, -1.671],
+          parent: "body"
         },
-        wing_right: {
-          nodes: ["wing_right", "aileron_right", "flap_right", "propeller_2"],
-          min: [-5.218, -0.619, -1.814],
-          max: [-0.449, 1.008, 1.499]
+        wing_left_inner: {
+          nodes: ["wing_left_inner"],
+          min: [0.441, -0.126, -1.671],
+          max: [2.719, 0.972, 1.616],
+          parent: "body"
         },
-        tail: {
-          nodes: ["tail", "elevator", "rudder"],
-          min: [-2.427, 0.016, -6.41],
-          max: [2.457, 2.113, -4.301]
+        wing_left_outer: {
+          nodes: ["wing_left_outer"],
+          min: [2.719, 0.093, -1.225],
+          max: [5.372, 0.76, 0.987],
+          parent: "wing_left_inner"
         },
-        gear: {
-          nodes: ["gear_retract"],
-          min: [-1.93, -1.024, -1.598],
-          max: [1.93, 0.001, 2.473]
+        wing_right_inner: {
+          nodes: ["wing_right_inner"],
+          min: [-2.719, -0.126, -1.671],
+          max: [-0.409, 0.665, 1.616],
+          parent: "body"
+        },
+        wing_right_outer: {
+          nodes: ["wing_right_outer"],
+          min: [-5.264, 0.111, -1.227],
+          max: [-2.719, 0.76, 0.989],
+          parent: "wing_right_inner"
+        },
+        stab: {
+          nodes: ["stab"],
+          min: [-2.427, 0.152, -5.193],
+          max: [2.457, 0.292, -4.472],
+          parent: "fuselage_rear"
+        },
+        fin: {
+          nodes: ["fin"],
+          min: [-0.215, 0.346, -5.842],
+          max: [0.238, 2.129, -4.421],
+          parent: "fuselage_rear"
+        },
+        gear_nose: {
+          nodes: ["gear_retract_nose"],
+          min: [-0.167, -1.024, 0.862],
+          max: [0.19, -0.034, 2.473],
+          parent: "body",
+          retractable: true
+        },
+        gear_left: {
+          nodes: ["gear_retract_left"],
+          min: [1.699, -1.006, -0.394],
+          max: [1.93, 0.001, 0.155],
+          parent: "wing_left_inner",
+          retractable: true
+        },
+        gear_right: {
+          nodes: ["gear_retract_right"],
+          min: [-1.93, -1.006, -1.647],
+          max: [-0.405, 0.002, 0.155],
+          parent: "wing_right_inner",
+          retractable: true
+        },
+        aileron_left: {
+          nodes: ["aileron_left"],
+          min: [3.2, 0.153, -1.105],
+          max: [4.887, 0.432, -0.571],
+          parent: "wing_left_outer"
+        },
+        aileron_right: {
+          nodes: ["aileron_right"],
+          min: [-4.834, 0.153, -1.105],
+          max: [-3.147, 0.432, -0.571],
+          parent: "wing_right_outer"
+        },
+        elevator: {
+          nodes: ["elevator"],
+          min: [-2.472, 0.212, -5.687],
+          max: [2.509, 0.24, -4.942],
+          parent: "stab"
+        },
+        flap_left: {
+          nodes: ["flap_left"],
+          min: [0.482, -0.165, -1.199],
+          max: [3.209, 0.194, -0.409],
+          parent: "wing_left_inner"
+        },
+        flap_right: {
+          nodes: ["flap_right"],
+          min: [-3.153, -0.165, -1.199],
+          max: [-0.463, 0.194, -0.409],
+          parent: "wing_right_inner"
+        },
+        propeller: {
+          nodes: ["propeller"],
+          min: [0.709, -0.767, 1.459],
+          max: [2.689, 1.174, 1.539],
+          parent: "wing_left_inner"
+        },
+        propeller_2: {
+          nodes: ["propeller_2"],
+          min: [-2.651, -0.767, 1.459],
+          max: [-0.671, 1.174, 1.539],
+          parent: "wing_right_inner"
+        },
+        rudder: {
+          nodes: ["rudder"],
+          min: [-0.003, 0.378, -6.41],
+          max: [0.026, 2.113, -5.006],
+          parent: "fin"
         }
       }
     }
@@ -436,55 +805,130 @@ export const FG_MODELS: Record<"c172p"|"c182"|"pa28"|"J3Cub"|"c310"|"DHC6"|"p51d
         position: [-2.857, 0.245, 1.943]
       }
     ],
-    parts: ["body", "wing_left", "wing_right", "tail", "gear_left", "gear_right", "gear_nose", "gear_tail", "aileron_left", "aileron_right", "elevator", "flap_left", "flap_right", "propeller_blades", "propeller_disc", "propeller", "propeller_blades_2", "propeller_disc_2", "propeller_2", "rudder"],
+    parts: ["body", "fuselage_rear", "wing_left_inner", "wing_left_outer", "wing_right_inner", "wing_right_outer", "stab", "fin", "gear_left", "gear_right", "gear_nose", "aileron_left", "aileron_right", "elevator", "flap_left", "flap_right", "propeller_blades", "propeller_disc", "propeller", "propeller_blades_2", "propeller_disc_2", "propeller_2", "rudder"],
     retractableGear: false,
-    triangles: 21237,
-    bytes: 872200,
+    triangles: 21629,
+    bytes: 895184,
     notes: "Aligned on the JSBSim main-gear contact points; the nose wheel then differs from the JSBSim nose contact by -22 cm fore/aft (+ = model wheel further aft) and +6 cm vertically (+ = model tyre higher). Default paint = the texture the 3D model itself uses (paint2-R.png); FG's livery default 'paint2.png' does not exist. In FG the ailerons also droop with the flaps; here the aileron nodes only carry the aileron hinge (the app may add a flap-dependent droop). flap_left/flap_right hold the flap vane and the main flap of the double-slotted flap on one hinge. propeller = engine 0 = LEFT engine, propeller_2 = RIGHT engine.",
     crash: {
       fuselageHalfWidth: 0.861,
       wingBand: [-1.789, 0.411],
       tailStartZ: -6.277,
+      rearStartZ: -2.039,
+      wingSplitX: 4.921,
       parts: {
         body: {
-          nodes: ["body", "propeller", "propeller_2"],
-          min: [-0.889, -1.692, -6.964],
-          max: [0.889, 0.364, 5.263]
+          nodes: ["body"],
+          min: [-0.891, -1.706, -2.039],
+          max: [0.891, 0.364, 5.264]
         },
-        wing_left: {
-          nodes: ["wing_left", "aileron_left", "flap_left"],
-          min: [0.904, -0.195, -1.775],
-          max: [9.672, 0.8, 1.505]
+        fuselage_rear: {
+          nodes: ["fuselage_rear"],
+          min: [-0.836, -1.661, -8.5],
+          max: [0.836, 0.551, -2.039],
+          parent: "body"
         },
-        wing_right: {
-          nodes: ["wing_right", "aileron_right", "flap_right"],
-          min: [-9.672, -0.195, -1.775],
-          max: [-0.904, 0.8, 1.505]
+        wing_left_inner: {
+          nodes: ["wing_left_inner"],
+          min: [0.904, -0.308, -1.263],
+          max: [4.921, 0.564, 1.714],
+          parent: "body"
         },
-        tail: {
-          nodes: ["tail", "elevator", "rudder"],
-          min: [-3.125, -0.965, -10.147],
-          max: [3.125, 3.068, -6.822]
+        wing_left_outer: {
+          nodes: ["wing_left_outer"],
+          min: [4.921, 0.302, -1.263],
+          max: [9.682, 0.8, 0.2],
+          parent: "wing_left_inner"
+        },
+        wing_right_inner: {
+          nodes: ["wing_right_inner"],
+          min: [-4.921, -0.308, -1.263],
+          max: [-0.904, 0.564, 1.714],
+          parent: "body"
+        },
+        wing_right_outer: {
+          nodes: ["wing_right_outer"],
+          min: [-9.682, 0.296, -1.263],
+          max: [-4.921, 0.8, 0.2],
+          parent: "wing_right_inner"
+        },
+        stab: {
+          nodes: ["stab"],
+          min: [-3.125, -0.35, -8.382],
+          max: [3.125, 0.528, -6.277],
+          parent: "fuselage_rear"
+        },
+        fin: {
+          nodes: ["fin"],
+          min: [-0.107, 0.528, -9.421],
+          max: [0.107, 3.069, -6.277],
+          parent: "fuselage_rear"
         },
         gear_left: {
           nodes: ["gear_left"],
-          min: [0.878, -2.598, -1.29],
-          max: [2.087, -1.512, -0.442]
+          min: [-0.968, -2.594, -1.912],
+          max: [2.086, -1.067, -0.229],
+          parent: "body"
         },
         gear_right: {
           nodes: ["gear_right"],
           min: [-2.087, -2.598, -1.29],
-          max: [-0.878, -1.512, -0.442]
+          max: [-0.878, -1.512, -0.442],
+          parent: "body"
         },
         gear_nose: {
           nodes: ["gear_nose"],
           min: [-0.203, -2.564, 3.335],
-          max: [0.289, -1.297, 4.025]
+          max: [0.289, -1.297, 4.025],
+          parent: "body"
         },
-        gear_tail: {
-          nodes: ["gear_tail"],
-          min: [-0.969, -1.641, -1.912],
-          max: [0.969, -1.067, -0.229]
+        aileron_left: {
+          nodes: ["aileron_left"],
+          min: [6.038, 0.36, -1.775],
+          max: [9.487, 0.63, -1.322],
+          parent: "wing_left_outer"
+        },
+        aileron_right: {
+          nodes: ["aileron_right"],
+          min: [-9.487, 0.36, -1.775],
+          max: [-6.038, 0.63, -1.322],
+          parent: "wing_right_outer"
+        },
+        elevator: {
+          nodes: ["elevator"],
+          min: [-3.223, 0.312, -8.965],
+          max: [3.223, 0.528, -7.852],
+          parent: "stab"
+        },
+        flap_left: {
+          nodes: ["flap_left"],
+          min: [0.913, 0.09, -1.775],
+          max: [9.486, 0.658, -1.101],
+          parent: "wing_left_outer"
+        },
+        flap_right: {
+          nodes: ["flap_right"],
+          min: [-9.486, 0.09, -1.775],
+          max: [-0.913, 0.658, -1.101],
+          parent: "wing_right_outer"
+        },
+        propeller: {
+          nodes: ["propeller"],
+          min: [1.579, -1.033, 1.766],
+          max: [4.135, 1.524, 2.233],
+          parent: "body"
+        },
+        propeller_2: {
+          nodes: ["propeller_2"],
+          min: [-4.135, -1.033, 1.766],
+          max: [-1.579, 1.524, 2.233],
+          parent: "body"
+        },
+        rudder: {
+          nodes: ["rudder"],
+          min: [-0.061, -0.803, -10.147],
+          max: [0.061, 3.069, -8.38],
+          parent: "fin"
         }
       }
     }
@@ -515,40 +959,127 @@ export const FG_MODELS: Record<"c172p"|"c182"|"pa28"|"J3Cub"|"c310"|"DHC6"|"p51d
         position: [-0.0, 0.097, 2.843]
       }
     ],
-    parts: ["body", "wing_left", "wing_right", "tail", "gear_retract", "aileron_left", "aileron_right", "elevator", "flap_left", "flap_right", "propeller_blades", "propeller_disc", "propeller", "rudder"],
+    parts: ["body", "fuselage_rear", "wing_left_inner", "wing_left_outer", "wing_right_inner", "wing_right_outer", "stab", "fin", "gear_retract_left", "gear_retract_right", "gear_retract_tail", "gear_retract", "aileron_left", "aileron_right", "elevator", "flap_left", "flap_right", "propeller_blades", "propeller_disc", "propeller", "rudder"],
     retractableGear: true,
-    triangles: 122745,
-    bytes: 4592484,
+    triangles: 124847,
+    bytes: 4690400,
     notes: "Aligned on the JSBSim main-gear contact points; the tail wheel then differs from the JSBSim tail contact by -23 cm fore/aft (+ = model wheel further aft) and +22 cm vertically (+ = model tyre higher). The blurred propeller disc's texture is outside the aircraft folder in FG; it is drawn as a plain translucent disc. The inner main-gear doors (FG moves them with a separate property) are static and shown closed. Tail-dragger with a retractable tail wheel (in gear_retract). Textures not available (surfaces drawn in their plain material colour): propDiskSpinner.png.",
     crash: {
       fuselageHalfWidth: 0.503,
       wingBand: [-1.356, 0.444],
       tailStartZ: -4.556,
+      rearStartZ: -1.606,
+      wingSplitX: 2.855,
       parts: {
         body: {
-          nodes: ["body", "propeller"],
-          min: [-0.644, -1.633, -4.329],
-          max: [0.695, 1.829, 2.862]
+          nodes: ["body"],
+          min: [-0.501, -0.974, -1.606],
+          max: [0.502, 1.009, 2.519]
         },
-        wing_left: {
-          nodes: ["wing_left", "aileron_left", "flap_left"],
-          min: [0.404, -0.677, -1.685],
-          max: [5.517, 0.021, 0.645]
+        fuselage_rear: {
+          nodes: ["fuselage_rear"],
+          min: [-0.431, -0.957, -5.648],
+          max: [0.429, 0.844, -1.609],
+          parent: "body"
         },
-        wing_right: {
-          nodes: ["wing_right", "aileron_right", "flap_right"],
-          min: [-5.516, -0.677, -1.691],
-          max: [-0.4, 0.036, 0.63]
+        wing_left_inner: {
+          nodes: ["wing_left_inner"],
+          min: [0.284, -0.68, -1.255],
+          max: [2.855, -0.141, 0.744],
+          parent: "body"
         },
-        tail: {
-          nodes: ["tail", "elevator", "rudder"],
-          min: [-1.867, -0.215, -6.49],
-          max: [1.867, 1.72, -4.326]
+        wing_left_outer: {
+          nodes: ["wing_left_outer"],
+          min: [2.855, -0.415, -0.992],
+          max: [5.612, 0.021, 0.426],
+          parent: "wing_left_inner"
         },
-        gear: {
-          nodes: ["gear_retract"],
-          min: [-1.96, -2.03, -4.746],
-          max: [1.96, 0.063, 0.807]
+        wing_right_inner: {
+          nodes: ["wing_right_inner"],
+          min: [-2.855, -0.682, -1.27],
+          max: [-0.277, -0.133, 0.744],
+          parent: "body"
+        },
+        wing_right_outer: {
+          nodes: ["wing_right_outer"],
+          min: [-5.611, -0.408, -0.992],
+          max: [-2.855, 0.036, 0.426],
+          parent: "wing_right_inner"
+        },
+        stab: {
+          nodes: ["stab"],
+          min: [-1.942, 0.401, -5.426],
+          max: [1.942, 0.543, -4.593],
+          parent: "fuselage_rear"
+        },
+        fin: {
+          nodes: ["fin"],
+          min: [-0.08, 0.578, -5.948],
+          max: [0.088, 1.817, -4.568],
+          parent: "fuselage_rear"
+        },
+        gear_tail: {
+          nodes: ["gear_retract_tail"],
+          min: [-0.128, -0.746, -4.746],
+          max: [0.127, 0.251, -3.907],
+          parent: "body",
+          retractable: true
+        },
+        gear_left: {
+          nodes: ["gear_retract_left"],
+          min: [0.8, -2.033, -0.17],
+          max: [1.961, -0.309, 0.81],
+          parent: "wing_left_inner",
+          retractable: true
+        },
+        gear_right: {
+          nodes: ["gear_retract_right"],
+          min: [-1.961, -2.033, -0.13],
+          max: [-0.802, -0.309, 0.811],
+          parent: "wing_right_inner",
+          retractable: true
+        },
+        aileron_left: {
+          nodes: ["aileron_left"],
+          min: [3.315, -0.292, -1.317],
+          max: [5.463, -0.028, -0.718],
+          parent: "wing_left_outer"
+        },
+        aileron_right: {
+          nodes: ["aileron_right"],
+          min: [-5.456, -0.285, -1.33],
+          max: [-3.309, -0.013, -0.737],
+          parent: "wing_right_outer"
+        },
+        elevator: {
+          nodes: ["elevator"],
+          min: [-1.906, 0.412, -5.872],
+          max: [1.907, 0.522, -5.289],
+          parent: "stab"
+        },
+        flap_left: {
+          nodes: ["flap_left"],
+          min: [0.455, -0.578, -1.742],
+          max: [3.368, -0.182, -0.793],
+          parent: "wing_left_inner"
+        },
+        flap_right: {
+          nodes: ["flap_right"],
+          min: [-3.362, -0.577, -1.744],
+          max: [-0.436, -0.174, -0.806],
+          parent: "wing_right_inner"
+        },
+        propeller: {
+          nodes: ["propeller"],
+          min: [-1.672, -1.64, 2.592],
+          max: [1.738, 1.837, 3.095],
+          parent: "body"
+        },
+        rudder: {
+          nodes: ["rudder"],
+          min: [-0.082, -0.005, -6.62],
+          max: [0.08, 1.778, -5.833],
+          parent: "fin"
         }
       }
     }
@@ -573,40 +1104,121 @@ export const FG_MODELS: Record<"c172p"|"c182"|"pa28"|"J3Cub"|"c310"|"DHC6"|"p51d
       nose: [-0.01, -2.538, 12.1]
     },
     propellers: [],
-    parts: ["body", "wing_left", "wing_right", "tail", "gear_retract", "aileron_left", "aileron_right", "elevator_left", "elevator_right", "elevator", "flap_left_1", "flap_left_2", "flap_left_3", "flap_left", "flap_right_1", "flap_right_2", "flap_right_3", "flap_right", "rudder"],
+    parts: ["body", "fuselage_rear", "wing_left_inner", "wing_left_outer", "wing_right_inner", "wing_right_outer", "stab", "fin", "gear_retract_left", "gear_retract_right", "gear_retract_nose", "gear_retract", "aileron_left", "aileron_right", "elevator_left", "elevator_right", "elevator", "flap_left_1", "flap_left_2", "flap_left_3", "flap_left", "flap_right_1", "flap_right_2", "flap_right_3", "flap_right", "rudder"],
     retractableGear: true,
-    triangles: 101847,
-    bytes: 7040952,
+    triangles: 102971,
+    bytes: 7106584,
     notes: "Aligned on the JSBSim main-gear contact points; the nose wheel then differs from the JSBSim nose contact by -1 cm fore/aft (+ = model wheel further aft) and -4 cm vertically (+ = model tyre higher). Jet: no propeller nodes (engine fans and the ram-air turbine are static). Spoilers, slats, the trimmable stabiliser and thrust reversers are static. gear_retract also holds the gear-bay doors: hiding it with the gear up leaves the wheel-bay openings visible. Main-gear track: model 7.72 m, JSBSim 7.34 m. elevator: two halves with swept hinges: turning this node moves both about one lateral axis (approximate); elevator_left / elevator_right have the exact hinges. Flaps: FlightGear moves them with a rotation plus a translation (Fowler-type); the flap nodes use the single pivot that gives FG's position at full flap (in between it is approximate). flap_left: several segments: turning this node moves them all about the hinge of flap_left_1 (exact for it, approximate for the others); the children have exact hinges. flap_right: several segments: turning this node moves them all about the hinge of flap_right_1 (exact for it, approximate for the others); the children have exact hinges.",
     crash: {
       fuselageHalfWidth: 2.409,
       wingBand: [-5.457, 0.543],
       tailStartZ: -13.594,
+      rearStartZ: -5.707,
+      wingSplitX: 9.134,
       parts: {
         body: {
           nodes: ["body"],
-          min: [-2.303, -0.645, -13.501],
-          max: [2.285, 3.718, 15.508]
+          min: [-2.305, -0.659, -5.707],
+          max: [2.287, 3.685, 16.031]
         },
-        wing_left: {
-          nodes: ["wing_left", "aileron_left", "flap_left"],
-          min: [1.963, -1.451, -4.194],
-          max: [16.611, 2.182, 4.903]
+        fuselage_rear: {
+          nodes: ["fuselage_rear"],
+          min: [-1.958, -0.392, -19.3],
+          max: [1.939, 3.718, -5.707],
+          parent: "body"
         },
-        wing_right: {
-          nodes: ["wing_right", "aileron_right", "flap_right"],
-          min: [-16.629, -1.451, -4.194],
-          max: [-1.981, 2.182, 4.903]
+        wing_left_inner: {
+          nodes: ["wing_left_inner"],
+          min: [5.079, -1.546, -1.727],
+          max: [9.134, 1.527, 4.903],
+          parent: "body"
         },
-        tail: {
-          nodes: ["tail", "elevator", "rudder"],
-          min: [-5.961, 0.836, -20.095],
-          max: [5.936, 9.489, -13.52]
+        wing_left_outer: {
+          nodes: ["wing_left_outer"],
+          min: [9.134, 1.179, -4.784],
+          max: [16.987, 2.199, 0.646],
+          parent: "wing_left_inner"
         },
-        gear: {
-          nodes: ["gear_retract"],
-          min: [-4.507, -2.58, -0.958],
-          max: [4.507, 0.686, 14.119]
+        wing_right_inner: {
+          nodes: ["wing_right_inner"],
+          min: [-9.134, -1.54, -1.727],
+          max: [-5.05, 1.514, 4.903],
+          parent: "body"
+        },
+        wing_right_outer: {
+          nodes: ["wing_right_outer"],
+          min: [-17.006, 1.177, -4.784],
+          max: [-9.134, 2.199, 0.656],
+          parent: "wing_right_inner"
+        },
+        stab: {
+          nodes: ["stab"],
+          min: [-5.961, 1.696, -19.291],
+          max: [5.936, 3.448, -13.594],
+          parent: "fuselage_rear"
+        },
+        fin: {
+          nodes: ["fin"],
+          min: [-0.408, 3.398, -18.836],
+          max: [0.48, 9.474, -13.594],
+          parent: "fuselage_rear"
+        },
+        gear_left: {
+          nodes: ["gear_retract_left"],
+          min: [0.2, -2.585, -0.963],
+          max: [4.517, 0.686, 0.918],
+          parent: "body",
+          retractable: true
+        },
+        gear_right: {
+          nodes: ["gear_retract_right"],
+          min: [-4.517, -2.585, -0.963],
+          max: [-0.219, 0.686, 0.918],
+          parent: "body",
+          retractable: true
+        },
+        gear_nose: {
+          nodes: ["gear_retract_nose"],
+          min: [-0.474, -2.52, 11.541],
+          max: [0.454, -0.194, 14.225],
+          parent: "body",
+          retractable: true
+        },
+        aileron_left: {
+          nodes: ["aileron_left"],
+          min: [13.271, 1.709, -4.616],
+          max: [16.284, 2.159, -2.957],
+          parent: "wing_left_outer"
+        },
+        aileron_right: {
+          nodes: ["aileron_right"],
+          min: [-16.303, 1.709, -4.616],
+          max: [-13.29, 2.159, -2.957],
+          parent: "wing_right_outer"
+        },
+        elevator: {
+          nodes: ["elevator"],
+          min: [-6.14, 2.38, -19.424],
+          max: [6.114, 3.294, -17.079],
+          parent: "stab"
+        },
+        flap_left: {
+          nodes: ["flap_left"],
+          min: [1.949, 0.294, -3.723],
+          max: [13.174, 1.793, -0.201],
+          parent: "wing_left_inner"
+        },
+        flap_right: {
+          nodes: ["flap_right"],
+          min: [-13.193, 0.294, -3.723],
+          max: [-1.967, 1.793, -0.201],
+          parent: "wing_right_inner"
+        },
+        rudder: {
+          nodes: ["rudder"],
+          min: [-0.243, 3.42, -19.485],
+          max: [0.218, 9.549, -16.345],
+          parent: "fin"
         }
       }
     }
@@ -631,40 +1243,103 @@ export const FG_MODELS: Record<"c172p"|"c182"|"pa28"|"J3Cub"|"c310"|"DHC6"|"p51d
       mainRight: [-1.225, -1.689, -0.874]
     },
     propellers: [],
-    parts: ["body", "wing_left", "wing_right", "tail", "gear_retract", "aileron_left", "aileron_right", "elevator", "rudder"],
+    parts: ["body", "wing_left_inner", "wing_left_outer", "wing_right_inner", "wing_right_outer", "stab", "fin", "gear_retract_left", "gear_retract_right", "gear_retract_nose", "gear_retract", "aileron_left", "aileron_right", "elevator", "rudder"],
     retractableGear: true,
-    triangles: 20171,
-    bytes: 1552420,
+    triangles: 21057,
+    bytes: 1604616,
     notes: "Aligned on the JSBSim main-gear contact points; the nose wheel then differs from the JSBSim nose contact by 0 cm fore/aft (+ = model wheel further aft) and -10 cm vertically (+ = model tyre higher). No flap nodes: the F-16 has flaperons; they are exported as aileron_left / aileron_right (the app may add the flap deflection to them). Leading-edge flaps, speed brakes and the engine fan are static. elevator = both all-moving tail halves turned about one averaged axis (the real halves have about 10 degrees of anhedral each). Fairly low-detail model (about 20,000 triangles). gear_retract also holds the gear doors: hiding it with the gear up leaves the wheel-bay openings visible.",
     crash: {
       fuselageHalfWidth: 0.582,
       wingBand: [-2.805, 0.195],
       tailStartZ: -3.76,
+      rearStartZ: null,
+      wingSplitX: 2.512,
       parts: {
         body: {
           nodes: ["body"],
-          min: [-0.781, -1.144, -4.652],
-          max: [0.784, 1.276, 6.493]
+          min: [-0.78, -1.144, -5.726],
+          max: [0.776, 1.276, 6.383]
         },
-        wing_left: {
-          nodes: ["wing_left", "aileron_left"],
-          min: [0.547, -0.322, -4.552],
-          max: [4.8, 0.427, 0.74]
+        wing_left_inner: {
+          nodes: ["wing_left_inner"],
+          min: [0.408, -0.323, -3.76],
+          max: [2.512, 0.616, 0.846],
+          parent: "body"
         },
-        wing_right: {
-          nodes: ["wing_right", "aileron_right"],
-          min: [-4.789, -0.323, -4.561],
-          max: [-0.542, 0.427, 0.654]
+        wing_left_outer: {
+          nodes: ["wing_left_outer"],
+          min: [2.512, 0.008, -2.702],
+          max: [4.8, 0.272, 0.044],
+          parent: "wing_left_inner"
         },
-        tail: {
-          nodes: ["tail", "elevator", "rudder"],
-          min: [-2.843, -0.429, -6.165],
-          max: [2.842, 3.305, -3.123]
+        wing_right_inner: {
+          nodes: ["wing_right_inner"],
+          min: [-2.512, -0.323, -3.76],
+          max: [-0.404, 0.616, 0.816],
+          parent: "body"
         },
-        gear: {
-          nodes: ["gear_retract"],
-          min: [-1.336, -1.736, -1.154],
-          max: [1.336, -0.296, 2.871]
+        wing_right_outer: {
+          nodes: ["wing_right_outer"],
+          min: [-4.789, 0.008, -2.697],
+          max: [-2.512, 0.271, -0.014],
+          parent: "wing_right_inner"
+        },
+        stab: {
+          nodes: ["stab"],
+          min: [-1.078, -0.379, -5.726],
+          max: [1.086, 0.566, -3.76],
+          parent: "body"
+        },
+        fin: {
+          nodes: ["fin"],
+          min: [-0.138, 0.797, -6.057],
+          max: [0.144, 3.305, -3.76],
+          parent: "body"
+        },
+        gear_nose: {
+          nodes: ["gear_retract_nose"],
+          min: [-0.345, -1.786, 1.471],
+          max: [0.093, -0.615, 2.921],
+          parent: "body",
+          retractable: true
+        },
+        gear_left: {
+          nodes: ["gear_retract_left"],
+          min: [0.216, -1.667, -1.154],
+          max: [1.358, -0.296, 0.519],
+          parent: "wing_left_inner",
+          retractable: true
+        },
+        gear_right: {
+          nodes: ["gear_retract_right"],
+          min: [-1.358, -1.667, -1.154],
+          max: [-0.209, -0.296, 0.519],
+          parent: "wing_right_inner",
+          retractable: true
+        },
+        aileron_left: {
+          nodes: ["aileron_left"],
+          min: [1.071, 0.165, -2.487],
+          max: [3.585, 0.303, -1.694],
+          parent: "wing_left_inner"
+        },
+        aileron_right: {
+          nodes: ["aileron_right"],
+          min: [-3.599, 0.163, -2.488],
+          max: [-1.068, 0.302, -1.695],
+          parent: "wing_right_inner"
+        },
+        elevator: {
+          nodes: ["elevator"],
+          min: [-2.843, -0.15, -5.768],
+          max: [2.842, 0.216, -3.487],
+          parent: "stab"
+        },
+        rudder: {
+          nodes: ["rudder"],
+          min: [-0.041, 1.266, -6.167],
+          max: [0.049, 3.148, -4.627],
+          parent: "fin"
         }
       }
     }
@@ -695,40 +1370,127 @@ export const FG_MODELS: Record<"c172p"|"c182"|"pa28"|"J3Cub"|"c310"|"DHC6"|"p51d
         position: [0.0, -0.562, 2.979]
       }
     ],
-    parts: ["body", "wing_left", "wing_right", "tail", "gear_retract", "aileron_left", "aileron_right", "elevator", "flap_left_1", "flap_left_2", "flap_left", "flap_right_1", "flap_right_2", "flap_right", "propeller_blades", "propeller_disc", "propeller", "rudder"],
+    parts: ["body", "fuselage_rear", "wing_left_inner", "wing_left_outer", "wing_right_inner", "wing_right_outer", "stab", "fin", "gear_retract_left", "gear_retract_right", "gear_retract_nose", "gear_retract", "aileron_left", "aileron_right", "elevator", "flap_left_1", "flap_left_2", "flap_left", "flap_right_1", "flap_right_2", "flap_right", "propeller_blades", "propeller_disc", "propeller", "rudder"],
     retractableGear: true,
-    triangles: 30290,
-    bytes: 1215156,
+    triangles: 31224,
+    bytes: 1258364,
     notes: "Aligned on the JSBSim main-gear contact points; the nose wheel then differs from the JSBSim nose contact by +125 cm fore/aft (+ = model wheel further aft) and -8 cm vertically (+ = model tyre higher). The JSBSim t6texan2 gear geometry does not match this model: JSBSim main-gear track 4.14 m vs 2.53 m in the model, wheelbase 3.58 m vs 2.33 m (the JSBSim nose contact is 1.25 m ahead of the model's nose wheel), and the JSBSim CG is 2.03 m above the wheels, which puts it near the front cockpit of this model. Aligned on the main wheels anyway. flap_left / flap_right: the outer flap plus one half of the centre flap under the fuselage, as child nodes with their own hinges. gear_retract also holds the gear doors: hiding it with the gear up leaves the wheel-bay openings visible. Main-gear track: model 2.53 m, JSBSim 4.14 m. flap_left: several segments: turning this node moves them all about the hinge of flap_left_1 (exact for it, approximate for the others); the children have exact hinges. flap_right: several segments: turning this node moves them all about the hinge of flap_right_1 (exact for it, approximate for the others); the children have exact hinges.",
     crash: {
       fuselageHalfWidth: 0.433,
       wingBand: [-1.526, -0.026],
       tailStartZ: -4.655,
+      rearStartZ: -1.776,
+      wingSplitX: 2.592,
       parts: {
         body: {
-          nodes: ["body", "propeller"],
-          min: [-0.52, -1.673, -5.11],
-          max: [0.52, 0.548, 2.952]
+          nodes: ["body"],
+          min: [-0.523, -1.332, -1.776],
+          max: [0.523, 0.384, 2.654]
         },
-        wing_left: {
-          nodes: ["wing_left", "aileron_left", "flap_left"],
-          min: [0.265, -1.334, -1.747],
-          max: [5.092, -0.66, 0.073]
+        fuselage_rear: {
+          nodes: ["fuselage_rear"],
+          min: [-0.498, -1.241, -5.98],
+          max: [0.498, 0.292, -1.776],
+          parent: "body"
         },
-        wing_right: {
-          nodes: ["wing_right", "aileron_right", "flap_right"],
-          min: [-5.092, -1.334, -1.747],
-          max: [-0.265, -0.66, 0.073]
+        wing_left_inner: {
+          nodes: ["wing_left_inner"],
+          min: [0.0, -1.334, -1.747],
+          max: [2.592, -0.742, 0.073],
+          parent: "body"
         },
-        tail: {
-          nodes: ["tail", "elevator", "rudder"],
-          min: [-1.785, -1.033, -6.451],
-          max: [1.785, 1.024, -4.255]
+        wing_left_outer: {
+          nodes: ["wing_left_outer"],
+          min: [2.592, -1.146, -1.538],
+          max: [5.145, -0.66, -0.01],
+          parent: "wing_left_inner"
         },
-        gear: {
-          nodes: ["gear_retract"],
-          min: [-1.33, -2.094, -1.006],
-          max: [1.33, -1.092, 1.806]
+        wing_right_inner: {
+          nodes: ["wing_right_inner"],
+          min: [-2.592, -1.334, -1.747],
+          max: [0.0, -0.742, 0.073],
+          parent: "body"
+        },
+        wing_right_outer: {
+          nodes: ["wing_right_outer"],
+          min: [-5.145, -1.146, -1.538],
+          max: [-2.592, -0.66, -0.01],
+          parent: "wing_right_inner"
+        },
+        stab: {
+          nodes: ["stab"],
+          min: [-1.821, -0.676, -5.98],
+          max: [1.821, -0.562, -4.655],
+          parent: "fuselage_rear"
+        },
+        fin: {
+          nodes: ["fin"],
+          min: [-0.159, -0.495, -5.733],
+          max: [0.159, 1.06, -4.655],
+          parent: "fuselage_rear"
+        },
+        gear_nose: {
+          nodes: ["gear_retract_nose"],
+          min: [-0.106, -2.107, 0.418],
+          max: [0.106, -1.083, 1.819],
+          parent: "body",
+          retractable: true
+        },
+        gear_right: {
+          nodes: ["gear_retract_right"],
+          min: [-1.332, -2.027, -1.011],
+          max: [-0.244, -1.171, -0.452],
+          parent: "wing_right_inner",
+          retractable: true
+        },
+        gear_left: {
+          nodes: ["gear_retract_left"],
+          min: [0.244, -2.027, -1.011],
+          max: [1.332, -1.171, -0.452],
+          parent: "wing_left_inner",
+          retractable: true
+        },
+        aileron_left: {
+          nodes: ["aileron_left"],
+          min: [2.846, -1.057, -1.559],
+          max: [5.058, -0.7, -1.062],
+          parent: "wing_left_outer"
+        },
+        aileron_right: {
+          nodes: ["aileron_right"],
+          min: [-5.058, -1.057, -1.559],
+          max: [-2.846, -0.7, -1.062],
+          parent: "wing_right_outer"
+        },
+        elevator: {
+          nodes: ["elevator"],
+          min: [-1.839, -0.65, -6.515],
+          max: [1.839, -0.578, -5.846],
+          parent: "stab"
+        },
+        flap_left: {
+          nodes: ["flap_left"],
+          min: [0.281, -1.269, -1.747],
+          max: [2.846, -1.018, -1.222],
+          parent: "wing_left_inner"
+        },
+        flap_right: {
+          nodes: ["flap_right"],
+          min: [-2.846, -1.269, -1.747],
+          max: [-0.281, -1.018, -1.222],
+          parent: "wing_right_inner"
+        },
+        propeller: {
+          nodes: ["propeller"],
+          min: [-1.121, -1.683, 2.771],
+          max: [1.121, 0.559, 3.148],
+          parent: "body"
+        },
+        rudder: {
+          nodes: ["rudder"],
+          min: [-0.03, -0.457, -5.922],
+          max: [0.03, 1.079, -5.034],
+          parent: "fin"
         }
       }
     }

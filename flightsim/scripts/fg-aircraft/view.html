@@ -139,17 +139,22 @@ if (view === "flapsDown") {
 if (view === "parts" && meta.crash) {
   // crash pieces: each in its own colour, pulled apart a little (body grey, left wing red, right wing
   // green, tail blue, landing gear yellow) — checks scripts/fg-aircraft/convert.py split_airframe
-  const colours = { body: 0x9a9a9a, wing_left: 0xd03030, wing_right: 0x30a040, tail: 0x3060d0, gear_left: 0xe0c020, gear_right: 0xe0c020, gear_nose: 0xe0c020, gear_tail: 0xe0c020, gear: 0xe0c020 };
-  const pull = { wing_left: [1, 0, 0], wing_right: [-1, 0, 0], tail: [0, 0.3, -1.5], gear_left: [0.6, -0.8, 0], gear_right: [-0.6, -0.8, 0], gear_nose: [0, -0.8, 0.6], gear_tail: [0, -0.8, -0.6], gear: [0, -0.8, 0] };
+  // a colour per piece (repeatable), pieces pulled apart along where they sit
+  const palette = [0xd03030, 0x30a040, 0x3060d0, 0xe0c020, 0xc040c0, 0x20b0b0, 0xe07020, 0x8050e0, 0x60c060, 0xd06090, 0x4090e0, 0xb0b030];
+  const order = Object.keys(meta.crash.parts);
+  const colourOf = (part) => (part === "body" ? 0x9a9a9a : palette[(order.indexOf(part) - 1 + palette.length) % palette.length]);
+  const pullOf = (info) => {
+    const c = info.min.map((v, i) => (v + info.max[i]) / 2);
+    return [c[0] * 0.25, c[1] * 0.4 + (c[1] < -0.5 ? -0.5 : 0), c[2] * 0.12];
+  };
   for (const [part, info] of Object.entries(meta.crash.parts)) {
     for (const name of info.nodes) {
       const n = root.getObjectByName(name);
       if (!n) continue;
       n.traverse((o) => {
-        if (o.isMesh) o.material = new THREE.MeshLambertMaterial({ color: colours[part] ?? 0xff00ff, side: THREE.DoubleSide });
+        if (o.isMesh) o.material = new THREE.MeshLambertMaterial({ color: colourOf(part), side: THREE.DoubleSide });
       });
-      const p = pull[part];
-      if (p) n.position.add(new THREE.Vector3(...p).multiplyScalar(size * 0.06));
+      if (part !== "body") n.position.add(new THREE.Vector3(...pullOf(info)));
     }
   }
 }
